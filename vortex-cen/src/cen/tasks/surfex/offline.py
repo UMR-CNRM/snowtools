@@ -275,9 +275,9 @@ class _Offline_MPI(_Offline):
     Additional mandatory configuration variables:
     ---------------------------------------------
     * ``nprocs`` Number of process to allocate to the execution of the MPI binary
-      type: int
+      type: int or dict
     * ``ntasks`` Number of tasks to allocate to the execution of the MPI binary
-      type: int
+      type: int or dict
     """
 
     def algo(self):
@@ -297,8 +297,6 @@ class _Offline_MPI(_Offline):
             # MV : la valeur par défaut de "threshold" dans la commande s2m est -999
             # TODO : cette valeur par défaut pourrait être codée directement dans l'algo
             threshold      = self.conf.get('august_threshold', -999),
-            # MV : comprendre avec Matthieu L les cas d'usages avec "dailyprep" (reforecast ?)
-            # et faire une tâche spécifique à ces cas là.
             # daily          = self.conf.dailyprep,
             # MV la valeur par défaut de 'drhook' dans la commande s2m est False
             # TODO : cette valeur par défaut pourrait être codée directement dans l'algo
@@ -314,21 +312,18 @@ class _Offline_MPI(_Offline):
         """
         Run OFFLINE MPI algo component.
         """
-        # # Pour un exécution de binaire, il faut donner l'objet "exécutable" associé (récupéré par la commande
-        # # vortex.executable(...))
-        # # Il est possible de récupérer cet objet avec la ligne suivante :
+        # Pour un exécution de binaire, il faut donner l'objet "exécutable" associé (récupéré par la commande
+        # vortex.executable(...))
+        # Il est possible de récupérer cet objet avec la ligne suivante :
         executable = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
-        #
-        # # MV : Il faudra également pouvoir fournir le nombre de process et le nombre de tâches via le fichier de conf
-        # # TODO : réfléchir à la procédure pour définir des valeurs par défaut en fonction du domaine comme c'est
-        # # le cas actuellement
+
         self.component_runner(
             algo,
             executable,
             mpiopts=dict(
-                nnodes=self.conf.nnodes,
-                nprocs=self.conf.nprocs[self.conf.geometry.tag],
-                ntasks=self.conf.ntasks[self.conf.geometry.tag],
+                nnodes=self.conf.nnodes,  # Redondant avec la valeur par défaut dans mkjob
+                nprocs=self.conf.nprocs,  # Redondant avec la valeur par défaut dans mkjob
+                ntasks=self.conf.ntasks,  # Redondant avec la valeur par défaut dans mkjob
             )
         )
 

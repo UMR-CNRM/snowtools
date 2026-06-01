@@ -64,7 +64,7 @@ class Shadows(_CenResearchTask):
 
         avail_forcings = t.context.sequence.effective_inputs(role='Forcing')
 
-        self.sh.title('Algo')
+        self.sh.title('Algo Shadows')
         algo = vortex.task(
             engine       = 'algo',
             kind         = 'shadowsforcing',

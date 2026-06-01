@@ -185,7 +185,7 @@ class SurfexCommonsMixin:
         self.sh.title('Input Namelist')
         namelist_tbi = vortex.input(
             role     = 'Nam_surfex',
-            remote   = self.conf.namelist,
+            remote   = self.conf.namelist_path,
             kind     = 'namelist',
             model    = 'surfex',
             local    = 'OPTIONS.nam',

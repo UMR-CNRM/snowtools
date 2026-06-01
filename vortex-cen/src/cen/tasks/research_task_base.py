@@ -86,6 +86,13 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         if 'forcing_geometry' in self.conf and isinstance(self.conf.forcing_geometry, dict):
             self.conf.forcing_geometry = self.conf.forcing_geometry[self.conf.geometry.tag]
 
+        # Le nombre de process et de tâches peut être associé à la géométrie via un dictionnaire, on récupère
+        # maintenant la bonne valeur
+        if isinstance(self.conf.ntasks, dict):
+            self.conf.ntasks = self.conf.ntasks[self.conf.geometry.tag]
+        if isinstance(self.conf.nprocs, dict):
+            self.conf.nprocs = self.conf.nprocs[self.conf.geometry.tag]
+
         # Define a namespace_out variable to apply to all outputs set as the *namespace_out*
         # configuration variable if provided by the user or 'vortex.multi.fr' by default
         self.namespace_out = self.conf.get('namespace_out', 'vortex.multi.fr')
@@ -225,9 +232,9 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         # Il est possible de récupérer cet objet avec la ligne suivante :
         executable = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
 
-        # MV : Il faudra également pouvoir fournir le nombre de process et le nombre de tâches via le fichier de conf
-        # TODO : réfléchir à la procédure pour définir des valeurs par défaut en fonction du domaine comme c'est
-        # le cas actuellement
+        # TODO : les valeurs de mpiopts sont définies par défaut dans la méthode "component_runner" de mkjob/nodes.py
+        # à partir des variables de configuration self.conf.nnodes, self.conf.ntasks, self.conf.nprocs
+        # --> Réfléchir à la pertinence de faire 2 méthodes "launch_MPI_executable" et "launch_executable" distinctes
         self.component_runner(algo, executable, mpiopts=mpiopts)
 
     def launch_executable(self, algo):
