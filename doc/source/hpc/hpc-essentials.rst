@@ -58,6 +58,7 @@ When the workload is significant, a submited job can stay "PENDING" (waiting for
 The status of a submited job can be monitored with the "squeue" command.
 
 .. code-block::
+
    squeue -a -o "%.10i %.25j %.7m %.10M %.9P %.3T %5D %25N %u " | grep <username>
    job ID       jobname               memory       exec_time partition status nnodes  Nodes list
    30639945     safran_reanalysis_alp 247000M      49:14     ibcell0   RUN    1       belenos75   <username>
@@ -67,11 +68,13 @@ The status of a submited job can be monitored with the "squeue" command.
 You can kill jobs with the "scancel" command. Specify the job's ID to kill a single job:
 
 .. code-block::
+
    scancel 30639945
 
 or kill all your runing jobs with:
 
 .. code-block::
+
    scancel -u <username>
 
 .. note::
@@ -89,6 +92,7 @@ The most frequent job-specific information to provide to mkjob through the mkjob
 * *time*: a user-defined estimation of the maximum run time ("walltime") of the job. The walltime is used by the scheduler to prioritize "short" jobs.
 
 .. warning::
+
    A job will automatically be killed once the prescribed "walltime" is reached, so include a magin to anticipate fluctuations in the HPC execution time.
 
 * *mem*: The memory to allocate to this specific job in case it runs on the "shared" partition
@@ -113,6 +117,7 @@ To do this, simply put the list of absolute path to the target files (using shel
 For example, to "pre-stage" all SURFEX-ready FORCING files of the S2M reanalysis over the Alps, you can use the following prestaging file:
 
 .. code-block::
+
    #MAIL=<your_email>
    /home/vernaym/vortex/s2m/reanalysis/release_2026.1/meteo/FORCING*alp27_allslopes*
 

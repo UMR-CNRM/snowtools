@@ -51,7 +51,6 @@ The *experiment* footprint (type string), commonly refered to as *xpid*, is an a
    4-digit *xpid* are saved for operational and OLIVE experiments, so **never use 4-digits xpid values**.
 
 .. note::
-   :collapsible: closed
 
    If you inadvertently used a 4-digit *xpid*, you will get get an error, with this kind of mysterious log message:
 
@@ -172,7 +171,6 @@ The *local* or *filename* footprint
 The *local* (or its alias *filename*) footprint (type string) is the name of the target file in the user's working directory.
 
 .. note::
-   :collapsible: closed
 
    In case the target resource is stored in a sub-directory of the current workdir, the value to provide to the *local* footprint should be the relative path to the file :
    *local* = 'subdir/MyFile.txt'
@@ -209,7 +207,6 @@ The *role* footprint
 The *role* footprint (type string) can be used to access a specific loaded Resource Handler from anywhere in the subsequent code (even outside the method / class where the Resource Handler has been defined). In particular, the *role* value is used to identify alternative resources fulfilling the same function (see :ref:`alternate`).
 
 .. admonition:: Example
-   :collapsible: closed
 
    You can access the resource handler of FORCING files retrieved by an earlier call to a vortex.input(role='Forcing,...) with the following command:
 
