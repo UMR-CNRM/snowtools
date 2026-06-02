@@ -88,9 +88,9 @@ class _CenResearchTask(Task, S2MTaskMixIn):
 
         # Le nombre de process et de tâches peut être associé à la géométrie via un dictionnaire, on récupère
         # maintenant la bonne valeur
-        if isinstance(self.conf.ntasks, dict):
+        if 'ntasks' in self.conf and isinstance(self.conf.ntasks, dict):
             self.conf.ntasks = self.conf.ntasks[self.conf.geometry.tag]
-        if isinstance(self.conf.nprocs, dict):
+        if 'nprocs' in self.conf and isinstance(self.conf.nprocs, dict):
             self.conf.nprocs = self.conf.nprocs[self.conf.geometry.tag]
 
         # Define a namespace_out variable to apply to all outputs set as the *namespace_out*
