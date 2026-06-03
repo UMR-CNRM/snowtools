@@ -1,1 +1,1 @@
-name=prepsafran_job task=prepsafran profile=rd-belenos-mt jobassistant=cen
+name=prepsafran_job package=drivers task=prepsafran profile=rd-belenos-mt
