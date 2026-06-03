@@ -5,6 +5,8 @@ import vortex
 import argparse
 import importlib
 
+from bronx.stdtypes.date import Date
+
 from mkjob.nodes import Driver
 
 parser = argparse.ArgumentParser(description='Test the toolbw call of a given task locally.')
@@ -26,6 +28,11 @@ parser.add_argument("-c", "--configuration",
 
 parser.add_argument("-w", "--workdir",
         help="The test's working directory",
+        default = os.path.join(os.environ['HOME'], 'tmpdir'),
+        required=False)
+
+parser.add_argument("-a", "--add", nargs='+',
+        help="Additional mandatory configuration variables not in the configuration file",
         required=False)
 
 parser.add_argument("-s", "--steps",
@@ -33,32 +40,35 @@ parser.add_argument("-s", "--steps",
         nargs='+', required=False, default=['early-fetch', 'compute', 'late-backup'])
 
 args = parser.parse_args()
+if args.add is not None:
+    args.add = {item.split('=')[0]: item.split('=')[1] for item in args.add}
+else:
+    args.add = dict()
 
 t = vortex.ticket()
+t.rundir = args.workdir
 
 module = importlib.import_module(f'vortex_cen.tasks.{args.directory}.{args.module}')
 task = getattr(module, args.task)
 
-
-def setup(t, **kw):
-    return Driver(
-        tag=args.task.lower(),
-        ticket=t,
-        nodes=[
-            task(tag=args.task.lower(), ticket=t, **kw),
-        ],
-        options=kw,
-        iniconf = args.configuration,
-    )
-
-
-# TODO :
-# - Déplacer l'exécution dans un "workdir" à l'extérieur du dépot
-# - Créer un driver [fichier de conf ?] spécifique dans vortex-cen/tests
-# - Transformer en script avec la task et la step à tester en arguments
-
 user = os.environ['USER']
-default_args = dict(localtest=True)
-driver = setup(t, steps=args.steps, **default_args)
+default_args = dict(localtest=True, xpid='localtest', datebegin=Date('2020080106'), dateend=Date('2021080106'),
+        steps=args.steps)
+default_args.update(**args.add)
+# Ensure proper date management as in the mkjob launcher
+for key, value in default_args.items():
+    if 'date' in key:
+        default_args[key] = Date(value)
+
+driver = Driver(
+    tag=args.task.lower(),
+    ticket=t,
+    nodes=[
+        task(tag=args.task.lower(), ticket=t, **default_args),
+    ],
+    options=default_args,
+    iniconf = args.configuration,
+)
+
 driver.setup()
 driver.run()
