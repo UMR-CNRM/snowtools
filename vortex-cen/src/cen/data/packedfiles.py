@@ -28,8 +28,14 @@ class CenPackedFiles(GeoFlowResource):
                 dateend =dict(
                     info = "Last date of the archive",
                 ),
-                cutoff=dict(
-                    optional=True,
+                date = dict(
+                    optional = True,
+                ),
+                cutoff = dict(
+                    optional = True,
+                ),
+                model = dict(
+                    optional = True,
                 ),
             ),
         )
@@ -53,10 +59,11 @@ class SurfexPackedFiles(CenPackedFiles):
             info='Surfex packed files covering a given period',
             attr=dict(
                 kind=dict(
-                    values=['FORCING', 'PREP', 'PRO'],
+                    values = ['FORCING', 'PREP', 'PRO'],
                 ),
                 model = dict(
-                    values=['surfex', 's2m'],
+                    values   = ['surfex', 's2m'],
+                    optional = True,
                 ),
             )
         )

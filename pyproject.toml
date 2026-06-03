@@ -20,6 +20,8 @@ dependencies = [
     'packaging',
     'dask',
     'bottleneck',
+    'epygram>=2.0',
+    'scikit-learn',  # For SAFRAN guess generation
 ]
 requires-python = ">=3.6"
 readme = "README.md"
@@ -59,7 +61,6 @@ sql = [
 plot = [
     'matplotlib',
     'cartopy',
-    'epygram>=2.0',
     'rioxarray',
 ]
 
@@ -68,7 +69,6 @@ all = [
     'psycopg2',
     'matplotlib',
     'cartopy',
-    'epygram>=2.0',
     'rioxarray',
 ]
 

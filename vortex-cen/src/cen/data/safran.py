@@ -133,18 +133,18 @@ class SafranPackedFiles(CenPackedFiles):
 
     _footprint = [
         dict(
-            info='SAFRAN packed files covering a given period',
             attr = dict(
                 kind = dict(
-                    values=['packedobs', 'listobs', 'packedguess', 'packedlisting'],
+                    values = ['packedobs', 'listobs', 'packedguess', 'packedlisting'],
                 ),
                 model = dict(
-                    values=['safran'],
+                    values = ['safran'],
+                    optional = True,
                 ),
                 source=dict(
-                    values=['arpege', 'cep', 'era5', 'surfaceobs', 'neb'],
-                    default=None,
-                    optional=True,
+                    values = ['arpege', 'cep', 'era5', 'surfaceobs', 'neb'],
+                    default = None,
+                    optional = True,
                 ),
             )
         )
