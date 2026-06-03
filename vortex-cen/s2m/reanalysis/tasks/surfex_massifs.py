@@ -23,12 +23,12 @@ def setup(t, **kw):
 
 
 class Offline_reanalysis(Offline_MPI_Uenv):
-    '''
+    """
     OFFLINE reanalysis task :
     - Get all constant inputs (including the PGD file) from a User Environment.
     - Get forcing file(s) on a compute node (step.02) because it comes from the
       output of a previous execution of "AddSlopes" task.
-    '''
+    """
     def get_remote_inputs(self):
 
         self.get_ecoclimap()

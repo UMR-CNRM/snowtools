@@ -50,7 +50,8 @@ class _Pgd_Construct(SurfexParamsMixin, _CenResearchTask):
         """
         Get forcing file(s) and namelist in order to transform the namelist
         """
-        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
+        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                         alternate=self.conf.get("forcing_alternate", True))
 
         """
         Get ecoclimapI_covers_param.bin, ecoclimapII_eu_covers_param.bin,

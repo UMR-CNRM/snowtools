@@ -356,6 +356,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
 
         forcing_datebegin = self.conf.get('forcing_datebegin', self.conf.datebegin)
         forcing_dateend   = self.conf.get('forcing_dateend', self.conf.dateend)
+        forcing_date      = self.conf.get('forcing_date', forcing_dateend)
         forcing_xpid      = self.conf.get('forcing_xpid', self.conf.xpid)
         forcing_user      = self.conf.get('forcing_user', None)
         forcing_vapp      = self.conf.get('forcing_vapp', self.conf.vapp)
@@ -380,7 +381,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
                 self.get_safran_sources([forcing_datebegin], era5=self.conf.forcing_source == 'era5')
         # TODO : à supprimer après suppression de ce footprint dans les objets "SurfaceIO"
         forcing_model = self.conf.get('forcing_model', 'safran')
-        # TODO : à supprimer après suppression de ce footprint dans les objets "SurfaceIO"
+        # Merci de ne pas supprimer, il y a besoin pour le reforecast ! TODO : à supprimer après suppression de ce footprint dans les objets "SurfaceIO"
         forcing_cutoff = self.conf.get('forcing_cutoff', None)
         vortex1        = self.conf.get('forcing_vortex1', False),
 
@@ -403,10 +404,10 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             namespace      = namespace,  # default : 'vortex.multi.fr',
             namebuild      = forcing_namebuild,  # default recherche : 'flat@cen', defaut oper : None
             vortex1        = vortex1,
-            date           = '[dateend]',  # TODO : à supprimer (cas recherche uniquement)
+            date           = forcing_date,  # Merci de ne pas supprimer, il y a besoin pour le reforecast
             source_app     = forcing_source_app,  # default = None (ne pas refaire l'erreur)
             source_conf    = forcing_source_conf,  # default = None (ne pas refaire l'erreur)
-            cutoff         = forcing_cutoff,  # TODO : à supprimer dans le cas recherche
+            cutoff         = forcing_cutoff,  # Merci de ne pas supprimer, il y a besoin pour le reforecast
             model          = forcing_model,  # TODO : à supprimer
             fatal          = False,  # Do not crash now, there is an alternative
         ),
@@ -452,10 +453,10 @@ class _CenResearchTask(Task, S2MTaskMixIn):
                 namespace      = namespace,  # default : 'vortex.multi.fr',
                 namebuild      = forcing_namebuild,  # default recherche : 'flat@cen', defaut oper : None
                 vortex1        = vortex1,
-                date           = '[dateend]',  # TODO : à supprimer dans le cas recherche
+                date           = forcing_date,  # Merci de ne pas supprimer, il y a besoin pour le reforecast
                 source_app     = forcing_source_app,  # default = None (ne pas refaire l'erreur)
                 source_conf    = forcing_source_conf,  # default = None (ne pas refaire l'erreur)
-                cutoff         = forcing_cutoff,  # TODO : à supprimer dans le cas recherche
+                cutoff         = forcing_cutoff,  # Merci de ne pas supprimer, il y a besoin pour le reforecast
                 model          = forcing_model,  # TODO : à supprimer
                 fatal          = True,  # This is the last try, crash in case of failure
             ),

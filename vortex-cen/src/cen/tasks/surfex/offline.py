@@ -254,7 +254,8 @@ class _Offline_MPI(SurfexParamsMixin, _CenResearchTask):
 
     def get_remote_inputs(self):
 
-        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
+        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                         alternate=self.conf.get("forcing_alternate", True))
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
         self.get_executable()
@@ -308,13 +309,14 @@ class _Offline_MPI(SurfexParamsMixin, _CenResearchTask):
         # # MV : Il faudra également pouvoir fournir le nombre de process et le nombre de tâches via le fichier de conf
         # # TODO : réfléchir à la procédure pour définir des valeurs par défaut en fonction du domaine comme c'est
         # # le cas actuellement
+        # print("in launch algo:", self.conf.geometry, self.conf.nprocs)
         self.component_runner(
             algo,
             executable,
             mpiopts=dict(
                 nnodes=self.conf.nnodes,
-                nprocs=self.conf.nprocs[self.conf.geometry.tag],
-                ntasks=self.conf.ntasks[self.conf.geometry.tag],
+                nprocs=self.conf.nprocs[self.conf.geometry.area],
+                ntasks=self.conf.ntasks[self.conf.geometry.area],
             )
         )
 
@@ -476,8 +478,8 @@ class OfflineMPIDailyPrep(_Offline_MPI):
             engine         = 'parallel',
             binary         = 'OFFLINE',
             kind           = 'deterministic',
-            datebegin      = self.conf.datebegin,
-            dateend        = self.conf.dateend,
+            datebegin      = self.conf.forcing_datebegin,
+            dateend        = self.conf.forcing_dateend,
             # MV : *dateinit* correspond à la date de validité du fichier PREP
             dateinit       = self.ticket.context.sequence.effective_inputs(role='SnowpackInit')[0].rh.resource.date,
             # MV : la valeur par défaut de "threshold" dans la commande s2m est -999
