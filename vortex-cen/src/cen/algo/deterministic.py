@@ -73,6 +73,8 @@ class Surfex_PreProcess(AlgoComponent):
                 forcing=self.forcingname,
                 dateend=self.dateend
             )
+            # Save input namelist for comparison
+            self.system.cp(namelist.container.basename, namelist.container.basename.rstrip('.nam') + '_IN.nam')
             newnam = footprints.proxy.container(filename=namelist.container.basename)
             newcontent.rewrite(newnam)
             newnam.close()

@@ -98,7 +98,6 @@ remove the corresponding lines from your ``~/.bashrc``, ``~/.bash_profile`` or `
 
 
 .. tip::
-   :collapsible: closed
 
     If you want to preserve your old installation of snowtools, you can save your ``~/.bash_profile``, ``~/.bashrc`` and ``~/.profile`` files with different
     names and "source" thes new files when you want to activate the old installation of snowtools.
@@ -172,14 +171,10 @@ Install
    deactivate
 
 .. tip::
-   :collapsible: closed
 
    If you want a stable / non-editable installation of snowtools (not affected by local modifications of the code), you can replace the line
-
    python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -e -v ~/my_envs/snowtools_env
-
    by:
-
    python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -v ~/my_envs/snowtools_env_stable
 
 [Optional] Configure Vortex and install UEnv tools
@@ -305,14 +300,12 @@ Continue installation for Belenos and SXCEN
     python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -e -v ~/my_envs/snowtools_env
 
 .. tip::
-   :collapsible: closed
 
    If you want a stable / non-editable installation of snowtools (not affected by local modifications of the code), you can replace the line above by:
-
    python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -v ~/my_envs/snowtools_env_stable
 
-Temporary step for Belenos and SXCEN
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Temporary step for Belenos
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Configure gitlab for HPC via SSH using the documentation (in french):
 
@@ -326,6 +319,15 @@ Then clone the following repositories
     git clone git@gitlab.meteo.fr:cnrm-gmap/mkjob.git
     git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-gco.git
     git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-olive.git
+
+Go in the mkjob directory and checkout to branch "mv-add-command-line-xpid":
+
+.. code-block:: bash
+
+    cd mkjob
+    git checkout mv-add-command-line-xpid
+    cd ..
+
 
 Install the repositories
 

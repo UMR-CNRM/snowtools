@@ -2,10 +2,8 @@
 
 from mkjob.nodes import Driver
 from vortex_cen.tasks.surfex.pre_process import Preprocess_Uenv_Namelist
-from vortex_cen.tasks.surfex.prep import PrepUenvPrep
 from vortex_cen.tasks.surfex.prep import GetPrep
 from vortex_cen.tasks.surfex.init_clim_ground_temperature import GetClimGroundTemperature
-from vortex_cen.tasks.surfex.pgd import GetPgd1D
 
 
 def setup(t, **kw):
@@ -15,9 +13,7 @@ def setup(t, **kw):
         nodes=[
             Preprocess_Uenv_Namelist(tag='preprocess_uenv_namelist', ticket=t, **kw),
             GetClimGroundTemperature(tag='getClimGroundTemperature', ticket=t, **kw),
-            GetPgd1D(tag='getpgd1d', ticket=t, **kw),
-            PrepUenvPrep(tag='prep_uenv_prep', ticket=t, **kw),
-            # GetPrep(tag='getprep', ticket=t, **kw),
+            GetPrep(tag='getprep', ticket=t, **kw),
         ],
         options=kw,
     )

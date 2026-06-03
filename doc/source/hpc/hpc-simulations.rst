@@ -4,37 +4,58 @@ Launching simulations on MF HPC
 Code organisation
 -----------------
 
-Application and configuration levels
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Available applications and configurations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-TODO:
-* Research
-    Snowpack simulation --> vapp=Crocus
-        1 member --> vconf = deterministic
-        Snow data assimilation --> vconf = assim
-        Multiphysics --> vconf = escroc
-    Production of meteorological FORCING --> vapp=meteo
-        ...
+Crocus
+""""""
 
-* oper / real-time / reference dataset production :
-    meteo SAFRAN --> vapp = s2m
-        reference reanalysis dataset --> vconf = reanalysis
-        reference reforecast dataset -->  vconf = reforecast
-        real-time --> vconf = alp / pyr / cor / mac / vog / jur
+Research snowpack simulations based on FORCING file(s) of any origin.
+Three different configurations are available:
+* **determinitic**: simulations involving a single meteorological FORCING and Crocus configuration
+* **escroc**: multiphysic snowpack simulations involving a single meteorological FORCING
+* **assim**: snowpack simulations based on an ensemble of FORCING files (and optionaly several Crocus configurations) with the assimilation of snow observations
 
-    meteo 250m --> vapp = edelweiss
-        real-time --> vconf = prafr
-        reanalysis of the operationnal configuration --> vconf = reanalysis
-        reforecast of the operationnal configuration --> vconf = reforecast
+s2m
+"""
 
-The "jobs" repository
-^^^^^^^^^^^^^^^^^^^^^
+SAFRAN-SURFEX/Crocus-MEPRA simulations in a "SAFRAN-massif" geometry.
+Configurations:
+* **reanalysis**: production of the reference S2M reanalysis dataset
+* **reforecast**: production of a S2M reforecast for the training of operationnal new snow forecasts post-processing algorithm
+* **oper (alp, pyr, cor, mac, vog, jur)**: S2M operational model chain
+
+Edelweiss
+"""""""""
+
+Ensemble, distributed snowpack simulations at 250m resolution with the assimilation of snow observations.
+
+Configurations:
+* **prafr**: Operational Edelweiss configuration for avalanche danger forecasting over France
+* **reanalysis**: Edelweiss reanalysis
+* **reforecast** Edelweiss reforecast
+
+Meteo
+"""""
+
+Research configurations for the production of meteorological data
+
 
 The "tasks" repository
 ^^^^^^^^^^^^^^^^^^^^^^
 
+The task repository contains all the unit tasks related to a given configuration. Multiple tasks can be grouped into a driver to form a sequential chain.
+
 The "conf" repository
 ^^^^^^^^^^^^^^^^^^^^^
+
+The configuration repository contains configuration files associated to specific experiments.
+A default configuration file defines default values for all variables of the configuration's tasks.
+
+The "jobs" repository
+^^^^^^^^^^^^^^^^^^^^^
+
+The job repository contains files with pre-defined job descriptions.
 
 The "mjkob" job launcher
 ------------------------

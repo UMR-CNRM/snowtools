@@ -4,15 +4,14 @@ Created on 18 March 2024
 @author: Vernay.M
 """
 import vortex
-from vortex.layout.dataflow import SectionFatalError
 from mkjob.nodes import Task
 from vortex_cen.layout.nodes import S2MTaskMixIn
 from bronx.stdtypes.date import Date
 from footprints.stdtypes import FPDict
-from vortex.tools.env import Environment
 # from vortex.syntax.stdattrs import Namespace
 
-from vortex_cen.tools.monitoring import InputReportContext, OutputReportContext, TestReportContext
+from vortex_cen.tools.monitoring import InputReportContext, OutputReportContext
+from vortex_cen.tools.monitoring import AlgoReportContext, TestReportContext
 
 from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
 
@@ -87,6 +86,13 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         if 'forcing_geometry' in self.conf and isinstance(self.conf.forcing_geometry, dict):
             self.conf.forcing_geometry = self.conf.forcing_geometry[self.conf.geometry.tag]
 
+        # Le nombre de process et de tâches peut être associé à la géométrie via un dictionnaire, on récupère
+        # maintenant la bonne valeur
+        if 'ntasks' in self.conf and isinstance(self.conf.ntasks, dict):
+            self.conf.ntasks = self.conf.ntasks[self.conf.geometry.tag]
+        if 'nprocs' in self.conf and isinstance(self.conf.nprocs, dict):
+            self.conf.nprocs = self.conf.nprocs[self.conf.geometry.tag]
+
         # Define a namespace_out variable to apply to all outputs set as the *namespace_out*
         # configuration variable if provided by the user or 'vortex.multi.fr' by default
         self.namespace_out = self.conf.get('namespace_out', 'vortex.multi.fr')
@@ -149,14 +155,16 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             # just before the beginning of computations. It is the appropriate place to fetch data produced
             # by a previous task (the so-called previous task will have to use the 'backup' step
             # in order to make such data available in the local cache).
-            self.get_local_inputs()
+            with InputReportContext(self, t):
+                self.get_local_inputs()
 
         if 'compute' in self.steps:
             # The actual computations... (usually a call to the run method of an AlgoComponent)
             # This is executed on a COMPUTE NODE.
-            algo = self.algo()
-            if 'localtest' not in self.conf:
-                self.launch_algo(algo)
+            with AlgoReportContext(self, t):
+                algo = self.algo()
+                if 'localtest' not in self.conf:
+                    self.launch_algo(algo)
 
         if 'backup' in self.steps or 'late-backup' in self.steps:
             # In a multi step job (MTOOL, ...), this step will be run on a TRANSFER NODE.
@@ -224,9 +232,9 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         # Il est possible de récupérer cet objet avec la ligne suivante :
         executable = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
 
-        # MV : Il faudra également pouvoir fournir le nombre de process et le nombre de tâches via le fichier de conf
-        # TODO : réfléchir à la procédure pour définir des valeurs par défaut en fonction du domaine comme c'est
-        # le cas actuellement
+        # TODO : les valeurs de mpiopts sont définies par défaut dans la méthode "component_runner" de mkjob/nodes.py
+        # à partir des variables de configuration self.conf.nnodes, self.conf.ntasks, self.conf.nprocs
+        # --> Réfléchir à la pertinence de faire 2 méthodes "launch_MPI_executable" et "launch_executable" distinctes
         self.component_runner(algo, executable, mpiopts=mpiopts)
 
     def launch_executable(self, algo):
@@ -276,6 +284,9 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         elif 'date' in self.conf:  # Real-time only --> make a specific default class ?
             self.list_dates_begin = [self.conf.date]
             self.dict_dates_end   = {self.conf.date: self.conf.date}
+        else:
+            # TODO
+            pass
 
     def get_forcing(self, localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc', alternate=True,
             namespace='vortex.multi.fr'):
@@ -354,8 +365,8 @@ class _CenResearchTask(Task, S2MTaskMixIn):
 
         t = self.ticket
 
-        forcing_datebegin = self.conf.get('forcing_datebegin', self.conf.datebegin)
-        forcing_dateend   = self.conf.get('forcing_dateend', self.conf.dateend)
+        forcing_datebegin = self.conf.get('forcing_datebegin', self.conf.get('datebegin', None))
+        forcing_dateend   = self.conf.get('forcing_dateend', self.conf.get('dateend', None))
         forcing_date      = self.conf.get('forcing_date', forcing_dateend)
         forcing_xpid      = self.conf.get('forcing_xpid', self.conf.xpid)
         forcing_user      = self.conf.get('forcing_user', None)
@@ -414,17 +425,14 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         print(t.prompt, 'FORCING =', forcing)
         print()
 
-        if alternate:
+        if not forcing[0] and alternate:
 
             # TODO : ne plus faire d'alternate, prescrire obligatoirement le duration (plus rapide)
             # 2 cas : 'Yearly', + exception pour 1er / dernier fichiers
             # NB : eviter les alternates dans les tâches
 
             # Sécurité si *forcing_datebegin* != *datebegin* ou *forcing_dateend* != *dateend*
-            if 'io_duration' in self.conf:
-                duration = self.conf.io_duration
-            else:
-                duration = 'yearly'
+            duration = self.conf.get('io_duration', 'yearly')
             list_dates_begin, list_dates_end, _, _ = get_list_dates_files(Date(forcing_datebegin),
                     Date(forcing_dateend), duration)
             dict_dates_end = get_dic_dateend(list_dates_begin, list_dates_end)
@@ -462,39 +470,3 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             ),
             print(t.prompt, 'FORCING (alternate) =', forcing)
             print()
-
-    def get_pgd_from_cache(self):
-        """
-        A PGD.nc file is mandatory to run OFFLINE.
-        In the general research case, the PGD comes from the vortex cache.
-        For "stable" configurations such as the reanalysis, it comes from a UEnv/GEnv.
-        """
-        try:
-            self.sh.title('Toolbox input PGD from cache')
-            pgd_tbi = vortex.input(
-                local='PGD.nc',
-                role='SurfexClim',
-                experiment=self.conf.get('pgd_xpid', self.conf.xpid),
-                vapp=self.conf.get('pgd_vapp', self.conf.vapp),
-                vconf=self.conf.get('pgd_vconf', self.conf.vconf),
-                geometry=self.conf.geometry,
-                nativefmt='netcdf',
-                kind='pgdnc',
-                model='surfex',
-                namespace='vortex.cache.fr',
-                namebuild='flat@cen',  # TODO : passer en variable de configuration
-                block='pgd',
-                vortex1=self.conf.get('pgd_vortex1', False),
-                fatal=True,
-            ),
-            print(self.ticket.prompt, 'pgd =', pgd_tbi)
-            print()
-        except SectionFatalError as e:
-            print('Unable to get PGD.nc from cache. Make sure that your driver '
-                  'has a node corresponding to the GetPgd1D task '
-                  'before executing the Prep task and that the pgd_xpid values in the '
-                  'corresponding configuration sections match. '
-                  'Or that the Pgd_Uenv_Pgd or Pgd_Local_Pgd task '
-                  'has been run recently for the given experiment (pgd_xpid).')
-            raise e
-

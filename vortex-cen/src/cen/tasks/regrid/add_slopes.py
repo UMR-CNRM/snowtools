@@ -47,6 +47,9 @@ class AddSlopes(_CenResearchTask):
 
         self.get_forcing(localname=self.forcingname)
 
+    def get_local_inputs(self):
+        pass
+
     def algo(self):
         """
         Returns a "PrepareForcingComponent" algo component with the appropriate arguments.
@@ -81,13 +84,13 @@ class AddSlopes(_CenResearchTask):
         else:
             list_geometry = [self.conf.forcing_geometry.tag]
 
-        self.sh.title('Algo')
+        self.sh.title('Algo AddSlopes')
         algo = vortex.task(
             engine       = 'algo',
             kind         = 'prepareforcing',
             datebegin    = list(set([tbinput.rh.resource.datebegin for tbinput in avail_forcings])),
             dateend      = list(set([tbinput.rh.resource.dateend for tbinput in avail_forcings])),
-            ntasks       = self.conf.get('max_ntasks', len(avail_forcings)),
+            ntasks       = self.conf.get('max_ntasks', self.conf.ntasks),
             geometry_in  = list_geometry,
             geometry_out = self.conf.geometry.tag,
             role_members = 'Forcing',
@@ -97,6 +100,15 @@ class AddSlopes(_CenResearchTask):
         print()
 
         return algo
+
+    def launch_algo(self, algo):
+        """
+        launch the algo component.
+
+        :param algo: Algorithm to be launched.
+        :type algo: AlgoComponent
+        """
+        self.launch_python_algo(algo)
 
     def put_outputs(self):
         """
@@ -123,25 +135,4 @@ class AddSlopes(_CenResearchTask):
             model          = 'safran',
         ),
         print(self.ticket.prompt, 'Output forcing =', forcing_out)
-        print()
-
-    def unittest(self):
-        """
-        Reproductibility test : compare output to reference.
-        """
-
-        self.sh.title('Diff FORCING')
-        forcing_diff = vortex.diff(
-            kind           = 'MeteorologicalForcing',
-            datebegin      = self.list_dates_begin,
-            dateend        = self.dict_dates_end,
-            geometry       = self.conf.geometry,
-            experiment     = 'reference',
-            username       = 'vernaym',
-            namebuild      = 'flat@cen',
-            local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_OUT.nc',
-            block          = 'shadows',
-            model          = 'safran',
-        ),
-        print(self.ticket.prompt, 'diff forcing =', forcing_diff)
         print()
