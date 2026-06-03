@@ -125,7 +125,7 @@ class SodaPreProcess(AlgoComponent):
                 namelist.contents,
                 nmembers=self.nmembers
             )
-            newnam = footprints.proxy.container(filename=namelist.container.basename)
+            newnam = footprints.proxy.container(filename='OPTIONS_OUT.nam')
             newcontent.rewrite(newnam)
             newnam.close()
 
