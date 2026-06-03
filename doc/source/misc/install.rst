@@ -232,15 +232,18 @@ In order to install snowtools on a distant server (SXCEN or Belenos), run this c
 **FOR BELENOS ONLY:** Environment and start installation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. warning::
+..
+  The following instruction seems irrelevant after the 03/06/2026 update
 
-    As of 2026-04-23, DSI/ICI/CC recently made changes to internet access
-    from Belenos. To install Python packages from pypi.org with Pip,
-    you'll need to export the following environment variable:
+  .. warning::
 
-.. code-block:: bash
+      As of 2026-04-23, DSI/ICI/CC recently made changes to internet access
+      from Belenos. To install Python packages from pypi.org with Pip,
+      you'll need to export the following environment variable:
 
-    export CURL_CA_BUNDLE=/opt/softs/certificats/proxy1_1.pem
+  .. code-block:: bash
+
+      export CURL_CA_BUNDLE=/opt/softs/certificats/proxy1_1.pem
 
 
 As in the personal computer case, set an environment variable pointing to the snowtools repository in **Belenos** ``~/.bashrc`` file
