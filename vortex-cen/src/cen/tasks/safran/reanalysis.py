@@ -5,7 +5,6 @@ __all__ = []
 from vortex_cen.layout.nodes import S2MTaskMixIn
 import footprints
 from vortex import toolbox
-from vortex.tools.systems import ExecutionError
 from mkjob.nodes import Task
 
 
