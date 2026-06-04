@@ -2,6 +2,8 @@
 Algo Components for ensemble S2M simulations.
 """
 
+import glob
+
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, Period, tomorrow
 from bronx.syntax.externalcode import ExternalCodeImportChecker
@@ -1652,24 +1654,12 @@ class S2MReforecast(S2MComponent):
         list_dates_begin = list()
         list_dates_end = list()
         for am in avail_members:
-            # Guess files are now stored in a tar archive
-            if self.system.is_tarfile(am.rh.container.basename):
-                for fic in self.system.untar(am.rh.container.basename):
-                    # fic = YYYYMMDDHH/mbXXX/PYYMMDDhh
-                    dirname = self.system.path.dirname(fic)  # YYYYMMDDHH/mbXXX
-                    if dirname not in subdirs:
-                        subdirs.append(dirname)
-                        rundate = Date(fic.split('/')[0])  # YYYYMMDDHH
-                        dt = rundate.hour - 6 if rundate.hour in [6, 18] else 6
-                        list_dates_begin.append(rundate + Period(hours=dt))
-                        list_dates_end.append(rundate + Period(hours=dt) + Period(days=4))
-            elif am.rh.container.dirname not in subdirs:
-                subdirs.append(am.rh.container.dirname)
-                # WARNING : The first ech in the corresponding footprint must correspond to 6:00 at day D
-                list_dates_begin.append(am.rh.resource.date + Period(hours=am.rh.resource.cumul.hour))
-                # The last ech in the corresponding footprint must correspond to 6:00 at day D+4
-                # WARNING : There is no check that this resource is effectively here...
-                list_dates_end.append(am.rh.resource.date + Period(hours=am.rh.resource.cumul.hour) + Period(days=4))
+            # am.rh.container.dirname = YYYYMMDDHH
+            for subdir in glob.glob(f'{am.rh.container.dirname}/mb*'):
+                if subdir not in subdirs:
+                    subdirs.append(subdir)
+                    list_dates_begin.append(am.rh.resource.datebegin)
+                    list_dates_end.append(am.rh.resource.dateend)
 
         return subdirs, list_dates_begin, list_dates_end
 

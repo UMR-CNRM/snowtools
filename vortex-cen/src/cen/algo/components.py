@@ -253,6 +253,9 @@ class _CenTaylorRun(TaylorRun):
             ),
             ntasks = dict(
                 info        = 'The maximum number of parallel tasks',
+                # WARNING : do not confuse this algo-specific argument with
+                # the "ntasks" argument of the SBATCH configuration (setting the number
+                # of tasks per node in case "exclusive=False")
                 type        = int,
                 access      = 'rwx',  # Make footprint writable
                 default     = None,

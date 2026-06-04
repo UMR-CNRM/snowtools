@@ -126,19 +126,36 @@ class PrepSafran(_CenResearchTask):
 
         if 'compute' in self.steps:
 
-            self.sh.title('Algo')
+            # Tar guess files in parallel over the different rundates
+            print('DBUG ntasks=', type(self.conf.ntasks))
+            print('DBUG nnodes=', type(self.conf.nnodes))
+
+            self.sh.title('Algo Guess')
             expresso = vortex.task(
                 engine         = 'exec',
                 kind           = 'guess',
                 terms          = footprints.util.rangex(self.conf.prv_terms),
                 interpreter    = 'current',
-                ntasks         = self.conf.ntasks,
+                ntasks         = int(self.conf.ntasks) * int(self.conf.nnodes),
                 reforecast     = True,
             )
             print(t.prompt, 'algo =', expresso)
             print()
 
             self.component_runner(expresso, script, fortran=False)
+
+            self.sh.title('Algo Tar')
+            tar = vortex.task(
+                engine         = 'algo',
+                kind           = 'TarSafranGuess',
+                domains        = [geometry.domain for geometry in self.conf.geometries],
+                ntasks         = int(self.conf.ntasks) * int(self.conf.nnodes),
+                role_members   = 'Gridpoint',
+            )
+            print(t.prompt, 'tar =', tar)
+            print()
+
+            tar.run()
 
         if 'backup' in self.steps or 'late-backup' in self.steps:
 
@@ -147,12 +164,12 @@ class PrepSafran(_CenResearchTask):
 
                 for geometry in self.conf.geometries:
 
-                    self.tar_date(rundate, geometry)
+                    # self.tar_date(rundate, geometry)
 
-                    self.sh.title(f'Output guess {rundate} {geometry.tag}')
+                    self.sh.title(f'Output guess {rundate} {geometry.domain}')
                     vortex.output(
                         role           = 'Ebauche',
-                        local          = f'ebauches_[geometry:tag]_{rundate.ymdh}.tar',
+                        local          = f'ebauches_[geometry:domain]_{rundate.ymdh}.tar',
                         kind           = 'packedguess',
                         experiment     = self.conf.xpid,
                         block          = 'guess',
@@ -169,9 +186,9 @@ class PrepSafran(_CenResearchTask):
 
     def tar_date(self, datepivot, geometry):
 
-        tarname = f'ebauches_{geometry.tag}_{datepivot.ymdh}.tar'
+        tarname = f'ebauches_{geometry.domain}_{datepivot.ymdh}.tar'
         with tarfile.open(tarname, mode='w') as tarfic:
-            for f in glob.glob(f'{datepivot.ymdh}/*/*/P????????*{geometry.tag}*'):
+            for f in glob.glob(f'{datepivot.ymdh}/*/*/P????????*{geometry.domain}*'):
                 # f = 'YYYYMMDD00/mbXXX/ECH/PYYMMDDHH_E_dom_production'
                 ech = int(f.split('/')[2])  # ECH
                 # On veut organiser le tar pour qu'il soit directement exploitable par

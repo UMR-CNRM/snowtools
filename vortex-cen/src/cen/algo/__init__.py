@@ -10,6 +10,7 @@ from . import postprocessing
 from . import forcing
 from . import obs
 from . import prep
+from . import safran
 
 #: No automatic export
 __all__ = []
