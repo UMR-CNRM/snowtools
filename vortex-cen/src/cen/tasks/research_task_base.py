@@ -366,7 +366,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         t = self.ticket
 
         forcing_datebegin = self.conf.get('forcing_datebegin', self.conf.get('datebegin', None))
-        forcing_dateend   = self.conf.get('forcing_dateend', self.conf.get('dateend', None))
+        forcing_dateend = self.conf.get('forcing_dateend', self.conf.get('dateend', None))
         forcing_date      = self.conf.get('forcing_date', forcing_dateend)
         forcing_xpid      = self.conf.get('forcing_xpid', self.conf.xpid)
         forcing_user      = self.conf.get('forcing_user', None)

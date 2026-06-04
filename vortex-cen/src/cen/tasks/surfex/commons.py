@@ -220,8 +220,9 @@ class SurfexCommonsMixin:
             model          = 'surfex',
             namespace      = 'vortex.multi.fr',
             vortex1        = self.conf.get('prep_vortex1', False),
-            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
+            namebuild  = self.conf.get('prep_namebuild', 'flat@cen'),
             block          = self.conf.get('prep_block', 'prep'),
+            cutoff     = self.conf.get('prep_cutoff', None),
             # MV : La notion de "membre" pour le PREP est particulière dans le cas déterministe
             # - dans le cas général, le PREP n'est associé à aucun *membre*
             # - dans une simulation avec assimilation: la première initialisation est faite
