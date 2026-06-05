@@ -101,7 +101,7 @@ class Preprocess_Uenv_Namelist(_Preprocess):
 
     Supplementary mandatory configuration variables:
     ------------------------------------------------
-    * ``genv`` User Environment in which the namelist is to be retrieved.
+    * ``uenv`` User Environment in which the namelist is to be retrieved.
                  Format : uenv:{uenv_name}@{user}
      type: str
     * ``namelist_source`` The name of the specific namelist to retrieve from the namelist
@@ -150,7 +150,7 @@ class Soda_Namelist_Preprocess(SurfexCommonsMixin, _CenResearchTask):
 
     Mandatory configuration variables
     ---------------------------------
-    * ``genv`` User Environment in which the namelist is to be retrieved
+    * ``uenv`` User Environment in which the namelist is to be retrieved
      type: str
     * ``namelist_source`` Name of the namelist in the user environment
      type: str

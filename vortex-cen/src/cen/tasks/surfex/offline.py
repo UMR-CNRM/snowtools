@@ -10,30 +10,29 @@ from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
 
 class OfflineCommonsMixin(SurfexCommonsMixin):
 
-    def get_executable_from_uenv(self, mpi=True):
+    def get_executable_from_uenv(self, mpi=True, fatal=True):
         """
         Get OFFLINE executable from Uenv
         """
         if mpi:
-            gvar = 'master_surfex_offline_mpi'
+            default_gvar = 'master_offline_mpi'
         else:
-            gvar = 'master_surfex_offline_nompi'
+            default_gvar = 'master_offline_nompi'
+
         self.sh.title('Input OFFLINE executable from uenv')
         OFFLINE_tbx = vortex.executable(
             role           = 'Binary',
             kind           = 'offline',
             local          = 'OFFLINE',
             model          = 'surfex',
-            # MV : Il faudra peut être utiliser une variable de conf différente de *genv* à terme pour permettre
-            # de récupérer les autres "constantes" dans un genv commun et le binaire dans un environement géré par
-            # le user
-            genv           = self.conf.genv,
-            gvar           = gvar,
+            genv           = self.conf.get('offline_uenv', self.conf.uenv),
+            gvar           = self.conf.get('offline_gvar', default_gvar),
+            fatal          = fatal,
         )
         print(self.ticket.prompt, 'OFFLINE_tbx =', OFFLINE_tbx)
         print()
 
-    def get_executable_from_path(self):
+    def get_executable_from_path(self, fatal=True):
         """
         Get OFFLINE executable locally
         """
@@ -43,7 +42,8 @@ class OfflineCommonsMixin(SurfexCommonsMixin):
             kind           = 'offline',
             local          = 'OFFLINE',
             model          = 'surfex',
-            remote         = self.conf.exesurfex + "/OFFLINE"
+            remote         = self.conf.exesurfex + "/OFFLINE",
+            fatal          = fatal,
         )
         print(self.ticket.prompt, 'OFFLINE_tbx =', OFFLINE_tbx)
         print()
@@ -81,7 +81,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
       type: str, footprints.stdtypes.FPList
     * ``xpid`` User-defined Experiment identifier (WARNING : 4-digit strings prohibited)
       type: str
-    * ``genv`` User Environment in which the following resources are to be retrieved :
+    * ``uenv`` User Environment in which the following resources are to be retrieved :
                  - ecoclimapI_covers_param.bin
                  - ecoclimapII_eu_covers_param.bin
                  - drdt_bst_fit_60.nc

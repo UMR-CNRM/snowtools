@@ -58,6 +58,8 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         Set toolbox defaults, extended with actual arguments ``extras``.
         """
 
+        t = vortex.ticket()
+
         if 'localtest' in self.conf:
             vortex.active_now = False
 
@@ -89,9 +91,34 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         # Le nombre de process et de tâches peut être associé à la géométrie via un dictionnaire, on récupère
         # maintenant la bonne valeur
         if 'ntasks' in self.conf and isinstance(self.conf.ntasks, dict):
-            self.conf.ntasks = self.conf.ntasks[self.conf.geometry.tag]
+            if self.conf.geometry.tag in self.conf.ntasks.keys():
+                self.conf.ntasks = self.conf.ntasks[self.conf.geometry.tag]
+            else:
+                # Default value from s2m.
+                # Maybe it would be better to crash and ask the user to set an explicit value ?
+                self.conf.ntasks = 80
         if 'nprocs' in self.conf and isinstance(self.conf.nprocs, dict):
-            self.conf.nprocs = self.conf.nprocs[self.conf.geometry.tag]
+            if self.conf.geometry.tag in self.conf.nprocs.keys():
+                self.conf.nprocs = self.conf.nprocs[self.conf.geometry.tag]
+            else:
+                # Default value from s2m.
+                # Maybe it would be better to crash and ask the user to set an explicit value ?
+                self.conf.nprocs = 80
+
+        if 'surfex_uenv' in self.conf:
+            for exe in ['offline', 'pgd', 'prep', 'soda', 'namelist']:
+                if f'{exe}_uenv' not in self.conf:
+                    self.conf[f'{exe}_uenv'] = self.conf.surfex_uenv
+
+        # Format uenv properly : "uenv:{uenv_name}@user" in cas only {uenv_name} is provided
+        for key, value in self.conf.items():
+            if "uenv" in key:
+                if ':' not in value:
+                    value = f"uenv:{value}"
+                if '@' not in value:
+                    value = f'{value}@{t.env()["USER"]}'
+
+                self.conf[key] = value
 
         # Define a namespace_out variable to apply to all outputs set as the *namespace_out*
         # configuration variable if provided by the user or 'vortex.multi.fr' by default
@@ -328,7 +355,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
 
         :param forcing_date: *date* footprint (unsed with the research namebuilders), default to [dateend]
         :type forcing_date: str
-        :param forcing_model: *model* footprint (to be made optional for SurfaceIO objects), default "safran"
+        :param forcing_model: *model* footprint (to be made optional for SurfaceIO objects), default None
         :type forcing_model: str
 
         Optionnal configuration variables:
@@ -389,9 +416,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         if 'forcing_source' in self.conf:
             forcing_source_app, forcing_source_conf = \
                 self.get_safran_sources([forcing_datebegin], era5=self.conf.forcing_source == 'era5')
-        # TODO : à supprimer après suppression de ce footprint dans les objets "SurfaceIO"
-        forcing_model = self.conf.get('forcing_model', 'safran')
-        # TODO : à supprimer après suppression de ce footprint dans les objets "SurfaceIO"
+        forcing_model = self.conf.get('forcing_model', None)
         forcing_cutoff = self.conf.get('forcing_cutoff', None)
         vortex1        = self.conf.get('forcing_vortex1', False),
 

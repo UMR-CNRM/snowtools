@@ -9,7 +9,12 @@ from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
 
 class PrepCommonsMixin(SurfexCommonsMixin):
 
-    def get_prep_exe_from_uenv(self):
+    def get_prep_exe_from_uenv(self, mpi=True, fatal=True):
+
+        if mpi:
+            default_gvar = 'master_prep_mpi'
+        else:
+            default_gvar = 'master_prep_nompi'
 
         self.sh.title('Toolbox input PREP executable from uenv')
         PREP_tbx = vortex.executable(
@@ -20,8 +25,9 @@ class PrepCommonsMixin(SurfexCommonsMixin):
             # MV : Il faudra peut être utiliser une variable de conf différente de *genv* à terme pour permettre
             # de récupérer les autres "constantes" dans un genv commun et le binaire dans un environement géré par
             # le user
-            genv           = self.conf.genv,
-            gvar           = 'master_prep_mpi',
+            genv           = self.conf.get('prep_uenv', self.conf.uenv),
+            gvar           = self.conf.get('prep_gvar', default_gvar),
+            fatal          = fatal,
         )
         print(self.ticket.prompt, 'PREP_tbx =', PREP_tbx)
         print()
@@ -67,7 +73,7 @@ class _Prep_Construct(PrepCommonsMixin, _CenResearchTask):
       type: str, footprints.stdtypes.FPList
     * ``xpid`` Experiment identifier
       type: str
-    * ``genv`` User Environment in which the following resources are to be retrieved :
+    * ``uenv`` User Environment in which the following resources are to be retrieved :
                  - ecoclimapI_covers_param.bin
                  - ecoclimapII_eu_covers_param.bin
                  - drdt_bst_fit_60.nc
@@ -199,7 +205,7 @@ class GetPrep(_Prep_Construct):
 
     * ``xpid`` Experiment identifier
       type: str
-    * ``genv`` User Environment in which the following resources are to be retrieved:
+    * ``uenv`` User Environment in which the following resources are to be retrieved:
                  - ecoclimapI_covers_param.bin
                  - ecoclimapII_eu_covers_param.bin
                  - drdt_bst_fit_60.nc
@@ -240,7 +246,11 @@ class GetPrep(_Prep_Construct):
         self.get_namelist_from_cache()
 
     def get_init_TG(self):
-        self.get_init_TG_from_cache_or_archive()
+        # Try to get an existing init_TG file but do not crash if there is none because
+        # it will be produced by the "MakeClimGroundTemperature" task
+        self.init_tg = self.get_init_TG_from_cache_or_archive(fatal=False)
+        if not self.init_tg[0]:
+            self.init_tg = self.get_init_TG_from_uenv(fatal=False)
 
     def get_pgd(self):
         self.get_pgd_from_cache_or_archive(fatal=False)
@@ -256,6 +266,9 @@ class GetPrep(_Prep_Construct):
             pass
         else:
             super().get_local_inputs()
+            # Last chance to find an init_tg file in case it has been produced by a previous task
+            if not self.init_tg[0]:
+                self.get_init_TG_from_cache(fatal=True)
 
     def algo(self):
         if len(self.ctx.sequence.effective_inputs(role="SnowpackInit")) > 0:

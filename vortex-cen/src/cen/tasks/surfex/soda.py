@@ -33,7 +33,12 @@ class SodaCommonsMixin(SurfexCommonsMixin):
         print(self.ticket.prompt, 'Observation =', obs)
         print()
 
-    def get_soda_exe_from_uenv(self):
+    def get_soda_exe_from_uenv(self, mpi=True, fatal=True):
+
+        if mpi:
+            default_gvar = 'master_soda_mpi'
+        else:
+            default_gvar = 'master_soda_nompi'
 
         self.sh.title('Input SODA executable')
         soda = vortex.executable(
@@ -41,8 +46,9 @@ class SodaCommonsMixin(SurfexCommonsMixin):
             kind           = 'soda',
             local          = 'SODA',
             model          = 'surfex',
-            genv           = self.conf.genv,
-            gvar           = 'master_surfex_soda_nompi',
+            genv           = self.conf.get('soda_uenv', self.conf.uenv),
+            gvar           = self.conf.get('soda_gvar', default_gvar),
+            fatal          = fatal,
         )
         print(self.ticket.prompt, 'SODA =', soda)
         print()
@@ -99,9 +105,9 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
     :type geometry: str, footprints.stdtypes.FPList
     :param xpid: Experiment identifier
     :type xpid: str
-    :param genv: User Environment in which the following resources are to be retrieved :
+    :param uenv: User Environment in which the following resources are to be retrieved :
                  Format : uenv:{uenv_name}@{user}
-    :type genv: str
+    :type uenv: str
     :param sensor: Sensor used for the observation (ex: MODIS, PLEIADES, VIIRS)
     :type sensor: str
     :param members: Ensemble members

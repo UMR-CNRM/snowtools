@@ -30,7 +30,7 @@ class PgdCommonsMixin(SurfexCommonsMixin):
         sand_tbi = vortex.input(
             role           = 'SandDB',
             format         = 'dir/hdr',
-            genv           = self.conf.get('genv2D', self.conf.genv),
+            genv           = self.conf.get('genv2D', self.conf.uenv),
             model          = 'surfex',
             kind           = 'sand',  # 'database'
             local          = 'sand_DB.tgz',
@@ -45,7 +45,7 @@ class PgdCommonsMixin(SurfexCommonsMixin):
         clay_tbi = vortex.input(
             role           = 'ClayDB',
             format         = 'dir/hdr',
-            genv           = self.conf.get('genv2D', self.conf.genv),
+            genv           = self.conf.get('genv2D', self.conf.uenv),
             model          = 'surfex',
             kind           = 'clay',
             local          = 'clay_DB.tgz',
@@ -60,7 +60,7 @@ class PgdCommonsMixin(SurfexCommonsMixin):
         ecoclimap2_europ_tbi = vortex.input(
             role           = 'EcoclimapIIEurop',
             format         = 'dir/hdr',
-            genv           = self.conf.get('genv2D', self.conf.genv),
+            genv           = self.conf.get('genv2D', self.conf.uenv),
             model          = 'surfex',
             kind           = 'coverparams',
             local          = 'ECOCLIMAP_II_EUROP.tgz',
@@ -70,15 +70,22 @@ class PgdCommonsMixin(SurfexCommonsMixin):
         print(self.ticket.prompt, 'ecoclimap2_europ_tbi =', ecoclimap2_europ_tbi)
         print()
 
-    def get_pgd_exe_from_uenv(self):
+    def get_pgd_exe_from_uenv(self, mpi=True, fatal=True):
+
+        if mpi:
+            default_gvar = 'master_pgd_mpi'
+        else:
+            default_gvar = 'master_pgd_nompi'
+
         self.sh.title('Toolbox input PGD executable from uenv')
         pgd_tbx = vortex.executable(
             role           = 'Binary',
             kind           = 'buildpgd',
             local          = 'PGD',
             model          = 'surfex',
-            genv           = self.conf.genv,
-            gvar           = 'master_pgd_mpi',
+            genv           = self.conf.get('pgd_uenv', self.conf.uenv),
+            gvar           = self.conf.get('pgd_gvar', default_gvar),
+            fatal          = fatal,
         )
         print(self.ticket.prompt, 'PGD_tbx =', pgd_tbx)
         print()
@@ -117,7 +124,7 @@ class _Pgd_Construct(PgdCommonsMixin, _CenResearchTask):
       type: str, footprints.stdtypes.FPList
     * ``xpid`` Experiment identifier
       type: str
-    * ``genv`` User Environment in which the following resources are to be retrieved :
+    * ``uenv`` User Environment in which the following resources are to be retrieved :
                  - ecoclimapI_covers_param.bin
                  - ecoclimapII_eu_covers_param.bin
                  - drdt_bst_fit_60.nc
@@ -302,10 +309,10 @@ class GetPgd1D(_Pgd_Construct):
     * ``pgd_user`` name of the user who produced the PGD file
     * ``pgd_vapp`` vapp the PGD.nc file should be fetched from. Defaults to ``vapp``.
     * ``pgd_vconf`` vconf the PGD.nc file should be fetched from. Defaults to ``vconf``.
-    * ``genv_pgd`` uenv to look for the PGD.nc file if the PGD.nc file should come from an uenv.
-    * ``gvar_pgd`` key to look up the PGD.nc file in the uenv if the file should come from there.
+    * ``pgd_uenv`` uenv to look for the PGD.nc file if the PGD.nc file should come from an uenv.
+    * ``pgd_gvar`` key to look up the PGD.nc file in the uenv if the file should come from there.
         Defaults to 'pgd_[geometry::tag]'.
-    * ``genv`` uenv to look for the ecoclimap Surfex cover parameters, Crocus metamorphism parameters
+    * ``uenv`` uenv to look for the ecoclimap Surfex cover parameters, Crocus metamorphism parameters
         and PGD executable in case the PGD.nc needs to be calculated.
     * ``forcing_source_app`` in case the PGD.nc needs to be calculated
         and the forcing comes from the S2M reanalysis

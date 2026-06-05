@@ -7,16 +7,6 @@ These objects can be used either in an operational or a research workflow.
 Resources
 ---------
 
-.. automodule:: vortex_cen
-
-.. autosummary::
-   :toctree: .
-   :recursive:
-
-   data.assim
-   data.flow
-
-
 Providers
 ---------
 

@@ -100,7 +100,7 @@ class GetClimGroundTemperature(InitClimGroundTemperature):
     Optional Configuration Parameters:
     ----------------------------------
 
-    * ``tg_genv`` uenv to look for the init_TG.nc file in case the file should come from an uenv.
+    * ``tg_uenv`` uenv to look for the init_TG.nc file in case the file should come from an uenv.
     * ``tg_gvar`` key to look up the init_TG.nc file in the uenv if the file should come from there.
     * ``forcing_source_app`` in case the init_TG needs to be calculated
         and the forcing comes from the S2M reanalysis
@@ -115,9 +115,9 @@ class GetClimGroundTemperature(InitClimGroundTemperature):
 
     def get_remote_inputs(self):
         # First try to get an init_TG file from the local cache or the archive
-        init_tg = self.get_init_TG_from_cache_or_archive(fatal=False)
+        self.init_tg = self.get_init_TG_from_cache_or_archive(fatal=False)
         # then try to get init_TG from uenv
-        if not init_tg[0]:
+        if not self.init_tg[0]:
             self.get_init_TG_from_uenv(fatal=False)
 
         # If no init_TG file was found, launch the actual init_TG task
