@@ -62,8 +62,12 @@ The "jobs" repository
 The job repository contains files that provide the information needed to carry out one or several specific job(s) (the minimal information beiing the job(s) name(s) and the associated driver(s)).
 The use of these files is optional, but it is recommended because it allows to set default CEN-specific launcher variables.
 
-The "mjkob" job launcher
-------------------------
+
+Launching HPC simulations
+-------------------------
+
+The mkjob launcher
+^^^^^^^^^^^^^^^^^^
 
 This section provides an overview of the mkjob launcher from a CEN perspective.
 The full mkjob package documentation is available here: https://cnrm-gmap.gitlab.meteo.fr/mkjob/index.html
@@ -76,7 +80,7 @@ This profile is based on the MTOOL tool that splits the execution in separate jo
 * **step.02**: on a compute node to do the actual computation
 * **step.03**: on a transfert node to archive the output files on aremote server
 
-Here is an overview of the mkjob launcher arguments used at CEN:
+Here is an overview of the mkjob launcher arguments used at CEN (see also "mkjob -h" for more information):
 
 * **-c [mandatory]**: Set the absolute path to the configuration file
 * **-f [optional but recommended]**: Set the path to the job description file (in which the job *name* and associated *task* name, as well as the *profile=rd-belenos-mt* information must be provided). The job description file can contain several job descriptions (one description per line). In this case, all the jobs will be launched.
@@ -98,8 +102,20 @@ The following example of an mkjob command line allows to launch a SURFEX simulat
    mkjob -j profile=rd-belenos-mt name=surfex package=drivers task=surfex xpid=first_test datebegin=2020080106 dateend=2021080106 geometry=cor2_allslopes -c $SNOWTOOLS_CEN/vortex-cen/Crocus/deterministic/conf/default_conf.ini
 
 
-Specific launchers
-------------------
+The mkjob helper
+^^^^^^^^^^^^^^^^
+
+An mkjob command launches a job associated to a specific driver.
+From a user point of view, the first question that arises is : what are the possible configuration variables associated to this scpecific driver ?
+The "mkjob-help" command line is provided to answer this question.
+
+For example, to print help information for the research "surfex" task of the Crocus-deterministic configuration, simply type "mkjob-help".
+
+..
+  TODO: Compléter doc
+
+The "assim" launcher
+^^^^^^^^^^^^^^^^^^^^
 ..
   TODO:
   * "assim" script
@@ -134,14 +150,22 @@ Reproductible simulations with a user-controlled SURFEX/Crocus configuration
 
 The default SURFEX/Crocus simulations described on the sections above are based on reference SURFEX/Crocus executables and namelists.
 
-You can use your own namelist and executables by creating a new user environment (TODO : lien doc).
+You can use your own namelist and executables by creating a new user environment or by modifying an existing one (TODO : lien doc).
 
 After compiling SURFEX, put the compiled executables in the $HOME/.vortexrc/hack/uget/<your_username>/data with the following naming convention <exec_name>_<MPI/NOMPI>_<SURFEX_git_commit>, where:
 
 * *exec_name* is "OFFLINE", "PGD", "PREP" or "SODA"
 * *SURFEX_git_commit* can be retrieved from the ".git_info" in your SURFEX root directory (make sure that the compiled executables match this commit)
 
-Then open a file in $HOME/.vortexrc/hack/uget/<your_username>/env with the name of your choice (for example "my_first_uenv") and add the following lines:
+To create a new UEnv, open a file in $HOME/.vortexrc/hack/uget/<your_username>/env with the name of your choice (for example "new_env_name").
+To update an existing UEnv named "reference_uenv" owned by the user "uenv_owner", create a copy of this UEnv into a "new_env_name":
+
+.. code-block::
+
+  uget hack env <reference_uenv>@<uenv_owner> into <new_env_name>
+
+This creates the file $HOME/.vortexrc/hack/uget/<your_username>/env/<new_env_name> containing the "reference_uenv" information.
+Then add or modify the following lines in file $HOME/.vortexrc/hack/uget/<your_username>/env/<new_env_name> :
 
 .. code-block::
 
@@ -154,19 +178,18 @@ Then open a file in $HOME/.vortexrc/hack/uget/<your_username>/env with the name 
   MASTER_SODA_MPI="uget:SODA_MPI_<SURFEX_git_commit>@<your_username>"
   MASTER_SODA_NOMPI="uget:SODA_NOMPI_<SURFEX_git_commit>@<your_username>"
 
-Similarly, put your SURFEX namelists in the $HOME/.vortexrc/hack/uget/<your_username>/data/namelists_surfex directory, and add the following line to the file $HOME/.vortexrc/hack/uget/<your_username>/env/my_first_uenv :
+Similarly, put your SURFEX namelists in the $HOME/.vortexrc/hack/uget/<your_username>/data/namelists_surfex directory, and add the following line to the file $HOME/.vortexrc/hack/uget/<your_username>/env/<new_env_name> :
 
 .. code-block::
 
    NAMELIST_SURFEX="uget:namelists_surfex.tar@<your_username>"
 
-You can now use your own executables and namelists by adding the "surfex_uenv=my_first_uenv" to your mkjob command line, as well as the target namelist from your pool of namelists with the *namelist_source* argument.
+You can now use your own executables and namelists by adding the "surfex_uenv=new_env_name" to your mkjob command line, as well as the target namelist from your pool of namelists with the *namelist_source* argument.
 For example if your $HOME/.vortexrc/hack/uget/<your_username>/data/namelists_surfex directory contains two namelists named "OPTIONS_PAPPUS.nam" and "OPTIONS_NO_PAPPUS.nam", you can choose to use the "OPTIONS_PAPPUS.nam" namelist with the following command line :
 
 .. code-block::
 
-   mkjob -f $SNOWTOOLS_CEN/vortex-cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex-cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2020080106 dateend=2021080106 geometry=cor2_allslopes surfex_uenv=my_first_uenv namelist_source=OPTIONS_PAPPUS.nam
-
+   mkjob -f $SNOWTOOLS_CEN/vortex-cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex-cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2020080106 dateend=2021080106 geometry=cor2_allslopes surfex_uenv=new_env_name namelist_source=OPTIONS_PAPPUS.nam
 
 
 Non-reproductible simulations with a user-controlled SURFEX/Crocus configuration
@@ -250,9 +273,3 @@ Simulation outputs
   /scratch/mtool/<username>/cache --> local vortex (+ uenv) cache
 
 
-Tutorial (developer)
---------------------
-..
-  TODO :
-  * Création d'une nouvelle tâche unitaire et du cas test associé
-  * Création d'un driver utilisant la nouvelle tâche et du fichier de configuration associé

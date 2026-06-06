@@ -3,9 +3,9 @@
 """
 
 import vortex
-from vortex.layout.dataflow import SectionFatalError
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
+from vortex_cen.tasks.configuration_variables import forcing, prep, pgd_cache
 
 
 class OfflineCommonsMixin(SurfexCommonsMixin):
@@ -25,7 +25,7 @@ class OfflineCommonsMixin(SurfexCommonsMixin):
             kind           = 'offline',
             local          = 'OFFLINE',
             model          = 'surfex',
-            genv           = self.conf.get('offline_uenv', self.conf.uenv),
+            genv           = self.conf.get('surfex_uenv', self.conf.uenv),
             gvar           = self.conf.get('offline_gvar', default_gvar),
             fatal          = fatal,
         )
@@ -70,76 +70,41 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
     - PREP.nc SURFEX/Crocus model state variables at the end of the simulation
     - CUMUL.nc TODO   Compléter et CHECKER la doc
     - DIAG.nc TODO    Compléter et CHECKER la doc
-
-    Mandatory configuration variables:
-    ----------------------------------
-    * ``datebegin`` *datebegin* of the forcing file(s)
-      type: str, footprints.stdtypes.FPList
-    * ``dateend` *dateend* of the forcing files(s)
-      type: str, footprints.stdtypes.FPList
-    * ``geometry` *geometry* of the forcing file(s)
-      type: str, footprints.stdtypes.FPList
-    * ``xpid`` User-defined Experiment identifier (WARNING : 4-digit strings prohibited)
-      type: str
-    * ``uenv`` User Environment in which the following resources are to be retrieved :
-                 - ecoclimapI_covers_param.bin
-                 - ecoclimapII_eu_covers_param.bin
-                 - drdt_bst_fit_60.nc
-                 - OFFLINE executable
-                 Format : uenv:{uenv_name}@{user}
-      type: str
-    * ``ntasks`` Number of parallel tasks to allocate to the execution
-      type: int
-
-    Optionnal configuration variables (other than forcing-specific ones):
-    ---------------------------------------------------------------------
-    * ``member`` Simulation member.
-                   NB : This is a deterministic task, only one single member value can be provided
-     type: int
-    * ``pgd_xpid`` Experiment Identifier of the PGD file, if different from the task's XPID
-     type: str
-    * ``pgd_user`` User who produced the target PGD file.
-     type: str
-    * ``pgd_vapp`` *vapp* of the PGD file, if different from the task's *vapp*
-     type: str
-    * ``pgd_vconf`` *vconf* of the PGD file, if different from the task's *vconf*
-     type: str
-    * ``prep_xpid`` Experiment Identifier of the PREP file, if different from the task's XPID
-     type: str
-    * ``prep_user`` User who produced the target PREP file.
-     type: str
-    * ``prep_member`` Member associated to the PREP file if it comes from an ensemble (after a SODA run)
-                        NB : This is a deterministic task, only one single member value can be provided
-     type: int
-    * ``prep_vapp`` *vapp* of the PREP file, if different from the task's *vapp*
-     type: str
-    * ``prep_vconf`` *vconf* of the PREP file, if different from the task's *vconf*
-     type: str
-    * ``prep_date`` Validity date of the PREP file (if different from *datebegin*)
-     type: str
-    * ``prep_block`` *block* of the PREP file (default 'prep', but can be different after an assimilation step)
-     type: str
-    * ``prep_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
-     type: bool
-    * ``august_threshold`` Threshold to apply to the snow water equivalent (in kg/m2) each 1st August (default: -999)
-     type: int
-    * ``dailyprep`` TODO :comprendre avec Matthieu L les cas d'usages avec "dailyprep" (reforecast ?)
-     type: bool
-    * ``drhook`` Activate / deactivate the profiling with DRHOOK (default: False)
-     type: bool
-    * ``namespace_out`` Force specific namespace for output files (default: 'vortex.multi.fr')
-     type: str
-    * ``nnodes`` Number of available nodes for MPI parallelisation
-     type: int
-    * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
-                        snowtools/utils/dates.py.
-                        Used to retrieve the list of *datebegin* and *dateend* for IO covering sub-periods.
-                        Possible values : "yearly", "monthly" or "full"
-     type: str
     """
 
+    def __init__(self, **kw):
+
+        super().__init__(**kw)
+        MANDATORY_CONFIGURATION_VARIABLES = [
+            "datebegin",
+            "dateend",
+            "xpid",
+            "geometry",
+        ]
+
+        OPTIONAL_CONFIGURATION_VARIABLES = [
+            "member",
+            "io_duration",
+            "namespace_out",
+            "august_threshold",
+        ] + forcing + prep + pgd_cache
+
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
+
+    def get_remote_inputs(self):
+
+        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
+        self.get_ecoclimap()
+        self.get_drdt_bst_fit()
+        self.get_executable()
+        self.get_pgd()
+        self.get_prep()
+
+    def get_local_inputs(self):
+        self.get_namelist()
+
     def get_namelist(self):
-        raise NotImplementedError("A namelist is exepected for to launch an OFFLINE executable")
+        self.get_namelist_from_cache()
 
     def get_executable(self):
         """
@@ -148,32 +113,11 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
         """
         raise NotImplementedError("An OFFLINE executable is exepected")
 
-    def get_remote_inputs(self):
-
-        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
-        self.get_ecoclimap()
-        self.get_drdt_bst_fit()
-        self.get_executable()
-        try:
-            self.get_prep()
-        except SectionFatalError as e:
-            print('Unable to get PREP.nc.')
-            # MV : la tâche 'GetPrep' est une tâche de secours, on ne doit pas
-            # compter dessus par defaut mais plutot chercher un PREP existant
-            #      'Make sure that your driver '
-            #      'has a node corresponding to the GetPrep task '
-            #      'before executing the offline task and that the prep_xpid values in the '
-            #      'corresponding configuration sections match. '
-            #      'Or that the PrepUenvPrep or PrepLocalPrep task '
-            #      'has been run recently for the given experiment (prep_xpid).')
-            raise e
-        self.get_pgd()
-
-    def get_local_inputs(self):
-        self.get_namelist_from_cache()
-
     def get_pgd(self):
-        self.get_pgd_from_cache_or_archive()
+        """
+        The PGD.nc file can come from the output of a "PGD" Task or a User Environment
+        """
+        raise NotImplementedError("A PGD.nc is exepected for to launch an OFFLINE executable")
 
     def put_outputs(self):
         """
@@ -272,13 +216,24 @@ class _Offline_MPI(_Offline):
     """
     Abstract task for the execution of OFFLINE binary with MPI parallelisation.
 
-    Additional mandatory configuration variables:
-    ---------------------------------------------
-    * ``nprocs`` Number of process to allocate to the execution of the MPI binary
-      type: int or dict
-    * ``ntasks`` Number of tasks to allocate to the execution of the MPI binary
-      type: int or dict
     """
+
+    def __init__(self, **kw):
+
+        super().__init__(**kw)
+
+        MANDATORY_CONFIGURATION_VARIABLES = [
+        ]
+
+        OPTIONAL_CONFIGURATION_VARIABLES = [
+            "drhook",
+            "august_threshold",
+            "ntasks",
+            "nnodes",
+            "nprocs",
+        ]
+
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
 
     def algo(self):
         """
@@ -335,6 +290,22 @@ class Offline_MPI_Uenv(_Offline_MPI):
     NB : This is the task to use to guarantee the simulation's reproductibility
     """
 
+    def __init__(self, **kw):
+
+        super().__init__(**kw)
+
+        MANDATORY_CONFIGURATION_VARIABLES = [
+        ]
+
+        OPTIONAL_CONFIGURATION_VARIABLES = [
+            "member",
+            "io_duration",
+            "namespace_out",
+            "august_threshold",
+        ] + forcing + prep + pgd_cache
+
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
+
     def get_executable(self):
         self.get_executable_from_uenv(mpi=True)
 
@@ -344,12 +315,18 @@ class Offline_MPI_Local(_Offline_MPI):
     Get an OFFLINE executable from any user-defined absolute path locally.
 
     WARNING : The simulation's reproductibility can not be guaranteed with this task !
-
-    Supplementary mandatory configuration variables:
-    ------------------------------------------------
-    * ``exesurfex`` Absolute path pointing the a local directory containing the target OFFLINE executable
-     type: str
     """
+
+    def __init__(self, **kw):
+
+        MANDATORY_CONFIGURATION_VARIABLES = []
+        OPTIONAL_CONFIGURATION_VARIABLES = [
+            "exesurfex",
+        ]
+        super().__init__(**kw)
+
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
+
     # MV : dans ce cas le binaire doit être présent localement sur HPC,
     # pas besoin de le récupérer sur un noeud de transfert
     def get_executable(self):

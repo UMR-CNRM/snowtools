@@ -10,13 +10,20 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
 
     Inputs :
     --------
-    - FORCING file(s) on simulation grid points
+    - FORCING file(s) on simulation geometry
     - Init_TG file (initial values of ground temperature)
 
     Outputs :
     ---------
     - Ground Temperature initialization file on simulation grid points
     """
+
+    MANDATORY_CONFIGURATION_VARIABLES = [
+        "forcing",
+    ]
+
+    OPTIONAL_CONFIGURATION_VARIABLES = [
+    ]
 
     def get_remote_inputs(self):
         """
@@ -60,11 +67,6 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
         """
         Save the output Ground temperature (GT) initialization based on the climatological mean file in the simulation
         geometry.
-
-        Configuration parameters used:
-        ------------------------------
-        * ``geometry`` simulation geometry
-        * ``xpid`` Experiment identifier
         """
 
         self.sh.title("Toolbox output for initial values of ground temperature")
@@ -90,28 +92,16 @@ class GetClimGroundTemperature(InitClimGroundTemperature):
     If not, try to get it from an uenv.
     If not either, generate it by calling the methods from the mother class.
 
-    Configuration Parameters:
-    -------------------------
-
-    * ``tg_xpid`` experiment id the init_TG.nc file should be fetched from.
-    * ``tg_user`` name of the user that produced the target the init_TG.nc file.
-    * ``geometry`` geometry of the init_TG. Logically the same as for the rest of the simulation
-
-    Optional Configuration Parameters:
-    ----------------------------------
-
-    * ``tg_uenv`` uenv to look for the init_TG.nc file in case the file should come from an uenv.
-    * ``tg_gvar`` key to look up the init_TG.nc file in the uenv if the file should come from there.
-    * ``forcing_source_app`` in case the init_TG needs to be calculated
-        and the forcing comes from the S2M reanalysis
-        (example: arpege)
-    * ``forcing_source_conf`` in case the init_TG needs to be calculated
-        and the forcing comes from the S2M reanalysis
-        (example: 4dvarfr)
-    * ``forcing_localname`` in case the init_TG needs to be calculated
-        and the forcing comes from the S2M reanalysis
-        (example: [datebegin:ymdh]_[dateend:ymdh]/FORCING_IN.nc)
     """
+
+    MANDATORY_CONFIGURATION_VARIABLES = [
+        "geometry",
+        "uenv|surfex_uenv",
+    ]
+
+    OPTIONAL_CONFIGURATION_VARIABLES = [
+        "init_tg_cache",
+    ]
 
     def get_remote_inputs(self):
         # First try to get an init_TG file from the local cache or the archive

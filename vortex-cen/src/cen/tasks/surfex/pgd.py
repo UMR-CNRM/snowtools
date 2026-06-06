@@ -6,6 +6,7 @@ import vortex
 from vortex.util.helpers import InputCheckerError
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
+from vortex_cen.tasks.configuration_variables import forcing, pgd_cache, pgd_uenv
 
 
 class PgdCommonsMixin(SurfexCommonsMixin):
@@ -83,7 +84,7 @@ class PgdCommonsMixin(SurfexCommonsMixin):
             kind           = 'buildpgd',
             local          = 'PGD',
             model          = 'surfex',
-            genv           = self.conf.get('pgd_uenv', self.conf.uenv),
+            genv           = self.conf.get('surfex_uenv', self.conf.uenv),
             gvar           = self.conf.get('pgd_gvar', default_gvar),
             fatal          = fatal,
         )
@@ -109,6 +110,7 @@ class _Pgd_Construct(PgdCommonsMixin, _CenResearchTask):
 
    Inputs:
     -------
+    - FORCING file
     - OPTIONS.nam ready-to-use SURFEX namelist (coming from an execution of a "Preprocess_Task")
     - ecoclimapI_covers_param.bin and ecoclimapII_eu_covers_param.bin (binaries for vegetation generation)
     - drdt_bst_fit_60.nc (Crocus metamorphism parameters)
@@ -138,8 +140,6 @@ class _Pgd_Construct(PgdCommonsMixin, _CenResearchTask):
 
     Optionnal configuration variables (other than forcing-specific ones):
     ---------------------------------------------------------------------
-    * ``namespace_out`` Force specific namespace for output files (default: 'vortex.multi.fr')
-      type: str
     """
     def get_remote_inputs(self):
         """
@@ -231,6 +231,17 @@ class Pgd_Uenv_Pgd(_Pgd_Construct):
     """
     Get PGD executable from Uenv
     """
+
+    MANDATORY_CONFIGURATION_VARIABLES = [
+        "datebegin",
+        "dateend",
+        "xpid",
+        "geometry",
+        "uenv",
+    ] + forcing
+
+    OPTIONAL_CONFIGURATION_VARIABLES = pgd_uenv
+
     def get_remote_inputs(self):
         """
         Get PGD executable from Uenv
@@ -298,8 +309,6 @@ class GetPgd1D(_Pgd_Construct):
     -------------------------
 
     * ``xpid`` experiment id. !!! Do not use ids with 4 letters !!!
-    * ``vapp`` application name !!! Implicit, depends on the driver tree !!!
-    * ``vconf`` application configuration. !!! Implicit, depends on the driver tree !!!
     * ``geometry`` geometry of the PGD.nc file. Logically the same as for the rest of the simulation.
 
      Optional Configuration Parameters:
@@ -314,18 +323,6 @@ class GetPgd1D(_Pgd_Construct):
         Defaults to 'pgd_[geometry::tag]'.
     * ``uenv`` uenv to look for the ecoclimap Surfex cover parameters, Crocus metamorphism parameters
         and PGD executable in case the PGD.nc needs to be calculated.
-    * ``forcing_source_app`` in case the PGD.nc needs to be calculated
-        and the forcing comes from the S2M reanalysis
-        (example: arpege)
-    * ``forcing_source_conf`` in case the PGD.nc needs to be calculated
-        and the forcing comes from the S2M reanalysis
-        (example: 4dvarfr)
-    * ``forcing_source`` in case the PGD.nc needs to be calculated
-        and the forcing comes from the S2M reanalysis (yearly sub-periods)
-        (example: era5)
-    * ``forcing_localname`` in case the PGD.nc needs to be calculated
-        and the forcing comes from the S2M reanalysis
-        (example: [datebegin:ymdh]_[dateend:ymdh]/FORCING_IN.nc)
     * ``exesurfex`` path to the surfex executable in case the PGD.nc needs to be calculated and the executable comes
         from a local directory.
     * ``nnodes`` number of nodes to use to run the PGD executable with MPI if the PGD.nc needs to be calculated.
@@ -333,10 +330,21 @@ class GetPgd1D(_Pgd_Construct):
     (example: 60, might be 80 for bigger simulations)
     * ``ntasks`` number of tasks per node to use to run the PGD executable with MPI.
     (in general equals the ``nprocs`` since we are not doing multithreading, 60 in our example)
-    * ``openmp`` number of openmp threads to use to run the PGD executable with MPI.
-    (normally 1, since we are not doing multithreading)
 
     """
+
+    MANDATORY_CONFIGURATION_VARIABLES = [
+        "xpid",
+        "geometry",
+    ]
+
+    OPTIONAL_CONFIGURATION_VARIABLES = [
+        "uenv",
+        "datebegin",
+        "dateend",
+        "exesurfex",
+    ] + forcing + pgd_cache + pgd_uenv
+
     def pgd_avail(self):
         """
         Try to get PGD.nc from cache or archive. If not available try to get PGD.nc from uenv.

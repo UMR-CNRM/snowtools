@@ -109,6 +109,21 @@ class Preprocess_Uenv_Namelist(_Preprocess):
       type: str
 
     """
+
+    MANDATORY_CONFIGURATION_VARIABLES = [
+        "datebegin",
+        "dateend",
+        "geometry",
+        "xpid",
+    ]
+
+    OPTIONAL_CONFIGURATION_VARIABLES = [
+        "namelist_uenv",
+        "namelist_source",
+        "surfex_uenv",
+        "uenv",
+    ]
+
     def get_remote_inputs(self):
         """
         Get namelist from a User Environment.
@@ -125,9 +140,21 @@ class Preprocess_Local_Namelist(_Preprocess):
 
     Supplementary mandatory configuration variables:
     ------------------------------------------------
-    * ``namelist`` Absolute path pointing to the namelist to be used.
+    * ``namelist_path`` Absolute path pointing to the namelist to be used.
      type: str
     """
+
+    MANDATORY_CONFIGURATION_VARIABLES = [
+        "datebegin",
+        "dateend",
+        "geometry",
+        "xpid",
+        "namelist_path",
+    ]
+
+    OPTIONAL_CONFIGURATION_VARIABLES = [
+    ]
+
     def get_remote_inputs(self):
         """
         Get namelist from a user-provided absolute path.

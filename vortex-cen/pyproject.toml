@@ -21,3 +21,6 @@ vortex_cen = "src/cen"
 
 [tool.setuptools.package-data]
 "vortex_cen.data.cen_stores_configs" = ["cen-map-resources.ini"]
+
+[project.scripts]
+mkjob-help = 'vortex_cen.scripts.mkjob_help:main'

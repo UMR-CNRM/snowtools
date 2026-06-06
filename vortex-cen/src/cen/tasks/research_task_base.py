@@ -53,6 +53,41 @@ class _CenResearchTask(Task, S2MTaskMixIn):
 
     """
 
+    def __init__(self, **kw):
+        """
+        Initialise class attributes for dynamic documentation.
+        """
+
+        super().__init__(**kw)
+        self.MANDATORY_CONFIGURATION_VARIABLES = [
+            "xpid",
+            "geometry",
+        ]
+
+        self.OPTIONAL_CONFIGURATION_VARIABLES = [
+            "datebegin",
+            "dateend",
+            "date",
+            "test",
+            "localtest",
+            "debug",
+            "member",
+            "io_duration",
+            "namespace_out",
+        ]
+
+    def update_attributes(self, mandatory, optional):
+        """
+        Update class attributes for dynamic documentation
+        """
+
+        self.MANDATORY_CONFIGURATION_VARIABLES.extend(
+            [x for x in mandatory if x not in self.MANDATORY_CONFIGURATION_VARIABLES]
+        )
+        self.OPTIONAL_CONFIGURATION_VARIABLES.extend(
+            [x for x in optional if x not in self.OPTIONAL_CONFIGURATION_VARIABLES]
+        )
+
     def defaults(self, extras):
         """
         Set toolbox defaults, extended with actual arguments ``extras``.
@@ -84,12 +119,9 @@ class _CenResearchTask(Task, S2MTaskMixIn):
                     value = FPDict(value)
                 vortex.defaults[optk] = value
 
-        # forcing_geometry value may depend on the task's output 'geometry' value
-        if 'forcing_geometry' in self.conf and isinstance(self.conf.forcing_geometry, dict):
-            self.conf.forcing_geometry = self.conf.forcing_geometry[self.conf.geometry.tag]
-
         # Le nombre de process et de tâches peut être associé à la géométrie via un dictionnaire, on récupère
         # maintenant la bonne valeur
+        # TODO : Sortir ce qui suit de research_task_base et essayer de simplifier
         if 'ntasks' in self.conf and isinstance(self.conf.ntasks, dict):
             if self.conf.geometry.tag in self.conf.ntasks.keys():
                 self.conf.ntasks = self.conf.ntasks[self.conf.geometry.tag]
@@ -104,11 +136,6 @@ class _CenResearchTask(Task, S2MTaskMixIn):
                 # Default value from s2m.
                 # Maybe it would be better to crash and ask the user to set an explicit value ?
                 self.conf.nprocs = 80
-
-        if 'surfex_uenv' in self.conf:
-            for exe in ['offline', 'pgd', 'prep', 'soda', 'namelist']:
-                if f'{exe}_uenv' not in self.conf:
-                    self.conf[f'{exe}_uenv'] = self.conf.surfex_uenv
 
         # Format uenv properly : "uenv:{uenv_name}@user" in cas only {uenv_name} is provided
         for key, value in self.conf.items():
@@ -382,11 +409,8 @@ class _CenResearchTask(Task, S2MTaskMixIn):
                             Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
                             Possible values : "yearly", "monthly" or "full"
         :type io_duration: str
-        :param prep_vortex1: Boolean to identify resources produced with vortex1 (filename without geometry)
-        :type prep_vortex1: bool
-
-        TODO : prévoir un mécanisme pour rendre des déclarer les arguments obligatoires / optionnels pour
-        chaque tâche (ex: member)
+        :param forcing_vortex1: Boolean to identify resources produced with vortex1 (filename without geometry)
+        :type forcing_vortex1: bool
 
         """
 
@@ -400,7 +424,14 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         forcing_vconf     = self.conf.get('forcing_vconf', self.conf.vconf)
         forcing_block     = self.conf.get('forcing_block', 'meteo')
         forcing_member    = self.conf.get('forcing_member', self.conf.get('member', None))
-        forcing_geometry = self.conf.get('forcing_geometry', self.conf.geometry)
+        # forcing_geometry value may depend on the task's output 'geometry' value
+        if 'forcing_geometry' in self.conf:
+            if isinstance(self.conf.forcing_geometry, dict):
+                forcing_geometry = self.conf.forcing_geometry[self.conf.geometry.tag]
+            else:
+                forcing_geometry = self.conf.forcing_geometry
+        else:
+            forcing_geometry = self.conf.geometry
         # Security : in case of an ensemble of forcing files, get the FORCING of each member in a
         # separate directory to avoid overwrinting files.
         if (isinstance(forcing_member, list) and len(forcing_member) > 1 and '[member]' not in localname):
@@ -416,7 +447,6 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         if 'forcing_source' in self.conf:
             forcing_source_app, forcing_source_conf = \
                 self.get_safran_sources([forcing_datebegin], era5=self.conf.forcing_source == 'era5')
-        forcing_model = self.conf.get('forcing_model', None)
         forcing_cutoff = self.conf.get('forcing_cutoff', None)
         vortex1        = self.conf.get('forcing_vortex1', False),
 
@@ -443,7 +473,6 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             source_app     = forcing_source_app,  # default = None (ne pas refaire l'erreur)
             source_conf    = forcing_source_conf,  # default = None (ne pas refaire l'erreur)
             cutoff         = forcing_cutoff,  # TODO : à supprimer dans le cas recherche
-            model          = forcing_model,  # TODO : à supprimer
             fatal          = False,  # Do not crash now, there is an alternative
         ),
         print(t.prompt, 'FORCING =', forcing)
@@ -489,7 +518,6 @@ class _CenResearchTask(Task, S2MTaskMixIn):
                 source_app     = forcing_source_app,  # default = None (ne pas refaire l'erreur)
                 source_conf    = forcing_source_conf,  # default = None (ne pas refaire l'erreur)
                 cutoff         = forcing_cutoff,  # TODO : à supprimer dans le cas recherche
-                model          = forcing_model,  # TODO : à supprimer
                 fatal          = True,  # This is the last try, crash in case of failure
             ),
             print(t.prompt, 'FORCING (alternate) =', forcing)

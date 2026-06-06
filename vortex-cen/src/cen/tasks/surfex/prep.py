@@ -5,6 +5,7 @@
 import vortex
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
+from vortex_cen.tasks.configuration_variables import prep, pgd_cache
 
 
 class PrepCommonsMixin(SurfexCommonsMixin):
@@ -25,7 +26,7 @@ class PrepCommonsMixin(SurfexCommonsMixin):
             # MV : Il faudra peut être utiliser une variable de conf différente de *genv* à terme pour permettre
             # de récupérer les autres "constantes" dans un genv commun et le binaire dans un environement géré par
             # le user
-            genv           = self.conf.get('prep_uenv', self.conf.uenv),
+            genv           = self.conf.get('surfex_uenv', self.conf.uenv),
             gvar           = self.conf.get('prep_gvar', default_gvar),
             fatal          = fatal,
         )
@@ -69,7 +70,7 @@ class _Prep_Construct(PrepCommonsMixin, _CenResearchTask):
 
     * ``date`` Date of validity of the PREP.nc file to generate
       type: str, Date
-    * ``geometry`` *geometry* of the forcing file(s)
+    * ``geometry`` *geometry* of the simulation
       type: str, footprints.stdtypes.FPList
     * ``xpid`` Experiment identifier
       type: str
@@ -79,10 +80,6 @@ class _Prep_Construct(PrepCommonsMixin, _CenResearchTask):
                  - drdt_bst_fit_60.nc
                  - PREP executable
                  Format : uenv:{uenv_name}@{user}
-    * ``nprocs`` Number of process to allocate to the execution of the MPI binary
-      type: int
-    * ``ntasks`` Number of tasks to allocate to the execution of the MPI binary
-      type: int
 
     Optionnal configuration variables:
     ---------------------------------------------------------------------
@@ -93,10 +90,6 @@ class _Prep_Construct(PrepCommonsMixin, _CenResearchTask):
     * ``pgd_vapp`` *vapp* of the PGD file, if different from the task's *vapp*
      type: str
     * ``pgd_vconf`` *vconf* of the PGD file, if different from the task's *vconf*
-    * ``dailyprep`` TODO :comprendre avec Matthieu L les cas d'usages avec "dailyprep" (reforecast ?)
-      type: bool
-    * ``namespace_out`` Force specific namespace for output files (default: 'vortex.multi.fr')
-      type: str
     """
     def get_remote_inputs(self):
         """
@@ -194,10 +187,7 @@ class GetPrep(_Prep_Construct):
 
     Mandatory configuration variables:
     ----------------------------------
-    * ``prep_xpid`` or ``xpid`` Experiment id the prep file should be searched for or put in cache.
-    * ``prep_date`` or ``datebegin`` Validity date of the prep file. Default is ``datebegin`` but can be any date.
-    * ``prep_vapp`` or ``vapp`` Application name to search the PREP.nc file.
-    * ``prep_vconf`` or ``vconf`` Configuration name to search the PREP.nc file.
+    * ``xpid`` Experiment id the prep file should be searched for or put in cache.
     * ``geometry`` Geometry of the PREP.nc file.
 
     Additional configuration variables needed if PREP is calculated:
@@ -212,15 +202,12 @@ class GetPrep(_Prep_Construct):
                  - PREP executable (if the executable is not given via a local path using the ``exesurfex``
                    configuration variable)
                  Format : uenv:{uenv_name}@{user}
-    * ``nnodes`` Number of nodes to allocate to the execution of the MPI binary. In general 1.
-    * ``nprocs`` Number of process to allocate to the execution of the MPI binary
-      type: int
-    * ``ntasks`` Number of tasks to allocate to the execution of the MPI binary
-      type: int
-    * ``openmp`` Number of threads to use for multithreading. Usually 1, since we don't do multithreading.
 
     Optional configuration variables:
     ---------------------------------
+    * ``prep_date`` or ``datebegin`` Validity date of the prep file. Default is ``datebegin`` but can be any date.
+    * ``prep_vapp`` Application name to search the PREP.nc file.
+    * ``prep_vconf`` Configuration name to search the PREP.nc file.
     * ``prep_user`` name of the user who produced the PREP file
     * ``prep_vortex1`` type: bool. True if the requested PREP.nc file was produced with vortex 1 and thus uses
       vortex 1 naming conventions. Default is ``False``.
@@ -232,6 +219,22 @@ class GetPrep(_Prep_Construct):
     * ``tg_xpid`` Experiment id the init_TG.nc file comes from, if different from ``xpid``.
     * ``tg_user`` Name of the user who produced the init_TG file.
     """
+
+    MANDATORY_CONFIGURATION_VARIABLES = [
+        "xpid",
+        "geometry",
+        "uenv",
+    ]
+
+    OPTIONAL_CONFIGURATION_VARIABLES = [
+        "datebegin",
+        "date",
+        "member",
+        "exesurfex",
+        "tg_xpid",
+        "tg_user",
+    ] + prep + pgd_cache
+
     def get_prep_executable(self):
         """
         get PREP executable either from local path or from a UEnv
