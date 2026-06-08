@@ -30,6 +30,9 @@ parser.add_argument('-o', '--optional', choices=['plot', 'sql', 'all'], nargs='*
                          "* 'sql' install sql extraction tools\n" +
                          "* 'all' install all optional dependencies")
 
+parser.add_argument('--system-site-packages', help="Install system site packages (activate similar pip option)",
+                    action='store_true')
+
 args = parser.parse_args()
 
 # Retrieve the snowtools root directory from the current script location
@@ -70,7 +73,7 @@ if sys.base_prefix == sys.prefix:
         if not os.path.isfile(os.path.join(venv, 'bin', 'pip')):
             # Create the virtual environment if it does not exist already
             from venv import create
-            create(venv, with_pip=True, system_site_packages=True)
+            create(venv, with_pip=True, system_site_packages=args['system-site-packages'])
             # TODO : ajouter un message pour dire comment activer l'environnement virtuel créé ?
             outstr = outstr + "Snowtools has been installed in a new virtual environment.\n" \
                 "To activate it, run :\n" \
