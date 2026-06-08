@@ -32,6 +32,7 @@ parser.add_argument('-o', '--optional', choices=['plot', 'sql', 'all'], nargs='*
 
 args = parser.parse_args()
 
+
 # Retrieve the snowtools root directory from the current script location
 snowtools_dir = os.path.dirname(os.path.dirname(__file__))
 
@@ -70,8 +71,11 @@ if sys.base_prefix == sys.prefix:
         if not os.path.isfile(os.path.join(venv, 'bin', 'pip')):
             # Create the virtual environment if it does not exist already
             from venv import create
-            create(venv, with_pip=True, system_site_packages=True)
-            # TODO : ajouter un message pour dire comment activer l'environnement virtuel créé ?
+            if 'hpc' in HOSTNAME:
+                # Do not create a virtual environment with system site packages on HPC
+                create(venv, with_pip=True)
+            else:
+                create(venv, with_pip=True, system_site_packages=True)
             outstr = outstr + "Snowtools has been installed in a new virtual environment.\n" \
                 "To activate it, run :\n" \
                 f"source {venv}/bin/activate"
@@ -134,8 +138,8 @@ subprocess.run([pip, 'install'] + pip_options + ['--upgrade', 'pip'])
 
 os.chdir(snowtools_dir)
 # Security : an existing "build" directory from a former installation may cause trouble
-#shutil.rmtree('build', ignore_errors=True)
-#shutil.rmtree('.mesonpy*', ignore_errors=True)
+# shutil.rmtree('build', ignore_errors=True)
+# shutil.rmtree('.mesonpy*', ignore_errors=True)
 
 if args.editable:
 
