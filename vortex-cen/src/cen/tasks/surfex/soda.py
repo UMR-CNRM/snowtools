@@ -46,7 +46,7 @@ class SodaCommonsMixin(SurfexCommonsMixin):
             kind           = 'soda',
             local          = 'SODA',
             model          = 'surfex',
-            genv           = self.conf.get('soda_uenv', self.conf.uenv),
+            genv           = self.conf.get('surfex_uenv', self.conf.uenv),
             gvar           = self.conf.get('soda_gvar', default_gvar),
             fatal          = fatal,
         )

@@ -30,6 +30,9 @@ parser.add_argument('-o', '--optional', choices=['plot', 'sql', 'all'], nargs='*
                          "* 'sql' install sql extraction tools\n" +
                          "* 'all' install all optional dependencies")
 
+parser.add_argument('--system-site-packages', help="Install system site packages (activate similar pip option)",
+                    action='store_true')
+
 args = parser.parse_args()
 
 

@@ -126,8 +126,8 @@ class SurfexCommonsMixin:
         self.sh.title('Input PGD from UEnv')
         pgd = vortex.input(
             role      = 'SurfexClim',
-            genv      = self.conf.get('pgd_uenv', self.conf.uenv),
-            gvar      = self.conf.get('pgd_gvar', 'pgd_[geometry::tag]'),
+            genv      = self.conf.get('surfex_uenv', self.conf.uenv),
+            gvar      = self.conf.get('pgdnc_gvar', 'pgd_[geometry::tag]'),
             kind      = 'pgdnc',
             model     = 'surfex',
             geometry  = self.conf.get('pgd_geometry', self.conf.geometry),
@@ -168,7 +168,7 @@ class SurfexCommonsMixin:
             # Dans un UEnv, plusieurs namelistes peuvent être stockées dans une archive ".tar",
             # le footprint *source* permet de définir le nom exact de la nameliste à récupérer.
             source   = self.conf.namelist_source,  # ex : OPTIONS_default.nam
-            genv     = self.conf.get('namelist_uenv', self.conf.uenv),
+            genv     = self.conf.get('surfex_uenv', self.conf.uenv),
             kind     = 'namelist',
             model    = 'surfex',
             local    = 'OPTIONS.nam',
@@ -299,7 +299,7 @@ class SurfexCommonsMixin:
             nativefmt    = 'netcdf',
             local        = 'init_TG.nc',
             geometry     = self.conf.get('tg_geometry', self.conf.geometry),
-            genv         = self.conf.get('tg_uenv', self.conf.uenv),
+            genv         = self.conf.get('surfex_uenv', self.conf.uenv),
             gvar         = self.conf.get('tg_gvar', 'climtg_[geometry::area]'),
             model        = 'surfex',
             fatal        = fatal,
