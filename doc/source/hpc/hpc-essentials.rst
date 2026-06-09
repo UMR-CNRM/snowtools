@@ -11,8 +11,11 @@ Nodes
 ^^^^^
 
 The MF HPC architecture relies on three different node types, identified as follow in this documentation:
+
 * **login nodes** are the entry point for HPC users, from which they submit jobs. These nodes must only be used for compilation, **they are NOT deigned to make any data transfert or computation.**
+
 * **tranfert nodes** are used to transfert data between the archive and the HPC file system. **These nodes are NOT deigned to make any computation.**
+
 * **compute nodes** are used to do any computation. **These nodes are NOT deigned to make any data transfert.**
 
 In the general case, tranfert and compute nodes should be accessed from a login node through the submission of a *job* (see :ref:`jobs`).
@@ -27,6 +30,7 @@ File system
 ^^^^^^^^^^^
 
 There are two different file systems on MF HPC:
+
 * **NFS** refers to users' home directories, which **should only contain source code**. In particular, **it should not host any job's IO**.
 
 .. note::
@@ -98,9 +102,13 @@ The most frequent job-specific information to provide to mkjob through the mkjob
 * *mem*: The memory to allocate to this specific job in case it runs on the "shared" partition
 * *profile*: The pre-defined job submission configuration (most of the time "rd-belenos-mt"). The recomended profile at CEN is the "rd-belenos-mt" profile.
   This create the jobs under /scratch/mtool/<username>/depot/mstep_XXXXXX_<jobname>, and automatically launches the following sequence:
+
   1. A transfert node to fetch all remote inputs (job: step.01, log: step.01.out)
+
   2. A compute node to do the computing work (job: step.02, log: step.02.out)
+
   3. A transfert node to archive the outputs (job: step.03, log: step.03.out)
+
   The actual execution of the job is done under /scratch/mtool/<username>/spool/spool_XXXXXX_<jobname>
   If the execution fails, or the argument debug=True is provided, the working directory is saved under /scratch/mtool/<username>/abort/dump_XXXXXX_<jobname>
 
@@ -124,7 +132,7 @@ For example, to "pre-stage" all SURFEX-ready FORCING files of the S2M reanalysis
 
 The full documentation for pre-staging requests is available here (in French): http://confluence.meteo.fr/spaces/~romain.roehrig/pages/263753981/Pr%C3%A9-staging+sur+hendrix?preview=%2F263753981%2F263753983%2Fdoc_pre-staging_hendrix.pdf
 
-You can only connect to Hendrix through a telent protocole with limited shell commands to explore the the file system.
+You can only connect to Hendrix through a telnet protocole with limited shell commands to explore the the file system.
 On HPC, you must first load hpss (module load hpss) before you can connect to Hendrix with the "hshell" command.
 
 

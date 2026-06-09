@@ -20,7 +20,7 @@ To generate a specific ssh key for github, run
 **NB:** If the folder ``~/.ssh`` does not exist, create it with ``mkdir ~/.ssh``
 
 You will be asked for an optional password to protect your key.
-Once the key created, go to your github account, section `SSH keys <https://github.com/settings/keys>`.
+Once the key created, go to your github account, section SSH keys: https://github.com/settings/keys
 Click on "add a SSH key" and copy the content of the file ``~/.ssh/github.pub`` in the "key" field.
 
 You may need to run
@@ -168,13 +168,13 @@ Install
    cd $SNOWTOOLS_CEN
    git checkout dev
    python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -e -v ~/my_envs/snowtools_env
-   deactivate
 
 .. tip::
 
-   If you want a stable / non-editable installation of snowtools (not affected by local modifications of the code), you can replace the line
-   python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -e -v ~/my_envs/snowtools_env
-   by:
+   If you want a stable / non-editable installation of snowtools (not affected by local modifications of the code), you can replace the last line by:
+
+.. code-block:: bash
+
    python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -v ~/my_envs/snowtools_env_stable
 
 [Optional] Configure Vortex and install UEnv tools
@@ -200,8 +200,9 @@ Install UEnv tools :
 
 .. code-block:: bash
 
+    source ~/my_envs/snowtools_env/bin/activate
     pip install vortex-gco
-
+    deactivate
 
 And that's it. Now, you have snowtools installed in your git repository ``~/all_git_repo/snowtools`` and a virtual environment associated ``~/my_envs/snowtools_env``
 
@@ -260,8 +261,7 @@ Source the ``~/.bashrc`` file and start installation
 
     source ~/.bashrc
     cd $SNOWTOOLS_CEN
-    module load python/3.10.12
-    module load gcc/15.2.0
+    module load python/3.10.12 gcc/15.2.0
 
 **NB** The installation should also work with python/3.12.12, but the installation fails in some cases.
 
@@ -336,7 +336,9 @@ Install the repositories
 
 .. code-block:: bash
 
+    source ~/my_envs/snowtools_env/bin/activate
     pip install mkjob/ vortex-gco/ vortex-olive/
+    deactivate
 
 Configure Vortex
 ^^^^^^^^^^^^^^^^
@@ -366,12 +368,6 @@ Start from the default geometries file (update it with your own geometries if yo
     mkdir ~/.vortexrc
     cd ~/.vortexrc
     cp $SNOWTOOLS_CEN/snowtools/conf/geometries_vortex2.ini geometries.ini
-
-Deactivate virtual environment
-
-.. code-block:: bash
-
-    deactivate
 
 That's it, now snowtools is installed on Meteo France HPC belenos or on Meteo France server SXCEN.
 
