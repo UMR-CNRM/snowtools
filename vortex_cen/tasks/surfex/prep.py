@@ -5,7 +5,6 @@
 import vortex
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
-from vortex_cen.tasks.configuration_variables import prep, pgd_cache
 
 
 class PrepCommonsMixin(SurfexCommonsMixin):
@@ -49,7 +48,10 @@ class PrepCommonsMixin(SurfexCommonsMixin):
 
 class _Prep_Construct(PrepCommonsMixin, _CenResearchTask):
     """
-    Abstract task for PREP step.
+    Task : _Prep_Construct
+    ======================
+
+    Abstract task for the generation of initial conditions (PREP.nc file)
 
     Inputs:
     -------
@@ -65,32 +67,25 @@ class _Prep_Construct(PrepCommonsMixin, _CenResearchTask):
     --------
     - PREP.nc (initial conditions)
 
-    Mandatory configuration variables:
-    ----------------------------------
-
-    * ``date`` Date of validity of the PREP.nc file to generate
-      type: str, Date
-    * ``geometry`` *geometry* of the simulation
-      type: str, footprints.stdtypes.FPList
-    * ``xpid`` Experiment identifier
-      type: str
-    * ``uenv`` User Environment in which the following resources are to be retrieved :
-                 - ecoclimapI_covers_param.bin
-                 - ecoclimapII_eu_covers_param.bin
-                 - drdt_bst_fit_60.nc
-                 - PREP executable
-                 Format : uenv:{uenv_name}@{user}
-
-    Optionnal configuration variables:
-    ---------------------------------------------------------------------
-    * ``pgd_xpid`` Experiment Identifier of the PGD file, if different from the task's XPID
-     type: str
-    * ``pgd_user`` User who produced the target PGD file.
-     type: str
-    * ``pgd_vapp`` *vapp* of the PGD file, if different from the task's *vapp*
-     type: str
-    * ``pgd_vconf`` *vconf* of the PGD file, if different from the task's *vconf*
     """
+
+    def __init__(self, **kw):
+
+        MANDATORY_CONFIGURATION_VARIABLES = [
+            "geometry",
+            "xpid",
+            "uenv|surfex_uenv",
+        ]
+        OPTIONAL_CONFIGURATION_VARIABLES = [
+            "pgd_cache",
+            "ntasks",
+            "nnodes",
+            "nprocs",
+            "tg_gvar",
+        ]
+        super().__init__(**kw)
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
+
     def get_remote_inputs(self):
         """
         Get ecoclimapI_covers_param.bin, ecoclimapII_eu_covers_param.bin,
@@ -180,60 +175,50 @@ class _Prep_Construct(PrepCommonsMixin, _CenResearchTask):
 
 class GetPrep(_Prep_Construct):
     """
+    Task : GetPrep
+    ==============
+
+    Generation of initial conditions (PREP.nc file)
     Look if the requested PREP.nc file is available in the cache or archive. If not,
     calculate it.
 
     WARNING : The simulation's reproductibility can not be guaranteed with this task !
 
-    Mandatory configuration variables:
-    ----------------------------------
-    * ``xpid`` Experiment id the prep file should be searched for or put in cache.
-    * ``geometry`` Geometry of the PREP.nc file.
+    Inputs:
+    -------
 
-    Additional configuration variables needed if PREP is calculated:
-    ----------------------------------------------------------------
+    * ``OPTIONS.nam`` ready-to-use SURFEX namelist (coming from an execution of a "Preprocess_Task")
+    * ``ecoclimapI_covers_param.bin`` and ``ecoclimapII_eu_covers_param.bin`` (binaries for vegetation generation)
+    * ``drdt_bst_fit_60.nc`` (Crocus metamorphism parameters)
+    * ``Init_TG.nc`` Initial values of ground temperature coming from the cache
+      (put there by an execution of an InitClimGroundTemperature or GetClimGroundTemperature task)
+    * ``PGD.nc`` Ground physiography
 
-    * ``xpid`` Experiment identifier
-      type: str
-    * ``uenv`` User Environment in which the following resources are to be retrieved:
-                 - ecoclimapI_covers_param.bin
-                 - ecoclimapII_eu_covers_param.bin
-                 - drdt_bst_fit_60.nc
-                 - PREP executable (if the executable is not given via a local path using the ``exesurfex``
-                   configuration variable)
-                 Format : uenv:{uenv_name}@{user}
+    Outputs:
+    --------
+    - PREP.nc (initial conditions)
 
-    Optional configuration variables:
-    ---------------------------------
-    * ``prep_date`` or ``datebegin`` Validity date of the prep file. Default is ``datebegin`` but can be any date.
-    * ``prep_vapp`` Application name to search the PREP.nc file.
-    * ``prep_vconf`` Configuration name to search the PREP.nc file.
-    * ``prep_user`` name of the user who produced the PREP file
-    * ``prep_vortex1`` type: bool. True if the requested PREP.nc file was produced with vortex 1 and thus uses
-      vortex 1 naming conventions. Default is ``False``.
-    * ``prep_block`` block part of the data tree to search for the PREP.nc file. Default is ``prep``.
-    * ``prep_member`` or ``member`` If the PREP.nc file comes from an ensemble. Default is ``None``.
-    * ``exesurfex`` path to the Surfex executables if PREP.nc is calculated and if the PREP binary is in a local
-                    directory
-      not in an uenv.
-    * ``tg_xpid`` Experiment id the init_TG.nc file comes from, if different from ``xpid``.
-    * ``tg_user`` Name of the user who produced the init_TG file.
     """
 
-    MANDATORY_CONFIGURATION_VARIABLES = [
-        "xpid",
-        "geometry",
-        "uenv",
-    ]
+    def __init__(self, **kw):
 
-    OPTIONAL_CONFIGURATION_VARIABLES = [
-        "datebegin",
-        "date",
-        "member",
-        "exesurfex",
-        "tg_xpid",
-        "tg_user",
-    ] + prep + pgd_cache
+        MANDATORY_CONFIGURATION_VARIABLES = [
+            "xpid",
+            "geometry",
+            "uenv",
+        ]
+
+        OPTIONAL_CONFIGURATION_VARIABLES = [
+            "date",
+            "member",
+            "exesurfex",
+            "tg_cache",
+            "tg_gvar",
+            "prep",
+            "pgd_cache",
+        ]
+        super().__init__(**kw)
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
 
     def get_prep_executable(self):
         """

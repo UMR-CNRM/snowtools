@@ -8,6 +8,9 @@ from vortex_cen.tasks.research_task_base import _CenResearchTask
 
 class Shadows(_CenResearchTask):
     """
+    Task : Shadows
+    ==============
+
     Add relief-induced solar masks to a FORCING file in a "station" geometry.
 
     Inputs :
@@ -18,21 +21,27 @@ class Shadows(_CenResearchTask):
     ---------
     - FORCING file with extracted solar masks added.
 
-    Mandatory configuration variables:
-    ----------------------------------
-    * `datebegin` *datebegin* of the forcing file(s)
-        type: str, footprints.stdtypes.FPList
-    * `dateend` *dateend* of the forcing files(s)
-        type: str, footprints.stdtypes.FPList
-    * `forcing_geometry` *geometry* of the input forcing file(s)
-        type: str, footprints.stdtypes.FPList
-    * `geometry` *geometry* of the output forcing file(s)
-        type: str, footprints.stdtypes.FPList
-    * `xpid` Experiment identifier
-        type: str
-
-
     """
+    def __init__(self, **kw):
+
+        MANDATORY_CONFIGURATION_VARIABLES = [
+            "forcing_datebegin|datebegin",
+            "forcing_dateend|dateend",
+            "forcing_xpid|xpid",
+            "forcing_geometry",
+            "geometry",
+        ]
+        OPTIONAL_CONFIGURATION_VARIABLES = [
+            "forcing",
+        ]
+        overwrite = [
+            "datebegin",
+            "dateend",
+        ]
+        super().__init__(**kw)
+
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES,
+                overwrite=overwrite)
 
     def get_remote_inputs(self):
         """

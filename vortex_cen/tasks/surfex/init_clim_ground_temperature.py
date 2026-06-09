@@ -6,24 +6,32 @@ from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
 
 class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
     """
+    Task : InitClimGroundTemperature
+    ================================
+
     Initialize Surfex ground temperature (GT) by taking the climatological mean of the input forcing air temperature.
 
     Inputs :
     --------
     - FORCING file(s) on simulation geometry
-    - Init_TG file (initial values of ground temperature)
 
     Outputs :
     ---------
-    - Ground Temperature initialization file on simulation grid points
+    - Init_TG file (initial values of ground temperature)
     """
 
-    MANDATORY_CONFIGURATION_VARIABLES = [
-        "forcing",
-    ]
+    def __init__(self, **kw):
 
-    OPTIONAL_CONFIGURATION_VARIABLES = [
-    ]
+        super().__init__(**kw)
+
+        MANDATORY_CONFIGURATION_VARIABLES = [
+        ]
+
+        OPTIONAL_CONFIGURATION_VARIABLES = [
+            "forcing",
+        ]
+
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
 
     def get_remote_inputs(self):
         """
@@ -88,20 +96,30 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
 
 class GetClimGroundTemperature(InitClimGroundTemperature):
     """
+    Task : GetClimGroundTemperature
+    ===============================
+
     If InitTG is available in cache or archive for the current experiment fetch it.
     If not, try to get it from an uenv.
     If not either, generate it by calling the methods from the mother class.
 
     """
 
-    MANDATORY_CONFIGURATION_VARIABLES = [
-        "geometry",
-        "uenv|surfex_uenv",
-    ]
+    def __init__(self, **kw):
 
-    OPTIONAL_CONFIGURATION_VARIABLES = [
-        "init_tg_cache",
-    ]
+        super().__init__(**kw)
+
+        MANDATORY_CONFIGURATION_VARIABLES = [
+            "geometry",
+            "uenv|surfex_uenv",
+        ]
+
+        OPTIONAL_CONFIGURATION_VARIABLES = [
+            "tg_cache",
+            "tg_gvar",
+        ]
+
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
 
     def get_remote_inputs(self):
         # First try to get an init_TG file from the local cache or the archive

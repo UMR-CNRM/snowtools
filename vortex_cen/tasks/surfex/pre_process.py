@@ -10,6 +10,8 @@ from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
 
 class _Preprocess(SurfexCommonsMixin, _CenResearchTask):
     """
+    Task: _Preprocess
+    =================
     Abstract task for pre-processing namelist:
     add infos like points and dates from forcing to namelist.
 
@@ -22,18 +24,19 @@ class _Preprocess(SurfexCommonsMixin, _CenResearchTask):
     --------
     - Modified and ready-to-use SURFEX namelist
 
-    Mandatory configuration variables:
-    ----------------------------------
-    * ``datebegin`` *datebegin* of the forcing file(s)
-      type: str, footprints.stdtypes.FPList
-    * ``dateend`` *dateend* of the forcing files(s)
-     type: str, footprints.stdtypes.FPList
-    * ``geometry`` *geometry* of the forcing file(s)
-     type: str, footprints.stdtypes.FPList
-    * ``xpid`` Experiment identifier
-     type: str
-
     """
+    def __init__(self, **kw):
+
+        super().__init__(**kw)
+        MANDATORY_CONFIGURATION_VARIABLES = [
+        ]
+
+        OPTIONAL_CONFIGURATION_VARIABLES = [
+            "forcing"
+        ]
+
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
+
     def get_remote_inputs(self):
         """
         Get forcing file(s) and namelist in order to transform the namelist
@@ -95,34 +98,25 @@ class _Preprocess(SurfexCommonsMixin, _CenResearchTask):
 
 class Preprocess_Uenv_Namelist(_Preprocess):
     """
+    Task: Preprocess_Uenv_Namelist
+    ==============================
     Task for pre-processing a namelist coming from a User Environment.
-
     NB : This is the task to use to guarantee the simulation's reproductibility
-
-    Supplementary mandatory configuration variables:
-    ------------------------------------------------
-    * ``uenv`` User Environment in which the namelist is to be retrieved.
-                 Format : uenv:{uenv_name}@{user}
-     type: str
-    * ``namelist_source`` The name of the specific namelist to retrieve from the namelist
-                   ".tar" archive containing all available namelists.
-      type: str
-
     """
 
-    MANDATORY_CONFIGURATION_VARIABLES = [
-        "datebegin",
-        "dateend",
-        "geometry",
-        "xpid",
-    ]
+    def __init__(self, **kw):
 
-    OPTIONAL_CONFIGURATION_VARIABLES = [
-        "namelist_uenv",
-        "namelist_source",
-        "surfex_uenv",
-        "uenv",
-    ]
+        super().__init__(**kw)
+        MANDATORY_CONFIGURATION_VARIABLES = [
+            "uenv|surfex_uenv",
+            "namelist_source",
+
+        ]
+
+        OPTIONAL_CONFIGURATION_VARIABLES = [
+        ]
+
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
 
     def get_remote_inputs(self):
         """
@@ -134,26 +128,25 @@ class Preprocess_Uenv_Namelist(_Preprocess):
 
 class Preprocess_Local_Namelist(_Preprocess):
     """
+    Task: Preprocess_Local_Namelist
+    ===============================
+
     Task for pre-processing a namelist coming from any user-defined absolute path.
-
     WARNING : The simulation's reproductibility can not be guaranteed with this task !
-
-    Supplementary mandatory configuration variables:
-    ------------------------------------------------
-    * ``namelist_path`` Absolute path pointing to the namelist to be used.
-     type: str
     """
 
-    MANDATORY_CONFIGURATION_VARIABLES = [
-        "datebegin",
-        "dateend",
-        "geometry",
-        "xpid",
-        "namelist_path",
-    ]
+    def __init__(self, **kw):
 
-    OPTIONAL_CONFIGURATION_VARIABLES = [
-    ]
+        super().__init__(**kw)
+        MANDATORY_CONFIGURATION_VARIABLES = [
+            "namelist_path",
+
+        ]
+
+        OPTIONAL_CONFIGURATION_VARIABLES = [
+        ]
+
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
 
     def get_remote_inputs(self):
         """
@@ -165,6 +158,8 @@ class Preprocess_Local_Namelist(_Preprocess):
 
 class Soda_Namelist_Preprocess(SurfexCommonsMixin, _CenResearchTask):
     """
+    Task: Soda_Namelist_Preprocess
+    ==============================
     Pre-process SURFEX namelist for SODA executable
 
     Inputs:
@@ -186,6 +181,21 @@ class Soda_Namelist_Preprocess(SurfexCommonsMixin, _CenResearchTask):
     * ``xpid`` Experiment Identifier
       type: str
     """
+
+    def __init__(self, **kw):
+
+        super().__init__(**kw)
+        MANDATORY_CONFIGURATION_VARIABLES = [
+            "uenv|surfex_uenv",
+            "namelist_source",
+            "nmembers",
+
+        ]
+
+        OPTIONAL_CONFIGURATION_VARIABLES = [
+        ]
+
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
 
     def get_remote_inputs(self):
 

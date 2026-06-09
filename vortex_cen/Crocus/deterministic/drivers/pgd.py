@@ -1,4 +1,8 @@
 # -*- coding:Utf-8 -*-
+"""
+This "pgd" driver allows to force the generation of a PGD.nc file (ground physiography).
+
+"""
 
 from mkjob.nodes import Driver
 from vortex_cen.tasks.surfex.pre_process import Preprocess_Uenv_Namelist

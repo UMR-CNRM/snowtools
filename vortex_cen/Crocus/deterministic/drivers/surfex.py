@@ -15,7 +15,6 @@ from vortex_cen.tasks.surfex.pre_process import _Preprocess
 from vortex_cen.tasks.surfex.pgd import GetPgd1D
 from vortex_cen.tasks.surfex.prep import GetPrep
 from vortex_cen.tasks.surfex.init_clim_ground_temperature import GetClimGroundTemperature
-from vortex_cen.tasks.configuration_variables import forcing, prep, pgd_cache, pgd_uenv
 
 
 def setup(t, **kw):
@@ -34,17 +33,31 @@ def setup(t, **kw):
 
 
 class MakeClimGroundTemperature(GetClimGroundTemperature):
+    """
+    Task : MakeClimGroundTemperature
+    ================================
+
+    If the "climground" is provided and set to "True", this task will look for a PREP.nc file and if none is found,
+    it will initialize Surfex ground temperature (GT) by taking the climatological mean of the input forcing air
+    temperature.
+
+    Inputs :
+    --------
+    - FORCING file(s) on simulation geometry
+
+    Outputs :
+    ---------
+    - Init_TG file (initial values of ground temperature)
+    """
 
     def __init__(self, **kw):
 
         super().__init__(**kw)
         MANDATORY_CONFIGURATION_VARIABLES = [
         ]
-
         OPTIONAL_CONFIGURATION_VARIABLES = [
-            "climground",  # TODO : ajouter les dépendances
-        ] + prep
-
+            "climground:prep",
+        ]
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
 
     def process(self):
@@ -59,17 +72,32 @@ class MakeClimGroundTemperature(GetClimGroundTemperature):
 
 
 class PreProcess(_Preprocess):
+    """
+    Task : PreProcess
+    =================
+
+    SURFEX namelist preprocessing : add infos like points and dates from forcing to namelist.
+
+    Inputs:
+    -------
+    - SURFEX namelist (OPTIONS.nam) from path or UEnv
+    - FORCING file(s)
+
+    Outputs:
+    --------
+    - Modified and ready-to-use SURFEX namelist
+
+    """
 
     def __init__(self, **kw):
 
         super().__init__(**kw)
         MANDATORY_CONFIGURATION_VARIABLES = [
+            "uenv|surfex_uenv",
         ]
 
         OPTIONAL_CONFIGURATION_VARIABLES = [
             "namelist_path",
-            "surfex_uenv",
-            "uenv",
         ]
 
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
@@ -83,18 +111,36 @@ class PreProcess(_Preprocess):
 
 
 class Offline(_Offline_MPI):
+    """
+    Task : Offline
+    ==============
+
+    SURFEX/OFFLINE documentation : https://umr-cnrm.github.io/snowtools-doc/misc/surfex.html
+
+    Inputs:
+    -------
+    - FORCING.nc files(s) (near-surface meteorological conditions during the simulation period)
+    - OPTIONS.nam ready-to-use SURFEX namelist (coming from the execution of the "PreProcess")
+    - ecoclimapI_covers_param.bin and ecoclimapII_eu_covers_param.bin (binaries for vegetation generation)
+    - drdt_bst_fit_60.nc (Crocus metamorphism parameters)
+    - PGD.nc (Ground physiography) retrieved or produced by the GetPgd1D task
+    - PREP.nc (initial conditions) retrieved or produced by the GetPrep task
+
+    Outputs:
+    --------
+    - PRO.nc Snowpack simulations covering the entire simulation period
+    - PREP.nc SURFEX/Crocus model state variables at the end of the simulation
+    """
 
     def __init__(self, **kw):
 
         super().__init__(**kw)
 
         MANDATORY_CONFIGURATION_VARIABLES = [
-            "uenv",
-            # "uenv|surfex_uenv",  # Gérer la syntaxe "OR" dans mkjob-help
+            "uenv|surfex_uenv",
         ]
 
         OPTIONAL_CONFIGURATION_VARIABLES = [
-            "surfex_uenv",
             "exesurfex",
         ]
 

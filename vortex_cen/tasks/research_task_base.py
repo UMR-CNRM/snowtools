@@ -60,26 +60,34 @@ class _CenResearchTask(Task, S2MTaskMixIn):
 
         super().__init__(**kw)
         self.MANDATORY_CONFIGURATION_VARIABLES = [
+            "datebegin",
+            "dateend",
             "xpid",
             "geometry",
         ]
 
         self.OPTIONAL_CONFIGURATION_VARIABLES = [
-            "datebegin",
-            "dateend",
             "date",
             "test",
             "localtest",
             "debug",
-            "member",
             "io_duration",
             "namespace_out",
         ]
 
-    def update_attributes(self, mandatory, optional):
+    def update_attributes(self, mandatory, optional, overwrite=None):
         """
         Update class attributes for dynamic documentation
         """
+        if isinstance(overwrite, list):
+            for var in overwrite:
+                # Warning : "remove" removes only 1 element in case of duplicated values.
+                # However, there should never be duplicates in MANDATORY_CONFIGURATION_VARIABLES and
+                # OPTIONAL_CONFIGURATION_VARIABLES
+                if var in self.MANDATORY_CONFIGURATION_VARIABLES:
+                    self.MANDATORY_CONFIGURATION_VARIABLES.remove(var)
+                if var in self.OPTIONAL_CONFIGURATION_VARIABLES:
+                    self.OPTIONAL_CONFIGURATION_VARIABLES.remove(var)
 
         self.MANDATORY_CONFIGURATION_VARIABLES.extend(
             [x for x in mandatory if x not in self.MANDATORY_CONFIGURATION_VARIABLES]

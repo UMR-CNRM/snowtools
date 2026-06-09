@@ -10,6 +10,8 @@ Install the vortex-gco plugin
 
    pip install vortex-gco
 
+.. _uenv_creation:
+
 Create a User Environment from scratch
 ======================================
 1. Put the file(s) you need in your UEnv in ``$HOME/.vortexrc/hack/uget/your_username/data``
@@ -40,8 +42,11 @@ Your file(s) should have a name and a number: ``AFirstFile.0``, ``ASecondFile.1`
 
 **NB:** On HPC this can only be done from a TRANSFERT node
 
+.. _uenv_modification:
+
 Modifying an existing UEnv
 ==========================
+
 1. Create a copy of existing UEnv:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

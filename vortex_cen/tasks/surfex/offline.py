@@ -5,7 +5,6 @@
 import vortex
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
-from vortex_cen.tasks.configuration_variables import forcing, prep, pgd_cache
 
 
 class OfflineCommonsMixin(SurfexCommonsMixin):
@@ -51,6 +50,9 @@ class OfflineCommonsMixin(SurfexCommonsMixin):
 
 class _Offline(OfflineCommonsMixin, _CenResearchTask):
     """
+    Task : _Offline
+    ===============
+
     Abstract task for OFFLINE binary execution.
 
     SURFEX/OFFLINE documentation : https://umr-cnrm.github.io/snowtools-doc/misc/surfex.html
@@ -83,11 +85,15 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
         ]
 
         OPTIONAL_CONFIGURATION_VARIABLES = [
+            "forcing",
+            "prep",
+            "pgd_cache",
             "member",
             "io_duration",
             "namespace_out",
             "august_threshold",
-        ] + forcing + prep + pgd_cache
+            "offline_gvar",
+        ]
 
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
 
@@ -215,6 +221,9 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
 
 class _Offline_MPI(_Offline):
     """
+    Task : _Offline_MPI
+    ===================
+
     Abstract task for the execution of OFFLINE binary with MPI parallelisation.
 
     """
@@ -286,6 +295,9 @@ class _Offline_MPI(_Offline):
 
 class Offline_MPI_Uenv(_Offline_MPI):
     """
+    Task : Offline_MPI_Uenv
+    =======================
+
     Get OFFLINE executable from a User Environment.
 
     NB : This is the task to use to guarantee the simulation's reproductibility
@@ -299,11 +311,15 @@ class Offline_MPI_Uenv(_Offline_MPI):
         ]
 
         OPTIONAL_CONFIGURATION_VARIABLES = [
+            "forcing",
+            "prep",
+            "pgd_cache",
             "member",
             "io_duration",
             "namespace_out",
             "august_threshold",
-        ] + forcing + prep + pgd_cache
+            "offline_gvar",
+        ]
 
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
 
@@ -313,6 +329,9 @@ class Offline_MPI_Uenv(_Offline_MPI):
 
 class Offline_MPI_Local(_Offline_MPI):
     """
+    Task : Offline_MPI_Local
+    ========================
+
     Get an OFFLINE executable from any user-defined absolute path locally.
 
     WARNING : The simulation's reproductibility can not be guaranteed with this task !
