@@ -8,8 +8,8 @@ import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
-from DATA import SNOWTOOLS_CEN
-from DATA import TESTBASE_DIR
+from DATA import SNOWTOOLS_CEN  # noqa
+from DATA import TESTBASE_DIR  # noqa
 
 if not os.path.exists(TESTBASE_DIR):
     sys.exit('The "TESTBASE_DIR" environment variable is not properly defined.\n' +
@@ -48,7 +48,8 @@ class install_snowtools(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        shutil.rmtree(f"{TESTBASE_DIR}/venv")
+        if os.path.isdir(f"{TESTBASE_DIR}/venv"):
+            shutil.rmtree(f"{TESTBASE_DIR}/venv")
 
 
 if __name__ == "__main__":

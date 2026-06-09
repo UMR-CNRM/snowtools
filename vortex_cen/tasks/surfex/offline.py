@@ -115,9 +115,10 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
 
     def get_pgd(self):
         """
-        The PGD.nc file can come from the output of a "PGD" Task or a User Environment
+        The PGD.nc file can come from the output of a "PGD" Task in standard cases.
+        It comes from a User Environment in reanalysis tasks.
         """
-        raise NotImplementedError("A PGD.nc is exepected for to launch an OFFLINE executable")
+        self.get_pgd_from_cache()
 
     def put_outputs(self):
         """

@@ -29,7 +29,7 @@ class InterpolateS2MForcing(_CenResearchTask):
     :type forcing_geometry: str, footprints.stdtypes.FPList
     :param gridout: path to output grid file
     :type gridout: str, pathlike
-    :param genv: environment containing the interpolation executable
+    :param uenv: environment containing the interpolation executable
     :param xpid: Experiment identifier
     :type xpid: str
     :param geometry: Geometry of the output file(s)
@@ -53,7 +53,7 @@ class InterpolateS2MForcing(_CenResearchTask):
             role='gridout',
             kind='interpolgrid',
             model='surfex',
-            genv=self.conf.genv,
+            genv=self.conf.uenv,
             gvar='DEM',
             local='GRID.nc',
         )
@@ -66,7 +66,7 @@ class InterpolateS2MForcing(_CenResearchTask):
             kind='offline',
             local='INTERPOL',
             model='surfex',
-            genv=self.conf.genv,
+            genv=self.conf.uenv,
             gvar='master_interpol_mpi',
         )
 
@@ -85,7 +85,7 @@ class InterpolateS2MForcing(_CenResearchTask):
             engine='parallel',
             binary='INTERPOL',
             kind='deterministic',
-            reprod_info=dict(genv=self.conf.genv),
+            reprod_info=dict(genv=self.conf.uenv),
         )
         print(self.ticket.prompt, 'interpolation algo component =', interpolation_tba)
         print()

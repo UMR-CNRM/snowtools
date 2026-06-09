@@ -41,7 +41,7 @@ os.makedirs(dst, exist_ok=True)
 os.chdir(dst)
 # TODO : check if vapp / vconf exists in snowtools
 for folder in ['jobs', 'drivers']:
-    src = os.path.join(snowtools, 'vortex-cen', args.vapp, args.vconf, folder)
+    src = os.path.join(snowtools, 'vortex_cen', args.vapp, args.vconf, folder)
     # Sync folder from the snowtools repo
     if os.path.exists(src):
         if os.path.exists(folder):
@@ -57,7 +57,7 @@ if os.path.exists('vortex'):
 if args.vortex is not None:
     os.symlink(args.vortex, "vortex")
 else:
-    os.symlink("/home/mf/dp/marp/verolive/vortex/vortex-cen", "vortex")
+    os.symlink("/home/mf/dp/marp/verolive/vortex/vortex_cen", "vortex")
 
 if os.path.exists('snowtools'):
     os.remove('snowtools')
@@ -65,7 +65,7 @@ os.symlink(snowtools, "snowtools")
 
 if os.path.exists('conf'):
     shutil.rmtree('conf')
-src = os.path.join(SNOWTOOLS_CEN, 'vortex-cen', args.vapp, args.vconf, 'conf')
+src = os.path.join(SNOWTOOLS_CEN, 'vortex_cen', args.vapp, args.vconf, 'conf')
 shutil.copytree(src, 'conf')
 
 

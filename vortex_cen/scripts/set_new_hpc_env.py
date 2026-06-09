@@ -43,7 +43,7 @@ os.makedirs('tasks', exist_ok=True)
 os.makedirs('conf', exist_ok=True)
 if os.path.exists('vortex'):
     os.remove('vortex')
-os.symlink("/home/mf/dp/marp/verolive/vortex/vortex-cen", "vortex")
+os.symlink("/home/mf/dp/marp/verolive/vortex/vortex_cen", "vortex")
 
 if os.path.exists('snowtools'):
     os.remove('snowtools')

@@ -91,7 +91,7 @@ The following example of an mkjob command line allows to launch a SURFEX simulat
 
 .. code-block::
 
-   mkjob -f $SNOWTOOLS_CEN/vortex-cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex-cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2020080106 dateend=2021080106 geometry=cor2_allslopes
+   mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2020080106 dateend=2021080106 geometry=cor2_allslopes
 
 .. note::
 
@@ -99,7 +99,7 @@ The following example of an mkjob command line allows to launch a SURFEX simulat
 
    The exact same result of the example above can be achieved with the following command line:
 
-   mkjob -j profile=rd-belenos-mt name=surfex package=drivers task=surfex xpid=first_test datebegin=2020080106 dateend=2021080106 geometry=cor2_allslopes -c $SNOWTOOLS_CEN/vortex-cen/Crocus/deterministic/conf/default_conf.ini
+   mkjob -j profile=rd-belenos-mt name=surfex package=drivers task=surfex xpid=first_test datebegin=2020080106 dateend=2021080106 geometry=cor2_allslopes -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini
 
 
 The mkjob helper
@@ -126,12 +126,12 @@ Tutorial (user)
 Launch a SURFEX/Crocus experiment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Deterministic SURFEX/Crocus simulations can be launched with the following job description file ("-f" argument of the mkjob launcher) : $SNOWTOOLS_CEN/vortex-cen/Crocus/deterministic/jobs/surfex.job
+Deterministic SURFEX/Crocus simulations can be launched with the following job description file ("-f" argument of the mkjob launcher) : $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job
 
 Default SAFRAN-based simulations
 """"""""""""""""""""""""""""""""
 
-A default configuration file is also available ("-c" argument of the mkjob command : $SNOWTOOLS_CEN/vortex-cen/Crocus/deterministic/conf/default_conf.ini
+A default configuration file is also available ("-c" argument of the mkjob command : $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini
 By default, SURFEX/Crocus simulations use FORCING files from the S2M-reanalysis dataset and the minimum information to provide is:
 
 * the simulation's experiment identifier : *xpid* can be any string of length different from 4
@@ -142,7 +142,7 @@ These arguments can either be added in the configuration file, or be provided to
 
 .. code-block::
 
-   mkjob -f $SNOWTOOLS_CEN/vortex-cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex-cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2020080106 dateend=2021080106 geometry=cor2_allslopes
+   mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2020080106 dateend=2021080106 geometry=cor2_allslopes
 
 
 Reproductible simulations with a user-controlled SURFEX/Crocus configuration
@@ -189,7 +189,7 @@ For example if your $HOME/.vortexrc/hack/uget/<your_username>/data/namelists_sur
 
 .. code-block::
 
-   mkjob -f $SNOWTOOLS_CEN/vortex-cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex-cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2020080106 dateend=2021080106 geometry=cor2_allslopes surfex_uenv=new_env_name namelist_source=OPTIONS_PAPPUS.nam
+   mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2020080106 dateend=2021080106 geometry=cor2_allslopes surfex_uenv=new_env_name namelist_source=OPTIONS_PAPPUS.nam
 
 
 Non-reproductible simulations with a user-controlled SURFEX/Crocus configuration
@@ -204,13 +204,13 @@ You can also use your own namelist by setting the *namelist_path* variable to po
 
 .. code-block::
 
-   mkjob -f $SNOWTOOLS_CEN/vortex-cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex-cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2017080106 dateend=2018080106 geometry=GrandesRousses250m forcing_xpid=ALPAGA forcing_user=vernaym forcing_member=0 forcing_vapp=edelweiss forcing_vconf=grandesrousses250m forcing_vortex1=True namelist_path=/home/cnrm_other/cen/mrns/vernaym/EDELWEISS/namelist_surfex/OPTIONS_NO_PAPPUS.nam
+   mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2017080106 dateend=2018080106 geometry=GrandesRousses250m forcing_xpid=ALPAGA forcing_user=vernaym forcing_member=0 forcing_vapp=edelweiss forcing_vconf=grandesrousses250m forcing_vortex1=True namelist_path=/home/cnrm_other/cen/mrns/vernaym/EDELWEISS/namelist_surfex/OPTIONS_NO_PAPPUS.nam
 
 Similarly, you can use your own SURFEX executables by setting the *exesurfex* variable:
 
 .. code-block::
 
-   mkjob -f $SNOWTOOLS_CEN/vortex-cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex-cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2020080106 dateend=2021080106 geometry=cor2_allslopes exesurfex=/home/cnrm_other/cen/mrns/vernaym/SURFEX/exe
+   mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2020080106 dateend=2021080106 geometry=cor2_allslopes exesurfex=/home/cnrm_other/cen/mrns/vernaym/SURFEX/exe
 
 
 Simulations based on other FORCING files
@@ -240,7 +240,7 @@ The following example illustrates the launch of a SURFEX/Crocus simulation with 
 
 .. code-block::
 
-   mkjob -f $SNOWTOOLS_CEN/vortex-cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex-cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2021080107 dateend=2022080106 geometry=GrandesRousses250m forcing_datebegin=2021080106 dateend=2022080106 forcing_xpid=ALPAGA forcing_user=vernaym forcing_member=0 forcing_vapp=edelweiss forcing_vconf=grandesrousses250m forcing_vortex1=True namelist_path=/home/cnrm_other/cen/mrns/vernaym/EDELWEISS/namelist_surfex/OPTIONS_V9.nam
+   mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2021080107 dateend=2022080106 geometry=GrandesRousses250m forcing_datebegin=2021080106 dateend=2022080106 forcing_xpid=ALPAGA forcing_user=vernaym forcing_member=0 forcing_vapp=edelweiss forcing_vconf=grandesrousses250m forcing_vortex1=True namelist_path=/home/cnrm_other/cen/mrns/vernaym/EDELWEISS/namelist_surfex/OPTIONS_V9.nam
 
 Configuring your job
 """"""""""""""""""""
@@ -255,7 +255,7 @@ For example, to increase your job's wall time to 1 hour, add "time=1:00:00" to y
 
 .. code-block::
 
-   mkjob -f $SNOWTOOLS_CEN/vortex-cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex-cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2021080107 dateend=2022080106 geometry=GrandesRousses250m forcing_datebegin=2021080106 dateend=2022080106 forcing_xpid=ALPAGA forcing_user=vernaym forcing_member=0 forcing_vapp=edelweiss forcing_vconf=grandesrousses250m forcing_vortex1=True namelist_path=/home/cnrm_other/cen/mrns/vernaym/EDELWEISS/namelist_surfex/OPTIONS_V9.nam time=1:00:00
+   mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2021080107 dateend=2022080106 geometry=GrandesRousses250m forcing_datebegin=2021080106 dateend=2022080106 forcing_xpid=ALPAGA forcing_user=vernaym forcing_member=0 forcing_vapp=edelweiss forcing_vconf=grandesrousses250m forcing_vortex1=True namelist_path=/home/cnrm_other/cen/mrns/vernaym/EDELWEISS/namelist_surfex/OPTIONS_V9.nam time=1:00:00
 
 ..
   TODO : exemple de lancement d'une simu SURFEX

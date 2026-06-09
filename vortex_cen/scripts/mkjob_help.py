@@ -48,7 +48,7 @@ def get_driver(args):
         target_driver = args.path
     else:
         target_driver = os.path.join(
-            os.environ['SNOWTOOLS_CEN'], 'vortex-cen', args.vapp, args.vconf, 'drivers', args.driver + '.py'
+            os.environ['SNOWTOOLS_CEN'], 'vortex_cen', args.vapp, args.vconf, 'drivers', args.driver + '.py'
         )
 
     if not os.path.isfile(target_driver):
@@ -124,7 +124,6 @@ def print_configuration_help(driver):
         '--------------------------------\n'
     )
     for key, value in optional_configuration_variables.items():
-        print(key, value)
         infos = [value['help'], "type : " + value['type']]
         for entry in ['format', 'alias', 'choices', 'default']:
             if entry in value.keys():

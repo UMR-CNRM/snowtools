@@ -186,7 +186,7 @@ Vortex Configuration :
 
     mkdir ~/.vortex.d/
     cd ~/.vortex.d/
-    ln -s $SNOWTOOLS_CEN/vortex-cen/configs/vortex_pc.toml vortex.toml
+    ln -s $SNOWTOOLS_CEN/vortex_cen/configs/vortex_pc.toml vortex.toml
 
 Start from the default geometries file (update it with your own geometries if you already had one):
 
@@ -294,31 +294,19 @@ By default, Pip fetches package distributions from the global Python package reg
     index-url = https://nexus-sidev.meteo.fr/repository/pypi-group/simple
     extra-index-url = https://nexus.meteo.fr/pypi-vortex-releases/simple
 
-
-Continue installation for Belenos and SXCEN
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. code-block:: bash
-
-    python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -e -v ~/my_envs/snowtools_env
-
-.. tip::
-
-   If you want a stable / non-editable installation of snowtools (not affected by local modifications of the code), you can replace the line above by:
-   python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -v ~/my_envs/snowtools_env_stable
-
-Temporary step for Belenos
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+**FOR BELENOS ONLY** : Temporary step
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Configure gitlab for HPC via SSH using the documentation (in french):
 
 http://confluence.meteo.fr/display/~thomas.carrel-billiard@meteo.fr/Configurer+GitLab
 
-Then clone the following repositories
+Then clone the following repositories in a  "Projects" on your $HOME :
 
 .. code-block:: bash
 
-    cd ~/all_git_repo
+    mkdir $HOME/Projects
+    cd $HOME/Projects
     git clone git@gitlab.meteo.fr:cnrm-gmap/mkjob.git
     git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-gco.git
     git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-olive.git
@@ -332,11 +320,17 @@ Go in the mkjob directory and checkout to branch "mv-add-command-line-xpid":
     cd ..
 
 
-Install the repositories
+Continue installation for Belenos and SXCEN
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
 
-    pip install mkjob/ vortex-gco/ vortex-olive/
+    python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -e -v ~/my_envs/snowtools_env
+
+.. tip::
+
+   If you want a stable / non-editable installation of snowtools (not affected by local modifications of the code), you can replace the line above by:
+   python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -v ~/my_envs/snowtools_env_stable
 
 Configure Vortex
 ^^^^^^^^^^^^^^^^
@@ -349,14 +343,14 @@ Vortex Configuration
     cd ~/.vortex.d/
 
     # For Belenos
-    ln -s $SNOWTOOLS_CEN/vortex-cen/configs/vortex_belenos.toml vortex.toml
+    ln -s $SNOWTOOLS_CEN/vortex_cen/configs/vortex_belenos.toml vortex.toml
 
     # For SXCEN
-    ln -s $SNOWTOOLS_CEN/vortex-cen/configs/vortex_sxcen.toml vortex.toml
+    ln -s $SNOWTOOLS_CEN/vortex_cen/configs/vortex_sxcen.toml vortex.toml
     mkdir -p /cnrm/cen/users/NO_SAVE/$USER/cache
 
     # For PC
-    ln -s $SNOWTOOLS_CEN/vortex-cen/configs/vortex_pc.toml vortex.toml
+    ln -s $SNOWTOOLS_CEN/vortex_cen/configs/vortex_pc.toml vortex.toml
     mkdir -p $HOME/NO_SAVE/cache/vortex
 
 Start from the default geometries file (update it with your own geometries if you already had one):

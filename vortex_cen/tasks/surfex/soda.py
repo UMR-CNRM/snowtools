@@ -33,7 +33,7 @@ class SodaCommonsMixin(SurfexCommonsMixin):
         print(self.ticket.prompt, 'Observation =', obs)
         print()
 
-    def get_soda_exe_from_uenv(self, mpi=True, fatal=True):
+    def get_soda_exe_from_uenv(self, mpi=False, fatal=True):
 
         if mpi:
             default_gvar = 'master_soda_mpi'

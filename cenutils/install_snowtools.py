@@ -135,6 +135,7 @@ else:
 print("Running command:")
 print(f"{pip} install --upgrade pip")
 subprocess.run([pip, 'install'] + pip_options + ['--upgrade', 'pip'])
+subprocess.run([pip, 'install'] + ['--upgrade', 'setuptools'])
 
 # Snowtools installation
 # ----------------------
@@ -149,19 +150,6 @@ if args.editable:
     if sys.version_info < (3, 10, 1):
         raise SystemError('Editable install is not possible with python versions lower than 3.10')
 
-    # Snowtools contains a compiled extension module written in Fortran.
-    # In order to render compiled extension modules editable similarly to ordinary python code,
-    # they are compiled at import time in an editable install rather than during
-    # installation in case of a classical install (:ref:`sec-install_users`).
-    # This means that the build dependencies have to be available at runtime in
-    # the virtual environment and not just temporarily during the install.
-    # The advantage is, that edits in the Fortran code trigger the (partial) re-compilation of
-    # the extension module at the next import in a new interpreter instance.
-    # https://mesonbuild.com/meson-python/how-to-guides/editable-installs.html
-    print("Running command:")
-    print(f"{pip} install {' '.join(pip_options)} numpy>=1.21.6 meson-python ninja")
-    subprocess.run([pip, 'install'] + pip_options + ['numpy>=1.21.6', 'meson-python', 'ninja'])
-
     # 'no-build-isolation' is required for an editable install
     pip_options.extend(['--no-build-isolation', '-e'])
 
@@ -172,12 +160,6 @@ print("Running command:")
 print(f"{pip} install {' '.join(pip_options)} .{optional}")
 subprocess.run([pip, 'install'] + pip_options + [f'.{optional}'])
 
-# Install vortex-cen plugin
-os.chdir('vortex-cen')
-print("Running command:")
-print(f"{pip} install .")
-subprocess.run([pip, 'install', '.'])
-
 # Write latest snowtools commit number into the virtual environment to keep a track of what has just been installed
 if os.path.isdir('.git'):
     commit = subprocess.check_output('git show --pretty=format:"%H" --no-patch', shell=True, encoding='utf-8')
@@ -186,7 +168,11 @@ if os.path.isdir('.git'):
 elif os.path.exists('.git_info'):
     shutil.copyfile('.git_info', os.path.join(venv, '.snowtools_info'))
 
-# TODO : DBUG non-editable install on HPC
+# Temporary step for Belenos because packages on nexus are not available from HPC
+if 'hpc' in HOSTNAME:
+    HOME = os.getenv('HOME')
+    subprocess.run([pip, 'install', f'{HOME}/Projects/mkjob/', f'{HOME}/Projects/vortex-gco',
+        f'{HOME}/Projects/vortex-olive'])
 
 # TODO : Crash if any subprces crashed
 
