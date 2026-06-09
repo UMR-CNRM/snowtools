@@ -1,19 +1,21 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=66,<71"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "snowtools"
 version = "2.0.4"
 dependencies = [
-    'netCDF4',
     'numpy>=1.8',
+    'cftime',
+    'certifi',
+    'netCDF4',
     'scipy',
     'python-dateutil',
     'pyproj',
     'shapely',
     'pyshp',
-    'pandas',
+    'pandas<=2.3.2',
     'xarray>=0.18.0',  # Enable the use of snowtools xarray plugin
     'bronx',
     'footprints',

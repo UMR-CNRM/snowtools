@@ -135,7 +135,10 @@ else:
 print("Running command:")
 print(f"{pip} install --upgrade pip")
 subprocess.run([pip, 'install'] + pip_options + ['--upgrade', 'pip'])
-subprocess.run([pip, 'install'] + ['--upgrade', 'setuptools'])
+
+# Get a proper version of setuptools (more than 66 -> editable, less than 71 to avoir bug)
+print("Setuptools:")
+subprocess.run([pip, 'install'] + ['setuptools>=66.0.0,<71.0.0'])
 
 # Snowtools installation
 # ----------------------

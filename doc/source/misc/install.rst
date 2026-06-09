@@ -168,13 +168,13 @@ Install
    cd $SNOWTOOLS_CEN
    git checkout dev
    python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -e -v ~/my_envs/snowtools_env
-   deactivate
 
 .. tip::
 
-   If you want a stable / non-editable installation of snowtools (not affected by local modifications of the code), you can replace the line
-   python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -e -v ~/my_envs/snowtools_env
-   by:
+   If you want a stable / non-editable installation of snowtools (not affected by local modifications of the code), you can replace the line above by:
+
+.. code-block:: bash
+
    python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -v ~/my_envs/snowtools_env_stable
 
 [Optional] Configure Vortex and install UEnv tools
@@ -200,8 +200,9 @@ Install UEnv tools :
 
 .. code-block:: bash
 
+    source ~/my_envs/snowtools_env/bin/activate
     pip install vortex-gco
-
+    deactivate
 
 And that's it. Now, you have snowtools installed in your git repository ``~/all_git_repo/snowtools`` and a virtual environment associated ``~/my_envs/snowtools_env``
 
@@ -260,8 +261,7 @@ Source the ``~/.bashrc`` file and start installation
 
     source ~/.bashrc
     cd $SNOWTOOLS_CEN
-    module load python/3.10.12
-    module load gcc/15.2.0
+    module load python/3.10.12 gcc/15.2.0
 
 **NB** The installation should also work with python/3.12.12, but the installation fails in some cases.
 
@@ -319,7 +319,6 @@ Go in the mkjob directory and checkout to branch "mv-add-command-line-xpid":
     git checkout mv-add-command-line-xpid
     cd ..
 
-
 Continue installation for Belenos and SXCEN
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -330,6 +329,9 @@ Continue installation for Belenos and SXCEN
 .. tip::
 
    If you want a stable / non-editable installation of snowtools (not affected by local modifications of the code), you can replace the line above by:
+
+.. code-block:: bash
+
    python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -v ~/my_envs/snowtools_env_stable
 
 Configure Vortex
@@ -360,12 +362,6 @@ Start from the default geometries file (update it with your own geometries if yo
     mkdir ~/.vortexrc
     cd ~/.vortexrc
     cp $SNOWTOOLS_CEN/snowtools/conf/geometries_vortex2.ini geometries.ini
-
-Deactivate virtual environment
-
-.. code-block:: bash
-
-    deactivate
 
 That's it, now snowtools is installed on Meteo France HPC belenos or on Meteo France server SXCEN.
 
@@ -417,7 +413,6 @@ Install
     python -m venv ~/my_envs/snowtools_env
     source ~/my_envs/snowtools_env/bin/activate
     python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -o all -e
-    deactivate
 
 And that's it. Now, you have snowtools installed in your git repository ``~/all_git_repo/snowtools`` and a virtual environment associated ``~/my_envs/snowtools_env``
 
