@@ -27,21 +27,17 @@ class Shadows(_CenResearchTask):
         MANDATORY_CONFIGURATION_VARIABLES = [
             "forcing_datebegin|datebegin",
             "forcing_dateend|dateend",
-            "forcing_xpid|xpid",
-            "forcing_geometry",
-            "geometry",
+            "forcing_geometry+help=A station / postes geometry",
+            "forcing_xpid",
+            "forcing_block",
+            "xpid",
         ]
         OPTIONAL_CONFIGURATION_VARIABLES = [
             "forcing",
         ]
-        overwrite = [
-            "datebegin",
-            "dateend",
-        ]
         super().__init__(**kw)
 
-        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES,
-                overwrite=overwrite)
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
 
     def get_remote_inputs(self):
         """

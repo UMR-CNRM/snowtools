@@ -8,7 +8,7 @@ import vortex
 
 class ExtractS2MForcing(_CenResearchTask):
     """
-    Extract a list of points from an ensemble of FORCING file(s) covering different time periods
+    Parallel extraction of a list of points from an ensemble of FORCING file(s) covering different time periods
     in the "massif" geometry according to their massif number, elevation, slope and aspect.
 
     Inputs :
@@ -19,22 +19,34 @@ class ExtractS2MForcing(_CenResearchTask):
     ---------
     - FORCING file(s) with extracted points
 
-    Configuration variables:
-    ------------------------
-
-    * ``massifs`` Massif number(s) to be extracted
-      type: int, list
-    * ``slopes`` Slope(s) to be extracted
-      type: int, list
-    * ``elevations`` Elevations(s) to be extracted
-      type: int, list
-    * ``aspects`` Aspects(s) to be extracted
-      type: int, list
-    *``geometry`` Geometry of the output file(s)
-      type: str
-    * ``xpid`` Experiment identifier
-      type: str
     """
+
+    def __init__(self, **kw):
+
+        MANDATORY_CONFIGURATION_VARIABLES = [
+            "forcing_datebegin|datebegin",
+            "forcing_dateend|dateend",
+            "forcing_xpid",
+            "xpid",
+            "forcing_geometry+help=A SAFRAN massif geometry",
+            "forcing_block",
+            "geometry",
+        ]
+        OPTIONAL_CONFIGURATION_VARIABLES = [
+            "forcing",
+            "massifs",
+            "slopes",
+            "elevations",
+            "aspects",
+        ]
+        overwrite = [
+            "datebegin",
+            "dateend",
+        ]
+        super().__init__(**kw)
+
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES,
+                overwrite=overwrite)
 
     def get_remote_inputs(self):
         """

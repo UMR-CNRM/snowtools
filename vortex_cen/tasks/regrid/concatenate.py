@@ -21,25 +21,6 @@ class ForcingSpatialConcatenation(_CenResearchTask):
     ---------
     - Single FORCING file
 
-    Mandatory Configuration variables:
-    ----------------------------------
-
-    :param forcing_geometry: List of geometries of the FORCING files to concatenate
-    :type forcing_geometry: footprints.stdtypes.FPList
-    :param xpid: Experiment identifier
-    :type xpid: str
-    :param geometry: Geometry of the output file(s)
-    :type geometry: str
-    :param datebegin: begin date(s) of files
-    :param dateend: end date(s) of files
-    :param namespace_out: namespace of output files
-
-    Optional configuration variables:
-    ---------------------------------
-    :param max_ntasks: The maximum number of parallel tasks (in case of huge memory usage)
-    :type max_ntasks: int
-    :param block: Output block of the concatenated FORCING files
-    :type block: str
     """
 
     def __init__(self, **kw):
@@ -47,8 +28,10 @@ class ForcingSpatialConcatenation(_CenResearchTask):
         MANDATORY_CONFIGURATION_VARIABLES = [
             "forcing_datebegin|datebegin",
             "forcing_dateend|dateend",
-            "forcing_xpid|xpid",
-            "forcing_geometry+type=list,default=None",
+            "forcing_xpid",
+            "xpid",
+            "forcing_geometry+type=list;default=None",
+            "forcing_block",
             "geometry",
         ]
         OPTIONAL_CONFIGURATION_VARIABLES = [

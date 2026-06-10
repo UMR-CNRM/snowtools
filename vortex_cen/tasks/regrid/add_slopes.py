@@ -7,7 +7,7 @@ from vortex_cen.tasks.research_task_base import _CenResearchTask
 
 
 class AddSlopes(_CenResearchTask):
-    '''
+    """
     Add slopes to forcing file in a "flat" geometry.
 
     Inputs :
@@ -18,25 +18,31 @@ class AddSlopes(_CenResearchTask):
     ---------
     - FORCING file wih slopes and aspects.
 
-    Mandatory configuration variables:
-    ----------------------------------
-    :param datebegin: *datebegin* of the forcing file(s)
-    :type datebegin: str, footprints.stdtypes.FPList
-    :param dateend: *dateend* of the forcing files(s)
-    :type dateend: str, footprints.stdtypes.FPList
-    :param forcing_geometry: *geometry* of the input forcing file(s)
-    :type forcing_geometry: str, footprints.stdtypes.FPList
-    :param geometry: *geometry* of the output forcing file(s)
-    :type geometry: str, footprints.stdtypes.FPList
-    :param xpid: Experiment identifier
-    :type xpid: str
+   """
 
-    Optional configuration variables:
-    ---------------------------------
-    :param max_ntasks: The maximum number of parallel tasks (in case of huge memory usage)
-    :type max_ntasks: int
+    def __init__(self, **kw):
 
-    '''
+        MANDATORY_CONFIGURATION_VARIABLES = [
+            "forcing_datebegin|datebegin",
+            "forcing_dateend|dateend",
+            "forcing_xpid",
+            "xpid",
+            "forcing_geometry+format=*_flat",
+            "forcing_block",
+            "geometry",
+        ]
+        OPTIONAL_CONFIGURATION_VARIABLES = [
+            "forcing",
+            "max_ntasks",
+        ]
+        overwrite = [
+            "datebegin",
+            "dateend",
+        ]
+        super().__init__(**kw)
+
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES,
+                overwrite=overwrite)
 
     def get_remote_inputs(self):
         """

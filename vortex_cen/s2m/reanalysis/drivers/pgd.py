@@ -1,4 +1,7 @@
 # -*- coding:Utf-8 -*-
+"""
+Generation of ground physiography (PGD.nc file)
+"""
 
 from mkjob.nodes import Driver
 from vortex_cen.tasks.surfex.pre_process import Preprocess_Uenv_Namelist

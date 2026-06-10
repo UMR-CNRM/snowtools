@@ -110,12 +110,9 @@ class Preprocess_Uenv_Namelist(_Preprocess):
         MANDATORY_CONFIGURATION_VARIABLES = [
             "uenv|surfex_uenv",
             "namelist_source",
-
         ]
-
         OPTIONAL_CONFIGURATION_VARIABLES = [
         ]
-
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
 
     def get_remote_inputs(self):

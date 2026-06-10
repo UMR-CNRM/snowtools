@@ -1,4 +1,7 @@
 # -*- coding:Utf-8 -*-
+"""
+Concatenate station/postes FORCING files covering different domains and solar relief-induced solar masks.
+"""
 
 from mkjob.nodes import Driver
 from vortex_cen.tasks.regrid.shadows import Shadows

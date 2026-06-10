@@ -39,6 +39,11 @@ standard_variables = dict(
         type = member_type,
         default = "None",
     ),
+    members = dict(
+        help = "The list of ensemble members",
+        type = member_type,
+        default = "None",
+    ),
     uenv     = dict(
         help = "Name of the User Environment containing constant files",
         type = "str",
@@ -389,5 +394,63 @@ standard_variables = dict(
     block = dict(
         help = "Set the output resource's block",
         type = "str",
-    )
+    ),
+    massifs = dict(
+        help = "Massif number(s) to be extracted",
+        type = "int, list",
+    ),
+    slopes = dict(
+        help = "Slope(s) to be extracted",
+        type = "int, list",
+    ),
+    elevations = dict(
+        help = "Elevations(s) to be extracted",
+        type = "int, list",
+    ),
+    aspects = dict(
+        help = "Aspects(s) to be extracted",
+        type = "int, list",
+    ),
+    newobs_xpid = dict(
+        help = "Experiment identifier of the reconstructed hourly temperature observation dataset",
+        type = "str",
+        default = xpid_default,
+    ),
+    newobs_user = dict(
+        help = "Username of the producer of the reconstructed hourly temperature observation dataset",
+        type  = "str",
+        default = "$USER",
+    ),
+    guess_xpid = dict(
+        help = "Experiment identifier of the SAFRAN guess files",
+        type = "str",
+        default = xpid_default,
+    ),
+    guess_user = dict(
+        help = "Username of the producer of the SAFRAN guess files",
+        type  = "str",
+        default = "$USER",
+    ),
+    prv_terms = dict(
+        help = "Lead times of the Safran guess files",
+        type = "footprints.stdtypes.FPList",
+        format = "first-last-step",
+    ),
+    arpege_geometry = dict(
+        help = "Geometry of ARPEGE analyses / forecasts files used to generate Safran guess",
+        type = "str",
+    ),
+    pearp_geometry = dict(
+        help = "Geometry of PEARP forecast files used to generate Safran guess",
+        type = "str",
+    ),
+    nwp_xpid = dict(
+        help = "Experiment identifier of the NWP models used to generate Safran guess files",
+        type = "str",
+    ),
+    geometries   = dict(
+        help = "List of output geometries of the simulation (these must be valid geometry tags in your"
+        "'$HOME/.vortexrc/geometries.ini' file.",
+        type  = "'list'",
+    ),
 )

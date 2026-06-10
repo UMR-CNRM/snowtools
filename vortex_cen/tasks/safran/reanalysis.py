@@ -145,7 +145,7 @@ class Safran(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb07')
             tb07 = toolbox.input(
                 role            = 'ListeMassif',
-                genv            = self.conf.cycle,
+                genv            = self.conf.uenv,
                 gdomain         = '[geometry:domain]',
                 geometry        = self.conf.geometry,
                 kind            = 'listem',
@@ -158,7 +158,7 @@ class Safran(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb08')
             tb08 = toolbox.input(
                 role            = 'ListeLimitesMassif',
-                genv            = self.conf.cycle,
+                genv            = self.conf.uenv,
                 gdomain         = '[geometry:domain]',
                 geometry        = self.conf.geometry,
                 kind            = 'listeml',
@@ -171,7 +171,7 @@ class Safran(Task, S2MTaskMixIn):
 #             self.sh.title('Toolbox input tb08')
 #             tb08 = toolbox.input(
 #                 role            = 'NormalesClim',
-#                 genv            = self.conf.cycle,
+#                 genv            = self.conf.uenv,
 #                 gdomain         = '[geometry:domain]',
 #                 geometry        = self.conf.geometry,
 #                 kind            = 'NORELm',
@@ -184,7 +184,7 @@ class Safran(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb09')
             tb09 = toolbox.input(
                 role            = 'ListePost',
-                genv            = self.conf.cycle,
+                genv            = self.conf.uenv,
                 gdomain         = '[geometry:domain]',
                 geometry        = self.conf.geometry,
                 kind            = 'listeo',
@@ -197,7 +197,7 @@ class Safran(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb09')
             tb09 = toolbox.input(
                 role            = 'MoyennesMensuellesRR',
-                genv            = self.conf.cycle,
+                genv            = self.conf.uenv,
                 gdomain         = '[geometry:domain]',
                 geometry        = self.conf.geometry,
                 kind            = 'NORELot',
@@ -211,7 +211,7 @@ class Safran(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb09')
             tb09 = toolbox.input(
                 role            = 'SurfZ',
-                genv            = self.conf.cycle,
+                genv            = self.conf.uenv,
                 gdomain         = '[geometry:domain]',
                 geometry        = self.conf.geometry,
                 kind            = 'surfz',
@@ -225,7 +225,7 @@ class Safran(Task, S2MTaskMixIn):
 #             self.sh.title('Toolbox input tb09')
 #             tb09 = toolbox.input(
 #                 role            = 'MoyennesMensuellesRR_TT',
-#                 genv            = self.conf.cycle,
+#                 genv            = self.conf.uenv,
 #                 gdomain         = '[geometry:domain]',
 #                 geometry        = self.conf.geometry,
 #                 kind            = 'NORELo',
@@ -238,7 +238,7 @@ class Safran(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb09')
             tb09 = toolbox.input(
                 role            = 'carac_post',
-                genv            = self.conf.cycle,
+                genv            = self.conf.uenv,
                 gdomain         = '[geometry:domain]',
                 geometry        = self.conf.geometry,
                 kind            = 'carpost',
@@ -251,7 +251,7 @@ class Safran(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb12')
             tb12 = toolbox.input(
                 role            = 'BlackList',
-                genv            = self.conf.cycle,
+                genv            = self.conf.uenv,
                 gdomain         = '[geometry:domain]',
                 geometry        = self.conf.geometry,
                 kind            = 'blacklist',
@@ -265,7 +265,7 @@ class Safran(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb08')
             tb08 = toolbox.input(
                 role            = 'NormalesClimTT',
-                genv            = self.conf.cycle,
+                genv            = self.conf.uenv,
                 gdomain         = '[geometry:domain]',
                 geometry        = self.conf.geometry,
                 kind            = 'NORELmt',
@@ -279,7 +279,7 @@ class Safran(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb11')
             tb11 = toolbox.input(
                 role            = 'Clim',
-                genv            = self.conf.cycle,
+                genv            = self.conf.uenv,
                 gdomain         = '[geometry:domain]',
                 geometry        = self.conf.geometry,
                 kind            = 'rsclim',
@@ -293,7 +293,7 @@ class Safran(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb12')
             tb12 = toolbox.input(
                 role            = 'Clim',
-                genv            = self.conf.cycle,
+                genv            = self.conf.uenv,
                 gdomain         = '[geometry:domain]',
                 geometry        = self.conf.geometry,
                 kind            = 'icrccm',
@@ -309,7 +309,7 @@ class Safran(Task, S2MTaskMixIn):
                 role            = 'Nam_sorties',
                 source          = 'namelist_sorties_[geometry:domain]',
                 geometry        = self.conf.geometry,
-                genv            = self.conf.cycle,
+                genv            = self.conf.uenv,
                 kind            = 'namelist',
                 model           = self.conf.model,
                 local           = 'SORTIES',
@@ -323,7 +323,7 @@ class Safran(Task, S2MTaskMixIn):
                 role            = 'Nam_analyse',
                 source          = 'namelist_analyse_[geometry:domain]',
                 geometry        = self.conf.geometry,
-                genv            = self.conf.cycle,
+                genv            = self.conf.uenv,
                 kind            = 'namelist',
                 model           = self.conf.model,
                 local           = 'ANALYSE',
@@ -337,7 +337,7 @@ class Safran(Task, S2MTaskMixIn):
                 role            = 'Nam_adapt',
                 source          = 'namelist_adapt',
                 geometry        = self.conf.geometry,
-                genv            = self.conf.cycle,
+                genv            = self.conf.uenv,
                 kind            = 'namelist',
                 model           = self.conf.model,
                 local           = 'ADAPT',
@@ -350,7 +350,7 @@ class Safran(Task, S2MTaskMixIn):
                 role            = 'Nam_melange',
                 source          = 'namelist_melange_[geometry:domain]',
                 geometry        = self.conf.geometry,
-                genv            = self.conf.cycle,
+                genv            = self.conf.uenv,
                 kind            = 'namelist',
                 model           = self.conf.model,
                 local           = 'MELANGE',
@@ -364,7 +364,7 @@ class Safran(Task, S2MTaskMixIn):
                 role            = 'Nam_observr',
                 source          = 'namelist_observr_[geometry:domain]',
                 geometry        = self.conf.geometry,
-                genv            = self.conf.cycle,
+                genv            = self.conf.uenv,
                 kind            = 'namelist',
                 model           = self.conf.model,
                 local           = 'OBSERVR',
@@ -378,7 +378,7 @@ class Safran(Task, S2MTaskMixIn):
                 role            = 'Nam_observa',
                 source          = 'namelist_observa',
                 geometry        = self.conf.geometry,
-                genv            = self.conf.cycle,
+                genv            = self.conf.uenv,
                 kind            = 'namelist',
                 model           = self.conf.model,
                 local           = 'OBSERVA',
@@ -392,7 +392,7 @@ class Safran(Task, S2MTaskMixIn):
                 role            = 'Nam_ebauche',
                 source          = 'namelist_ebauche_[geometry:domain]',
                 geometry        = self.conf.geometry,
-                genv            = self.conf.cycle,
+                genv            = self.conf.uenv,
                 kind            = 'namelist',
                 model           = self.conf.model,
                 local           = 'EBAUCHE',
@@ -404,7 +404,7 @@ class Safran(Task, S2MTaskMixIn):
 #            self.sh.title('Toolbox executable tb17 = tbx0')
 #            tb17 = tbx0 = toolbox.executable(
 #                role           = 'Binary',
-#                genv           = self.conf.cycle,
+#                genv           = self.conf.uenv,
 #                kind           = 'intercep',
 #                #local          = 'intercep_era40',
 #                local          = 'intercep_era5',
@@ -416,7 +416,7 @@ class Safran(Task, S2MTaskMixIn):
             self.sh.title('Toolbox executable tb17 = tbx1')
             tb17 = tbx1 = toolbox.executable(
                 role           = 'Binary',
-                genv           = self.conf.cycle,
+                genv           = self.conf.uenv,
                 kind           = 'safrane',
                 local          = 'safrane',
                 model          = self.conf.model,
@@ -427,7 +427,7 @@ class Safran(Task, S2MTaskMixIn):
             self.sh.title('Toolbox executable tb18 = tbx2')
             tbx2 = toolbox.executable(
                 role           = 'Binary',
-                genv           = self.conf.cycle,
+                genv           = self.conf.uenv,
                 kind           = 'syrpluie',
                 local          = 'syrpluie',
                 model          = self.conf.model,
@@ -440,7 +440,7 @@ class Safran(Task, S2MTaskMixIn):
                 self.sh.title('Toolbox executable tb18_b = tbx3')
                 tb18_b = tbx3 = toolbox.executable(
                     role           = 'Binary',
-                    genv           = self.conf.cycle,
+                    genv           = self.conf.uenv,
                     kind           = 'sypluie',
                     local          = 'sypluie',
                     model          = self.conf.model,
@@ -451,7 +451,7 @@ class Safran(Task, S2MTaskMixIn):
                 self.sh.title('Toolbox executable tb19 = tbx4')
                 tb19 = tbx4 = toolbox.executable(
                     role           = 'Binary',
-                    genv           = self.conf.cycle,
+                    genv           = self.conf.uenv,
                     kind           = 'syvapr',
                     local          = 'syvapr',
                     model          = self.conf.model,
@@ -462,7 +462,7 @@ class Safran(Task, S2MTaskMixIn):
                 self.sh.title('Toolbox executable tb20 = tbx5')
                 tb20 = tbx5 = toolbox.executable(
                     role           = 'Binary',
-                    genv           = self.conf.cycle,
+                    genv           = self.conf.uenv,
                     kind           = 'syvafi',
                     local          = 'syvafi',
                     model          = self.conf.model,
@@ -475,7 +475,7 @@ class Safran(Task, S2MTaskMixIn):
 #                self.sh.title('Toolbox executable syrmRR')
 #                tb13 = tbx3 = toolbox.executable(
 #                    role           = 'Binary',
-#                    genv           = self.conf.cycle,
+#                    genv           = self.conf.uenv,
 #                    kind           = 'syrmrr',
 #                    local          = 'syrmRR',
 #                    model          = self.conf.model,
@@ -486,7 +486,7 @@ class Safran(Task, S2MTaskMixIn):
             self.sh.title('Toolbox executable tb21 = tbx6')
             tb21 = tbx6 = toolbox.executable(
                 role           = 'Binary',
-                genv           = self.conf.cycle,
+                genv           = self.conf.uenv,
                 kind           = 'sytist',
                 local          = 'sytist',
                 model          = self.conf.model,

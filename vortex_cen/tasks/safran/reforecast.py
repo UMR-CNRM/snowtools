@@ -8,8 +8,53 @@ from vortex_cen.tasks.research_task_base import _CenResearchTask
 
 class SafranReforecast(_CenResearchTask):
     """
-    Safran re-forecast task
+    Task : SafranReforecast
+    =======================
+
+    Safran ensemble re-forecast task (daily run covering J 6H --> J+4 6H).
+    SAFRAN guess files come from both the PEARP ensemble and ARPEGE (as member 'N+1') from the 0 UTC run.
+
+    Inputs
+    ------
+    - Guess : daily packed files containing all lead time of a given 0H run of ARPEGE / PERAP
+    - listem : List of SAFRAN massifs
+    - listeml : List of coordinates of the SAFRAN massifs
+    - Listeo : list of potential observation sites to assimilate (mandatory but unused)
+    - NORELmt : Monthly mean precipitation value
+    - rsclim / icrccm : Climatological values
+    - ADAPT/ANALYSE/EBAUCHE/IMPRESS/MELANGE/SORTIES : Safran namelists
+    - carpost.tar : Files describing the output "postes"
+    - safrane : Safran executable for synoptic interpolation of the guess on the Safran geometry
+    - syrpluie / syrmRR : Safran executables for precipitation spatio-temporal precipitation interpolation
+    - sytist : Safran executable for hourly interpolation and the creation of FORCING files
+
+    Outputs
+    -------
+    - FORCING_massifs.nc : Ensemble of forcing files on the "flat" massif geometry
+    - FORCING_postes.nc : Ensemble of forcing files on the "postes" geometry
     """
+
+    def __init__(self, **kw):
+
+        MANDATORY_CONFIGURATION_VARIABLES = [
+            "datebegin+help=First rundate of the guess (hour must be '00')",
+            "dateend+help=Last run date of the guess (hour must be '00')",
+            "xpid",
+            "geometry",
+            "uenv+help=Name of the UEnv containing all SAFRAN constant input files and executables",
+            "prv_terms",
+            "uenv",
+            "ntasks",
+            "nnodes",
+            "members",
+        ]
+        OPTIONAL_CONFIGURATION_VARIABLES = [
+            "guess_xpid",
+            "guess_user",
+        ]
+        super().__init__(**kw)
+
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
 
     def get_remote_inputs(self):
 

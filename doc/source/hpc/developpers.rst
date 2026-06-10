@@ -202,8 +202,7 @@ The mkjob-help script will add the information that a "prep" description becomes
                         type : bool
                         enforce : prep"
 
-Finally, it is possible to change default variable attributes from the "standard_variables" dictionnary, with the syntaxe "var+<var_attribute_to_modify>=<new_attribute_value>,..."
-
+Finally, it is possible to change default variable attributes from the "standard_variables" dictionnary (separated by ';'), with the syntaxe "var+<var_attribute_to_modify>=<new_attribute_value>;..."
 For example, the following class attributes
 
 .. code-block:: python
@@ -212,7 +211,7 @@ For example, the following class attributes
 
        super().__init__(**kw)
        MANDATORY_CONFIGURATION_VARIABLES = [
-           "forcing_geometry+type=list,default=None",
+           "forcing_geometry+type=list;default=None",
        ]
        OPTIONAL_CONFIGURATION_VARIABLES = [
        ]

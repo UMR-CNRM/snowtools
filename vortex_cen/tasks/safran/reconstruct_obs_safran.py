@@ -7,10 +7,40 @@ import vortex
 
 
 class Reconstruct_SAFRAN_Obs(_CenResearchTask):
-    '''
+    """
+    Task : Reconstruct_SAFRAN_Obs
+    =============================
+
     Task to build SAFRAN-compatible hourly observations files from reconstructed
     observation series.
-    '''
+
+    Inputs
+    ------
+    - NEW_OBSERVATIONS.nc : file containing reconstructed hourly temperature "observations"
+    - OBSERVATIONS.tar : archive containing real Safran-compatible surface observation files (R, S and T files)
+    - listeo file : providing the metadata of all observation sites
+
+    Outputs
+    -------
+    - OBSERVATIONS.tar : archive containing Safran-compatible files with both real and reconstructed observations
+    """
+
+    def __init__(self, **kw):
+
+        MANDATORY_CONFIGURATION_VARIABLES = [
+            "datebegin",
+            "dateend",
+            "xpid",
+            "geometry",
+            "uenv",
+        ]
+        OPTIONAL_CONFIGURATION_VARIABLES = [
+            "newobs_xpid",
+            "newobs_user",
+        ]
+        super().__init__(**kw)
+
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
 
     def get_remote_inputs(self):
 
@@ -65,7 +95,7 @@ class Reconstruct_SAFRAN_Obs(_CenResearchTask):
         self.sh.title('Input listeo')
         listeo = vortex.input(
             role            = 'ListePost',
-            genv            = self.conf.cycle,
+            genv            = self.conf.uenv,
             gdomain         = '[geometry:tag]',
             geometry        = self.conf.geometry,
             kind            = 'listeo',
@@ -103,8 +133,6 @@ class Reconstruct_SAFRAN_Obs(_CenResearchTask):
             date           = '[dateend:ymdh]',
             experiment     = self.conf.xpid,
             geometry       = self.conf.geometry,
-            vapp           = 'safran',
-            vconf          = self.conf.vconf,
             local          = '[datebegin:ymd6h]_[dateend:ymd6h]/OBSERVATIONS.tar',
             namespace      = 'vortex.archive.fr',
             model          = 'safran',
@@ -117,8 +145,3 @@ class Reconstruct_SAFRAN_Obs(_CenResearchTask):
         )
         print(self.ticket.prompt, 'Output observations =', out)
         print()
-
-        if 'debug' in self.conf and self.conf.debug:
-            print('==================================================================================================')
-            print('==================================================================================================')
-            raise Exception('INFO :The execution went well, do not take into account the following error')

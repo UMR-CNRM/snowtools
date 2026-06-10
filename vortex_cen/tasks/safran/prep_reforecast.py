@@ -15,6 +15,48 @@ from bronx.stdtypes.date import Period
 
 
 class PrepSafran(_CenResearchTask):
+    """
+    Task : PrepSafran
+    =================
+
+    Generation of guess files for the Safran ensemble re-forecast task (daily run covering J 6H --> J+4 6H).
+    SAFRAN guess files come from both the PEARP ensemble and ARPEGE (as member 'N+1') from the 0 UTC run.
+
+    Inputs
+    ------
+    - METADATA : Description of the ARPEGE / PEARP grib files grid / geometry
+    - ARPEGE.grib : ARPEGE forecasts
+    - PEARP.grib : PEARP ensemble forecasts
+    - massifs_safran.tar : shapefile describing the Safran massifs
+    - makeP.py : script generating the Safran guess files from the ARPEGE / PEARP forecasts
+
+    Outputs
+    -------
+    - PYYMMDDHH : Safran guess files, grouped in tar archives containing all 'P' files from all members and lead times
+    of a given model run
+    """
+
+    def __init__(self, **kw):
+
+        MANDATORY_CONFIGURATION_VARIABLES = [
+            "datebegin+help=First rundate of the guess (hour must be '00')",
+            "dateend+help=Last run date of the guess (hour must be '00')",
+            "xpid",
+            "geometries",
+            "uenv+help=Name of the UEnv containing constant files (METADATA, massifs_safran.shp and makeP.py script)",
+            "arpege_geometry",
+            "pearp_geometry",
+            "prv_terms",
+            "nwp_xpid",
+            "members",
+            "ntasks",
+            "nnodes",
+        ]
+        OPTIONAL_CONFIGURATION_VARIABLES = [
+        ]
+        super().__init__(**kw)
+
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
 
     def process(self):
         """Preparation of SAFRAN input files"""
@@ -58,7 +100,7 @@ class PrepSafran(_CenResearchTask):
                     cutoff         = 'production',
                     format         = 'grib',
                     nativefmt      = '[format]',
-                    experiment     = self.conf.guess_xpid,
+                    experiment     = self.conf.nwp_xpid,
                     block          = 'forecast',
                     namespace      = 'vortex.multi.fr',  # permet d'utiliser le cache inline pour les relances
                     geometry       = self.conf.arpege_geometry,
@@ -79,7 +121,7 @@ class PrepSafran(_CenResearchTask):
                     cutoff         = 'production',
                     format         = 'grib',
                     nativefmt      = '[format]',
-                    experiment     = self.conf.guess_xpid,
+                    experiment     = self.conf.nwp_xpid,
                     block          = 'forecast',
                     namespace      = 'vortex.multi.fr',  # permet d'utiliser le cache inline pour les relances
                     geometry       = self.conf.pearp_geometry,
@@ -127,9 +169,6 @@ class PrepSafran(_CenResearchTask):
         if 'compute' in self.steps:
 
             # Tar guess files in parallel over the different rundates
-            print('DBUG ntasks=', type(self.conf.ntasks))
-            print('DBUG nnodes=', type(self.conf.nnodes))
-
             self.sh.title('Algo Guess')
             expresso = vortex.task(
                 engine         = 'exec',

@@ -1,4 +1,7 @@
 # -*- coding:Utf-8 -*-
+"""
+Safran reforecast producing daily FORCING files covering J 6h --> J+4 6H
+"""
 
 from mkjob.nodes import Driver
 from vortex_cen.tasks.safran.reforecast import SafranReforecast

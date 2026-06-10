@@ -306,10 +306,8 @@ class Offline_MPI_Uenv(_Offline_MPI):
     def __init__(self, **kw):
 
         super().__init__(**kw)
-
         MANDATORY_CONFIGURATION_VARIABLES = [
         ]
-
         OPTIONAL_CONFIGURATION_VARIABLES = [
             "forcing",
             "prep",
@@ -320,7 +318,6 @@ class Offline_MPI_Uenv(_Offline_MPI):
             "august_threshold",
             "offline_gvar",
         ]
-
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
 
     def get_executable(self):

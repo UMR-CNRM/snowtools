@@ -116,7 +116,7 @@ def get_configuration(driver, bytask):
                 # var+type=list  overwrites the "type" of var
                 newkey = key.split('+')[0]
                 value = standard_variables[newkey]
-                for k, v in [x.split('=') for x in key.split('+')[1].split(',')]:
+                for k, v in [x.split('=') for x in key.split('+')[1].split(';')]:
                     value[k] = v
                 conf.update({newkey: value})
             else:

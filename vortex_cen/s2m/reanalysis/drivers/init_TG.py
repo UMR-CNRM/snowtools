@@ -1,4 +1,7 @@
 # -*- coding:Utf-8 -*-
+"""
+Initialize Surfex ground temperature (GT) by taking the climatological mean of the input forcing air temperature.
+"""
 
 from mkjob.nodes import Driver
 from vortex_cen.tasks.surfex.init_clim_ground_temperature import InitClimGroundTemperature

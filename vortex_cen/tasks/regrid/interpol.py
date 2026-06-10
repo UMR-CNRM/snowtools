@@ -23,21 +23,32 @@ class InterpolateS2MForcing(_CenResearchTask):
     ---------
     - FORCING file on the new grid.
 
-    Configuration variables:
-
-    :param forcing_geometry: geometry of input file
-    :type forcing_geometry: str, footprints.stdtypes.FPList
-    :param gridout: path to output grid file
-    :type gridout: str, pathlike
-    :param uenv: environment containing the interpolation executable
-    :param xpid: Experiment identifier
-    :type xpid: str
-    :param geometry: Geometry of the output file(s)
-    :type geometry: str
-    :param datebegin: begin date(s) of files
-    :param dateend: end date(s) of files
-    :param namespace_out: namespace of output files
     """
+
+    def __init__(self, **kw):
+
+        MANDATORY_CONFIGURATION_VARIABLES = [
+            "forcing_datebegin|datebegin",
+            "forcing_dateend|dateend",
+            "forcing_xpid",
+            "xpid",
+            "forcing_geometry+help=A SAFRAN massif geometry",
+            "forcing_block",
+            "geometry",
+            "uenv+help=Name of the UEnv containing the DEM file and interpolator executable",
+        ]
+        OPTIONAL_CONFIGURATION_VARIABLES = [
+            "forcing",
+            "member",
+        ]
+        overwrite = [
+            "datebegin",
+            "dateend",
+        ]
+        super().__init__(**kw)
+
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES,
+                overwrite=overwrite)
 
     def get_remote_inputs(self):
         """
@@ -122,7 +133,7 @@ class InterpolateS2MForcing(_CenResearchTask):
                 nativefmt   = 'netcdf',
                 kind        = 'MeteorologicalForcing',
                 model       = 's2m',
-                namespace   = self.conf.namespace_out,
+                namespace   = self.namespace_out,
                 namebuild   = 'flat@cen',
                 block       = 'meteo',
                 member      = self.conf.get('member', None),
