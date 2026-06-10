@@ -97,6 +97,7 @@ def get_configuration(driver, bytask):
                 conf.update({key: standard_variables.get(key)})
                 known_vars.append(key)
             elif '|' in key:
+                # var1|var2 means that setting either var1 or var2 gives the same result
                 newkey = ' or '.join([k for k in key.split('|')])
                 known_vars.extend([k for k in key.split('|')])
                 value = dict(
@@ -104,12 +105,20 @@ def get_configuration(driver, bytask):
                 )
                 conf.update({newkey: value})
             elif ':' in key:
+                # var1:var2,var3  means that setting var1 makes var2 and va3 mandatory / relevant
                 newkey = key.split(':')[0]
                 value = standard_variables[newkey]
                 enforce = key.split(':')[1]
                 value.update({'enforce': ', '.join(enforce.split(','))})
                 conf.update({newkey: value})
                 known_vars.append(newkey)
+            elif '+' in key:
+                # var+type=list  overwrites the "type" of var
+                newkey = key.split('+')[0]
+                value = standard_variables[newkey]
+                for k, v in [x.split('=') for x in key.split('+')[1].split(',')]:
+                    value[k] = v
+                conf.update({newkey: value})
             else:
                 print(f'WARNING : Undocumented configuration variable : {key}')
 

@@ -42,6 +42,30 @@ class ForcingSpatialConcatenation(_CenResearchTask):
     :type block: str
     """
 
+    def __init__(self, **kw):
+
+        MANDATORY_CONFIGURATION_VARIABLES = [
+            "forcing_datebegin|datebegin",
+            "forcing_dateend|dateend",
+            "forcing_xpid|xpid",
+            "forcing_geometry+type=list,default=None",
+            "geometry",
+        ]
+        OPTIONAL_CONFIGURATION_VARIABLES = [
+            "concat_dim",
+            "max_ntasks",
+            "forcing",
+            "block+default=meteo",
+        ]
+        overwrite = [
+            "datebegin",
+            "dateend",
+        ]
+        super().__init__(**kw)
+
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES,
+                overwrite=overwrite)
+
     def get_remote_inputs(self):
         """
         get forcing files to concatenate
@@ -65,7 +89,7 @@ class ForcingSpatialConcatenation(_CenResearchTask):
             engine       = 'algo',
             kind         = 'ConcatForcings',
             role_members = 'Forcing',
-            concat_dim   = 'Number_of_points',
+            concat_dim   = self.conf.get('concat_dim', 'Number_of_points'),
             ntasks       = self.conf.get('max_ntasks', self.conf.ntasks),
         )
         print(self.ticket.prompt, 'algo =', algo)

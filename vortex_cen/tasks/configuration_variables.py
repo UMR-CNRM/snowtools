@@ -32,7 +32,7 @@ standard_variables = dict(
     geometry   = dict(
         help = "Geometry of the simulation. This must be a valid geometry tag in your"
         "'$HOME/.vortexrc/geometries.ini' file.",
-        type  = "str",
+        type  = "'str', 'list'",
     ),
     member = dict(
         help = "The simulation's member(s) in case it is part of an ensemble",
@@ -80,7 +80,7 @@ standard_variables = dict(
     forcing_geometry   = dict(
         help    = "Geometry of the forcing file(s). This must be a valid geometry tag in your"
         "'$HOME/.vortexrc/geometries.ini' file.",
-        type    = "str",
+        type  = "'str', 'list'",
         default = geometry_default,
     ),
     forcing_member = dict(
@@ -179,7 +179,7 @@ standard_variables = dict(
     pgd_geometry   = dict(
         help    = "Geometry of the PGD.nc file. This must be a valid geometry tag in your"
         "'$HOME/.vortexrc/geometries.ini' file.",
-        type    = "str",
+        type  = "'str', 'list'",
         default = geometry_default,
     ),
     pgd_vortex1 = dict(
@@ -241,7 +241,7 @@ standard_variables = dict(
     prep_geometry   = dict(
         help    = "Geometry of the PREP.nc file. This must be a valid geometry tag in your"
         "'$HOME/.vortexrc/geometries.ini' file.",
-        type    = "str",
+        type  = "'str', 'list'",
         default = geometry_default,
     ),
     prep_vortex1 = dict(
@@ -320,7 +320,7 @@ standard_variables = dict(
     tg_geometry   = dict(
         help    = "Geometry of the init_TG.nc file. This must be a valid geometry tag in your"
         "'$HOME/.vortexrc/geometries.ini' file.",
-        type    = "str",
+        type  = "'str', 'list'",
         default = geometry_default,
     ),
     tg_gvar = dict(
@@ -376,4 +376,18 @@ standard_variables = dict(
         help = "Number of ensemble members",
         type = "int",
     ),
+    concat_dim = dict(
+        help = "Dimensions along which to concatenate variables, as used by xarray.concat()",
+        type = "str",
+        default = "Number_of_points",
+    ),
+    max_ntasks = dict(
+        help = "Set a maximum number of parallel tasks to  avoid memory overflow",
+        type = "int",
+        default = "*ntasks*",
+    ),
+    block = dict(
+        help = "Set the output resource's block",
+        type = "str",
+    )
 )

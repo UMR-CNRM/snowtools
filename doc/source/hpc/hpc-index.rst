@@ -16,4 +16,4 @@ Few informations on how to work on MF HPC.
 .. toctree::
    :maxdepth: 1
 
-   Developing new functionalities for MF HPC <developers.rst>
+   Developing new functionalities for MF HPC <developpers.rst>
