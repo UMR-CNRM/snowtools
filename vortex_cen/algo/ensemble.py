@@ -889,7 +889,7 @@ class SurfexWorker(_CenWorkerBlindRun):
                 # * croco = N FORCINGs (--> N subdirs) / N physiques Crocus
             ),
             threshold = dict(
-                info = "Threshold to initialise snowdepth",
+                info = "Threshold to apply to SWE",
                 type = int,
                 optional = True,
                 default = -999
