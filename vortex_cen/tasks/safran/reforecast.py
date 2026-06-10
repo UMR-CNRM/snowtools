@@ -187,6 +187,7 @@ class SafranReforecast(_CenResearchTask):
             kind            = 'namelist',
             model           = 'safran',
             local           = 'ADAPT',
+            fatal           = False,
         )
         print(t.prompt, 'adapt =', adapt)
         print()
@@ -200,6 +201,7 @@ class SafranReforecast(_CenResearchTask):
             kind            = 'namelist',
             model           = 'safran',
             local           = 'MELANGE',
+            fatal           = False,
         )
         print(t.prompt, 'melange =', melange)
         print()
@@ -226,6 +228,7 @@ class SafranReforecast(_CenResearchTask):
             kind            = 'namelist',
             model           = 'safran',
             local           = 'IMPRESS',
+            fatal           = False,
         )
         print(t.prompt, 'impress =', impress)
         print()

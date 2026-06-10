@@ -24,9 +24,9 @@ def parse_command_line():
     parser.add_argument("-c", "--vconf",
         help="Target configuration name",
         type=str,
-        choices=['reanalysis', 'reforecast', 'deterministic', 'escroc', 'assim'],
+        # choices=['reanalysis', 'reforecast', 'deterministic', 'escroc', 'assim'],
         # default='deterministic',
-    )
+    )  # noqa
 
     parser.add_argument("-d", "--driver",
         help="Target driver name",
@@ -58,8 +58,11 @@ def parse_command_line():
 
 
 def get_module(target):
-    module_name = os.path.basename(target).removesuffix('.py')
-    spec = importlib.util.spec_from_file_location(module_name, target)
+    module_name = os.path.basename(target).removesuffix(".py")
+    directory = os.path.dirname(target)
+    sys.path.insert(0, os.path.dirname(directory))
+    dirname = os.path.basename(directory)
+    spec = importlib.util.spec_from_file_location(f'{dirname}.{module_name}', target)
     module = importlib.util.module_from_spec(spec)
     sys.modules[module_name] = module
     spec.loader.exec_module(module)
@@ -115,12 +118,18 @@ def get_configuration(driver, bytask):
             elif '+' in key:
                 # var+type=list  overwrites the "type" of var
                 newkey = key.split('+')[0]
-                value = standard_variables[newkey]
+                if newkey in standard_variables:
+                    value = standard_variables[newkey]
+                else:
+                    value = dict()
                 for k, v in [x.split('=') for x in key.split('+')[1].split(';')]:
                     value[k] = v
                 conf.update({newkey: value})
+                known_vars.append(newkey)
             else:
                 print(f'WARNING : Undocumented configuration variable : {key}')
+                conf.update({key: {'help': 'Undocumented'}})
+                known_vars.append(key)
 
         return conf
 
@@ -304,8 +313,12 @@ def main():
                 for driver in avail_drivers:
                     basename = os.path.basename(driver).removesuffix('.py')
                     if basename != '__init__':
-                        module = get_module(driver)
-                        print(f'  *   {basename} : ' + module.__doc__)
+                        try:
+                            module = get_module(driver)
+                            print(f'  *   {basename} : ' + module.__doc__)
+                        except ImportError:
+                            # Relative imports in SURFEX s2m-oper tasks
+                            pass
     else:
         raise FileNotFoundError(target)
 

@@ -8,6 +8,8 @@ Ensemble, distributed snowpack simulations at 250m resolution with the assimilat
 Associated configurations:
 
 * **prafr**: Operational Edelweiss configuration for avalanche danger forecasting over France
+
 * **reanalysis**: Edelweiss reanalysis
+
 * **reforecast** Edelweiss reforecast
 """
