@@ -86,7 +86,7 @@ class ScoreCalcTest(TestWithTempFolderWithLogWithChdir):
         self.assertAlmostEqual(rdict["scores"][0, 1, 0], -0.086062541841526)
         self.assertAlmostEqual(rdict["scores"][1, 1, 0], 0.107970488223159)
         self.assertAlmostEqual(rdict["scores"][2, 1, 0], 0.0897967995224728)
-        rdict["scores"] = np.reshape(rdict["scores"], shape=(3, 8, 1, 1))
+        rdict["scores"] = np.reshape(rdict["scores"], (3, 8, 1, 1))
         scores_dataset = scores_file(os.path.join(self.diroutput, "scores.nc"), "w")
         for s, score in enumerate(list_scores):
             scores_dataset.write(score, rdict["scores"][s, :, :, :])
