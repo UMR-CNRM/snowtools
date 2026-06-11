@@ -64,8 +64,7 @@ class InterpolateS2MForcing(_CenResearchTask):
             role='gridout',
             kind='interpolgrid',
             model='surfex',
-            genv=self.conf.uenv,
-            gvar='DEM',
+            remote=self.conf.gridout,
             local='GRID.nc',
         )
         print(self.ticket.prompt, 'toolbox input grid definition file =', grid_tbi)
