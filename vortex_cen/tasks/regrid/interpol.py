@@ -64,7 +64,13 @@ class InterpolateS2MForcing(_CenResearchTask):
             role='gridout',
             kind='interpolgrid',
             model='surfex',
+            # TODO : ne pas utiliser de "remote" dans les tâches unitaires de base, utiliser l'héritage
+            # pour créer une tâche spécifique identifiée comme "non reproductible"
+            # --> pour cela il faut pouvoir surcharger cette "toolbox input" spécifiquement et donc
+            # la mettre dans une méthode spécifique de "Mixin"
             remote=self.conf.gridout,
+            # genv=self.conf.uenv,
+            # gvar='DEM',
             local='GRID.nc',
         )
         print(self.ticket.prompt, 'toolbox input grid definition file =', grid_tbi)
