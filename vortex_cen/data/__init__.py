@@ -36,6 +36,7 @@ from . import surfex as surfex
 from . import packedfiles as packedfiles
 from . import postprocess as postprocess
 from . import consts as consts
+from . import geometries
 
 #: No automatic export
 __all__ = []

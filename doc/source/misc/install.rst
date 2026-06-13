@@ -328,14 +328,6 @@ Vortex Configuration
     ln -s $SNOWTOOLS_CEN/vortex_cen/configs/vortex_pc.toml vortex.toml
     mkdir -p $HOME/NO_SAVE/cache/vortex
 
-Start from the default geometries file (update it with your own geometries if you already had one):
-
-.. code-block:: bash
-
-    mkdir ~/.vortexrc
-    cd ~/.vortexrc
-    cp $SNOWTOOLS_CEN/snowtools/conf/geometries_vortex2.ini geometries.ini
-
 That's it, now snowtools is installed on Meteo France HPC belenos or on Meteo France server SXCEN.
 
 In order to launch a simulation, just follow :ref:`surfex_HPC_simu`

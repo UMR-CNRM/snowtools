@@ -116,13 +116,16 @@ The resource's *kind*
 
 The prefix of the file name is the resource *kind* footprint (type string) or any alias deriving from it.
 
+.. _vortex_geometries:
+
 The resource's *geometry*
 """""""""""""""""""""""""
 
 The second level of the file name is derived from the *geometry* footprint (string or list of str type), which is a tag identifying a geometry object describing a given discretisation of space.
+Standard NWP geometries are referenced in the vortex_nwp package, and additional "CEN"-specific geometries are references in the vortex-cen plugin.
 
-**NB** A description of the geometry object must be provided in a geometries.ini file stored under $HOME/.vortexrc (the *geometry* footprint is the geometry block/entry name)
-For example, *geometry='GrandesRousses250m'* identifies the following geometry :
+Any "new" geometry not included in these standrd geometries must be provided in a ``geometries.ini`` file stored under $HOME/.vortexrc.
+The *geometry* footprint is the geometry block/entry name. For example, *geometry='GrandesRousses250m'* identifies the following geometry :
 
 .. code-block:: ini
 
@@ -132,11 +135,10 @@ For example, *geometry='GrandesRousses250m'* identifies the following geometry :
     area       = GrandesRousses
 
 The minimum information to provide for the description of a geometry is the geometry *kind* ("ustructured" for massif-like geometries or "lonlat" for 2D simulations).
-A default "geometries.ini" file containing all standard geometries commonly used at CEN is provided in snowtools, under $SNOWTOOLS_CEN/snowtools/conf/geometries_vortex2.ini
 
 .. note::
 
-    This is a major difference with the naming convention used at CEN before the migration to vortex-2:
+    This *geometry* information in the file name is a major difference with the naming convention used at CEN before the migration to vortex-2:
     The *geometry* used to appear at the *vconf* level and not in the filename.
 
 The resource's *datebegin* and *dateend*
