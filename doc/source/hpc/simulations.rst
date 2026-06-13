@@ -64,9 +64,10 @@ This profile is based on the MTOOL tool that splits the execution in separate jo
 Here is an overview of the mkjob launcher arguments used at CEN (see also "mkjob -h" for more information):
 
 * **-c [mandatory]**: Set the absolute path to the configuration file
-* **-f [optional but recommended]**: Set the path to the job description file (in which the job *name* and associated *task* name, as well as the *profile=rd-belenos-mt* information must be provided). The job description file can contain several job descriptions (one description per line). In this case, all the jobs will be launched.
+* **-f [optional but recommended]**: Absolute path or filename of the job description file (in which the job *name* and associated *task* name, as well as the *profile=rd-belenos-mt* information must be provided). The job description file can contain several job descriptions (one description per line). In this case, all the jobs will be launched.
 * **-a [optional]**: Additionnal user defined command line variables (format "arg1=XXX arg2=YYY [...]") with the highest level of priority (the values provided after the "-a" option overwrite both the values provided in the "job" file and the configuration file). These additionnal values apply to all jobs described in the job description file. Although this argument is optional, it should be used to set variables such as *datebegin*, *dateend* or *geometry*.
 * **-n [optional]**: In case the job description file (*-f* argument) provides several job decriptions, the *-n* argument allows to choose a subset of jobs to launch based on the jobs names.
+* **-l [info]**: Return the list of job descriptions in the job description file (for example to find a specific job name to launch with option *-n*)
 
 The following example of an mkjob command line allows to launch a SURFEX simulation with the minimal default configuration variables:
 
@@ -81,6 +82,24 @@ The following example of an mkjob command line allows to launch a SURFEX simulat
    The exact same result of the example above can be achieved with the following command line:
 
    mkjob -j profile=rd-belenos-mt name=surfex package=drivers task=surfex xpid=first_test datebegin=2020080106 dateend=2021080106 geometry=cor2_allslopes -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini
+
+If the job description file contains several jobs and you want to launch only a subset, il is possible to access the jobname wit option -l :
+
+.. code-block::
+
+   > mkjob -f safran.jobs -c $SNOWTOOLS_CEN/vortex_cen/s2m/reanalysis/conf/s2m_reanalysis.ini -l
+   {'name': 'safran_reanalysis_alp', 'package': 'drivers', 'task': 'safran', 'profile': 'rd-belenos-mt', 'geometry': 'alp27_flat'}
+   {'name': 'safran_reanalysis_pyr', 'package': 'drivers', 'task': 'safran', 'profile': 'rd-belenos-mt', 'geometry': 'pyr24_flat'}
+   {'name': 'safran_reanalysis_cor', 'package': 'drivers', 'task': 'safran', 'profile': 'rd-belenos-mt', 'geometry': 'cor2_flat'}
+   {'name': 'safran_reanalysis_mac', 'package': 'drivers', 'task': 'safran', 'profile': 'rd-belenos-mt', 'geometry': 'mac11_flat'}
+   {'name': 'safran_reanalysis_jur', 'package': 'drivers', 'task': 'safran', 'profile': 'rd-belenos-mt', 'geometry': 'jur4_flat'}
+   {'name': 'safran_reanalysis_vog', 'package': 'drivers', 'task': 'safran', 'profile': 'rd-belenos-mt', 'geometry': 'vog3_flat'}
+
+Then you can choose a subset of jobs to launch with the "-n" option :
+
+.. code-block::
+
+   mkjob -f safran.jobs -c $SNOWTOOLS_CEN/vortex_cen/s2m/reanalysis/conf/s2m_reanalysis.ini -n safran_reanalysis_alp safran_reanalysis_pyr safran_reanalysis_cor -a datebegin=... dateend=... xpid=...
 
 
 The mkjob helper
@@ -195,7 +214,7 @@ Similarly, you can use your own SURFEX executables by setting the *exesurfex* va
 
 .. code-block::
 
-   mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2020080106 dateend=2021080106 geometry=cor2_allslopes exesurfex=/home/cnrm_other/cen/mrns/vernaym/SURFEX/exe
+   mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2020080106 dateend=2021080107 geometry=cor2_allslopes exesurfex=/home/cnrm_other/cen/mrns/vernaym/SURFEX/exe
 
 
 Simulations based on other FORCING files
