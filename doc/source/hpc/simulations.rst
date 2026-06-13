@@ -95,6 +95,24 @@ Then you can choose a subset of jobs to launch with the "-n" option :
 
    mkjob -f $SNOWTOOLS_CEN/vortex_cen/s2m/reanalysis/safran.jobs -c $SNOWTOOLS_CEN/vortex_cen/s2m/reanalysis/conf/s2m_reanalysis.ini -n safran_reanalysis_alp safran_reanalysis_pyr safran_reanalysis_cor -a datebegin=... dateend=... xpid=...
 
+If the job description file contains several jobs and you want to launch only a subset, il is possible to access the jobname wit option -l :
+
+.. code-block::
+
+   > mkjob -f safran.jobs -c $SNOWTOOLS_CEN/vortex_cen/s2m/reanalysis/conf/s2m_reanalysis.ini -l
+   {'name': 'safran_reanalysis_alp', 'package': 'drivers', 'task': 'safran', 'profile': 'rd-belenos-mt', 'geometry': 'alp27_flat'}
+   {'name': 'safran_reanalysis_pyr', 'package': 'drivers', 'task': 'safran', 'profile': 'rd-belenos-mt', 'geometry': 'pyr24_flat'}
+   {'name': 'safran_reanalysis_cor', 'package': 'drivers', 'task': 'safran', 'profile': 'rd-belenos-mt', 'geometry': 'cor2_flat'}
+   {'name': 'safran_reanalysis_mac', 'package': 'drivers', 'task': 'safran', 'profile': 'rd-belenos-mt', 'geometry': 'mac11_flat'}
+   {'name': 'safran_reanalysis_jur', 'package': 'drivers', 'task': 'safran', 'profile': 'rd-belenos-mt', 'geometry': 'jur4_flat'}
+   {'name': 'safran_reanalysis_vog', 'package': 'drivers', 'task': 'safran', 'profile': 'rd-belenos-mt', 'geometry': 'vog3_flat'}
+
+Then you can choose a subset of jobs to launch with the "-n" option :
+
+.. code-block::
+
+   mkjob -f safran.jobs -c $SNOWTOOLS_CEN/vortex_cen/s2m/reanalysis/conf/s2m_reanalysis.ini -n safran_reanalysis_alp safran_reanalysis_pyr safran_reanalysis_cor -a datebegin=... dateend=... xpid=...
+
 
 The mkjob helper
 ^^^^^^^^^^^^^^^^
