@@ -73,9 +73,11 @@ class ExtractSubPeriod(_CenResearchTask):
             nativefmt   = 'netcdf',
             kind        = 'MeteorologicalForcing',
             model       = 's2m',
-            namespace   = 'vortex.multi.fr',
+            # MV : archivage sur cache uniquement par défaut pour ne pas dupliquer de la donnée existante
+            namespace   = self.conf.get("namespace_out", "vortex.cache.fr"),
             namebuild   = 'flat@cen',
-            block       = 'meteo',
+            # MV : archivage dans le même block que le forcing d'origine
+            block       = self.conf.get('forcing_block', 'meteo'),
             member      = self.conf.get('member', None),
         ),
         print(self.ticket.prompt, 'Sub-forcing =', forcing_tbo)
