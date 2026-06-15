@@ -17,7 +17,7 @@ def parse_command_line():
     parser.add_argument("-a", "--vapp",
         help="Target application name",
         type=str,
-        choices=['edelweiss', 's2m', 'Crocus'],
+        choices=['edelweiss', 's2m', 'Crocus', 'tests'],
         # default='Crocus',
     )
 

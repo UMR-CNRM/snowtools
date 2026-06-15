@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+Test the "GetPrep" unittask. The driver also includes the "Preprocess_Uenv_Namelist" and "GetClimGroundTemperature" tasks.
+"""
 
 from mkjob.nodes import Driver
 from vortex_cen.tasks.surfex.pre_process import Preprocess_Uenv_Namelist
