@@ -721,3 +721,34 @@ For example, the following class attributes
 
 states that for this given task, the value of the *forcing_geometry* configuration variable must be a list (instead of 'str or list') and that there is no default value.
 This syntax can also be used to document variables not in the "standard_variables" dictionnary. In this case, at least the "help" message and the variable "type" must be provided.
+
+Testing unit tasks
+------------------
+
+The HPC testbase configuration is under vortex_cen/tests/testhpc.
+
+In order to launch the entire testbase, simply launch the following command on Belenos :
+
+.. code-block::
+
+   mkjob -f $SNOWTOOLS_CEN/vortex_cen/tests/testhpc/jobs/create_job -c $SNOWTOOLS_CEN/vortex_cen/tests/testhpc/conf/tests_testhpc.ini
+
+An monitor the tests results under /scratch/mtool/$USER : Any failed test and the step that caused them to fail will be recorded in a 'FailTests.txt' file.
+On the contrary, successfull tests will be recorded in a 'OKTests.txt' file.
+
+If you want to launch a specific test, identify the associated job name with :
+
+.. code-block::
+
+   mkjob -f $SNOWTOOLS_CEN/vortex_cen/tests/testhpc/jobs/create_job -c $SNOWTOOLS_CEN/vortex_cen/tests/testhpc/conf/tests_testhpc.ini -l
+
+And launch it with :
+
+.. code-block::
+
+   mkjob -f $SNOWTOOLS_CEN/vortex_cen/tests/testhpc/jobs/create_job -c $SNOWTOOLS_CEN/vortex_cen/tests/testhpc/conf/tests_testhpc.ini -n <jobname>
+
+.. note::
+
+   The test monitoring is done by Context managers stored in vortex_cen/tools/monitoring.py
+
