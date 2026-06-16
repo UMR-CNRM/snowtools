@@ -299,7 +299,7 @@ standard_variables = dict(
         singular = True,
     ),
     exesurfex = dict(
-        help = "Absolute path to SURFEX executables",
+        help = "Absolute path to SURFEX executables (WARNING : non-reproductible simulations)",
         type = "str",
     ),
     tg_cache = dict(
@@ -345,7 +345,7 @@ standard_variables = dict(
         default = "False",
     ),
     namelist_path     = dict(
-        help = "Absolute path to the SURFEX namelist",
+        help = "Absolute path to the SURFEX namelist (WARNING : non-reproductible simulations)",
         type = "str",
     ),
     namelist_source     = dict(
