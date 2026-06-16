@@ -33,7 +33,7 @@ class ExtractSubPeriod(_CenResearchTask):
         get forcing files in the "massif" geometry, output grid file and interpolation binary.
 
         """
-        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
+        self.get_forcing(localname='FORCING.nc')
 
     def get_local_inputs(self):
         pass
@@ -44,9 +44,9 @@ class ExtractSubPeriod(_CenResearchTask):
         """
         import xarray as xr
 
-        ds = xr.open_dataset('FORCING_{:s}_{:s}.nc'.format(self.conf.forcing_datebegin, self.conf.forcing_dateend))
+        ds = xr.open_dataset('FORCING.nc')
         shorter_forcing = ds.sel(time=slice(self.conf.datebegin, self.conf.dateend))
-        shorter_forcing.to_netcdf('FORCING_{:s}_{:s}.nc'.format(self.conf.datebegin, self.conf.dateend),
+        shorter_forcing.to_netcdf('FORCING_' + str(self.conf.datebegin.strftime("%Y%m%d%H")) + '_' + str(self.conf.dateend.strftime("%Y%m%d%H")) + '.nc',
                 format='NETCDF4_CLASSIC')
 
         return None
@@ -62,19 +62,19 @@ class ExtractSubPeriod(_CenResearchTask):
 
         self.sh.title('Output sub-forcing file')
         forcing_tbo = vortex.output(
-            local       = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+            local       = 'FORCING_' + str(self.conf.datebegin.strftime("%Y%m%d%H")) + '_' + str(self.conf.dateend.strftime("%Y%m%d%H")) + '.nc',
             experiment  = self.conf.xpid,
             # MV : il faut forcer la géométrie de sortie à la géométrie d'entrée puisqu'il n'y a
             # pas de changement de géométrie (--> sortir du répertoire "regrid" pour clarifier).
             # TODO : trouver une façon plus standardisée de faire ça.
             geometry    = self.conf.get('forcing_geometry', self.conf.geometry),
-            datebegin   = self.list_dates_begin,
-            dateend     = self.dict_dates_end,
+            datebegin   = self.conf.datebegin,
+            dateend     = self.conf.dateend,
             nativefmt   = 'netcdf',
             kind        = 'MeteorologicalForcing',
             model       = 's2m',
             # MV : archivage sur cache uniquement par défaut pour ne pas dupliquer de la donnée existante
-            namespace   = self.conf.get("namespace_out", "vortex.cache.fr"),
+            namespace   = self.conf.get('namespace_out', 'vortex.cache.fr'),
             namebuild   = 'flat@cen',
             # MV : archivage dans le même block que le forcing d'origine
             block       = self.conf.get('forcing_block', 'meteo'),

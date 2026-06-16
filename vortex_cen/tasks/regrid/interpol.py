@@ -55,8 +55,6 @@ class InterpolateS2MForcing(_CenResearchTask):
         get forcing files in the "massif" geometry, output grid file and interpolation binary.
 
         """
-        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
-
         # Target grid file for interpolation
         # the path must be provided in the configuration file
         self.sh.title('Toolbox input output grid definition')
@@ -145,3 +143,72 @@ class InterpolateS2MForcing(_CenResearchTask):
             ),
             print(self.ticket.prompt, 'interpolated forcing file toolbox =', forcing_tbo)
             print()
+
+class InterpolateS2MRemoteForcing(InterpolateS2MForcing):
+    """
+    Interpolate a forcing file in "massif" geometry onto a 2D grid, or 1D grid, that is a list of points.
+
+    Inputs:
+    --------
+    - remote FORCING file in the "massif" geometry
+    - GRID file containing the desired output grid.
+    - interpolation binary
+
+    Outputs:
+    ---------
+    - FORCING file on the new grid.
+
+    """
+
+    def get_remote_inputs(self):
+        """
+        get forcing files in the "massif" geometry, output grid file and interpolation binary.
+
+        """
+        super().get_remote_inputs()
+        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
+
+
+class InterpolateS2MLocalForcing(InterpolateS2MForcing):
+    """
+    Interpolate a forcing file in "massif" geometry onto a 2D grid, or 1D grid, that is a list of points.
+
+    Inputs:
+    --------
+    - Local FORCING file in the "massif" geometry.
+    - GRID file containing the desired output grid.
+    - interpolation binary
+
+    Outputs:
+    ---------
+    - FORCING file on the new grid.
+
+    """
+
+    def get_local_inputs(self):
+        """
+        FORCING can come from local cache because if just a subpart of yearly forcing is used.
+        """
+        # FORCING coming from cache after extraction of a sub-period
+        self.sh.title('Input sub-forcing file')
+        forcing_tbi = vortex.input(
+            local       = 'FORCING_' + str(self.conf.datebegin.strftime("%Y%m%d%H")) + '_' + str(self.conf.dateend.strftime("%Y%m%d%H")) + '.nc',
+            experiment  = self.conf.xpid,
+            # MV : il faut forcer la géométrie de sortie à la géométrie d'entrée puisqu'il n'y a
+            # pas de changement de géométrie (--> sortir du répertoire "regrid" pour clarifier).
+            # TODO : trouver une façon plus standardisée de faire ça.
+            geometry    = self.conf.get('forcing_geometry', self.conf.geometry),
+            datebegin   = self.conf.datebegin,
+            dateend     = self.conf.dateend,
+            nativefmt   = 'netcdf',
+            kind        = 'MeteorologicalForcing',
+            model       = 's2m',
+            # MV : archivage sur cache uniquement par défaut pour ne pas dupliquer de la donnée existante
+            namespace   = self.conf.get('namespace_out', 'vortex.cache.fr'),
+            namebuild   = 'flat@cen',
+            # MV : archivage dans le même block que le forcing d'origine
+            block       = self.conf.get('forcing_block', 'meteo'),
+            member      = self.conf.get('member', None),
+        ),
+        print(self.ticket.prompt, 'Sub-forcing =', forcing_tbi)
+        print()
