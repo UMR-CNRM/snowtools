@@ -234,6 +234,9 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             with OutputReportContext(self, t):
                 self.put_outputs()
 
+            if 'diff_xpid' in self.conf:
+                self.diff()
+
         if 'late-backup' in self.steps and 'test' in self.conf and 'localtest' not in self.conf:
             # In test cases, some diff with reference output could be necessary (this explains why the following
             # line are called from a transfer node only)
@@ -327,6 +330,13 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         Implement this method in unittest tasks to monitor the test results.
         """
         # raise NotImplementedError()
+        pass
+
+    def diff(self):
+        """
+        Implement this method in your task to compare output with a reference file.
+        TODO : this could replace the "unittest" method (generalisation)
+        """
         pass
 
     def get_list_dates(self, duration='yearly'):
