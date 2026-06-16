@@ -22,7 +22,9 @@ def read_and_preprocess(resource,
                         operation=None,
                         global_shift_center=None,
                         zoom=None,
-                        additional_selection_options={}):
+                        additional_selection_options={},
+                        nanvalue=None,
+                        cap=None):
     """
     Read field in resource, and preprocess if requested.
 
@@ -41,6 +43,11 @@ def read_and_preprocess(resource,
         to be shifted to a [-180,180] grid, for instance (with -180 argument).
     :param zoom: a dict(lonmin, lonmax, latmin, latmax) on which to build the plot.
     :type zoom: dict
+    :param nanvalue: If set, convert given value(s) to nan
+                     (e.g. use 0 to remove areas without snow on a total snow depth map)
+    :type nanvalue: float or list of float
+    :param cap: Cap the values of the field to (min, max). Values outside of range will be clip to min and max resp.
+    :type cap: list of 2 elements of type float|None
     :return: field
     :rtype: epygram.field
 
@@ -71,6 +78,24 @@ def read_and_preprocess(resource,
         field = field.extract_zoom(zoom)
     if operation is not None:
         field.operation(**operation)
+    # Remove useless values (given in nanvalue)
+    if nanvalue is not None:
+        if not isinstance(nanvalue, list):
+            nanvalue = [nanvalue, ]
+        data = field.data
+        for v in nanvalue:
+            data[data == v] = np.nan
+        field.setdata(data)
+    # Cap data
+    if cap is not None:
+        if not ((isinstance(cap, list) or isinstance(cap, tuple)) and len(cap) == 2):
+            raise ValueError('cap should be a list or tuple of two elements')
+        data = field.data
+        if cap[0] is not None:
+            data[data < cap[0]] = cap[0]
+        if cap[1] is not None:
+            data[data > cap[1]] = cap[1]
+        field.setdata(data)
     if 'ellps' in field.geometry.geoid.keys():
         if 'a' not in field.geometry.geoid.keys():
             geoid = pyproj.Geod(ellps=field.geometry.geoid['ellps'])

@@ -333,8 +333,8 @@ class ESCROC_EnsembleScores(EnsembleScores):
         time_obs_ok = time_obs[ind_obs_ok]
         obs_ok = var_obs[ind_obs_ok]
 
-        mask_sim = np.in1d(time_sim, time_obs_ok)
-        mask_obs = np.in1d(time_obs_ok, time_sim)
+        mask_sim = np.isin(time_sim, time_obs_ok)
+        mask_obs = np.isin(time_obs_ok, time_sim)
 
         self.obsCommon = obs_ok[mask_obs]
         self.ensCommon = ensemble[:, mask_sim]

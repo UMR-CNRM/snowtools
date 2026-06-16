@@ -12,7 +12,7 @@ In the download directory:
 
    git init 
    git config core.sparseCheckout true 
-   git remote add -f origin git@github.com:UMR-CNRM/SURFEX_CEN.git
+   git remote add -f origin git@github.com:UMR-CNRM/SURFEX_CEN.git -t cen
 
 
 Save the attached file `sparse-checkout <../_static/sparse-checkout>`__ in ``.git/info/``

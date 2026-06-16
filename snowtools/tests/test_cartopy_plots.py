@@ -4,6 +4,7 @@
 import unittest
 import os
 
+import matplotlib.pyplot as plt
 import numpy as np
 from netCDF4 import Dataset
 from snowtools.utils.prosimu import prosimu
@@ -156,8 +157,8 @@ class TestCartopyPyr(unittest.TestCase):
         self.m.set_figtitle("2100m")
         self.outfilename = "2021041012_pyr_tables.png"
         self.m.save(os.path.join(self.diroutput, self.outfilename), formatout="png")
-        self.m.close()
         self.m.reset_massifs()
+        self.m.close()
 
     def test_zoom_70(self):
         self.m = cartopy_massifs.Zoom_massif(70)

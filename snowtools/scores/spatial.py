@@ -7,6 +7,9 @@ Created on 23 April 2024
 based on code from Ange Haddjeri thesis.
 """
 
+from abc import ABC, abstractmethod
+import logging
+
 import epygram
 import footprints
 import xarray
@@ -18,15 +21,16 @@ import xarray as xr
 # import libpysal
 from scipy.signal import convolve2d
 from scipy.stats import pearsonr
-from abc import ABC, abstractmethod
 from snowtools.scores.list_scores import SpatialScoreFile
 from snowtools.utils.prosimu import prosimu_auto
 from snowtools.plots.scores.moran_scatter import MoranScatter, MoranScatterColored, get_moran_palette
 
 try:
-    from snowtools.scores import crps
+    import snowtools_crps
 except ImportError:
-    raise ImportError("failed to import compiled module crps. \nMake sure the library was compiled.")
+    logging.critical("Failed to import module snowtools_crps.\n"
+                     "Please install the crps module from https://github.com/UMR-CNRM/snowtools-crps.")
+    raise
 
 
 def rolling_window(array, window_shape):
@@ -289,7 +293,7 @@ def call_crps(fc_in, obs_in):
     fc = fc[~np.isnan(fc)]
     obs = obs[~np.isnan(obs)]
 
-    crpsval = crps.crps(fc, obs, len(fc), len(obs))
+    crpsval = snowtools_crps.crps(fc, obs, len(fc), len(obs))
     return crpsval
 
 

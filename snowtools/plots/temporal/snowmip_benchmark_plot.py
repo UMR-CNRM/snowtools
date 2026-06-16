@@ -66,11 +66,25 @@ class BenchmarkPlotSnowMip(temporalsubplot):
 
         if ESMSnowMIP_dicvarnames[varname] in self.fileObs.listvar():
             varObs = self.fileObs.read(ESMSnowMIP_dicvarnames[varname])
-        elif ESMSnowMIP_alternatevarnames[varname] in self.fileObs.listvar():
-            varObs = self.fileObs.read(ESMSnowMIP_alternatevarnames[varname])
+
+            if np.sum(~np.isnan(varObs)) > 0:
+                availdata = True
+            else:
+                availdata = False
         else:
+            availdata = False
+
+        if not availdata and varname in ESMSnowMIP_alternatevarnames.keys():
+            if ESMSnowMIP_alternatevarnames[varname] in self.fileObs.listvar():
+                varObs = self.fileObs.read(ESMSnowMIP_alternatevarnames[varname])
+                if np.sum(~np.isnan(varObs)) > 0:
+                    availdata = True
+
+        if not availdata:
             print('MISSING VARIABLE ' + varname)
-            return np.empty_like(self.timeObs)
+            nanarray = np.empty_like(self.timeObs, dtype=float)
+            nanarray.fill(np.nan)
+            return nanarray
 
         if 'convert_unit' in self.attributes[varname].keys():
             varObs = varObs * self.attributes[varname]['convert_unit']

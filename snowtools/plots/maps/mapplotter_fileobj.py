@@ -110,7 +110,7 @@ class reader(abc.ABC):
             if v in self._variables:
                 return v
         if len(self._variables) > 0:
-            return self._variables[0]
+            return list(self._variables)[0]
         return None
 
     def colorbar_variable(self, varname: str):

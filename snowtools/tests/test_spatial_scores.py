@@ -3,20 +3,23 @@
 
 import unittest
 import os
-
-import matplotlib.pyplot as plt
-import netCDF4
-import numpy as np
 import timeit
 
+import netCDF4
+import numpy as np
+
 from snowtools.scores.list_scores import SpatialScoreFile
-from snowtools.scores.spatial import ProVsPleiade, call_crps, LocalMoranData
 from snowtools.scores.ensemble import EnsembleScores
 from snowtools.plots.scores.perfdiag import PerfDiag, FuzzyScoreDiagram
 from snowtools.plots.scores.moran_scatter import MoranScatter
 from snowtools.utils.projections import LCCProjectionType
 from snowtools.tests.tempfolder import TestWithTempFolderWithLog, TestWithTempFolder
 from snowtools.DATA import TESTBASE_DIR
+try:
+    from snowtools.scores.spatial import ProVsPleiade, call_crps, LocalMoranData
+    SKIP_CRPS = False
+except ImportError:
+    SKIP_CRPS = True
 
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -24,20 +27,8 @@ TEST_SIM_DIR = os.path.join(TESTBASE_DIR, "PRO")
 TIME_CRPS = False
 PROJ_avail = True
 
-# class TestInstall(unittest.TestCase):
-#
-#     def test_paths(self):
-#         # str = snowtools.__path__
-#         # str = os.system('ls $PWD')
-#         # raise Warning(str)
-#         # str = os.system('ls $PWD/snowtools/')
-#         # print(str)
-#         # raise Warning(str)
-#         str = os.system('ls $PWD/snowtools/scores/')
-#         print(str)
-#         raise Warning(str)
 
-
+@unittest.skipIf(SKIP_CRPS, "CRPS Fortran module is not installed")
 class TestSpatialFile(TestWithTempFolder):
     @classmethod
     def setUpClass(cls):
@@ -114,12 +105,13 @@ class TestSpatialFile(TestWithTempFolder):
         local_moran = LocalMoranData(self.myscores.fc_data['bli'].data)
         self.assertAlmostEqual(local_moran.moran_I, 0.876794444)
 
+
+@unittest.skipIf(SKIP_CRPS, "CRPS Fortran module is not installed")
 class TestMoranDiags(TestSpatialFile):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         cls.local_moran = LocalMoranData(cls.myscores.fc_data['bli'].data)
-
 
     def test_moran_scatter_colored(self):
         self.local_moran.plot_moran_scatter_colored('snow height',
@@ -135,7 +127,6 @@ class TestMoranDiags(TestSpatialFile):
                                            filename=os.path.join(self.diroutput, "moran_quadrant_map.png"))
         # self.local_moran.plot_quadrant_map(self.myscores.obs_data.xx.data,
         #                                    self.myscores.obs_data.yy.data, lcc.geometry)
-
 
 
 class TestPerfDiag(TestWithTempFolderWithLog):

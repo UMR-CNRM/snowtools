@@ -733,40 +733,50 @@ the one at the model time step which equals the output time ) or ”cumulated”
 
 .. code-block:: bash
 
-  'XQDEP_TOT' : total wind-blown snow net deposition rate q dep (kg.m -2 .s -1 )
+  'QDEP_TOT_PAP' : total wind-blown snow net deposition rate (kg.m -2 .s -1 )
 
-  'XQ_OUT_SUBL' : sublimation rate q subl (kg.m -2 .s -1 )
+  'QOUTSUBL_PAP' : sublimation rate (kg.m -2 .s -1 )
 
-  'XQT_TOT' : total wind-blown horizontal vertically integrated snow transport rate Q t (kg.m -1 .s -1 )
+  'QT_TOT_PAP' : total wind-blown horizontal vertically integrated snow transport rate (kg.m -1 .s -1 )
 
-  'XSNOWDEBTC' : cumulated amount of snow which should have been removed on the oint but was not because it became snowfree (kg.m -2 ) (see the paragraph ”mass balance” in the article )
+  'SNWDEBTC_PAP' : cumulated amount of snow which should have been removed on the point but was not because
+  it became snowfree (kg.m -2 ) (see the paragraph ”mass balance” in the article )
 
 
 **”instantaneous” diagnostic variables:**
 
 .. code-block:: bash
 
-  'XBLOWSNWFLUX_1M' : horizontal blowing snow flux 1 m above snow
-  surface (kg.m -2 .s -1 )
+  'SNFLX_1M_PAP' : horizontal blowing snow flux 1 m above snow surface (kg.m -2 .s -1 )
 
-  'XBLOWSNWFLUXINT' : average horizontal blowing snow flux between
-  0.2 and 1.2 m Qt,int (kg.m -1 .s -1 )
+  'SNFLXINT_PAP' : average horizontal blowing snow flux between 0.2 and 1.2 m (kg.m -1 .s -1 )
 
-  'XQ_OUT_SALT' : total horizontal transport rate in the saltation layer
-  Qsalt (kg.m -1 .s -1 )
+  'QOUTSALT_PAP' : total horizontal transport rate in the saltation layer (kg.m -1 .s -1 )
 
-  'XQ_OUT_SUSP' : total horizontal transport rate in the suspension layer
-  Qsusp (kg.m -1 .s -1 )
+  'QOUTSUSP_PAP' : total horizontal transport rate in the suspension layer (kg.m -1 .s -1 )
 
-  'XVFRIC_PAPPUS' : wind friction velocity computed by Snowpappus (m.s -1 )
 
-  'XVFRIC_T_PAPPUS' : threshold friction velocity (at ground level) for
-  snow transport (m.s -1 )
+**diagnostic with debug activation:**
 
-  'XPZ0_PAPPUS' : roughness length for momentum z0 (m) used by Snowpappus
+.. code-block:: bash
 
-  'XVFALL_PAPPUS' : mass averaged terminal fall velocity of snow particles
+  'VFRIC_DPAP' : wind friction velocity computed by Snowpappus (m.s -1 )
+
+  'VFRIC_T_DPAP' : threshold friction velocity at ground level for snow transport (m.s -1 )
+
+  'PZ0_DPAP' : roughness length for momentum z0 used by Snowpappus (m) 
+
+  'VFALL_DPAP' : mass averaged terminal fall velocity of snow particles
   at the bottom of the suspension layer (m.s -1 )
+
+  'JJ_DPAP' : debug mpi: processor local point index (-)
+
+  'NRANK_DPAP' : debug mpi: processor rank (-)
+
+  'ILOCNIY_DPAP' : debug mpi: processor local number of lines (-)
+
+  'SIZTASK_DPAP' : debug mpi: processor number of points (-)
+
 
 References
 ^^^^^^^^^^
