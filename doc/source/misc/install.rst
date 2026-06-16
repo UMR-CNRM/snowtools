@@ -311,13 +311,6 @@ Then clone the following repositories in a  "Projects" on your $HOME :
     git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-gco.git
     git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-olive.git
 
-Go in the mkjob directory and checkout to branch "mv-add-command-line-xpid":
-
-.. code-block:: bash
-
-    cd mkjob
-    git checkout mv-add-command-line-xpid
-    cd ..
 
 Continue installation for Belenos and SXCEN
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
