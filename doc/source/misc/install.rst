@@ -500,6 +500,7 @@ To compile the interpol binary:
 
 CRPS scores
 ^^^^^^^^^^^
-If you need to use CRPS scoring tools, which parts are written in Fortran, you need to compile them.
+CRPS score is now as an independent package available at https://github.com/UMR-CNRM/snowtools-crps
 
-For CRPS scores, go to the ``snowtools/scores``, and run ``./install_ubuntu.sh`` (or ``./install_belenos.sh`` if you are on a Meteo-France super computer).
+To install it along with snowtools, just install the optional dependency ``snowtools[scores]`` (by running ``pip install .[all,scores]`` instead of ``pip install .[all]``).
+Note that you may need to upgrade pip to version above 23.0 to install scores dependency due to a bug in previous pip versions.

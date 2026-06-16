@@ -17,7 +17,7 @@ def parse_command_line():
     parser.add_argument("-a", "--vapp",
         help="Target application name",
         type=str,
-        choices=['edelweiss', 's2m', 'Crocus'],
+        choices=['edelweiss', 's2m', 'Crocus', 'tests'],
         # default='Crocus',
     )
 
@@ -244,7 +244,12 @@ def main():
 
     avail_drivers = list()
     if args.path:
-        target = args.path
+        if os.path.isfile(args.path):
+            target = args.path
+        elif os.path.isdir(args.path):
+            target = os.path.join(args.path, '__init__.py')
+        else:
+            raise FileNotFoundError(args.path)
     else:
         if args.vapp:
             if args.vconf:
@@ -290,8 +295,9 @@ def main():
                     print(module.__doc__)
                 else:
                     raise FileNotFoundError(target)
+            sys.exit(0)
 
-    if os.path.isfile(target):
+    if os.path.exists(target):
         module = get_module(target)
         # Print the module's doc
         if module.__doc__ is None:
@@ -319,6 +325,7 @@ def main():
                         except ImportError:
                             # Relative imports in SURFEX s2m-oper tasks
                             pass
+
     else:
         raise FileNotFoundError(target)
 

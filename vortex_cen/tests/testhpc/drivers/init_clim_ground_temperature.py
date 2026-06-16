@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+Test the "InitClimGroundTemperature" unit task, including a reproductibility test of the output file.
+"""
+
 import vortex
 from mkjob.nodes import Driver
 from vortex_cen.tasks.surfex.init_clim_ground_temperature import \

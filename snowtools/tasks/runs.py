@@ -435,7 +435,7 @@ class griddedrun(ecoclimaprun):
     """Class for a PC gridded SURFEX run for which the geometry is defined in the namelist"""
     def __init__(self, *args, **kwargs):
         super(griddedrun, self).__init__(*args, **kwargs)
-        self.updateloc = False
+        self.updateloc = True  # Necessary to set LWRITE_COORD and LWRITE_TOPO to False
 
 
 class interpolgriddedrun(interpolrun, griddedrun):

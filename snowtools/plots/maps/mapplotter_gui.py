@@ -426,13 +426,14 @@ class MapPlotterMain(tk.Frame):
                     g = self.master.fileobj.resource.readfield(vn).geometry.get_lonlat_grid()
                     _d = (g[0] - lon) ** 2 + (g[1] - lat) ** 2
                     xxyy = np.argmin(_d)
-                    xx, yy = xxyy // g[0].shape[1], xxyy % g[0].shape[1]
+                    yy, xx = xxyy // g[0].shape[1], xxyy % g[0].shape[1]
+                    point = xx * g[0].shape[0] + yy
                 except Exception:
                     pass
             messagebox.showinfo(
                 title = 'Coordinates',
                 message = f"""lat: {lat}\nlon: {lon}\nxlambert: {xlambert}\nylambert: {ylambert}\n"""
-                f"""#xx: {xx}\n#yy: {yy}\n##: {xxyy}""")
+                f"""Nearest point:\n#xx: {xx}\n#yy: {yy}\n##: {point}""")
 
     def update(self):
         """

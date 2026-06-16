@@ -6,10 +6,8 @@ Add slopes to the SAFRAN "flat massif" FORCING files and launch the OFFLINE exec
 
 from mkjob.nodes import Driver
 import vortex
-from vortex_cen.tasks.regrid.add_slopes import AddSlopes
 from vortex_cen.tasks.surfex.offline import Offline_MPI_Uenv
 from vortex_cen.tasks.surfex.pre_process import _Preprocess
-from vortex_cen.tasks.surfex.pgd import GetPgd1D
 
 
 def setup(t, **kw):
@@ -17,9 +15,7 @@ def setup(t, **kw):
         tag='surfex',
         ticket=t,
         nodes=[
-            AddSlopes(tag='addslopes', ticket=t, **kw),
             PreProcess(tag='preprocess', ticket=t, **kw),
-            GetPgd1D(tag='pgd', ticket=t, **kw),
             Offline_reanalysis(tag='offline', ticket=t, **kw),
         ],
         options=kw,
@@ -66,9 +62,7 @@ class Offline_reanalysis(Offline_MPI_Uenv):
     """
     Task : Offline_reanalysis
     =========================
-    - Get all constant inputs (including the PGD file) from a User Environment.
-    - Get forcing file(s) on a compute node (step.02) because it comes from the
-      output of a previous execution of "AddSlopes" task.
+    Get all constant inputs (including the PGD file) from a User Environment.
 
     Inputs:
     -------
@@ -106,6 +100,7 @@ class Offline_reanalysis(Offline_MPI_Uenv):
 
     def get_remote_inputs(self):
 
+        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
         self.get_pgd()
@@ -113,7 +108,6 @@ class Offline_reanalysis(Offline_MPI_Uenv):
         self.get_prep()
 
     def get_local_inputs(self):
-        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
         self.get_namelist_from_cache()
 
     def get_pgd(self):

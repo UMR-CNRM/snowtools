@@ -25,12 +25,12 @@ These entry points are designed to deal with the following requirements :
       Try opening your dataset with decode_times=False or installing cftime if it is not installed."
 
       The solution here is to switch off the decoding of time variables when reading data ("decode_times=False")
-      and doing so manually afterward for the dime dimension alone (see "decode_time_dimension" method)
+      and doing so manually afterward for the time dimension alone (see "decode_time_dimension" method)
 
     - Ensure that variable and dimension names are standard names for backward compatibility of SURFEX versions
       and to deal with data coming from different sources (this replaces the former prosimu functionality
       designed to reduce dependency to variable and dimension names of SURFEX outputs).
-      This is done by mapping the possible names of a variable / dimension (when different names coexist) to the a
+      This is done by mapping the possible names of a variable / dimension (when different names coexist) to the
       standard name through the "dimension_map" and "variables_map" dictionnaries (see "update_varname" and
       "update_dimname" methods).
 

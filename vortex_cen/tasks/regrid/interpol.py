@@ -59,7 +59,7 @@ class InterpolateS2MForcing(_CenResearchTask):
 
         # Target grid file for interpolation
         # the path must be provided in the configuration file
-        self.sh.title('Toolbox input output grid definition')
+        self.sh.title('Input definition of the output grid')
         grid_tbi = vortex.input(
             role='gridout',
             kind='interpolgrid',

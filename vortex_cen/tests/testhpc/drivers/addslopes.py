@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+Test the "AddSlopes" unit task, including a reproductibility test of the output file.
+"""
 
 import vortex
 from mkjob.nodes import Driver
