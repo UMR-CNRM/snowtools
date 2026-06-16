@@ -285,7 +285,7 @@ The following mkjob command is now equivalent to the one above :
 
 .. code-block::
 
-   mkjob -f job_directives_file -c $SNOWTOOLS_CEN/vortex_cen/*vapp*/*vconf*/conf/conf_example.ini
+   mkjob -f $SNOWTOOLS_CEN/vortex_cen/*vapp*/*vconf*/jobs/job_directives_file -c $SNOWTOOLS_CEN/vortex_cen/*vapp*/*vconf*/conf/conf_example.ini
 
 
 Adding a unit test for the task

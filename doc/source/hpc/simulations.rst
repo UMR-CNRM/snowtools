@@ -77,19 +77,11 @@ The following example of an mkjob command line allows to launch a SURFEX simulat
 
    mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2020080106 dateend=2021080106 geometry=cor2_allslopes
 
-.. note::
-
-   Alternatively, it is possible to avoid using a job description file (*-f* argument) and to provide the full job description (including the job name, the associated task and the profile) with the *-j* argument.
-
-   The exact same result of the example above can be achieved with the following command line:
-
-   mkjob -j profile=rd-belenos-mt name=surfex package=drivers task=surfex xpid=first_test datebegin=2020080106 dateend=2021080106 geometry=cor2_allslopes -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini
-
 If the job description file contains several jobs and you want to launch only a subset, il is possible to access the list of available job names with option -l :
 
 .. code-block::
 
-   > mkjob -f safran.jobs -c $SNOWTOOLS_CEN/vortex_cen/s2m/reanalysis/conf/s2m_reanalysis.ini -l
+   > mkjob -f $SNOWTOOLS_CEN/vortex_cen/s2m/reanalysis/jobs/safran.jobs -c $SNOWTOOLS_CEN/vortex_cen/s2m/reanalysis/conf/s2m_reanalysis.ini -l
    {'name': 'safran_reanalysis_alp', 'package': 'drivers', 'task': 'safran', 'profile': 'rd-belenos-mt', 'geometry': 'alp27_flat'}
    {'name': 'safran_reanalysis_pyr', 'package': 'drivers', 'task': 'safran', 'profile': 'rd-belenos-mt', 'geometry': 'pyr24_flat'}
    {'name': 'safran_reanalysis_cor', 'package': 'drivers', 'task': 'safran', 'profile': 'rd-belenos-mt', 'geometry': 'cor2_flat'}
@@ -101,7 +93,7 @@ Then you can choose a subset of jobs to launch with the "-n" option :
 
 .. code-block::
 
-   mkjob -f safran.jobs -c $SNOWTOOLS_CEN/vortex_cen/s2m/reanalysis/conf/s2m_reanalysis.ini -n safran_reanalysis_alp safran_reanalysis_pyr safran_reanalysis_cor -a datebegin=... dateend=... xpid=...
+   mkjob -f $SNOWTOOLS_CEN/vortex_cen/s2m/reanalysis/safran.jobs -c $SNOWTOOLS_CEN/vortex_cen/s2m/reanalysis/conf/s2m_reanalysis.ini -n safran_reanalysis_alp safran_reanalysis_pyr safran_reanalysis_cor -a datebegin=... dateend=... xpid=...
 
 
 The mkjob helper
@@ -292,7 +284,7 @@ Then launch mkjob with the "first_test.ini" configuration file in the "-c" argum
 
 .. code-block::
 
-   mkjob -f surfex.job -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/first_test.ini -a xpid=first_test datebegin=2021080107 dateend=2022080106 geometry=GrandesRousses250m
+   mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/first_test.ini -a xpid=first_test datebegin=2021080107 dateend=2022080106 geometry=GrandesRousses250m
 
 
 Configuring your job
