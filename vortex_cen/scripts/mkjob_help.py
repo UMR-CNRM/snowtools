@@ -59,6 +59,12 @@ def parse_command_line():
         action = 'store_true',
     )  # noqa
 
+    parser.add_argument("--jobs",
+        help="List available jobs for the target configuration",
+        action = 'store_true',
+    )  # noqa
+
+
     args = parser.parse_args()
 
     if args.driver and not args.driver.endswith('.py'):
@@ -298,6 +304,14 @@ def main():
                         'drivers',
                         args.driver,
                     )
+                elif args.jobs:
+                    target = os.path.join(
+                        os.environ['SNOWTOOLS_CEN'],
+                        'vortex_cen',
+                        args.vapp,
+                        args.vconf,
+                        'jobs/*',
+                    )
                 else:
                     target = os.path.join(
                         os.environ['SNOWTOOLS_CEN'],
@@ -333,7 +347,12 @@ def main():
                     raise FileNotFoundError(target)
             sys.exit(0)
 
-    if os.path.exists(target):
+    if args.jobs:
+        print(f'List of available jobs for {args.vapp}-{args.vconf}:')
+        for job in glob.glob(target):
+            jobname = os.path.basename(job)
+            print(f' * {jobname}')
+    elif os.path.exists(target):
         module = get_module(target)
         # Print the module's doc
         if module.__doc__ is None:
@@ -361,7 +380,6 @@ def main():
                         except ImportError:
                             # Relative imports in SURFEX s2m-oper tasks
                             pass
-
     else:
         raise FileNotFoundError(target)
 
