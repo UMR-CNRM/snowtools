@@ -13,5 +13,7 @@ Associated  configurations:
   post-processing algorithm
 
 * **oper (alp, pyr, cor, mac, vog, jur)**: S2M operational model chain
+  - oper contains the drivers (common to all domains) and "prepsafran" jobs (common to all domains)
+  - [alp|pyr|cor|mac|vog|jur] contains the domain-specific jobs and configuraiton files
 
 """
