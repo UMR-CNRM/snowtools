@@ -224,20 +224,22 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
         """
         Test output reproductibility [OPTIONAL]
         """
-        self.sh.title("Reproductibility check : PRO")
+        # Diff of PRO files always fails because netcdf can not properly read them.
+        # --> check reproductibility on PREP file
+        self.sh.title("Reproductibility check : PREP")
         diff = vortex.diff(
-            local          = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+            local          = 'PREP_[date:ymdh].nc',
+            role           = 'SnowpackInit',
             experiment     = self.conf.diff_xpid,
-            username       = self.conf.get('diff_user', None),
+            username       = self.conf.diff_user,
             geometry       = self.conf.geometry,
-            datebegin      = self.list_dates_begin_pro,
-            dateend        = self.dict_dates_end_pro,
+            date           = self.list_dates_end_pro,
             nativefmt      = 'netcdf',
-            kind           = 'SnowpackSimulation',
+            kind           = 'PREP',
             model          = 'surfex',
             namespace      = self.namespace_out,
             namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
-            block          = 'pro',
+            block          = 'prep',
             member         = self.conf.get('member', None),
         ),
         print(self.ticket.prompt, 'diff =', diff)
