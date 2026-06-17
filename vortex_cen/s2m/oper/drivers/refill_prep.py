@@ -2,7 +2,9 @@
 
 from mkjob.nodes import Driver, Task
 from vortex_cen.layout.nodes import S2MTaskMixIn
+import footprints
 import vortex
+
 
 def setup(t, **kw):
     return Driver(
@@ -50,14 +52,14 @@ class RefillPrep(Task, S2MTaskMixIn):
             self.sh.title('Input PREP')
             prep = vortex.input(
                 role           = 'SnowpackInit',
-                local          = 'PREP.nc',
+                local          = 'mb[member]/PREP.nc',
                 block          = 'prep',
                 experiment     = self.conf.prep_xpid,
                 username       = self.conf.get('prep_user', None),
                 geometry       = self.conf.geometry,
                 datevalidity   = self.conf.datevalidity,
                 date           = self.conf.rundate,
-                member         = 35,
+                member         = footprints.util.rangex(0, 36),
                 intent         = 'inout',
                 nativefmt      = 'netcdf',
                 kind           = 'PREP',
@@ -74,13 +76,13 @@ class RefillPrep(Task, S2MTaskMixIn):
             self.sh.title('Output PREP')
             prep = vortex.output(
                 role           = 'SnowpackInit',
-                local          = 'PREP.nc',
+                local          = 'mb[member]/PREP.nc',
                 block          = 'prep',
                 experiment     = self.conf.xpid,
                 geometry       = self.conf.geometry,
                 datevalidity   = self.conf.datevalidity,
                 date           = self.conf.rundate,
-                member         = 35,
+                member         = footprints.util.rangex(0, 36),
                 intent         = 'inout',
                 nativefmt      = 'netcdf',
                 kind           = 'PREP',
