@@ -37,6 +37,7 @@ class AddSlopes(_CenResearchTask):
             "out_block+default=allslopes",
             "diff_xpid",
             "diff_user",
+            "diff_block+default=allslopes",
         ]
         overwrite = [
             "datebegin",
@@ -159,7 +160,7 @@ class AddSlopes(_CenResearchTask):
             username       = self.conf.get('diff_user', None),
             namebuild      = 'flat@cen',
             local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_OUT.nc',
-            block          = self.conf.get('out_block', 'allslopes'),
+            block          = self.conf.get('diff_block', 'allslopes'),
         ),
         print(self.ticket.prompt, 'diff =', diff)
         print()

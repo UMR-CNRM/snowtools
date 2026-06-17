@@ -35,6 +35,9 @@ class Shadows(_CenResearchTask):
         OPTIONAL_CONFIGURATION_VARIABLES = [
             "forcing",
             "out_block+default=shadows",
+            "diff_xpid",
+            "diff_user",
+            "diff_block+default=shadows",
         ]
         super().__init__(**kw)
 
@@ -132,7 +135,7 @@ class Shadows(_CenResearchTask):
             username       = self.conf.get('diff_user', None),
             namebuild      = 'flat@cen',
             local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
-            block          = self.conf.get('out_block', 'shadows'),
+            block          = self.conf.get('diff_block', 'shadows'),
         ),
         print(self.ticket.prompt, 'diff =', diff)
         print()

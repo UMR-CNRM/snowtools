@@ -29,8 +29,10 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
 
         OPTIONAL_CONFIGURATION_VARIABLES = [
             "forcing",
+            "out_block+default=init_tg/prep",
             "diff_xpid",
             "diff_user",
+            "diff_block+default=init_tg/prep",
         ]
 
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
@@ -90,7 +92,7 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
             model      = "surfex",
             namespace  = "vortex.multi.fr",
             namebuild  = "flat@cen",
-            block      = "prep",
+            block      = self.conf.get("out_block", "init_tg/prep"),
         )
         print(self.ticket.prompt, "Output init ground temperature =", init_ground_temperature_out)
         print()
@@ -112,7 +114,7 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
             model      = "surfex",
             namespace  = "vortex.multi.fr",
             namebuild  = "flat@cen",
-            block      = "prep",
+            block      = self.conf.get("diff_block", "init_tg/prep"),
         )
         print(self.ticket.prompt, "diff init_tg =", init_tg_diff)
         print()

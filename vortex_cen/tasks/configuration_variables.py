@@ -468,4 +468,8 @@ standard_variables = dict(
         type  = "str",
         default = "$USER",
     ),
+    diff_block = dict(
+        help = "The reference's block for reproductibiliy check",
+        type = "str",
+    ),
 )

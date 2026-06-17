@@ -43,6 +43,7 @@ class InterpolateS2MForcing(_CenResearchTask):
             "out_block+default=interpol",
             "diff_xpid",
             "diff_user",
+            "diff_block+default=interpol",
         ]
         overwrite = [
             "datebegin",
@@ -157,7 +158,7 @@ class InterpolateS2MForcing(_CenResearchTask):
             kind        = 'MeteorologicalForcing',
             namespace   = self.namespace_out,
             namebuild   = 'flat@cen',
-            block       = self.conf.get('out_block', 'interpol'),
+            block       = self.conf.get('diff_block', 'interpol'),
             member      = self.conf.get('member', None),
         ),
         print(self.ticket.prompt, 'diff =', diff)

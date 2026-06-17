@@ -41,6 +41,7 @@ class ForcingSpatialConcatenation(_CenResearchTask):
             "out_block+default=concatenate",
             "diff_xpid",
             "diff_user",
+            "diff_block+default=concatenate",
         ]
         overwrite = [
             "datebegin",
@@ -123,7 +124,7 @@ class ForcingSpatialConcatenation(_CenResearchTask):
             username       = self.conf.get('diff_user', None),
             namebuild      = 'flat@cen',
             local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_OUT.nc',
-            block          = self.conf.get('out_block', 'concatenate'),
+            block          = self.conf.get('diff_block', 'concatenate'),
         ),
         print(self.ticket.prompt, 'diff =', diff)
         print()

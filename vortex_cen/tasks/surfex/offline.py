@@ -93,8 +93,10 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
             "namespace_out",
             "august_threshold",
             "offline_gvar",
+            "out_block+default=offline/[pro,prep] ",
             "diff_xpid",
             "diff_user",
+            "diff_block+default=offline/prep",
         ]
 
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
@@ -152,7 +154,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
             model          = 'surfex',
             namespace      = self.namespace_out,
             namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
-            block          = 'prep',
+            block          = self.conf.get('out_block', 'offline/prep'),
             member         = self.conf.get('member', None),
         ),
         print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
@@ -172,7 +174,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
             model          = 'surfex',
             namespace      = self.namespace_out,
             namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
-            block          = 'pro',
+            block          = self.conf.get('out_block', 'offline/pro'),
             member         = self.conf.get('member', None),
         ),
         print(self.ticket.prompt, 'pro_tbo =', pro_tbo)
@@ -192,7 +194,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
             model          = 'surfex',
             namespace      = self.namespace_out,
             namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
-            block          = 'cumul',
+            block          = self.conf.get('out_block', 'offline/cumul'),
             member         = self.conf.get('member', None),
             fatal          = False,
         ),
@@ -213,7 +215,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
             model          = 'surfex',
             namespace      = self.namespace_out,
             namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
-            block          = 'diag',
+            block          = self.conf.get('out_block', 'offline/diag'),
             member         = self.conf.get('member', None),
             fatal          = False,
         ),
@@ -239,7 +241,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
             model          = 'surfex',
             namespace      = self.namespace_out,
             namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
-            block          = 'prep',
+            block          = self.conf.get('diff_block', 'offline/prep'),
             member         = self.conf.get('member', None),
         ),
         print(self.ticket.prompt, 'diff =', diff)

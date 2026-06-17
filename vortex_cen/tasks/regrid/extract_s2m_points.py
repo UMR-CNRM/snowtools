@@ -41,6 +41,7 @@ class ExtractS2MForcing(_CenResearchTask):
             "out_block+default=extract_s2m",
             "diff_xpid",
             "diff_user",
+            "diff_block+default=extract_s2m",
         ]
         overwrite = [
             "datebegin",
@@ -135,7 +136,7 @@ class ExtractS2MForcing(_CenResearchTask):
             username       = self.conf.get('diff_user', None),
             namebuild      = 'flat@cen',
             local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_OUT.nc',
-            block          = self.conf.get('out_block', 'extract_s2m'),
+            block          = self.conf.get('diff_block', 'extract_s2m'),
         ),
         print(self.ticket.prompt, 'diff =', diff)
         print()

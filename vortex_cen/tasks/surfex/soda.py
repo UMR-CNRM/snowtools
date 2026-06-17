@@ -184,7 +184,7 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
             model          = 'surfex',
             namespace      = 'vortex.multi.fr',
             namebuild      = 'flat@cen',
-            block          = 'prep/analysis',
+            block          = 'soda/analysis',
             fatal          = True
         ),
         print(t.prompt, 'SODA analysis =', prep)
@@ -224,7 +224,7 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
             model          = 'surfex',
             namespace      = 'vortex.multi.fr',
             namebuild      = 'flat@cen',
-            block          = 'prep/analysis',
+            block          = 'soda/analysis',
             fatal          = True
         ),
         print(self.ticket.prompt, 'diff =', diff)
