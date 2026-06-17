@@ -789,3 +789,15 @@ And launch it with :
 
    The test monitoring is done by Context managers stored in vortex_cen/tools/monitoring.py
 
+**NB** There is currently a bug in the netcdf comparison tools of vortex leading to "failed reproductibility check" errors.
+You can either ignore there errors, or install the `mv-diff-netcdf` bug-fix branch of vortex in your "snowtools" virtual environment :
+
+.. code-block::
+
+   cd $HOME/Projects
+   git clone https://github.com/vernaym/vortex.git vortex-nwp
+   cd vortex-nwp
+   git checkout -b mv-diff-netcdf
+   git branch --set-upstream-to=origin/mv-diff-netcdf mv-diff-netcdf
+   git pull
+   pip install -e .

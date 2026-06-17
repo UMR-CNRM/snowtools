@@ -260,7 +260,6 @@ Source the ``~/.bashrc`` file and start installation
 .. code-block:: bash
 
     source ~/.bashrc
-    cd $SNOWTOOLS_CEN
     module load python/3.10.12 gcc/15.2.0
 
 **NB** The installation should also work with python/3.12.12, but the installation fails in some cases.
@@ -282,7 +281,6 @@ Source the ``~/.bashrc`` file and start installation
 .. code-block:: bash
 
     source ~/.bashrc
-    cd $SNOWTOOLS_CEN
 
 
 By default, Pip fetches package distributions from the global Python package registry, pypi.org. To install internal vortex plugins, configure Pip so that it can reach MF’s internal Nexus package registry. To do so, add the following lines to ~/.config/pip/pip.ini:
@@ -293,24 +291,6 @@ By default, Pip fetches package distributions from the global Python package reg
     index = https://nexus-sidev.meteo.fr/repository/pypi-group/pypi
     index-url = https://nexus-sidev.meteo.fr/repository/pypi-group/simple
     extra-index-url = https://nexus.meteo.fr/pypi-vortex-releases/simple
-
-**FOR BELENOS ONLY** : Temporary step
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Configure gitlab for HPC via SSH using the documentation (in french):
-
-http://confluence.meteo.fr/display/~thomas.carrel-billiard@meteo.fr/Configurer+GitLab
-
-Then clone the following repositories in a  "Projects" on your $HOME :
-
-.. code-block:: bash
-
-    mkdir $HOME/Projects
-    cd $HOME/Projects
-    git clone git@gitlab.meteo.fr:cnrm-gmap/mkjob.git
-    git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-gco.git
-    git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-olive.git
-
 
 Continue installation for Belenos and SXCEN
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -326,6 +306,30 @@ Continue installation for Belenos and SXCEN
 .. code-block:: bash
 
    python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -v ~/my_envs/snowtools_env_stable
+
+Activate the virtual environment conatinaing the snowtools install with :
+
+.. code-block:: bash
+
+    source ~/my_envs/snowtools_env/bin/activate
+
+**FOR BELENOS ONLY** : Temporary step
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Configure gitlab for HPC via SSH using the documentation (in french):
+
+http://confluence.meteo.fr/display/~thomas.carrel-billiard@meteo.fr/Configurer+GitLab
+
+Then clone the following repositories in a  "Projects" on your $HOME and install them with pip :
+
+.. code-block:: bash
+
+    mkdir $HOME/Projects
+    cd $HOME/Projects
+    git clone git@gitlab.meteo.fr:cnrm-gmap/mkjob.git
+    git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-gco.git
+    git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-olive.git
+    pip install mkjob/ vortex-gco/ vortex-olive/
 
 Configure Vortex
 ^^^^^^^^^^^^^^^^
