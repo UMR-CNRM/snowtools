@@ -40,6 +40,7 @@ class InterpolateS2MForcing(_CenResearchTask):
         OPTIONAL_CONFIGURATION_VARIABLES = [
             "forcing",
             "member",
+            "out_block+default=interpol",
             "diff_xpid",
             "diff_user",
         ]
@@ -51,6 +52,11 @@ class InterpolateS2MForcing(_CenResearchTask):
 
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES,
                 overwrite=overwrite)
+
+        if self.conf.forcing_geometry == self.conf.geometry:
+            print(self.conf.forcing_geometry, self.conf.geometry)
+            raise ValueError("The output 'geometry' can not be the same as the input one.\n"
+                             "Please provide two different 'geometry' and 'forcing_geometry' configuration variables")
 
     def get_remote_inputs(self):
         """
@@ -117,30 +123,23 @@ class InterpolateS2MForcing(_CenResearchTask):
         self.launch_executable(algo=algo)
 
     def put_outputs(self):
-        """
 
-        """
-        if self.conf.forcing_geometry == self.conf.geometry:
-            print(self.conf.forcing_geometry, self.conf.geometry)
-            raise ValueError("The output 'geometry' can not be the same as the input one.\n"
-                             "Please provide two different 'geometry' and 'forcing_geometry' configuration variables")
-        else:
-            self.sh.title('Toolbox output interpolated forcing file')
-            forcing_tbo = vortex.output(
-                local       = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
-                experiment  = self.conf.xpid,
-                geometry    = self.conf.geometry,
-                datebegin   = self.list_dates_begin,
-                dateend     = self.dict_dates_end,
-                nativefmt   = 'netcdf',
-                kind        = 'MeteorologicalForcing',
-                namespace   = self.namespace_out,
-                namebuild   = 'flat@cen',
-                block       = 'meteo',  # change to "interpolate" ?
-                member      = self.conf.get('member', None),
-            ),
-            print(self.ticket.prompt, 'interpolated forcing file toolbox =', forcing_tbo)
-            print()
+        self.sh.title('Toolbox output interpolated forcing file')
+        forcing_tbo = vortex.output(
+            local       = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+            experiment  = self.conf.xpid,
+            geometry    = self.conf.geometry,
+            datebegin   = self.list_dates_begin,
+            dateend     = self.dict_dates_end,
+            nativefmt   = 'netcdf',
+            kind        = 'MeteorologicalForcing',
+            namespace   = self.namespace_out,
+            namebuild   = 'flat@cen',
+            block       = self.conf.get('out_block', 'interpol'),
+            member      = self.conf.get('member', None),
+        ),
+        print(self.ticket.prompt, 'interpolated forcing file toolbox =', forcing_tbo)
+        print()
 
     def diff(self):
         """
@@ -158,7 +157,7 @@ class InterpolateS2MForcing(_CenResearchTask):
             kind        = 'MeteorologicalForcing',
             namespace   = self.namespace_out,
             namebuild   = 'flat@cen',
-            block       = 'meteo',
+            block       = self.conf.get('out_block', 'interpol'),
             member      = self.conf.get('member', None),
         ),
         print(self.ticket.prompt, 'diff =', diff)

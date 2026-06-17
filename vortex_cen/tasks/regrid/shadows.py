@@ -34,6 +34,7 @@ class Shadows(_CenResearchTask):
         ]
         OPTIONAL_CONFIGURATION_VARIABLES = [
             "forcing",
+            "out_block+default=shadows",
         ]
         super().__init__(**kw)
 
@@ -112,7 +113,7 @@ class Shadows(_CenResearchTask):
             experiment     = self.conf.xpid,
             namebuild      = 'flat@cen',
             local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
-            block          = 'meteo',  # This is SURFEX-ready
+            block          = self.conf.get('out_block', 'shadows'),
         ),
         print(self.ticket.prompt, 'Output forcing =', forcing_out)
         print()
@@ -131,7 +132,7 @@ class Shadows(_CenResearchTask):
             username       = self.conf.get('diff_user', None),
             namebuild      = 'flat@cen',
             local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
-            block          = 'meteo',  # This is SURFEX-ready
+            block          = self.conf.get('out_block', 'shadows'),
         ),
         print(self.ticket.prompt, 'diff =', diff)
         print()

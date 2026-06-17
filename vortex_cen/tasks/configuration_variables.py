@@ -396,7 +396,7 @@ standard_variables = dict(
         type = "int",
         default = "*ntasks*",
     ),
-    block = dict(
+    out_block = dict(
         help = "Set the output resource's block",
         type = "str",
     ),
