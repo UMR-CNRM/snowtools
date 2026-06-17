@@ -40,6 +40,11 @@ class S2m_ensemble_postprocessing(AlgoComponent):
                     info = "Variable names to be post-processed",
                     type = FPList,
                 ),
+                method = dict(
+                    info        = "Method used to compute distribution of probabilty",
+                    default     = 'quantiles',
+                    values      = ['quantiles', 'emos']
+                ),
                 engine = dict(
                     optional    = True,
                     default     = 's2m',
@@ -55,7 +60,7 @@ class S2m_ensemble_postprocessing(AlgoComponent):
         # get list of file names
         listforcing = [am.rh.container.filename for am in avail_forecasts]
         # init ensemble postprocessing object
-        ens = EnsemblePostproc(self.varnames, listforcing)
+        ens = EnsemblePostproc(self.varnames, listforcing, emosmethod=self.method)
         # do postprocessing
         ens.postprocess()
 
@@ -74,7 +79,7 @@ class HydroWorker(TaylorVortexWorker):
             info = 'Algo component for post-processing of s2m ensemble simulations',
             attr = dict(
                 kind = dict(
-                    values = ['s2m_hydro']
+                    values = ['s2m_hydro_deter', 's2m_hydro_ensemble']
                 ),
                 varnames = dict(
                     info = "Variable names to be post-processed",
@@ -131,7 +136,7 @@ class HydroComponent(TaylorRun):
             info = 'Algo component for post-processing of s2m ensemble simulations',
             attr = dict(
                 kind = dict(
-                    values = ['s2m_hydro']
+                    values = ['s2m_hydro_deter', 's2m_hydro_ensemble']
                 ),
                 varnames = dict(
                     info = "Variable names to be post-processed",
@@ -178,8 +183,8 @@ class HydroComponent(TaylorRun):
         members_pro = [pro.rh.provider.member for pro in avail_pro]
         members_common = [m for m in members_forcing if m in members_pro]
 
-        avail_forcing_common = [f.rh.container.filename for f in avail_forcing
-                if f.rh.provider.member in members_common]
+        avail_forcing_common = [f.rh.container.filename for f in avail_forcing if
+                f.rh.provider.member in members_common]
         avail_pro_common = [p.rh.container.filename for p in avail_pro if p.rh.provider.member in members_common]
 
         # Give some instructions to the boss
@@ -187,15 +192,16 @@ class HydroComponent(TaylorRun):
 
         self._default_post_execute(rh, opts)
 
-        # Final synthesis
-        listhydro = [self.system.path.join(self.system.path.dirname(pro), 'HYDRO.nc') for pro in avail_pro_common]
+        if self.kind == 's2m_hydro_ensemble':
+            # Final synthesis
+            listhydro = [self.system.path.join(self.system.path.dirname(pro), 'HYDRO.nc') for pro in avail_pro_common]
 
-        ens = EnsembleHydro(self.varnames, listhydro)
-        ens.postprocess()
+            ens = EnsembleHydro(self.varnames, listhydro)
+            ens.postprocess()
 
-        outfile = 'HYDRO_{0}_{1}.nc'.format(avail_pro[0].rh.resource.datebegin.ymdh,
-                avail_pro[0].rh.resource.dateend.ymdh)
-        self.system.mv('PRO_post.nc', outfile)
+            outfile = 'HYDRO_{0}_{1}.nc'.format(avail_pro[0].rh.resource.datebegin.ymdh,
+                    avail_pro[0].rh.resource.dateend.ymdh)
+            self.system.mv('PRO_post.nc', outfile)
 
 
 @echecker.disabled_if_unavailable
