@@ -234,18 +234,19 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             with OutputReportContext(self, t):
                 self.put_outputs()
 
-        if 'late-backup' in self.steps and 'test' in self.conf and 'localtest' not in self.conf:
-            # In test cases, some diff with reference output could be necessary (this explains why the following
-            # line are called from a transfer node only)
-            # In this case, implement them in the "unittest".
-            with TestReportContext(self, t):
-                self.unittest()
+        if 'late-backup' in self.steps:
+            # Reproductibility check with reference output (retrieved from the archive on a transfer node only)
+            if 'test' in self.conf and 'localtest' not in self.conf:
+                with TestReportContext(self, t):
+                    self.unittest()
+            elif 'diff_xpid' in self.conf:
+                self.diff()
 
-        if 'late-backup' in self.steps and self.debug:
-            # Debug mode : make the job crash at the end to preserve the working directory
-            print('=====================================================================================')
-            print('=====================================================================================')
-            raise Exception('INFO :The execution went well, do not take into account the following error')
+            if self.debug:
+                # Debug mode : make the job crash at the end to preserve the working directory
+                print('============================================================================')
+                print('============================================================================')
+                raise Exception('INFO :The execution went well, do not take into account the following error')
 
     def get_remote_inputs(self):
         """
@@ -326,7 +327,13 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         """
         Implement this method in unittest tasks to monitor the test results.
         """
-        # raise NotImplementedError()
+        if 'diff_xpid' in self.conf:
+            self.diff()
+
+    def diff(self):
+        """
+        Implement this method in your task to compare output with a reference file.
+        """
         pass
 
     def get_list_dates(self, duration='yearly'):

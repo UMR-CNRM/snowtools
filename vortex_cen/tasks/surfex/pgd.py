@@ -128,6 +128,8 @@ class _Pgd_Construct(PgdCommonsMixin, _CenResearchTask):
             "ntasks",
             "nnodes",
             "nprocs",
+            "diff_xpid",
+            "diff_user",
         ]
         super().__init__(**kw)
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
@@ -217,6 +219,27 @@ class _Pgd_Construct(PgdCommonsMixin, _CenResearchTask):
         print(self.ticket.prompt, 'pgd_tbo =', pgd_tbo)
         print()
 
+    def diff(self):
+        """
+        Test output reproductibility [OPTIONAL]
+        """
+        self.sh.title("Reproductibility check : PGD")
+        diff = vortex.diff(
+            local      = 'PGD.nc',
+            role       = 'SurfexClim',
+            experiment = self.conf.diff_xpid,
+            username   = self.conf.get('diff_user', None),
+            geometry   = self.conf.geometry,
+            nativefmt  = 'netcdf',
+            kind       = 'pgdnc',
+            model      = 'surfex',
+            namespace  = 'vortex.multi.fr',
+            namebuild  = 'flat@cen',
+            block      = 'pgd',
+        ),
+        print(self.ticket.prompt, 'diff =', diff)
+        print()
+
 
 class Pgd_Uenv_Pgd(_Pgd_Construct):
     """
@@ -296,6 +319,9 @@ class Pgd_Local_Pgd(_Pgd_Construct):
         super().get_remote_inputs()
         self.get_pgd_exe_from_local_path()
 
+
+# MV : La distinction 1D/2D doit pouvoir se gérer avec une simple variable de configuration activant le passage
+# dans "get_2D_databases" ou non pour alléger le nombre de classe "similaires"
 
 class Pgd2D_Uenv_Pgd(_Pgd_Construct):
     """

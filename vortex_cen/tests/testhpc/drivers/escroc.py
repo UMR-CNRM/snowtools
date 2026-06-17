@@ -6,7 +6,7 @@ Test the "Escroc" unittask. The driver includes the "Preprocess_Uenv_Namelist" a
 from mkjob.nodes import Driver
 from vortex_cen.tasks.surfex.pre_process import Preprocess_Uenv_Namelist
 from vortex_cen.tasks.surfex.pgd import GetPgd1D
-from vortex_cen.tasks.surfex.escroc import Escroc
+from vortex_cen.tasks.surfex.offline_ensemble import Escroc
 
 
 def setup(t, **kw):

@@ -43,7 +43,6 @@ class SafranReforecast(_CenResearchTask):
             "geometry",
             "uenv+help=Name of the UEnv containing all SAFRAN constant input files and executables",
             "prv_terms",
-            "uenv",
             "ntasks",
             "nnodes",
             "members",

@@ -294,7 +294,7 @@ standard_variables = dict(
         singular = True,
     ),
     exesurfex = dict(
-        help = "Absolute path to SURFEX executables",
+        help = "Absolute path to SURFEX executables (WARNING : non-reproductible simulations)",
         type = "str",
     ),
     tg_cache = dict(
@@ -340,7 +340,7 @@ standard_variables = dict(
         default = "False",
     ),
     namelist_path     = dict(
-        help = "Absolute path to the SURFEX namelist",
+        help = "Absolute path to the SURFEX namelist (WARNING : non-reproductible simulations)",
         type = "str",
     ),
     namelist_source     = dict(
@@ -391,7 +391,7 @@ standard_variables = dict(
         type = "int",
         default = "*ntasks*",
     ),
-    block = dict(
+    out_block = dict(
         help = "Set the output resource's block",
         type = "str",
     ),
@@ -452,5 +452,19 @@ standard_variables = dict(
         help = "List of output geometries of the simulation (these must be valid geometry tags in your"
         "'$HOME/.vortexrc/geometries.ini' file.",
         type  = "'list'",
+    ),
+    diff_xpid = dict(
+        help = "Experiment identifier of the reference file for reproductibility check",
+        type = "str",
+        default = xpid_default,
+    ),
+    diff_user = dict(
+        help = "Username of the producer of the reference file for reproductibility check",
+        type  = "str",
+        default = "$USER",
+    ),
+    diff_block = dict(
+        help = "The reference's block for reproductibiliy check",
+        type = "str",
     ),
 )

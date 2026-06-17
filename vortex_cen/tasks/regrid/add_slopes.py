@@ -34,6 +34,10 @@ class AddSlopes(_CenResearchTask):
         OPTIONAL_CONFIGURATION_VARIABLES = [
             "forcing",
             "max_ntasks",
+            "out_block+default=allslopes",
+            "diff_xpid",
+            "diff_user",
+            "diff_block+default=allslopes",
         ]
         overwrite = [
             "datebegin",
@@ -137,8 +141,26 @@ class AddSlopes(_CenResearchTask):
             experiment     = self.conf.xpid,
             namebuild      = 'flat@cen',
             local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_OUT.nc',
-            block          = 'meteo',
-            model          = 'safran',
+            block          = self.conf.get('out_block', 'allslopes'),
         ),
         print(self.ticket.prompt, 'Output forcing =', forcing_out)
+        print()
+
+    def diff(self):
+        """
+        Test output reproductibility [OPTIONAL]
+        """
+        self.sh.title("Reproductibility check : FORCING")
+        diff = vortex.diff(
+            kind           = 'MeteorologicalForcing',
+            datebegin      = self.list_dates_begin,
+            dateend        = self.dict_dates_end,
+            geometry       = self.conf.geometry,
+            experiment     = self.conf.diff_xpid,
+            username       = self.conf.get('diff_user', None),
+            namebuild      = 'flat@cen',
+            local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_OUT.nc',
+            block          = self.conf.get('diff_block', 'allslopes'),
+        ),
+        print(self.ticket.prompt, 'diff =', diff)
         print()

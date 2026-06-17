@@ -147,7 +147,7 @@ class ConcatForcingsWorker(_CenTaylorVortexWorker):
             combine='nested',
             concat_dim=self.concat_dim,
             chunks='auto',  # Activates dask for automatic data slicing
-            parallel=True,  # multi-threads
+            # parallel=True,  # multi-threads  --> crash (TODO : understand and fix)
             engine='snowtools',  # Apply snowtools-specific pre-processing
         )
         ds.to_netcdf("FORCING_OUT.nc")
