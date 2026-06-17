@@ -472,7 +472,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                     local          = 'OFFLINE',
                     model          = 'surfex',
                     genv           = self.conf.cycle,
-                    gvar           = 'master_surfex_offline_nompi',
+                    gvar           = 'master_offline_nompi',
                 )
 
                 print(t.prompt, 'tb08 =', tb08)
