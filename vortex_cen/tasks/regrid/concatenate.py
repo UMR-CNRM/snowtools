@@ -39,6 +39,8 @@ class ForcingSpatialConcatenation(_CenResearchTask):
             "max_ntasks",
             "forcing",
             "block+default=meteo",
+            "diff_xpid",
+            "diff_user",
         ]
         overwrite = [
             "datebegin",
@@ -105,4 +107,23 @@ class ForcingSpatialConcatenation(_CenResearchTask):
             block          = self.conf.get('block', 'meteo'),
         ),
         print(self.ticket.prompt, 'Output forcing =', forcing_out)
+        print()
+
+    def diff(self):
+        """
+        Test output reproductibility [OPTIONAL]
+        """
+        self.sh.title("Reproductibility check : FORCING")
+        diff = vortex.diff(
+            kind           = 'MeteorologicalForcing',
+            datebegin      = self.list_dates_begin,
+            dateend        = self.dict_dates_end,
+            geometry       = self.conf.geometry,
+            experiment     = self.conf.diff_xpid,
+            username       = self.conf.get('diff_user', None),
+            namebuild      = 'flat@cen',
+            local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_OUT.nc',
+            block          = self.conf.get('block', 'meteo'),
+        ),
+        print(self.ticket.prompt, 'diff =', diff)
         print()

@@ -93,6 +93,8 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
             "namespace_out",
             "august_threshold",
             "offline_gvar",
+            "diff_xpid",
+            "diff_user",
         ]
 
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
@@ -216,6 +218,29 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
             fatal          = False,
         ),
         print(self.ticket.prompt, 'diag_tbo =', diag_tbo)
+        print()
+
+    def diff(self):
+        """
+        Test output reproductibility [OPTIONAL]
+        """
+        self.sh.title("Reproductibility check : PRO")
+        diff = vortex.diff(
+            local          = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+            experiment     = self.conf.diff_xpid,
+            username       = self.conf.get('diff_user', None),
+            geometry       = self.conf.geometry,
+            datebegin      = self.list_dates_begin_pro,
+            dateend        = self.dict_dates_end_pro,
+            nativefmt      = 'netcdf',
+            kind           = 'SnowpackSimulation',
+            model          = 'surfex',
+            namespace      = self.namespace_out,
+            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
+            block          = 'pro',
+            member         = self.conf.get('member', None),
+        ),
+        print(self.ticket.prompt, 'diff =', diff)
         print()
 
 

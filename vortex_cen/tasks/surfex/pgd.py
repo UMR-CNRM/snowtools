@@ -128,6 +128,8 @@ class _Pgd_Construct(PgdCommonsMixin, _CenResearchTask):
             "ntasks",
             "nnodes",
             "nprocs",
+            "diff_xpid",
+            "diff_user",
         ]
         super().__init__(**kw)
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
@@ -215,6 +217,27 @@ class _Pgd_Construct(PgdCommonsMixin, _CenResearchTask):
         # MF: in surfex_task.py:       member = self.conf.member if hasattr(self.conf, 'member') else None,
         # MV : c'était un bug introduit par mon commit #21915d5748ec0f80095edced4fc7ee6790a8faa4
         print(self.ticket.prompt, 'pgd_tbo =', pgd_tbo)
+        print()
+
+    def diff(self):
+        """
+        Test output reproductibility [OPTIONAL]
+        """
+        self.sh.title("Reproductibility check : PGD")
+        diff = vortex.diff(
+            local      = 'PGD.nc',
+            role       = 'SurfexClim',
+            experiment = self.conf.diff_xpid,
+            username   = self.conf.get('diff_user', None),
+            geometry   = self.conf.geometry,
+            nativefmt  = 'netcdf',
+            kind       = 'pgdnc',
+            model      = 'surfex',
+            namespace  = 'vortex.multi.fr',
+            namebuild  = 'flat@cen',
+            block      = 'pgd',
+        ),
+        print(self.ticket.prompt, 'diff =', diff)
         print()
 
 

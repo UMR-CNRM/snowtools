@@ -207,6 +207,11 @@ standard_variables = dict(
         type = "str",
         default = "'MASTER_OFFLINE_MPI' or 'MASTER_OFFLINE_NOMPI'",
     ),
+    soda_gvar = dict(
+        help = "Key to look up the SODA executable in the uenv if it should come from there.",
+        type = "str",
+        default = "'MASTER_SODA_MPI' or 'MASTER_SODA_NOMPI'",
+    ),
     prep_gvar = dict(
         help = "Key to look up the PREP executable in the uenv if it should come from there.",
         type = "str",
@@ -452,5 +457,15 @@ standard_variables = dict(
         help = "List of output geometries of the simulation (these must be valid geometry tags in your"
         "'$HOME/.vortexrc/geometries.ini' file.",
         type  = "'list'",
+    ),
+    diff_xpid = dict(
+        help = "Experiment identifier of the reference file for reproductibility check",
+        type = "str",
+        default = xpid_default,
+    ),
+    diff_user = dict(
+        help = "Username of the producer of the reference file for reproductibility check",
+        type  = "str",
+        default = "$USER",
     ),
 )

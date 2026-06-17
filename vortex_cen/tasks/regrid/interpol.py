@@ -40,6 +40,8 @@ class InterpolateS2MForcing(_CenResearchTask):
         OPTIONAL_CONFIGURATION_VARIABLES = [
             "forcing",
             "member",
+            "diff_xpid",
+            "diff_user",
         ]
         overwrite = [
             "datebegin",
@@ -132,11 +134,32 @@ class InterpolateS2MForcing(_CenResearchTask):
                 dateend     = self.dict_dates_end,
                 nativefmt   = 'netcdf',
                 kind        = 'MeteorologicalForcing',
-                model       = 's2m',
                 namespace   = self.namespace_out,
                 namebuild   = 'flat@cen',
-                block       = 'meteo',
+                block       = 'meteo',  # change to "interpolate" ?
                 member      = self.conf.get('member', None),
             ),
             print(self.ticket.prompt, 'interpolated forcing file toolbox =', forcing_tbo)
             print()
+
+    def diff(self):
+        """
+        Test output reproductibility [OPTIONAL]
+        """
+        self.sh.title("Reproductibility check : FORCING")
+        diff = vortex.diff(
+            local       = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+            experiment  = self.conf.diff_xpid,
+            username    = self.conf.get('diff_user', None),
+            geometry    = self.conf.geometry,
+            datebegin   = self.list_dates_begin,
+            dateend     = self.dict_dates_end,
+            nativefmt   = 'netcdf',
+            kind        = 'MeteorologicalForcing',
+            namespace   = self.namespace_out,
+            namebuild   = 'flat@cen',
+            block       = 'meteo',
+            member      = self.conf.get('member', None),
+        ),
+        print(self.ticket.prompt, 'diff =', diff)
+        print()

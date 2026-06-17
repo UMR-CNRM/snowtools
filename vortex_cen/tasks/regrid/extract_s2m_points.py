@@ -38,6 +38,8 @@ class ExtractS2MForcing(_CenResearchTask):
             "slopes",
             "elevations",
             "aspects",
+            "diff_xpid",
+            "diff_user",
         ]
         overwrite = [
             "datebegin",
@@ -120,7 +122,25 @@ class ExtractS2MForcing(_CenResearchTask):
                 namebuild      = 'flat@cen',
                 local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_OUT.nc',
                 block          = 'meteo',
-                model          = 'safran',
             ),
             print(self.ticket.prompt, 'Output forcing =', forcing_out)
             print()
+
+    def diff(self):
+        """
+        Test output reproductibility [OPTIONAL]
+        """
+        self.sh.title("Reproductibility check : FORCING")
+        diff = vortex.diff(
+            kind           = 'MeteorologicalForcing',
+            datebegin      = self.list_dates_begin,
+            dateend        = self.dict_dates_end,
+            geometry       = self.conf.geometry,
+            experiment     = self.conf.diff_xpid,
+            username       = self.conf.get('diff_user', None),
+            namebuild      = 'flat@cen',
+            local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_OUT.nc',
+            block          = 'meteo',
+        ),
+        print(self.ticket.prompt, 'diff =', diff)
+        print()

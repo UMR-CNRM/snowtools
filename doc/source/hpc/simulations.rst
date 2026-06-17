@@ -247,9 +247,20 @@ For example, to increase your job's wall time to 1 hour, add "time=1:00:00" to y
 
   * Force a specific PREP file
 
+Reproductibility check
+----------------------
 
-Simulation outputs
-------------------
+In certain situations, you may wish to verify that the files produced are identical to the reference files produced by a previous experiment that you are attempting to replicate.
+In this case, simply provide the reference experiment identifier in the "diff_xpid" configuration variable (and optionaly the username of the owner of this experiment in the "diff_user" configuration variable) :
+
+.. code-block::
+
+   mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2020080106
+   dateend=2021080106 geometry=cor2_allslopes diff_xpid=<reference_xpid> [diff_user=<username>]
+
+
+Simulation log
+--------------
 ..
   TODO : copie d'écran pour montrer ou trouver le numéro XXXX
   /scratch/mtool/<username>/depot/mstepXXXX --> actual jobs ("step.0[123]") + output logs ("step.0[123].out)

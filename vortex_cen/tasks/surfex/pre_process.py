@@ -32,7 +32,9 @@ class _Preprocess(SurfexCommonsMixin, _CenResearchTask):
         ]
 
         OPTIONAL_CONFIGURATION_VARIABLES = [
-            "forcing"
+            "forcing",
+            "diff_xpid",
+            "diff_user",
         ]
 
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
@@ -93,6 +95,25 @@ class _Preprocess(SurfexCommonsMixin, _CenResearchTask):
             nativefmt    = 'nam',
         ),
         print(self.ticket.prompt, 'namelist_tbo =', namelist_tbo)
+        print()
+
+    def diff(self):
+        """
+        Test output reproductibility [OPTIONAL]
+        """
+        self.sh.title("Reproductibility check : OPTIONS.nam")
+        diff = vortex.diff(
+            role         = 'Nam_surfex',
+            kind         = 'namelist',
+            model        = 'surfex',
+            local        = 'OPTIONS.nam',
+            experiment   = self.conf.diff_xpid,
+            username     = self.conf.get('diff_user', None),
+            namespace    = 'vortex.multi.fr',  # A single reference namelist should be on Hendrix
+            block        = 'namelist',
+            nativefmt    = 'nam',
+        ),
+        print(self.ticket.prompt, 'diff =', diff)
         print()
 
 

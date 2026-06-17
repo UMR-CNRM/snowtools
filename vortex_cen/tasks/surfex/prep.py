@@ -82,6 +82,8 @@ class _Prep_Construct(PrepCommonsMixin, _CenResearchTask):
             "nnodes",
             "nprocs",
             "tg_gvar",
+            "diff_xpid",
+            "diff_user",
         ]
         super().__init__(**kw)
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
@@ -170,6 +172,31 @@ class _Prep_Construct(PrepCommonsMixin, _CenResearchTask):
             member      = self.conf.get('member', None),
         ),
         print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
+        print()
+
+    def diff(self):
+        """
+        Test output reproductibility [OPTIONAL]
+        """
+        self.sh.title("Reproductibility check : PREP")
+        diff = vortex.diff(
+            local       = 'PREP.nc',
+            role        = 'SnowpackInit',
+            experiment  = self.conf.diff_xpid,
+            username   = self.conf.get('diff_user', None),
+            date        = self.conf.get('date', self.conf.get('datebegin', None)),
+            vapp        = self.conf.vapp,
+            vconf       = self.conf.vconf,
+            geometry    = self.conf.geometry,
+            nativefmt   = 'netcdf',
+            kind        = 'PREP',
+            model       = 'surfex',
+            namespace   = 'vortex.multi.fr',
+            namebuild   = 'flat@cen',  # TODO : passer en variable de configuration
+            block       = 'prep',
+            member      = self.conf.get('member', None),
+        ),
+        print(self.ticket.prompt, 'diff =', diff)
         print()
 
 

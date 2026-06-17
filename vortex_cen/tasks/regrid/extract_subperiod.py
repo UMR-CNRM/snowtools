@@ -77,7 +77,6 @@ class ExtractSubPeriod(_CenResearchTask):
                 dateend     = self.dict_dates_end,
                 nativefmt   = 'netcdf',
                 kind        = 'MeteorologicalForcing',
-                model       = 's2m',
                 namespace   = 'vortex.multi.fr',
                 namebuild   = 'flat@cen',
                 block       = 'meteo',
