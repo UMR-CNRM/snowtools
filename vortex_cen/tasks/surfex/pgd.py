@@ -320,6 +320,9 @@ class Pgd_Local_Pgd(_Pgd_Construct):
         self.get_pgd_exe_from_local_path()
 
 
+# MV : La distinction 1D/2D doit pouvoir se gérer avec une simple variable de configuration activant le passage
+# dans "get_2D_databases" ou non pour alléger le nombre de classe "similaires"
+
 class Pgd2D_Uenv_Pgd(_Pgd_Construct):
     """
     Task : Pgd2D_Uenv_Pgd
