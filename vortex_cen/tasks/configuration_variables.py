@@ -207,11 +207,6 @@ standard_variables = dict(
         type = "str",
         default = "'MASTER_OFFLINE_MPI' or 'MASTER_OFFLINE_NOMPI'",
     ),
-    soda_gvar = dict(
-        help = "Key to look up the SODA executable in the uenv if it should come from there.",
-        type = "str",
-        default = "'MASTER_SODA_MPI' or 'MASTER_SODA_NOMPI'",
-    ),
     prep_gvar = dict(
         help = "Key to look up the PREP executable in the uenv if it should come from there.",
         type = "str",
