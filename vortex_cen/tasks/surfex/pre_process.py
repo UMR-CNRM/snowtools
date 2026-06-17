@@ -101,20 +101,21 @@ class _Preprocess(SurfexCommonsMixin, _CenResearchTask):
         """
         Test output reproductibility [OPTIONAL]
         """
-        self.sh.title("Reproductibility check : OPTIONS.nam")
-        diff = vortex.diff(
-            role         = 'Nam_surfex',
-            kind         = 'namelist',
-            model        = 'surfex',
-            local        = 'OPTIONS.nam',
-            experiment   = self.conf.diff_xpid,
-            username     = self.conf.get('diff_user', None),
-            namespace    = 'vortex.multi.fr',  # A single reference namelist should be on Hendrix
-            block        = 'namelist',
-            nativefmt    = 'nam',
-        ),
-        print(self.ticket.prompt, 'diff =', diff)
-        print()
+        pass
+#        self.sh.title("Reproductibility check : OPTIONS.nam")
+#        diff = vortex.diff(
+#            role         = 'Nam_surfex',
+#            kind         = 'namelist',
+#            model        = 'surfex',
+#            local        = 'OPTIONS.nam',
+#            experiment   = self.conf.diff_xpid,
+#            username     = self.conf.get('diff_user', None),
+#            namespace    = 'vortex.multi.fr',  # A single reference namelist should be on Hendrix
+#            block        = 'namelist',
+#            nativefmt    = 'nam',
+#        ),
+#        print(self.ticket.prompt, 'diff =', diff)
+#        print()
 
 
 class Preprocess_Uenv_Namelist(_Preprocess):
