@@ -91,6 +91,7 @@ proplotter = 'snowtools.plots.stratiprofile.proplotter:main'
 mapplotter = 'snowtools.plots.maps.mapplotter:main'
 procompare = 'snowtools.plots.stratiprofile.procompare:main'
 mkjob-help = 'vortex_cen.scripts.mkjob_help:main'
+s2m_oper = 'vortex_cen.scripts.s2m_oper:main'
 
 [project.entry-points."xarray.backends"]
 snowtools = "snowtools.utils.xarray_snowtools_backend:SnowtoolsBackendEntrypoint"
