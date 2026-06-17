@@ -1,0 +1,47 @@
+LOG=$HOME/LOG_CRON
+S2M=$SNOWTOOLS_CEN/vortex_cen/s2m
+ENV_OPER=$HOME/venv/oper/bin/activate
+
+# Generation of SAFRAN guess files
+# ================================
+#
+# Réseau de 3h
+#
+10 3  * * * . $ENV_OPER ; mkjob -f $S2M/oper/jobs/prepsafran_ana.jobs -c $S2M/oper/conf/s2m_common.ini -a rundate=$( date '+\%Y\%m\%d03') >> $LOG/prepsafran_ana_03.$( date '+\%Y\%m\%d\%h') 2>&1
+10 5  * * * . $ENV_OPER ; mkjob -f $S2M/oper/jobs/prepsafran_prv.jobs -c $S2M/oper/conf/s2m_common.ini -a rundate=$( date '+\%Y\%m\%d03') >> $LOG/prepsafran_prv_03.$( date '+\%Y\%m\%d\%h')2>&1
+#
+# Réseau de 9h
+30 9  * * * . $ENV_OPER ; mkjob -f $S2M/oper/jobs/prepsafran_ana.jobs -c $S2M/oper/conf/s2m_common.ini -a rundate=$( date '+\%Y\%m\%d09') >> $LOG/prepsafran_ana_09.$( date '+\%Y\%m\%d\%h') 2>&1
+#
+# SAFRAN
+# ======
+#
+# Analyse 3H
+45 3 * * * . $ENV_OPER ; mkjob -f $S2M/alp/safran_ana.jobs -c $S2M/alp/conf/s2m_alp.ini -a rundate=$( date '+\%Y\%m\%d03') >> $LOG/safran_ana_03.$( date '+\%Y\%m\%d\%h') 2>&1
+# Analyse 6H
+30 6 * * * . $ENV_OPER ; mkjob -f $S2M/alp/safran_ana.jobs -c $S2M/alp/conf/s2m_alp.ini -a rundate=$( date '+\%Y\%m\%d06') >> $LOG/safran_ana_06.$( date '+\%Y\%m\%d\%h') 2>&1
+# Analyse 9H
+45 9 * * * . $ENV_OPER ; mkjob -f $S2M/alp/safran_ana.jobs -c $S2M/alp/conf/s2m_alp.ini -a rundate=$( date '+\%Y\%m\%d09') >> $LOG/safran_ana_09.$( date '+\%Y\%m\%d\%h') 2>&1
+# Prévision 3H
+20 5 * * * . $ENV_OPER ; mkjob -f $S2M/alp/safran_prv.jobs -c $S2M/alp/conf/s2m_alp.ini -a rundate=$( date '+\%Y\%m\%d03') >> $LOG/safran_prv_03.$( date '+\%Y\%m\%d\%h') 2>&1
+#
+# SURFEX
+# ======
+#
+# Analyse 3H
+15 04 * * * . $ENV_OPER ; mkjob -f $S2M/alp/surfex_ana.jobs -c $S2M/alp/conf/s2m_alp.ini -a rundate=$( date '+\%Y\%m\%d03') >> $LOG/surfex_ana_03.$( date '+\%Y\%m\%d\%h') 2>&1
+#
+# Analyse 6H
+00 07 * * * . $ENV_OPER ; mkjob -f $S2M/alp/surfex_ana.jobs -c $S2M/alp/conf/s2m_alp.ini -a rundate=$( date '+\%Y\%m\%d06') >> $LOG/surfex_ana_06.$( date '+\%Y\%m\%d\%h') 2>&1
+#
+# Analyse 9H
+00 10 * * * . $ENV_OPER ; mkjob -f $S2M/alp/surfex_ana.jobs -c $S2M/alp/conf/s2m_alp.ini -a rundate=$( date '+\%Y\%m\%d09') >> $LOG/surfex_ana_06.$( date '+\%Y\%m\%d\%h') 2>&1
+#
+# Prevision 3H
+00 05 * * * . $ENV_OPER ; mkjob -f $S2M/alp/surfex_prv.jobs -c $S2M/alp/conf/s2m_alp.ini -a rundate=$( date '+\%Y\%m\%d03') >> $LOG/surfex_prv_03.$( date '+\%Y\%m\%d\%h') 2>&1
+#
+# Analyse 6H
+20 07 * * * . $ENV_OPER ; mkjob -f $S2M/alp/surfex_prv.jobs -c $S2M/alp/conf/s2m_alp.ini -a rundate=$( date '+\%Y\%m\%d06') >> $LOG/surfex_prv_06.$( date '+\%Y\%m\%d\%h') 2>&1
+#
+# Analyse 9H
+20 10 * * * . $ENV_OPER ; mkjob -f $S2M/alp/surfex_prv.jobs -c $S2M/alp/conf/s2m_alp.ini -a rundate=$( date '+\%Y\%m\%d09') >> $LOG/surfex_prv_06.$( date '+\%Y\%m\%d\%h') 2>&1
