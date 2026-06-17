@@ -91,8 +91,8 @@ This example illustrates the creation of a "task" with :
           datebegin   = self.conf.datebegin,
           dateend     = self.conf.dateend,
           geometry    = self.conf.get('forcing_geometry', self.conf.geometry),  # Must be the same as the input geometry in this example
-          block       = 'meteo',  # Force output block at "meteo" (arbitrary choice)
-          nativefmt   = 'netcdf',
+          block       = self.conf.get('out_block', 'extract_subperiod'),  # Allow for a user-defined block, by set default as task "tag"
+          nativefmt   = 'netcdf'
           namespace   = 'vortex.cache.fr',  # Do not archive the output file on Hendrix in this exemple (duplicated data)
           namebuild   = 'flat@cen',
       ),
@@ -187,6 +187,7 @@ The documentation of the example task of section :ref:`minimal_example` would lo
            "forcing_xpid+help=Experiment identifier of the input forcing;type=str;default=The current experiment identifier",
            "forcing_user+help=Name of the producer of the input forcing;type=str;default=$USER",
            "forcing_block+help=*block* level of the input forcing;type=str;default=meteo",
+           "out_block+help=*block* of the output file(s);type=str;default=extract_subperiod",
        ]
 
 For more information on the documentation of configuration variables, see section :ref:`dynamic_documentation`.
@@ -296,6 +297,42 @@ To add a unit test, follow the exact same steps than the previous section (:ref:
 .. note::
 
    The configuration variables should be set to minimise the execution time, this is only a test !
+
+It is also recommended that you add a reproducibility check by defining a 'diff' method.
+In the example of section :ref:`minimal_example`, this would look like :
+
+.. code-block:: python
+
+  def diff(self):
+      self.sh.title('"Reproductibility check : FORCING')
+      diff = vortex.diff(
+          kind        = 'MeteorologicalForcing',
+          local       = 'FORCING_OUT.nc',
+          experiment  = self.conf.diff_xpid,
+          username    = self.conf.get('diff_user', None),
+          datebegin   = self.conf.datebegin,
+          dateend     = self.conf.dateend,
+          geometry    = self.conf.get('forcing_geometry', self.conf.geometry),
+          block       = self.conf.get('diff_block', 'extract_subperiod'),
+          nativefmt   = 'netcdf',
+          namespace   = 'vortex.cache.fr',  # Do not archive the output file on Hendrix in this exemple (duplicated data)
+          namebuild   = 'flat@cen',
+      ),
+      print(self.ticket.prompt, 'Output forcing =', output_forcing)
+      print()
+
+**NB** Do not forget to update the task's documentation with the optional "diff_xpid", "diff_user" and "diff_block" variables:
+
+.. code-block::
+
+   OPTIONAL_CONFIGURATION_VARIABLES = [
+       ...
+       "diff_xpid+...",
+       "diff_user+...",
+       "diff_block+...",
+   ]
+
+In this case, you also have to provide a reference output file for the testbase (by convention under the "reference" *xpid*).
 
 
 Tutorial : creation of an algo component
