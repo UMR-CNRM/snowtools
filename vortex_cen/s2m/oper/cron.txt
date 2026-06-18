@@ -28,7 +28,7 @@
 15 04 * * * . ~/.bash_profile ; . $HOME/venv/oper/bin/activate ; s2m_oper -j surfex_ana -d $( date '+\%Y\%m\%d03')
 #
 # Prevision 3H
-00 05 * * * . ~/.bash_profile ; . $HOME/venv/oper/bin/activate ; s2m_oper -j surfex_prv -d $( date '+\%Y\%m\%d03')
+40 05 * * * . ~/.bash_profile ; . $HOME/venv/oper/bin/activate ; s2m_oper -j surfex_prv -d $( date '+\%Y\%m\%d03')
 #
 # Analyse 6H
 00 07 * * * . ~/.bash_profile ; . $HOME/venv/oper/bin/activate ; s2m_oper -j surfex_ana -d $( date '+\%Y\%m\%d06')
