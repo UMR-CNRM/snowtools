@@ -21,6 +21,7 @@ def parse_command_line():
         help = "Target job name",
         type = str,
         choices = ['prepsafran_ana', 'prepsafran_prv', 'safran_ana', 'safran_prv', 'surfex_ana', 'surfex_prv'],
+        required = True,
     )
 
     parser.add_argument(
@@ -28,6 +29,7 @@ def parse_command_line():
         "--rundate",
         help = "Date of the oper run (hour must be in (03, 06, 09, 12)",
         type = str,
+        required = True,
     )
 
     parser.add_argument(
@@ -39,16 +41,25 @@ def parse_command_line():
         nargs = '*',
     )
 
+    parser.add_argument(
+        "-a",
+        "--add",
+        nargs = "*",
+        help = "Additional command line arguments (dev only)",
+        default = list(),
+    )
+
     args = parser.parse_args()
     return args
 
 
-def execute(job, conf, rundate, domain=None):
+def execute(job, conf, rundate, additional, domain=None):
     job_name = os.path.basename(job)
     if domain is not None:
         job_name = f'{job_name}_{domain}'
+    print(f"mkjob -f {job} -c {conf} -a rundate={rundate} {additional} >> {log}/{job_name}_{rundate} 2>&1")
     subprocess.call(
-        f"mkjob -f {job} -c {conf} -a rundate={rundate} >> {log}/{job_name}_{rundate} 2>&1",
+        f"mkjob -f {job} -c {conf} -a rundate={rundate} {additional} >> {log}/{job_name}_{rundate} 2>&1",
         shell=True
     )
 
@@ -57,11 +68,12 @@ def main():
     args = parse_command_line()
     jobname = args.jobname
     rundate = args.rundate
+    additional = ' '.join(args.add)
 
     if jobname in ['prepsafran_ana', 'prepsafran_prv']:
         job = os.path.join(rootdir, f'oper/jobs/{jobname}')
         conf = os.path.join(rootdir, 'oper/conf/s2m_common.ini')
-        execute(job, conf, rundate)
+        execute(job, conf, rundate, additional)
 
     elif jobname in ['safran_ana', 'safran_prv']:
         if args.region is None:
@@ -69,7 +81,7 @@ def main():
         for dom in args.region:
             job = os.path.join(rootdir, dom, 'jobs', jobname)
             conf = os.path.join(rootdir, dom, 'conf', f's2m_{dom}.ini')
-            execute(job, conf, rundate, dom)
+            execute(job, conf, rundate, dom, additional)
 
     elif jobname in ['surfex_ana', 'surfex_prv']:
         if args.region is None:
@@ -77,7 +89,7 @@ def main():
         for dom in args.region:
             job = os.path.join(rootdir, dom, 'jobs', jobname)
             conf = os.path.join(rootdir, dom, 'conf', f's2m_{dom}.ini')
-            execute(job, conf, rundate, dom)
+            execute(job, conf, rundate, dom, additional)
 
 
 if __name__ == "__main__":
