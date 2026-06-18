@@ -3,17 +3,17 @@ This modules defines specific CEN addons for the Task base class.
 Multiple inheritence together with the standard Task class is required to use this module.
 """
 
+import os
 from bronx.stdtypes.date import yesterday, Date, Period, Time
 from bronx.fancies import loggers
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 from vortex.tools.actions import actiond as ad
 from vortex.algo.components import DelayedAlgoComponentError
-from vortex import __file__ as vortexfile
 
 echecker = ExternalCodeImportChecker('snowtools')
 with echecker:
+    from snowtools import __file__ as snowtoolsdir
     from snowtools.utils.git import get_summary_git
-    from snowtools.DATA import SNOWTOOLS_CEN
 
 logger = loggers.getLogger(__name__)
 
@@ -224,7 +224,6 @@ class S2MTaskMixIn:
         else:
             source_safran, block_safran = self.get_source_safran(meteo=meteo)
 
-            list_suffix = ['_allslopes', '_flat']
             if source_safran == "safran":
                 if self.conf.geometry.area == "postes":
                     return self.conf.geometry.list.split(",")
@@ -318,22 +317,11 @@ class S2MTaskMixIn:
         Provide informations that should be stored in output files for reproductibility purposes
         """
         reprod_info = dict()
-        for info_from_conf in ['snowtools_command', 'forcingid', 'prep_xpid']:
-            if hasattr(self.conf, info_from_conf):
-                reprod_info[info_from_conf] = getattr(self.conf, info_from_conf)
-
         reprod_info['id'] = self.conf.xpid  # Standard version attribute name that can not be changed
-
-        if hasattr(self.conf, "exesurfex"):
-            reprod_info['surfex_commit'] = get_summary_git(self.sh.path.dirname(self.sh.path.realpath(
-                                           self.conf.exesurfex)))
-        elif hasattr(self.conf, "genv"):
-            reprod_info['surfex_genv'] = self.conf.genv
-
-        reprod_info['vortex_commit'] = get_summary_git(self.sh.path.dirname(
-                                                        self.sh.path.dirname(
-                                                         self.sh.path.dirname(vortexfile))))
-
-        reprod_info['snowtools_commit'] = get_summary_git(SNOWTOOLS_CEN)
+        reprod_info['task'] = self.tag
+        import pdb
+        pdb.set_trace()
+        reprod_info['conf'] = self.conf
+        reprod_info['snowtools_commit'] = get_summary_git(os.path.dirname(os.path.dirname(snowtoolsdir)))
 
         return reprod_info

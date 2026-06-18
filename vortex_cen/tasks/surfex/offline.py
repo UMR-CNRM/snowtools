@@ -295,8 +295,7 @@ class _Offline_MPI(_Offline):
             # MV la valeur par défaut de 'drhook' dans la commande s2m est False
             # TODO : cette valeur par défaut pourrait être codée directement dans l'algo
             drhookprof     = self.conf.get('drhook', False),
-            # MV : on traitera les question de reproductibilité dans un 2nd temps.
-            # reprod_info    = self.get_reprod_info,
+            reprod_info    = self.get_reprod_info,
         )
         print(self.ticket.prompt, 'Algo =', algo)
         print()
