@@ -128,11 +128,12 @@ class InterpolateS2MForcing(_CenResearchTask):
         else:
             self.sh.title('Toolbox output interpolated forcing file')
             forcing_tbo = vortex.output(
-                local       = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                #local       = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                local       = 'FORCING.nc',
                 experiment  = self.conf.xpid,
                 geometry    = self.conf.geometry,
-                datebegin   = self.list_dates_begin,
-                dateend     = self.dict_dates_end,
+                datebegin   = self.conf.datebegin,
+                dateend     = self.conf.dateend,
                 nativefmt   = 'netcdf',
                 kind        = 'MeteorologicalForcing',
                 model       = 's2m',
@@ -166,7 +167,7 @@ class InterpolateS2MRemoteForcing(InterpolateS2MForcing):
 
         """
         super().get_remote_inputs()
-        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
+        self.get_forcing(localname='FORCING.nc')
 
 
 class InterpolateS2MLocalForcing(InterpolateS2MForcing):
@@ -192,12 +193,13 @@ class InterpolateS2MLocalForcing(InterpolateS2MForcing):
         # FORCING coming from cache after extraction of a sub-period
         self.sh.title('Input sub-forcing file')
         forcing_tbi = vortex.input(
-            local       = 'FORCING_' + str(self.conf.datebegin.strftime("%Y%m%d%H")) + '_' + str(self.conf.dateend.strftime("%Y%m%d%H")) + '.nc',
+            #local       = 'FORCING_' + str(self.conf.datebegin.strftime("%Y%m%d%H")) + '_' + str(self.conf.dateend.strftime("%Y%m%d%H")) + '.nc',
+            local       = 'FORCING.nc',
             experiment  = self.conf.xpid,
             # MV : il faut forcer la géométrie de sortie à la géométrie d'entrée puisqu'il n'y a
             # pas de changement de géométrie (--> sortir du répertoire "regrid" pour clarifier).
             # TODO : trouver une façon plus standardisée de faire ça.
-            geometry    = self.conf.get('forcing_geometry', self.conf.geometry),
+            geometry    = self.conf.get('forcing_geometry'),
             datebegin   = self.conf.datebegin,
             dateend     = self.conf.dateend,
             nativefmt   = 'netcdf',
@@ -207,8 +209,9 @@ class InterpolateS2MLocalForcing(InterpolateS2MForcing):
             namespace   = self.conf.get('namespace_out', 'vortex.cache.fr'),
             namebuild   = 'flat@cen',
             # MV : archivage dans le même block que le forcing d'origine
-            block       = self.conf.get('forcing_block', 'meteo'),
+            block       = 'meteo',
             member      = self.conf.get('member', None),
+            role        = 'Forcing',
         ),
         print(self.ticket.prompt, 'Sub-forcing =', forcing_tbi)
         print()

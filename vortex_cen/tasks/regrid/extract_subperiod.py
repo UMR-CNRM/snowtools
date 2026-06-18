@@ -67,7 +67,7 @@ class ExtractSubPeriod(_CenResearchTask):
             # MV : il faut forcer la géométrie de sortie à la géométrie d'entrée puisqu'il n'y a
             # pas de changement de géométrie (--> sortir du répertoire "regrid" pour clarifier).
             # TODO : trouver une façon plus standardisée de faire ça.
-            geometry    = self.conf.get('forcing_geometry', self.conf.geometry),
+            geometry    = self.conf.get('forcing_geometry'),
             datebegin   = self.conf.datebegin,
             dateend     = self.conf.dateend,
             nativefmt   = 'netcdf',
@@ -77,8 +77,9 @@ class ExtractSubPeriod(_CenResearchTask):
             namespace   = self.conf.get('namespace_out', 'vortex.cache.fr'),
             namebuild   = 'flat@cen',
             # MV : archivage dans le même block que le forcing d'origine
-            block       = self.conf.get('forcing_block', 'meteo'),
+            block       = 'meteo',
             member      = self.conf.get('member', None),
+            role        = 'Forcing',
         ),
         print(self.ticket.prompt, 'Sub-forcing =', forcing_tbo)
         print()
