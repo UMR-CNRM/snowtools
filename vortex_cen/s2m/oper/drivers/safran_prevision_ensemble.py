@@ -7,6 +7,7 @@ __all__ = []
 
 from vortex_cen.layout.nodes import S2MTaskMixIn
 from vortex_cen.tasks.safran.common import SafranMixIn
+from vortex_cen.tools.monitoring import InputReportContext, OutputReportContext
 import footprints
 import vortex
 from mkjob.nodes import Driver
@@ -96,7 +97,7 @@ class Safran(Task, S2MTaskMixIn, SafranMixIn):
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
-            if True:  # To match IGA indentation
+            with InputReportContext(self, t):
 
                 # I- ARPEGE
                 # ---------
@@ -319,7 +320,7 @@ class Safran(Task, S2MTaskMixIn, SafranMixIn):
 
         if 'backup' in self.steps or 'late-backup' in self.steps:
 
-            if True:  # To match IGA identation
+            with OutputReportContext(self, t):
 
                 self.sh.title('Toolbox output FORCING_massif deteministe')
                 tb27 = vortex.output(

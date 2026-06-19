@@ -4,6 +4,7 @@
 
 from mkjob.nodes import Task
 from vortex_cen.layout.nodes import S2MTaskMixIn
+from vortex_cen.tools.monitoring import InputReportContext, OutputReportContext
 import vortex
 from bronx.stdtypes.date import daterange, yesterday, tomorrow
 import footprints
@@ -74,7 +75,8 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
         pearpmembers, members = self.get_list_members()
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
-            if True:  # In order to have an indentation and facilitate the comparison with IGA Task
+
+            with InputReportContext(self, t):
 
                 self.sh.title('Toolbox input tb01')
                 tb01 = vortex.input(
@@ -504,7 +506,8 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
             self.component_runner(tbalgo1, tbx1)
 
         if 'backup' in self.steps or 'late-backup' in self.steps:
-            if True:  # In order to have an indentation and facilitate the comparison with IGA Task
+
+            with OutputReportContext(self, t):
 
                 self.sh.title('Toolbox output tb11')
                 tb11 = vortex.output(

@@ -6,6 +6,7 @@ Prepare analysis SAFRAN guess files
 __all__ = []
 
 from vortex_cen.layout.nodes import S2MTaskMixIn
+from vortex_cen.tools.monitoring import InputReportContext, OutputReportContext
 import footprints
 import vortex
 from mkjob.nodes import Driver, Task
@@ -84,7 +85,7 @@ class PrepSafran(Task, S2MTaskMixIn):
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
-            if True:  # To match IGA indentation
+            with InputReportContext(self, t):
 
                 tbarp = list()
 
@@ -294,7 +295,7 @@ class PrepSafran(Task, S2MTaskMixIn):
 
         if 'backup' in self.steps or 'late-backup' in self.steps:
 
-            if True:  # To match IGA identation
+            with OutputReportContext(self, t):
 
                 if self.conf.rundate.hour == 3:
 
