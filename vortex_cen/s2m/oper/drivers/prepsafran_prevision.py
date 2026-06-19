@@ -6,6 +6,7 @@ Prepare guess files for SAFRAN forecast
 __all__ = []
 
 from vortex_cen.layout.nodes import S2MTaskMixIn
+from vortex_cen.tools.monitoring import InputReportContext, OutputReportContext
 import footprints
 import vortex
 from mkjob.nodes import Driver
@@ -85,7 +86,7 @@ class PrepSafran(Task, S2MTaskMixIn):
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
-            if True:  # To match IGA identation
+            with InputReportContext(self, t):
 
                 ###########################
                 #  I) FICHIER de METADONNES
@@ -216,7 +217,7 @@ class PrepSafran(Task, S2MTaskMixIn):
 
         if 'backup' in self.steps or 'late-backup' in self.steps:
 
-            if True:  # To match IGA identation
+            with OutputReportContext(self, t):
 
                 self.sh.title('Toolbox output guess arpege prod')
                 tb05 = vortex.output(

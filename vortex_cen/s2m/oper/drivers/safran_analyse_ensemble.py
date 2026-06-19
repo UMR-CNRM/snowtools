@@ -11,6 +11,7 @@ import footprints
 import vortex
 from vortex_cen.layout.nodes import S2MTaskMixIn
 from vortex_cen.tasks.safran.common import SafranMixIn
+from vortex_cen.tools.monitoring import InputReportContext, OutputReportContext
 from mkjob.nodes import Driver
 from mkjob.nodes import Task
 
@@ -160,7 +161,7 @@ class Safran(Task, S2MTaskMixIn, SafranMixIn):
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
-            if True:  # To match IGA indentation
+            with InputReportContext(self, t):
 
                 ################################################
                 ##### Difference between dev and oper task #####
@@ -522,7 +523,7 @@ class Safran(Task, S2MTaskMixIn, SafranMixIn):
 
         if 'backup' in self.steps or 'late-backup' in self.steps:
 
-            if True:  # To match IGA indentation
+            with OutputReportContext(self, t):
 
                 if self.conf.rundate.hour == 12:
                     deterministicdir = ''
