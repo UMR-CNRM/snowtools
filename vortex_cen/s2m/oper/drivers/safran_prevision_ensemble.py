@@ -6,6 +6,7 @@ SAFRAN forecast
 __all__ = []
 
 from vortex_cen.layout.nodes import S2MTaskMixIn
+from vortex_cen.tasks.safran.common import SafranMixIn
 import footprints
 import vortex
 from mkjob.nodes import Driver
@@ -26,7 +27,7 @@ def setup(t, **kw):
     )
 
 
-class Safran(Task, S2MTaskMixIn):
+class Safran(Task, S2MTaskMixIn, SafranMixIn):
     """
     Task : Safran
     =============
@@ -198,7 +199,7 @@ class Safran(Task, S2MTaskMixIn):
                     experiment     = self.conf.xpid_guess,
                     block          = self.conf.guess_block,
                     geometry       = self.conf.geometry[self.conf.vconf],
-                    date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h), # Réseau 0h (J)
+                    date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),  # Réseau 0h (J)
                     cumul          = footprints.util.rangex(self.conf.prv_terms),
                     nativefmt      = 'ascii',
                     kind           = 'guess',
@@ -212,178 +213,7 @@ class Safran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb02b =', tb02b)
                 print()
 
-                self.sh.title('Toolbox input listem')
-                tb03 = vortex.input(
-                    role            = 'ListeMassif',
-                    genv            = self.conf.cycle,
-                    kind            = 'listem',
-                    model           = 'safran',
-                    local           = 'listem',
-                    geometry        = self.conf.geometry[self.conf.vconf],
-                )
-                print(t.prompt, 'tb03 =', tb03)
-                print()
-
-                self.sh.title('Toolbox input listeml')
-                tb04 = vortex.input(
-                    role            = 'ListeLimitesMassif',
-                    genv            = self.conf.cycle,
-                    kind            = 'listeml',
-                    model           = 'safran',
-                    local           = 'listeml',
-                    geometry        = self.conf.geometry[self.conf.vconf],
-                )
-                print(t.prompt, 'tb04 =', tb04)
-                print()
-
-                self.sh.title('Toolbox input listeo')
-                tb05 = vortex.input(
-                    role            = 'ListePost',
-                    genv            = self.conf.cycle,
-                    kind            = 'listeo',
-                    model           = 'safran',
-                    local           = 'listeo',
-                    geometry        = self.conf.geometry[self.conf.vconf],
-                )
-                print(t.prompt, 'tb05 =', tb05)
-                print()
-
-                # WARNING : Les ressoucre rsclim ne sert pas dans le cas nominal mais
-                # constitue un mode secours pour SAFRAN si il rencontre un problème pour faire son guess
-                # A partir des fichiers P
-#                self.sh.title('Toolbox input rsclim')
-#                tb07 = vortex.input(
-#                    role            = 'Clim',
-#                    genv            = self.conf.cycle,
-#                    gvar            = '[kind]',
-#                    kind            = 'rsclim',
-#                    model           = 'safran',
-#                    local           = 'rsclim.don',
-#                    geometry        = self.conf.geometry[self.conf.vconf],
-#                )
-#                print(t.prompt, 'tb07 =', tb07)
-#                print()
-
-                self.sh.title('Toolbox input icrccm')
-                tb08 = vortex.input(
-                    role            = 'Clim',
-                    genv            = self.conf.cycle,
-                    gvar            = '[kind]',
-                    kind            = 'icrccm',
-                    model           = 'safran',
-                    local           = 'icrccm.don',
-                    geometry        = self.conf.geometry[self.conf.vconf],
-                )
-                print(t.prompt, 'tb08 =', tb08)
-                print()
-
-                self.sh.title('Toolbox input namelist sorties')
-                tb09 = vortex.input(
-                    role            = 'Nam_sorties',
-                    source          = 'namelist_sorties_[geometry:domain]',
-                    geometry        = self.conf.geometry[self.conf.vconf],
-                    genv            = self.conf.cycle,
-                    kind            = 'namelist',
-                    model           = 'safran',
-                    local           = 'SORTIES',
-                )
-                print(t.prompt, 'tb09 =', tb09)
-                print()
-
-                self.sh.title('Toolbox input namelist adapt')
-                tb14 = vortex.input(
-                    role            = 'Nam_adapt',
-                    source          = 'namelist_adapt',
-                    geometry        = self.conf.geometry[self.conf.vconf],
-                    genv            = self.conf.cycle,
-                    kind            = 'namelist',
-                    model           = 'safran',
-                    local           = 'ADAPT',
-                )
-                print(t.prompt, 'tb14 =', tb14)
-                print()
-
-                self.sh.title('Toolbox input namelist melange')
-                tb10 = vortex.input(
-                    role            = 'Nam_melange',
-                    source          = 'namelist_melange_[geometry:domain]',
-                    geometry        = self.conf.geometry[self.conf.vconf],
-                    genv            = self.conf.cycle,
-                    kind            = 'namelist',
-                    model           = 'safran',
-                    local           = 'MELANGE',
-                )
-                print(t.prompt, 'tb10 =', tb10)
-                print()
-
-                self.sh.title('Toolbox input carpost')
-                tb11 = vortex.input(
-                    role            = 'carac_post',
-                    genv            = self.conf.cycle,
-                    geometry        = self.conf.geometry[self.conf.vconf],
-                    kind            = 'carpost',
-                    model           = 'safran',
-                    local           = 'carpost.tar',
-                )
-                print(t.prompt, 'tb11 =', tb11)
-                print()
-
-                self.sh.title('Toolbox input namelist impress')
-                tb12 = vortex.input(
-                    role            = 'Nam_impress',
-                    source          = 'namelist_impress_[geometry:domain]',
-                    geometry        = self.conf.geometry[self.conf.vconf],
-                    genv            = self.conf.cycle,
-                    kind            = 'namelist',
-                    model           = 'safran',
-                    local           = 'IMPRESS',
-                )
-                print(t.prompt, 'tb12 =', tb12)
-                print()
-
-                if self.conf.vconf == 'pyr':
-
-                    self.sh.title('Toolbox input namelist observr')
-                    tb13 = vortex.input(
-                        role            = 'Nam_observr',
-                        source          = 'namelist_observr_[geometry:domain]',
-                        geometry        = self.conf.geometry[self.conf.vconf],
-                        genv            = self.conf.cycle,
-                        kind            = 'namelist',
-                        model           = 'safran',
-                        local           = 'OBSERVR',
-                        fatal           = False,
-                    )
-                    print(t.prompt, 'tb13 =', tb13)
-                    print()
-
-                self.sh.title('Toolbox input namelist analyse')
-                tb14 = vortex.input(
-                    role            = 'Nam_analyse',
-                    source          = 'namelist_analyse_[geometry:domain]',
-                    geometry        = self.conf.geometry[self.conf.vconf],
-                    genv            = self.conf.cycle,
-                    kind            = 'namelist',
-                    model           = 'safran',
-                    local           = 'ANALYSE',
-                    fatal           = False,
-                )
-                print(t.prompt, 'tb14 =', tb14)
-                print()
-
-                self.sh.title('Toolbox input namelist ebauche')
-                tb16 = vortex.input(
-                    role            = 'Nam_ebauche',
-                    source          = 'namelist_ebauche_[geometry:domain]',
-                    geometry        = self.conf.geometry[self.conf.vconf],
-                    genv            = self.conf.cycle,
-                    kind            = 'namelist',
-                    model           = 'safran',
-                    local           = 'EBAUCHE',
-                    fatal           = False,
-                )
-                print(t.prompt, 'tb16 =', tb16)
-                print()
+                self.get_const_safran()
 
                 self.sh.title('Toolbox executable tbx1 = safrane')
                 tb11 = tbx1 = vortex.executable(
