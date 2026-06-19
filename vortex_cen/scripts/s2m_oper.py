@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*
 
-import os
+import vortex
 import vortex_cen
-import subprocess
 import argparse
 
 
-log = os.path.join(os.environ["HOME"], "LOG_CRON")
-# Get S2M oper root directory
-rootdir = os.path.join(vortex_cen.__path__[0], 's2m')
+t = vortex.ticket()
+log = t.sh.path.join(t.sh.env()['HOME'], "LOG_CRON")
+# Get S2M oper root directory from the actual vortex_cen install in the virtual environment
+rootdir = t.sh.path.join(vortex_cen.__path__[0], 's2m')
 
 
 def parse_command_line():
@@ -54,14 +54,12 @@ def parse_command_line():
 
 
 def execute(job, conf, rundate, additional, domain=None):
-    job_name = os.path.basename(job)
+    job_name = t.sh.path.basename(job)
     if domain is not None:
         job_name = f'{job_name}_{domain}'
-    print(f"mkjob -f {job} -c {conf} -a rundate={rundate} {additional} >> {log}/{job_name}_{rundate} 2>&1")
-    subprocess.call(
-        f"mkjob -f {job} -c {conf} -a rundate={rundate} {additional} >> {log}/{job_name}_{rundate} 2>&1",
-        shell=True
-    )
+    cmd = f"mkjob -f {job} -c {conf} -a rundate={rundate} {additional} >> {log}/{job_name}_{rundate} 2>&1"
+    # print(cmd)
+    t.sh.spawn(cmd, output=False, shell=True)
 
 
 def main():
@@ -71,24 +69,24 @@ def main():
     additional = ' '.join(args.add)
 
     if jobname in ['prepsafran_ana', 'prepsafran_prv']:
-        job = os.path.join(rootdir, f'oper/jobs/{jobname}')
-        conf = os.path.join(rootdir, 'oper/conf/s2m_common.ini')
+        job = t.sh.path.join(rootdir, f'oper/jobs/{jobname}')
+        conf = t.sh.path.join(rootdir, 'oper/conf/s2m_common.ini')
         execute(job, conf, rundate, additional)
 
     elif jobname in ['safran_ana', 'safran_prv']:
         if args.region is None:
             args.region = ['alp', 'pyr', 'cor', 'mac', 'vog', 'jur']
         for dom in args.region:
-            job = os.path.join(rootdir, dom, 'jobs', jobname)
-            conf = os.path.join(rootdir, dom, 'conf', f's2m_{dom}.ini')
+            job = t.sh.path.join(rootdir, dom, 'jobs', jobname)
+            conf = t.sh.path.join(rootdir, dom, 'conf', f's2m_{dom}.ini')
             execute(job, conf, rundate, dom, additional)
 
     elif jobname in ['surfex_ana', 'surfex_prv']:
         if args.region is None:
             args.region = ['alp', 'pyr', 'cor', 'mac', 'vog', 'jur', 'postes']
         for dom in args.region:
-            job = os.path.join(rootdir, dom, 'jobs', jobname)
-            conf = os.path.join(rootdir, dom, 'conf', f's2m_{dom}.ini')
+            job = t.sh.path.join(rootdir, dom, 'jobs', jobname)
+            conf = t.sh.path.join(rootdir, dom, 'conf', f's2m_{dom}.ini')
             execute(job, conf, rundate, dom, additional)
 
 
