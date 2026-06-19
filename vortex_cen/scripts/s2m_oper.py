@@ -79,7 +79,7 @@ def main():
         for dom in args.region:
             job = t.sh.path.join(rootdir, dom, 'jobs', jobname)
             conf = t.sh.path.join(rootdir, dom, 'conf', f's2m_{dom}.ini')
-            execute(job, conf, rundate, dom, additional)
+            execute(job, conf, rundate, additional, domain=dom)
 
     elif jobname in ['surfex_ana', 'surfex_prv']:
         if args.region is None:
@@ -87,7 +87,7 @@ def main():
         for dom in args.region:
             job = t.sh.path.join(rootdir, dom, 'jobs', jobname)
             conf = t.sh.path.join(rootdir, dom, 'conf', f's2m_{dom}.ini')
-            execute(job, conf, rundate, dom, additional)
+            execute(job, conf, rundate, additional, domain=dom)
 
 
 if __name__ == "__main__":
