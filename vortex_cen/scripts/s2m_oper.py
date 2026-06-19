@@ -57,7 +57,7 @@ def execute(job, conf, rundate, additional, domain=None):
     job_name = t.sh.path.basename(job)
     if domain is not None:
         job_name = f'{job_name}_{domain}'
-    cmd = f"mkjob -f {job} -c {conf} -a rundate={rundate} {additional} >> {log}/{job_name}_{rundate} 2>&1"
+    cmd = f"mkjob -f {job}.job -c {conf} -a rundate={rundate} {additional} >> {log}/{job_name}_{rundate} 2>&1"
     # print(cmd)
     t.sh.spawn(cmd, output=False, shell=True)
 
