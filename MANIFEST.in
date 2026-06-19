@@ -1,6 +1,9 @@
 include README.md
 include LICENSE.txt
 include LICENSE-en.txt
+include *.job
+include *.jobs
+include *.ini
 
 graft snowtools
 graft cenutils
