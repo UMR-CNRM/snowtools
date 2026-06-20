@@ -2,6 +2,8 @@
 Algo Components for deterministic S2M simulations.
 """
 
+import xarray as xr
+
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, tomorrow
 from bronx.syntax.externalcode import ExternalCodeImportChecker
@@ -18,7 +20,7 @@ with echecker:
     from snowtools.utils.resources import get_file_period, save_file_period, save_file_date
     from snowtools.tools.update_namelist import update_surfex_namelist_object, update_namelist_var
     from snowtools.tools.initTG import generate_clim
-    from snowtools.tools.massif_diags import massif_simu
+    from snowtools.utils import xarray_snowtools  # noqa
 
 
 @echecker.disabled_if_unavailable
@@ -222,8 +224,8 @@ class Surfex_Parallel(Parallel, DrHookDecoMixin):
             save_file_date(".", "SURFOUT", dateend_this_run, newprefix="PREP")
 
             # Post-process
-            pro = massif_simu("ISBA_PROGNOSTIC.OUT.nc", openmode='a')
-            pro.massif_natural_risk()
+            pro = xr.open_dataset("ISBA_PROGNOSTIC.OUT.nc", engine='snowtools')
+            pro.surfex.massif_natural_risk()
             pro.dataset.GlobalAttributes(**self.reprod_info)
             pro.dataset.add_standard_names()
             pro.close()

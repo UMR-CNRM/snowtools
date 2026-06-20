@@ -146,6 +146,8 @@ class Test_SURFEX_accessor(unittest.TestCase):
         cls.ds18    = xr.open_dataset(path_pro18, engine='snowtools')
         path_pro_2D = os.path.join(TESTBASE_DIR, "PRO", "PRO_first_2014080106_2015080106.nc")
         cls.ds_2D   = xr.open_dataset(path_pro_2D, engine='snowtools')
+        path_pro_NAT_RISK = os.path.join(TESTBASE_DIR, "PRO", "PRO_gdesRousses_2019-2020.nc")
+        cls.ds_pro_NAT_RISK   = xr.open_dataset(path_pro_NAT_RISK, engine='snowtools')
 
     def test_drop_tile_dimension(self):
         self.ds_2D.surfex.drop_tile_dimension()
@@ -154,6 +156,10 @@ class Test_SURFEX_accessor(unittest.TestCase):
     def test_decode_time_variable(self):
         self.ds_2D.surfex.decode_time_variable('time')
         self.assertEqual(len(self.ds_2D.xx), 5, "Expect: 5 points in xx direction")
+
+    def test_massif_natural_risk(self):
+        self.ds_pro_NAT_RISK.surfex.massif_natural_risk()
+        self.assertTrue('naturalIndex' in list(self.ds_pro_NAT_RISK.keys()))
 
     @classmethod
     def tearDownClass(cls):
