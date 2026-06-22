@@ -1,36 +1,42 @@
 # -*- coding: utf-8 -*-
+"""
+Xarray accessorsused to set standard metadata attributes
+--------------------------------------------------------
 
-#===============
-#Exemple d'usage
-#===============
+Following the xarray project's recomandations, it is based on the use of accessor :
+https://tutorial.xarray.dev/advanced/accessors/01_accessor_examples.html
 
-#import xarray as xr
-#from standard_nc_accessor import StandardNC   # le fichier ci‑dessus
-#
-## Chargement du NetCDF (xarray s’occupe du décodage)
-#ds = xr.open_dataset("S2M_example.nc")
-#
-## Accès aux nouvelles méthodes via l’accessor "standard_nc"
-#ds.standard_nc.GlobalAttributes()               # crée les attributs ACDD
-#ds.standard_nc.add_standard_names()             # ajoute standard_name / long_name
-#ds.standard_nc.add_coord()                      # (si besoin) crée LAT/LON
-#
-## Exemple d’opération sur toutes les variables
-#ds_means = ds.standard_nc.apply_to_all(lambda da: da.mean(dim="time"))
-#
-#print(ds.standard_nc)                           # <StandardNC accessor …>
-#print(ds.attrs)                                 # attributs globaux remplis
-#print(ds_means)                                 # nouveau Dataset avec les moyennes
+This accessor is automatically made available when you import ``snowtools.utils.xarray_snowtools``.
 
+Usage examples
+^^^^^^^^^^^^^^
+
+Adding standard Crocus attributes the 'PRO_gdesRousses_2019-2020.nc' file of the snowtools testbase :
+
+.. code-block:: python
+
+    import xarray as xr
+    from snowtools.utils import xarray_snowtool
+
+    ds = xr.open_dataset('PRO_gdesRousses_2019-2020.nc', engine='snowtools')
+    ds.crocus.GlobalAttributes()
+    ds.crocus.add_coord()  # Optional
+
+"""
 
 import os
 import sys
+import re
 import datetime
 import configparser
 import importlib
 
+from pyproj import Transformer
 import xarray as xr
 import numpy as np
+
+from bronx.datagrip.namelist import NamelistParser
+from snowtools.utils.infomassifs import infomassifs
 
 
 @xr.register_dataset_accessor("standard_nc")
@@ -61,7 +67,7 @@ class StandardNC:
                 value = " ".join(value.split())
             self.ds.attrs[key] = value
 
-    def GlobalAttributes(self, product='reanalysis', **additionnal_attributes):
+    def GlobalAttributes(self, product='S2MReanalysis', **additionnal_attributes):
         """
         Global attributes following ACDD conventions.
         The dataset must have a "time" attribute.
@@ -69,12 +75,12 @@ class StandardNC:
         time = self.ds.time
 
         if product == 'reanalysis':
-            self.read_constant_attributes("GlobalAttributesReanalysis")
+            self.read_constant_attributes("S2MReanalysis")
             self.ds.attrs["date_created"] = datetime.datetime.now().replace(
                 second=0, microsecond=0
             ).isoformat()
         else:
-            self.read_constant_attributes("GlobalAttributesOper")
+            self.read_constant_attributes("S2MOper")
             self.ds.attrs["date_created"] = datetime.datetime.now().replace(
                 hour=12, minute=0, second=0, microsecond=0
             ).isoformat()
@@ -99,6 +105,9 @@ class StandardNC:
         self.ds.attrs["python_version"] = sys.version
         self.ds.attrs["python_binary"] = os.path.realpath(sys.executable)
 
+        # Standard attributs
+        self.add_standard_names()
+
         # additional attributs
         for name, value in additionnal_attributes.items():
             self.ds.attrs[name] = value
@@ -106,49 +115,6 @@ class StandardNC:
     @staticmethod
     def standard_names():
         return dict(ZS="surface_altitude", time="time")
-
-    def addCoord(self):
-        from .massif import infomassifs
-
-        INFOmassifs = infomassifs()
-        dicLonLat = INFOmassifs.getAllMassifLatLon()
-
-        massif_number = self.ds["massif_number"].values
-
-        lat = np.empty(massif_number.shape, np.float64)
-        lon = np.empty(massif_number.shape, np.float64)
-
-        for i, num in enumerate(massif_number.flat):
-            lonlat = dicLonLat[int(num)]
-            lat[i] = lonlat[1]
-            lon[i] = lonlat[0]
-
-        dim = self.ds["ZS"].dims
-        fill_value = -9999999.0
-
-        da_lat = xr.DataArray(
-            lat,
-            dims=dim,
-            attrs=dict(
-                long_name="latitude",
-                units="degrees_north",
-                _FillValue=fill_value,
-            ),
-        )
-        da_lon = xr.DataArray(
-            lon,
-            dims=dim,
-            attrs=dict(
-                long_name="longitude",
-                units="degrees_east",
-                _FillValue=fill_value,
-            ),
-        )
-
-        self.ds["LAT"] = da_lat
-        self.ds["LON"] = da_lon
-
-        return da_lat, da_lon
 
     def special_long_names(self):
         """
@@ -205,45 +171,28 @@ class StandardCROCUS(StandardNC):
             'FREEZE/THAW,SNOW COVER,SNOW DENSITY,SNOW DEPTH,SNOW ENERGY BALANCE,SNOW MELT,SNOW WATER EQUIVALENT,' \
             'SNOW/ICE TEMPERATURE'
 
-    @property
-    def getlatname(self):
-        return 'latitude'
+        # self.get_coord()  # TODO : à mettre dans un accesseur spécifique ?
 
-    @property
-    def getlonname(self):
-        return 'longitude'
+    def getsoilgrid(self):
+        if os.path.isfile("OPTIONS.nam"):
+            n = NamelistParser()
+            N = n.parse("OPTIONS.nam")
+            if 'XSOILGRID' in N['NAM_ISBA']:
+                bottom = list(map(float, N['NAM_ISBA'].XSOILGRID))
+                top = [0] + bottom[:-1]
+                self.soilgrid = (np.array(top) + np.array(bottom)) / 2.
 
-    @property
-    def getcoordname(self):
-        return 'xx', 'yy'
-
-    @property
-    def getmassifname(self):
-        return 'massif_num'
-
-#    def getsoilgrid(self):
-#        from bronx.datagrip.namelist import NamelistParser
-#        n = NamelistParser()
-#        N = n.parse("OPTIONS.nam")
-#        if 'XSOILGRID' in N['NAM_ISBA']:
-#            bottom = list(map(float, N['NAM_ISBA'].XSOILGRID))
-#            top = [0] + bottom[:-1]
-#            self.soilgrid = (np.array(top) + np.array(bottom)) / 2.
-#        else:
-#            from snowtools.utils.prosimu import prosimu
-#            if os.path.isfile("PGD.nc"):
-#                pgd = prosimu("PGD.nc")
-#                nlayers = pgd.read("GROUND_LAYER")
-#                bottom = []
-#                for layer in range(1, nlayers[0] + 1):
-#                    bottom.append(pgd.read('SOILGRID' + str(layer))[0])
-#                top = [0] + bottom[:-1]
-#                self.soilgrid = (np.array(top) + np.array(bottom)) / 2.
-#
-#                pgd.close()
+        if not hasattr(self, 'soilgrid') and os.path.isfile("PGD.nc"):
+            pgd = xr.open_dataset("PGD.nc", engine="snowtools")
+            nlayers = pgd["GROUND_LAYER"].data
+            bottom = []
+            for layer in range(1, nlayers[0] + 1):
+                bottom.append(pgd["SOILGRID"] + str(layer)[0])
+            top = [0] + bottom[:-1]
+            self.soilgrid = (np.array(top) + np.array(bottom)) / 2.
+            pgd.close()
 
     def soil_long_names(self, varname):
-        import re
         r = re.search(r'\d+', varname)
         # r is None for varname without number: 'WGTOT_ISBA'
         if r is None:
@@ -252,8 +201,7 @@ class StandardCROCUS(StandardNC):
             layer = int(r.group()) - 1
 
         if not hasattr(self, 'soilgrid'):
-            pass
-            # self.getsoilgrid()
+            self.getsoilgrid()
 
         if hasattr(self, 'soilgrid'):
             return '(depth %.4f m)' % self.soilgrid[layer]
@@ -300,13 +248,30 @@ class StandardCROCUS(StandardNC):
                         self.variables[varname].long_name = self.variables[varname].long_name + \
                             self.soil_long_names(varname)
 
+    @property
+    def getlatname(self):
+        return 'latitude'
+
+    @property
+    def getlonname(self):
+        return 'longitude'
+
+    @property
+    def getcoordname(self):
+        return 'xx', 'yy'
+
+    @property
+    def getmassifname(self):
+        return 'massif_num'
+
+
+@xr.register_dataset_accessor("s2m")
+class StandardS2M(StandardNC):
+
     def xy2latlon(self, xvar, yvar):
         """
         Convert from an x/y projection to lat/lon by reading the info in the SURFEX namelist
         """
-        from pyproj import Transformer
-        from bronx.datagrip.namelist import NamelistParser
-
         # ----- Lecture du type de grille dans le namelist -----
         n = NamelistParser()
         N = n.parse("OPTIONS.nam")
@@ -328,7 +293,7 @@ class StandardCROCUS(StandardNC):
 
         transformer = Transformer.from_crs(epsg_src, "epsg:4326", always_xy=True)
 
-        # xvar / yvar sont des DataArray 1‑D (ou déjà 2‑D) → on assure 2‑D
+        # On s'assure que xvar/yvar sont des DataArray 2D
         x = np.asarray(xvar)
         y = np.asarray(yvar)
 
@@ -388,6 +353,44 @@ class StandardCROCUS(StandardNC):
         self.ds.attrs["geospatial_vertical_units"] = "m"
         self.ds.attrs["geospatial_vertical_positive"] = "up"
 
+    def addCoord(self):
 
+        INFOmassifs = infomassifs()
+        dicLonLat = INFOmassifs.getAllMassifLatLon()
 
+        massif_number = self.ds["massif_number"].values
 
+        lat = np.empty(massif_number.shape, np.float64)
+        lon = np.empty(massif_number.shape, np.float64)
+
+        for i, num in enumerate(massif_number.flat):
+            lonlat = dicLonLat[int(num)]
+            lat[i] = lonlat[1]
+            lon[i] = lonlat[0]
+
+        dim = self.ds["ZS"].dims
+        fill_value = -9999999.0
+
+        da_lat = xr.DataArray(
+            lat,
+            dims=dim,
+            attrs=dict(
+                long_name="latitude",
+                units="degrees_north",
+                _FillValue=fill_value,
+            ),
+        )
+        da_lon = xr.DataArray(
+            lon,
+            dims=dim,
+            attrs=dict(
+                long_name="longitude",
+                units="degrees_east",
+                _FillValue=fill_value,
+            ),
+        )
+
+        self.ds["LAT"] = da_lat
+        self.ds["LON"] = da_lon
+
+        return da_lat, da_lon
