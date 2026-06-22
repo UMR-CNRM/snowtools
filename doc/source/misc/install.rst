@@ -264,6 +264,24 @@ Source the ``~/.bashrc`` file and start installation
 
 **NB** The installation should also work with python/3.12.12, but the installation fails in some cases.
 
+**FOR BELENOS ONLY [Temporary step]**
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Configure gitlab for HPC via SSH using the documentation (in french):
+
+http://confluence.meteo.fr/display/~thomas.carrel-billiard@meteo.fr/Configurer+GitLab
+
+Then clone the following repositories in a "Projects" on your $HOME :
+
+.. code-block:: bash
+
+    mkdir $HOME/Projects
+    cd $HOME/Projects
+    git clone git@gitlab.meteo.fr:cnrm-gmap/mkjob.git
+    git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-gco.git
+    git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-olive.git
+
+
 **FOR SXCEN ONLY:** Environment and start installation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 As in the personal computer case, set an environment variable pointing to the snowtools repository in **SXCEN** ``~/.bashrc`` file
@@ -307,29 +325,12 @@ Continue installation for Belenos and SXCEN
 
    python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -v ~/my_envs/snowtools_env_stable
 
-Activate the virtual environment conatinaing the snowtools install with :
+Activate the virtual environment containaing the snowtools install with :
 
 .. code-block:: bash
 
     source ~/my_envs/snowtools_env/bin/activate
 
-**FOR BELENOS ONLY** : Temporary step
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Configure gitlab for HPC via SSH using the documentation (in french):
-
-http://confluence.meteo.fr/display/~thomas.carrel-billiard@meteo.fr/Configurer+GitLab
-
-Then clone the following repositories in a  "Projects" on your $HOME and install them with pip :
-
-.. code-block:: bash
-
-    mkdir $HOME/Projects
-    cd $HOME/Projects
-    git clone git@gitlab.meteo.fr:cnrm-gmap/mkjob.git
-    git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-gco.git
-    git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-olive.git
-    pip install mkjob/ vortex-gco/ vortex-olive/
 
 Configure Vortex
 ^^^^^^^^^^^^^^^^
