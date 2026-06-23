@@ -500,5 +500,5 @@ CRPS scores
 ^^^^^^^^^^^
 CRPS score is now as an independent package available at https://github.com/UMR-CNRM/snowtools-crps
 
-To install it along with snowtools, just install the optional dependency ``snowtools[scores]`` (by running ``pip install .[all,scores]`` instead of ``pip install .[all]``).
+To install it along with snowtools, just install the optional dependency ``snowtools[scores]`` or ``pip install .[all]``.
 Note that you may need to upgrade pip to version above 23.0 to install scores dependency due to a bug in previous pip versions.
