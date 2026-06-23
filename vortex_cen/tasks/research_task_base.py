@@ -7,8 +7,8 @@ import vortex
 from mkjob.nodes import Task
 from vortex_cen.layout.nodes import S2MTaskMixIn
 from bronx.stdtypes.date import Date
-from footprints.stdtypes import FPDict
-# from vortex.syntax.stdattrs import Namespace
+from footprints.stdtypes import FPDict, FPList
+from footprints.util import rangex
 
 from vortex_cen.tools.monitoring import InputReportContext, OutputReportContext
 from vortex_cen.tools.monitoring import AlgoReportContext, TestReportContext
@@ -190,10 +190,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
                             Possible values : "yearly", "monthly" or "full"
         :type io_duration: str
         """
-        if 'io_duration' in self.conf:
-            self.get_list_dates(duration=self.conf.io_duration)
-        else:
-            self.get_list_dates()
+        self.get_list_dates(duration=self.conf.get('io_duration', 'yearly'))
 
     def process(self):
         """
@@ -327,7 +324,8 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         """
         Implement this method in unittest tasks to monitor the test results.
         """
-        if 'diff_xpid' in self.conf:
+        if 'diff_xpid' in self.conf and self.conf.diff_xpid != 'False':
+            # TODO : trouver une façon plus élégante de désactiver ponctuellement un test de reproductibilité
             self.diff()
 
     def diff(self):
@@ -356,6 +354,22 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         else:
             # TODO
             pass
+
+    def get_list_members(self):
+        """
+        Return the complete list of ensemble members from either
+        - the exact 'member' value (int) --> returns [member]
+        - the 'members' list (FPList or list) --> returns the list of members
+        - the number of members 'nmembers' (int) --> returns the list of 'nmembers' values starting from 1
+        """
+        if self.conf.member is not None:
+            return rangex(self.conf.member)
+        elif 'members' in self.conf:
+            # members is the list of ensemble members, ex : range(35), '0-35-1', [1, 2, 3]
+            return rangex(self.conf.members)
+        elif 'nmembers' in self.conf:
+            # nmembers is the number of ensemble members (int)
+            return rangex(1, self.conf.nmembers)
 
     def get_forcing(self, localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc', alternate=True,
             namespace='vortex.multi.fr'):
@@ -439,6 +453,8 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         forcing_vconf     = self.conf.get('forcing_vconf', self.conf.vconf)
         forcing_block     = self.conf.get('forcing_block', 'meteo')
         forcing_member    = self.conf.get('forcing_member', self.conf.get('member', None))
+        if forcing_member is not None and not isinstance(forcing_member, int):
+            forcing_member = FPList(forcing_member)
         # forcing_geometry value may depend on the task's output 'geometry' value
         if 'forcing_geometry' in self.conf:
             if isinstance(self.conf.forcing_geometry, dict):
@@ -458,20 +474,26 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         # TODO : ne pas utiliser de source_app / source_conf à l'avenir
         forcing_source_app  = self.conf.get('forcing_source_app', None)
         forcing_source_conf = self.conf.get('forcing_source_conf', None)
-        # Verrue pour gérer les footprints *source_app* et *source_conf* de la réanalyse S2M
-        if 'forcing_source' in self.conf:
-            forcing_source_app, forcing_source_conf = \
-                self.get_safran_sources([forcing_datebegin], era5=self.conf.forcing_source == 'era5')
         forcing_cutoff = self.conf.get('forcing_cutoff', None)
         vortex1        = self.conf.get('forcing_vortex1', False),
 
-        self.sh.title('Input forcing (full simulation period)')
+        duration = self.conf.get('io_duration', 'yearly')
+        list_dates_begin, list_dates_end, _, _ = get_list_dates_files(Date(forcing_datebegin),
+                Date(forcing_dateend), duration)
+        dict_dates_end = get_dic_dateend(list_dates_begin, list_dates_end)
+
+        # Verrue pour gérer les footprints *source_app* et *source_conf* de la réanalyse S2M
+        if 'forcing_source' in self.conf:
+            forcing_source_app, forcing_source_conf = \
+                self.get_safran_sources(list_dates_begin, era5=self.conf.forcing_source == 'era5')
+
+        self.sh.title(f'Input forcing ({duration} duration)')
         forcing = vortex.input(
             role           = 'Forcing',  # Used for parallelisation and alternates only
             kind           = 'MeteorologicalForcing',
             nativefmt      = 'netcdf',
-            datebegin      = forcing_datebegin,  # default : self.conf.datebegin
-            dateend        = forcing_dateend,  # default : self.conf.dateend
+            datebegin      = list_dates_begin,
+            dateend        = dict_dates_end,
             experiment     = forcing_xpid,  # default : self.conf.xpid
             username       = forcing_user,
             geometry       = forcing_geometry,  # default : self.conf.geometry
@@ -488,52 +510,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             source_app     = forcing_source_app,  # default = None (ne pas refaire l'erreur)
             source_conf    = forcing_source_conf,  # default = None (ne pas refaire l'erreur)
             cutoff         = forcing_cutoff,  # TODO : à supprimer dans le cas recherche
-            fatal          = False,  # Do not crash now, there is an alternative
+            fatal          = True,
         ),
         print(t.prompt, 'FORCING =', forcing)
         print()
-
-        if not forcing[0] and alternate:
-
-            # TODO : ne plus faire d'alternate, prescrire obligatoirement le duration (plus rapide)
-            # 2 cas : 'Yearly', + exception pour 1er / dernier fichiers
-            # NB : eviter les alternates dans les tâches
-
-            # Sécurité si *forcing_datebegin* != *datebegin* ou *forcing_dateend* != *dateend*
-            duration = self.conf.get('io_duration', 'yearly')
-            list_dates_begin, list_dates_end, _, _ = get_list_dates_files(Date(forcing_datebegin),
-                    Date(forcing_dateend), duration)
-            dict_dates_end = get_dic_dateend(list_dates_begin, list_dates_end)
-
-            # Verrue pour gérer les footprints *source_app* et *source_conf* de la réanalyse S2M
-            if 'forcing_source' in self.conf:
-                forcing_source_app, forcing_source_conf = \
-                    self.get_safran_sources(list_dates_begin, era5=self.conf.forcing_source == 'era5')
-
-            self.sh.title('Input forcing (sub-periods)')
-            forcing = vortex.input(
-                alternate      = 'Forcing',
-                kind           = 'MeteorologicalForcing',
-                nativefmt      = 'netcdf',
-                datebegin      = list_dates_begin,
-                dateend        = dict_dates_end,
-                experiment     = forcing_xpid,  # default : self.conf.xpid
-                username       = forcing_user,
-                geometry       = forcing_geometry,  # default : self.conf.geometry
-                local          = localname,
-                vapp           = forcing_vapp,  # default : self.conf.vapp
-                vconf          = forcing_vconf,  # default : self.conf.vconf
-                block          = forcing_block,  # default : 'meteo' ?
-                member         = forcing_member,  # default : None
-                intent         = forcing_intent,  # default : 'in' ?
-                namespace      = namespace,  # default : 'vortex.multi.fr',
-                namebuild      = forcing_namebuild,  # default recherche : 'flat@cen', defaut oper : None
-                vortex1        = vortex1,
-                date           = '[dateend]',  # TODO : à supprimer dans le cas recherche
-                source_app     = forcing_source_app,  # default = None (ne pas refaire l'erreur)
-                source_conf    = forcing_source_conf,  # default = None (ne pas refaire l'erreur)
-                cutoff         = forcing_cutoff,  # TODO : à supprimer dans le cas recherche
-                fatal          = True,  # This is the last try, crash in case of failure
-            ),
-            print(t.prompt, 'FORCING (alternate) =', forcing)
-            print()

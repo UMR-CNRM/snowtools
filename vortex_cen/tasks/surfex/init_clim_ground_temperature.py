@@ -61,7 +61,7 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
 
         self.sh.title("Toolbox algo")
         algo = vortex.task(
-            engine="s2m",
+            engine="algo",
             kind="clim",
         )
         print(self.ticket.prompt, "algo =", algo)

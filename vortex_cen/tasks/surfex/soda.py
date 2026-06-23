@@ -5,7 +5,6 @@
 import vortex
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
-import footprints
 
 
 class SodaCommonsMixin(SurfexCommonsMixin):
@@ -58,7 +57,7 @@ class SodaCommonsMixin(SurfexCommonsMixin):
         self.sh.title('Input SODA background PREPs')
         prep = vortex.input(
             role           = 'SnowpackInit',
-            member         = footprints.util.rangex(self.conf.members),
+            member         = self.get_list_members(),
             vapp           = self.conf.get('prep_vapp', self.conf.vapp),
             vconf          = self.conf.get('prep_vconf', self.conf.vconf),
             local          = 'mb[member]/PREP_[date:ymdh].nc',
@@ -178,7 +177,7 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
             experiment     = self.conf.xpid,
             geometry       = self.conf.geometry,
             date           = self.conf.date,
-            member         = footprints.util.rangex(self.conf.members),
+            member         = self.get_list_members(),
             nativefmt      = 'netcdf',
             kind           = 'PREP',
             model          = 'surfex',
@@ -218,7 +217,7 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
             username       = self.conf.get('diff_user', None),
             geometry       = self.conf.geometry,
             date           = self.conf.date,
-            member         = footprints.util.rangex(self.conf.members),
+            member         = self.get_list_members(),
             nativefmt      = 'netcdf',
             kind           = 'PREP',
             model          = 'surfex',

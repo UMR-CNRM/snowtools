@@ -3,4 +3,6 @@
 The Crocus 'escroc' configuration
 =================================
 
+Crocus multiphysics simulations based on a single or an ensemble of meteorological forcing(s).
+
 """

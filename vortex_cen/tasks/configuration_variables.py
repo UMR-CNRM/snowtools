@@ -44,6 +44,10 @@ standard_variables = dict(
         type = member_type,
         default = "None",
     ),
+    nmembers = dict(
+        help = "Number of ensemble members",
+        type = "int",
+    ),
     uenv     = dict(
         help = "Name of the User Environment containing constant files",
         type = "str",
@@ -376,10 +380,6 @@ standard_variables = dict(
         type = "bool",
         default = "False",
         singular = True,
-    ),
-    nmembers = dict(
-        help = "Number of ensemble members",
-        type = "int",
     ),
     concat_dim = dict(
         help = "Dimensions along which to concatenate variables, as used by xarray.concat()",

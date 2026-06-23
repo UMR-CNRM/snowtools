@@ -93,6 +93,8 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
             "namespace_out",
             "august_threshold",
             "offline_gvar",
+            "drhook",
+            "august_threshold",
             "out_block+default=offline/[pro,prep] ",
             "diff_xpid",
             "diff_user",
@@ -129,6 +131,34 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
         It comes from a User Environment in reanalysis tasks.
         """
         self.get_pgd_from_cache()
+
+    def algo(self):
+        """
+        Algo component to execute OFFLINE
+        """
+
+        self.sh.title('Algo OFFLINE-MPI')
+        algo = vortex.task(
+            engine         = 'parallel',
+            # binary         = 'OFFLINE',  # unused
+            kind           = 'deterministic',
+            datebegin      = self.conf.datebegin,
+            dateend        = self.conf.dateend,
+            # MV : *dateinit* correspond à la date de validité du fichier PREP
+            dateinit       = self.ticket.context.sequence.effective_inputs(role='SnowpackInit')[0].rh.resource.date,
+            # MV : la valeur par défaut de "threshold" dans la commande s2m est -999
+            # TODO : cette valeur par défaut pourrait être codée directement dans l'algo
+            threshold      = self.conf.get('august_threshold', -999),
+            # daily          = self.conf.dailyprep,
+            # MV la valeur par défaut de 'drhook' dans la commande s2m est False
+            # TODO : cette valeur par défaut pourrait être codée directement dans l'algo
+            drhookprof     = self.conf.get('drhook', False),
+            # MV : on traitera les question de reproductibilité dans un 2nd temps.
+            # reprod_info    = self.get_reprod_info,
+        )
+        print(self.ticket.prompt, 'Algo =', algo)
+        print()
+        return algo
 
     def put_outputs(self):
         """
@@ -265,42 +295,12 @@ class _Offline_MPI(_Offline):
         ]
 
         OPTIONAL_CONFIGURATION_VARIABLES = [
-            "drhook",
-            "august_threshold",
             "ntasks",
             "nnodes",
             "nprocs",
         ]
 
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
-
-    def algo(self):
-        """
-        Algo component to execute OFFLINE with MPI parallelisation
-        """
-
-        self.sh.title('Algo OFFLINE-MPI')
-        algo = vortex.task(
-            engine         = 'parallel',
-            binary         = 'OFFLINE',
-            kind           = 'deterministic',
-            datebegin      = self.conf.datebegin,
-            dateend        = self.conf.dateend,
-            # MV : *dateinit* correspond à la date de validité du fichier PREP
-            dateinit       = self.ticket.context.sequence.effective_inputs(role='SnowpackInit')[0].rh.resource.date,
-            # MV : la valeur par défaut de "threshold" dans la commande s2m est -999
-            # TODO : cette valeur par défaut pourrait être codée directement dans l'algo
-            threshold      = self.conf.get('august_threshold', -999),
-            # daily          = self.conf.dailyprep,
-            # MV la valeur par défaut de 'drhook' dans la commande s2m est False
-            # TODO : cette valeur par défaut pourrait être codée directement dans l'algo
-            drhookprof     = self.conf.get('drhook', False),
-            # MV : on traitera les question de reproductibilité dans un 2nd temps.
-            # reprod_info    = self.get_reprod_info,
-        )
-        print(self.ticket.prompt, 'Algo =', algo)
-        print()
-        return algo
 
     def launch_algo(self, algo, **kw):
         """
@@ -320,6 +320,35 @@ class _Offline_MPI(_Offline):
                 ntasks=self.conf.ntasks,  # Redondant avec la valeur par défaut dans mkjob
             )
         )
+
+
+class _Offline_NOMPI(_Offline):
+    """
+    Task : _Offline_NOMPI
+    =====================
+
+    Abstract task for the execution of OFFLINE binary without MPI parallelisation.
+
+    """
+
+    def __init__(self, **kw):
+
+        super().__init__(**kw)
+
+        MANDATORY_CONFIGURATION_VARIABLES = [
+        ]
+
+        OPTIONAL_CONFIGURATION_VARIABLES = [
+        ]
+
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
+
+    def launch_algo(self, algo, **kw):
+        """
+        Run OFFLINE algo component without MPI parallelisation.
+        """
+        executable = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
+        self.component_runner(algo, executable)
 
 
 class Offline_MPI_Uenv(_Offline_MPI):

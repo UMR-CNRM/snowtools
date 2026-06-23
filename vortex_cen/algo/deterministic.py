@@ -91,11 +91,6 @@ class Generate_Clim_TG(AlgoComponent):
         attr = dict(
             kind = dict(
                 values = ['clim']),
-            engine = dict(
-                optional     = True,
-                default   = 's2m',
-                values = ['s2m']
-            ),
         )
     )
 
@@ -145,29 +140,26 @@ class Surfex_Parallel(Parallel, DrHookDecoMixin):
         info = 'AlgoComponent designed to run SURFEX experiments over large domains '
                'with MPI parallelization.',
         attr = dict(
-            binary = dict(
-                values = ['OFFLINE'],
-            ),
-
+            # Unused ?
+            #binary = dict(
+            #    values = ['OFFLINE'],
+            #),
             datebegin   = dict(
                 info = "The first date of the simulation.",
                 type = Date,
                 optional = False
             ),
-
             dateend = dict(
                 info = "The final date of the simulation.",
                 type = Date,
                 optional = False
             ),
-
             dateinit = dict(
                 info = "The initialization date if different from the starting date.",
                 type = Date,
                 optional = True,
                 default = '[datebegin]'
             ),
-
             threshold = dict(
                 info = "Threshold on snow water equivalent on August 1st.",
                 type = int,
@@ -180,7 +172,6 @@ class Surfex_Parallel(Parallel, DrHookDecoMixin):
                 optional = True,
                 default = False,
             ),
-
             reprod_info = dict(
                 info = "Informations that must be stored in output files for reproductibility",
                 type = dict,
@@ -304,9 +295,10 @@ class Interpol_Forcing(Parallel):
         info = 'AlgoComponent designed to interpolate SAFRAN forcings on regular grid '
                'with MPI parallelization.',
         attr = dict(
-            binary = dict(
-                values = ['INTERPOL'],
-            ),
+            # Unused ?
+            # binary = dict(
+            #     values = ['INTERPOL'],
+            # ),
 
             reprod_info=dict(
                 info="Informations that must be stored in output files for reproductibility",

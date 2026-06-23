@@ -73,6 +73,7 @@ class SurfexCommonsMixin:
                 local         = 'PGD.nc',
                 role          = 'SurfexClim',
                 experiment    = self.conf.get('pgd_xpid', self.conf.xpid),
+                username      = self.conf.get('pgd_user', None),
                 vapp          = self.conf.get('pgd_vapp', self.conf.vapp),
                 vconf         = self.conf.get('pgd_vconf', self.conf.vconf),
                 geometry      = self.conf.geometry,

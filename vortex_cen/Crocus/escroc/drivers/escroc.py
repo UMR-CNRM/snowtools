@@ -1,8 +1,8 @@
 # -*- coding:Utf-8 -*-
 
 """
-The "surfex" driver allows to launch deterministic SURFEX/Crocus simulations in a research context
-based on any meteorological forcing file.
+The "escroc" driver allows to launch multi-physics SURFEX/Crocus simulations in a research context
+based on any meteorological forcing file(s).
 WARNING : It does not guarantee the reproductibility of the simulations due to a loose user control
 on the input files : missing inputs files will be looked for on alternate locations and will
 enventually be generated if necessary and possible.
@@ -10,7 +10,7 @@ enventually be generated if necessary and possible.
 """
 
 from mkjob.nodes import Driver
-from vortex_cen.tasks.surfex.offline import _Offline_MPI
+from vortex_cen.tasks.surfex.offline_ensemble import Escroc
 from vortex_cen.tasks.surfex.pre_process import _Preprocess
 from vortex_cen.tasks.surfex.pgd import GetPgd1D
 from vortex_cen.tasks.surfex.prep import GetPrep
@@ -26,7 +26,7 @@ def setup(t, **kw):
             MakeClimGroundTemperature(tag='inittg', ticket=t, **kw),
             GetPgd1D(tag='pgd', ticket=t, **kw),
             GetPrep(tag='prep', ticket=t, **kw),
-            Offline(tag='offline', ticket=t, **kw),
+            EscrocResearch(tag='escroc_task', ticket=t, **kw),
         ],
         options=kw,
     )
@@ -110,10 +110,10 @@ class PreProcess(_Preprocess):
         self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
 
 
-class Offline(_Offline_MPI):
+class EscrocResearch(Escroc):
     """
-    Task : Offline
-    ==============
+    Task : EscrocResearch
+    =====================
 
     SURFEX/OFFLINE documentation : https://umr-cnrm.github.io/snowtools-doc/misc/surfex.html
 
