@@ -439,7 +439,7 @@ class GetPgd1D(_Pgd_Construct):
         OPTIONAL_CONFIGURATION_VARIABLES = [
             "exesurfex",
             "pgdnc_gvar",
-            "pgd_cache",
+            "pgd",
         ]
         super().__init__(**kw)
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)

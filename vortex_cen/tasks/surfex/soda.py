@@ -114,8 +114,8 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
             "observation_xpid+help=Experiment identifier of the snow observation to assimilate;type=str;default=*xpid*",
             "observation_user+help=Name of the user who owns the snow observation file to assimilate;" +
             "type=str;default=$USER",
-            "sensor+help=Sensor used for the snow observation to assimilate (ex: MODIS, PLEIADES, VIIRS);type=str",
-            "scope+help=Scope of the snow observation to assimilate observation (ex: MODIS, PLEIADES, VIIRS);type=str",
+            "sensor+help=Sensor used for the snow observation to assimilate (ex MODIS, PLEIADES, VIIRS,...);type=str",
+            "scope+help=Type of the snow observation to assimilate;type=str",
             "soda_gvar",
             "prep",
             "prep_namespace+help=Where to look for the PREP files ('vortex.cache.fr' if part of the 'assim' task');" +

@@ -77,7 +77,7 @@ class _Prep_Construct(PrepCommonsMixin, _CenResearchTask):
             "uenv|surfex_uenv",
         ]
         OPTIONAL_CONFIGURATION_VARIABLES = [
-            "pgd_cache",
+            "pgd",
             "ntasks",
             "nnodes",
             "nprocs",
@@ -242,7 +242,7 @@ class GetPrep(_Prep_Construct):
             "tg_cache",
             "tg_gvar",
             "prep",
-            "pgd_cache",
+            "pgd",
         ]
         super().__init__(**kw)
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)

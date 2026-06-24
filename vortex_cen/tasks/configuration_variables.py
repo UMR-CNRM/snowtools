@@ -160,7 +160,7 @@ standard_variables = dict(
         type = "bool",
         default = "False",
     ),
-    pgd_cache = dict(
+    pgd = dict(
         metavar = True,
         help = "Footprint description of a PGD.nc file stored in a Vortex cache",
         values = ["pgd_xpid", "pgd_user", "pgd_vapp", "pgd_vconf", "pgd_geometry", "pgd_vortex1"],

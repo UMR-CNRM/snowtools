@@ -87,7 +87,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
         OPTIONAL_CONFIGURATION_VARIABLES = [
             "forcing",
             "prep",
-            "pgd_cache",
+            "pgd",
             "member",
             "io_duration",
             "namespace_out",
@@ -369,7 +369,7 @@ class Offline_MPI_Uenv(_Offline_MPI):
         OPTIONAL_CONFIGURATION_VARIABLES = [
             "forcing",
             "prep",
-            "pgd_cache",
+            "pgd",
             "member",
             "io_duration",
             "namespace_out",
