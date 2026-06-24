@@ -1,25 +1,30 @@
 [build-system]
-build-backend = 'mesonpy'
-requires = ['meson-python', 'numpy>=1.21.6', 'ninja', 'wheel']
+requires = ["setuptools>=66,<71"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "snowtools"
 version = "2.0.4"
 dependencies = [
-    'netCDF4',
     'numpy>=1.8',
+    'cftime',
+    'certifi',
+    'netCDF4',
     'scipy',
     'python-dateutil',
     'pyproj',
     'shapely',
     'pyshp',
-    'pandas',
+    'pandas<=2.3.2',
     'xarray>=0.18.0',  # Enable the use of snowtools xarray plugin
     'bronx',
     'footprints',
     'packaging',
     'dask',
     'bottleneck',
+    'epygram>=2.0',
+    'scikit-learn',  # For SAFRAN guess generation
+    'vortex-nwp',
 ]
 requires-python = ">=3.6"
 readme = "README.md"
@@ -59,17 +64,21 @@ sql = [
 plot = [
     'matplotlib',
     'cartopy',
-    'epygram>=2.0',
     'rioxarray',
 ]
+
+scores = [
+    'snowtools-crps@git+https://github.com/UMR-CNRM/snowtools-crps.git',
+]
+
 
 # For a full installation
 all = [
     'psycopg2',
     'matplotlib',
     'cartopy',
-    'epygram>=2.0',
     'rioxarray',
+    'snowtools-crps@git+https://github.com/UMR-CNRM/snowtools-crps.git',
 ]
 
 [project.urls]
@@ -81,9 +90,19 @@ s2m = 'snowtools.tasks.s2m_command:main'
 proplotter = 'snowtools.plots.stratiprofile.proplotter:main'
 mapplotter = 'snowtools.plots.maps.mapplotter:main'
 procompare = 'snowtools.plots.stratiprofile.procompare:main'
+mkjob-help = 'vortex_cen.scripts.mkjob_help:main'
 
 [project.entry-points."xarray.backends"]
 snowtools = "snowtools.utils.xarray_snowtools_backend:SnowtoolsBackendEntrypoint"
+
+[project.entry-points.vtx]
+cen = "vortex_cen"
+
+[tool.setuptools.package-dir]
+vortex_cen = "vortex_cen"
+
+[tool.setuptools.package-data]
+"vortex_cen.data.cen_stores_configs" = ["cen-map-resources.ini"]
 
 [tool.setuptools.packages.find]
 # Explicitely exclude the "cenutils" repository from the setuptool automatic package discovery

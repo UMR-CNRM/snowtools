@@ -1,0 +1,7 @@
+name=pgd_alp package=drivers task=pgd profile=rd-belenos-mt geometry=alp27_allslopes
+name=pgd_pyr package=drivers task=pgd profile=rd-belenos-mt geometry=pyr24_allslopes
+name=pgd_cor package=drivers task=pgd profile=rd-belenos-mt geometry=cor2_allslopes
+name=pgd_mac package=drivers task=pgd profile=rd-belenos-mt geometry=mac11_allslopes
+name=pgd_jur package=drivers task=pgd profile=rd-belenos-mt geometry=jur4_allslopes
+name=pgd_vog package=drivers task=pgd profile=rd-belenos-mt geometry=vog3_allslopes
+name=pgd_postes package=drivers task=pgd profile=rd-belenos-mt geometry=postes

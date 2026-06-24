@@ -1,0 +1,7 @@
+name=init_tg_alp package=drivers task=init_TG profile=rd-belenos-mt geometry=alp27_allslopes
+name=init_tg_pyr package=drivers task=init_TG profile=rd-belenos-mt geometry=pyr24_allslopes
+name=init_tg_cor package=drivers task=init_TG profile=rd-belenos-mt geometry=cor2_allslopes
+name=init_tg_mac package=drivers task=init_TG profile=rd-belenos-mt geometry=mac11_allslopes
+name=init_tg_jur package=drivers task=init_TG profile=rd-belenos-mt geometry=jur4_allslopes
+name=init_tg_vog package=drivers task=init_TG profile=rd-belenos-mt geometry=vog3_allslopes
+name=init_tg_postes package=drivers task=init_TG profile=rd-belenos-mt geometry=postes

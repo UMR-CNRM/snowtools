@@ -67,7 +67,7 @@ Vortex
 .. toctree::
    :maxdepth: 2
 
-   The vortex-cen plugin <vortex/vortex-index.rst>
+   Vortex and associated tools <vortex/vortex-index.rst>
 
 Meteo France HPC
 ----------------

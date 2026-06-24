@@ -1,17 +1,23 @@
+Constant data managment with User Environments
+==============================================
+
 A general documentation (in french) can be found in:
    http://intra.cnrm.meteo.fr/algopy/sphinx/vortex/current/technical/uget.html
 
 There is a list of useful commands at the end
 
 Install the vortex-gco plugin
-=============================
+-----------------------------
 
 .. code-block:: bash
 
    pip install vortex-gco
 
+.. _uenv_creation:
+
 Create a User Environment from scratch
-======================================
+--------------------------------------
+
 1. Put the file(s) you need in your UEnv in ``$HOME/.vortexrc/hack/uget/your_username/data``
 
 Your file(s) should have a name and a number: ``AFirstFile.0``, ``ASecondFile.1``
@@ -40,8 +46,11 @@ Your file(s) should have a name and a number: ``AFirstFile.0``, ``ASecondFile.1`
 
 **NB:** On HPC this can only be done from a TRANSFERT node
 
+.. _uenv_modification:
+
 Modifying an existing UEnv
-==========================
+--------------------------
+
 1. Create a copy of existing UEnv:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -85,7 +94,7 @@ b. Add a new file in ``MyNewUenv.0``
   --> Add a line to the file ``MyNewUenv.0`` (ex: NEW_KEY="uenv:New_File.0@your_username")
 
 Concatenation of 2 existing UEnv
-================================
+--------------------------------
 
 1. Get both UEnv:
 
@@ -105,7 +114,8 @@ Now, the files ``UEnv1_copy`` and ``UEnv2_copy`` are copied in ``$HOME/.vortexrc
 **NB:** it is of course posible to just pick few lines of each files
 
 Using UEnv ``TargetUEnv.X`` owned by another user
-=================================================
+-------------------------------------------------
+
 1. Explore ``TargetUEnv.X``:
 
 .. code-block:: bash
@@ -119,7 +129,8 @@ Using UEnv ``TargetUEnv.X`` owned by another user
    toolbox.input(genv='uenv:TargetUEnv.X@the_other_user', gvar='Key_from_TargetUEnv.X', unknown=True, filename='...')
 
 Examples of available User Environments (UEnv)
-==============================================
+----------------------------------------------
+
 Started by Ange Haddjeri, to be continued...
 
 Digital elevations models available in "uenv:dem.2@vernaym"::
@@ -143,7 +154,7 @@ Uenv to reproduce simulations from M.Vernay PhD : "edelweiss_gr250_pappus.2@vern
 Uenv for latest version of the ANTILOPE post-processing algorithm : "edelweiss.3@vernaym"
 
 FAQ - Frequent issues
-=====================
+---------------------
 
 * On HPC, fetch/save data from a TRANSFERT node because the uget tool is based on ftget/ftput commands, which are unavailable on login/compute nodes and raise the following error:
 

@@ -1,7 +1,0 @@
-name=init_tg_alp task=init_TG profile=rd-belenos-mt jobassistant=cen geometry=alp27_allslopes datebegin=1940080106 dateend=1941080106
-name=init_tg_pyr task=init_TG profile=rd-belenos-mt jobassistant=cen geometry=pyr24_allslopes datebegin=1940080106 dateend=1941080106
-name=init_tg_cor task=init_TG profile=rd-belenos-mt jobassistant=cen geometry=cor2_allslopes datebegin=1940080106 dateend=1941080106
-name=init_tg_mac task=init_TG profile=rd-belenos-mt jobassistant=cen geometry=mac11_allslopes datebegin=1940080106 dateend=1941080106
-name=init_tg_jur task=init_TG profile=rd-belenos-mt jobassistant=cen geometry=jur4_allslopes datebegin=1940080106 dateend=1941080106
-name=init_tg_vog task=init_TG profile=rd-belenos-mt jobassistant=cen geometry=vog3_allslopes datebegin=1940080106 dateend=1941080106
-name=init_tg_postes task=init_TG profile=rd-belenos-mt jobassistant=cen geometry=postes datebegin=1940080106 dateend=1941080106

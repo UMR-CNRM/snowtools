@@ -168,13 +168,13 @@ Install
    cd $SNOWTOOLS_CEN
    git checkout dev
    python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -e -v ~/my_envs/snowtools_env
-   deactivate
 
 .. tip::
 
-   If you want a stable / non-editable installation of snowtools (not affected by local modifications of the code), you can replace the line
-   python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -e -v ~/my_envs/snowtools_env
-   by:
+   If you want a stable / non-editable installation of snowtools (not affected by local modifications of the code), you can replace the line above by:
+
+.. code-block:: bash
+
    python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -v ~/my_envs/snowtools_env_stable
 
 [Optional] Configure Vortex and install UEnv tools
@@ -186,7 +186,7 @@ Vortex Configuration :
 
     mkdir ~/.vortex.d/
     cd ~/.vortex.d/
-    ln -s $SNOWTOOLS_CEN/vortex-cen/configs/vortex_pc.toml vortex.toml
+    ln -s $SNOWTOOLS_CEN/vortex_cen/configs/vortex_pc.toml vortex.toml
 
 Start from the default geometries file (update it with your own geometries if you already had one):
 
@@ -200,8 +200,9 @@ Install UEnv tools :
 
 .. code-block:: bash
 
+    source ~/my_envs/snowtools_env/bin/activate
     pip install vortex-gco
-
+    deactivate
 
 And that's it. Now, you have snowtools installed in your git repository ``~/all_git_repo/snowtools`` and a virtual environment associated ``~/my_envs/snowtools_env``
 
@@ -232,15 +233,18 @@ In order to install snowtools on a distant server (SXCEN or Belenos), run this c
 **FOR BELENOS ONLY:** Environment and start installation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. warning::
+..
+  The following instruction seems irrelevant after the 03/06/2026 update
 
-    As of 2026-04-23, DSI/ICI/CC recently made changes to internet access
-    from Belenos. To install Python packages from pypi.org with Pip,
-    you'll need to export the following environment variable:
+  .. warning::
 
-.. code-block:: bash
+      As of 2026-04-23, DSI/ICI/CC recently made changes to internet access
+      from Belenos. To install Python packages from pypi.org with Pip,
+      you'll need to export the following environment variable:
 
-    export CURL_CA_BUNDLE=/opt/softs/certificats/proxy1_1.pem
+  .. code-block:: bash
+
+      export CURL_CA_BUNDLE=/opt/softs/certificats/proxy1_1.pem
 
 
 As in the personal computer case, set an environment variable pointing to the snowtools repository in **Belenos** ``~/.bashrc`` file
@@ -256,11 +260,27 @@ Source the ``~/.bashrc`` file and start installation
 .. code-block:: bash
 
     source ~/.bashrc
-    cd $SNOWTOOLS_CEN
-    module load python/3.10.12
-    module load gcc/15.2.0
+    module load python/3.10.12 gcc/15.2.0
 
 **NB** The installation should also work with python/3.12.12, but the installation fails in some cases.
+
+**FOR BELENOS ONLY [Temporary step]**
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Configure gitlab for HPC via SSH using the documentation (in french):
+
+http://confluence.meteo.fr/display/~thomas.carrel-billiard@meteo.fr/Configurer+GitLab
+
+Then clone the following repositories in a "Projects" on your $HOME :
+
+.. code-block:: bash
+
+    mkdir $HOME/Projects
+    cd $HOME/Projects
+    git clone git@gitlab.meteo.fr:cnrm-gmap/mkjob.git
+    git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-gco.git
+    git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-olive.git
+
 
 **FOR SXCEN ONLY:** Environment and start installation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -279,7 +299,6 @@ Source the ``~/.bashrc`` file and start installation
 .. code-block:: bash
 
     source ~/.bashrc
-    cd $SNOWTOOLS_CEN
 
 
 By default, Pip fetches package distributions from the global Python package registry, pypi.org. To install internal vortex plugins, configure Pip so that it can reach MF’s internal Nexus package registry. To do so, add the following lines to ~/.config/pip/pip.ini:
@@ -291,7 +310,6 @@ By default, Pip fetches package distributions from the global Python package reg
     index-url = https://nexus-sidev.meteo.fr/repository/pypi-group/simple
     extra-index-url = https://nexus.meteo.fr/pypi-vortex-releases/simple
 
-
 Continue installation for Belenos and SXCEN
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -302,38 +320,17 @@ Continue installation for Belenos and SXCEN
 .. tip::
 
    If you want a stable / non-editable installation of snowtools (not affected by local modifications of the code), you can replace the line above by:
+
+.. code-block:: bash
+
    python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -v ~/my_envs/snowtools_env_stable
 
-Temporary step for Belenos
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Configure gitlab for HPC via SSH using the documentation (in french):
-
-http://confluence.meteo.fr/display/~thomas.carrel-billiard@meteo.fr/Configurer+GitLab
-
-Then clone the following repositories
+Activate the virtual environment containaing the snowtools install with :
 
 .. code-block:: bash
 
-    cd ~/all_git_repo
-    git clone git@gitlab.meteo.fr:cnrm-gmap/mkjob.git
-    git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-gco.git
-    git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-olive.git
+    source ~/my_envs/snowtools_env/bin/activate
 
-Go in the mkjob directory and checkout to branch "mv-add-command-line-xpid":
-
-.. code-block:: bash
-
-    cd mkjob
-    git checkout mv-add-command-line-xpid
-    cd ..
-
-
-Install the repositories
-
-.. code-block:: bash
-
-    pip install mkjob/ vortex-gco/ vortex-olive/
 
 Configure Vortex
 ^^^^^^^^^^^^^^^^
@@ -346,14 +343,14 @@ Vortex Configuration
     cd ~/.vortex.d/
 
     # For Belenos
-    ln -s $SNOWTOOLS_CEN/vortex-cen/configs/vortex_belenos.toml vortex.toml
+    ln -s $SNOWTOOLS_CEN/vortex_cen/configs/vortex_belenos.toml vortex.toml
 
     # For SXCEN
-    ln -s $SNOWTOOLS_CEN/vortex-cen/configs/vortex_sxcen.toml vortex.toml
+    ln -s $SNOWTOOLS_CEN/vortex_cen/configs/vortex_sxcen.toml vortex.toml
     mkdir -p /cnrm/cen/users/NO_SAVE/$USER/cache
 
     # For PC
-    ln -s $SNOWTOOLS_CEN/vortex-cen/configs/vortex_pc.toml vortex.toml
+    ln -s $SNOWTOOLS_CEN/vortex_cen/configs/vortex_pc.toml vortex.toml
     mkdir -p $HOME/NO_SAVE/cache/vortex
 
 Start from the default geometries file (update it with your own geometries if you already had one):
@@ -363,12 +360,6 @@ Start from the default geometries file (update it with your own geometries if yo
     mkdir ~/.vortexrc
     cd ~/.vortexrc
     cp $SNOWTOOLS_CEN/snowtools/conf/geometries_vortex2.ini geometries.ini
-
-Deactivate virtual environment
-
-.. code-block:: bash
-
-    deactivate
 
 That's it, now snowtools is installed on Meteo France HPC belenos or on Meteo France server SXCEN.
 
@@ -420,7 +411,6 @@ Install
     python -m venv ~/my_envs/snowtools_env
     source ~/my_envs/snowtools_env/bin/activate
     python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -o all -e
-    deactivate
 
 And that's it. Now, you have snowtools installed in your git repository ``~/all_git_repo/snowtools`` and a virtual environment associated ``~/my_envs/snowtools_env``
 
@@ -508,6 +498,7 @@ To compile the interpol binary:
 
 CRPS scores
 ^^^^^^^^^^^
-If you need to use CRPS scoring tools, which parts are written in Fortran, you need to compile them.
+CRPS score is now as an independent package available at https://github.com/UMR-CNRM/snowtools-crps
 
-For CRPS scores, go to the ``snowtools/scores``, and run ``./install_ubuntu.sh`` (or ``./install_belenos.sh`` if you are on a Meteo-France super computer).
+To install it along with snowtools, just install the optional dependency ``snowtools[scores]`` (by running ``pip install .[all,scores]`` instead of ``pip install .[all]``).
+Note that you may need to upgrade pip to version above 23.0 to install scores dependency due to a bug in previous pip versions.

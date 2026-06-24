@@ -1,6 +1,0 @@
-name=safran_reanalysis_alp task=safran profile=rd-belenos-mt jobassistant=cen datebegin=1940080106 dateend=2025080106 geometry=alp27_flat
-name=safran_reanalysis_pyr task=safran profile=rd-belenos-mt jobassistant=cen datebegin=1940080106 dateend=2025080106 geometry=pyr24_flat
-name=safran_reanalysis_cor task=safran profile=rd-belenos-mt jobassistant=cen datebegin=1940080106 dateend=2025080106 geometry=cor2_flat
-name=safran_reanalysis_mac task=safran profile=rd-belenos-mt jobassistant=cen datebegin=1940080106 dateend=2025080106 geometry=mac11_flat
-name=safran_reanalysis_jur task=safran profile=rd-belenos-mt jobassistant=cen datebegin=1940080106 dateend=2025080106 geometry=jur4_flat
-name=safran_reanalysis_vog task=safran profile=rd-belenos-mt jobassistant=cen datebegin=1940080106 dateend=2025080106 geometry=vog3_flat

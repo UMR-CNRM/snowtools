@@ -1,7 +1,0 @@
-name=surfex_reanalysis_alp task=surfex_massifs profile=rd-belenos-mt jobassistant=cen datebegin=1940080106 dateend=2025080106 geometry=alp27_allslopes
-name=surfex_reanalysis_pyr task=surfex_massifs profile=rd-belenos-mt jobassistant=cen datebegin=1940080106 dateend=2025080106 geometry=pyr24_allslopes
-name=surfex_reanalysis_cor task=surfex_massifs profile=rd-belenos-mt jobassistant=cen datebegin=1940080106 dateend=2025080106 geometry=cor2_allslopes
-name=surfex_reanalysis_mac task=surfex_massifs profile=rd-belenos-mt jobassistant=cen datebegin=1940080106 dateend=2025080106 geometry=mac11_allslopes
-name=surfex_reanalysis_jur task=surfex_massifs profile=rd-belenos-mt jobassistant=cen datebegin=1940080106 dateend=2025080106 geometry=jur4_allslopes
-name=surfex_reanalysis_vog task=surfex_massifs profile=rd-belenos-mt jobassistant=cen datebegin=1940080106 dateend=2025080106 geometry=vog3_allslopes
-name=surfex_reanalysis_postes task=surfex_postes profile=rd-belenos-mt jobassistant=cen datebegin=1940080106 dateend=2025080106 geometry=postes

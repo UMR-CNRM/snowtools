@@ -30,7 +30,11 @@ parser.add_argument('-o', '--optional', choices=['plot', 'sql', 'all'], nargs='*
                          "* 'sql' install sql extraction tools\n" +
                          "* 'all' install all optional dependencies")
 
+parser.add_argument('--system-site-packages', help="Install system site packages (activate similar pip option)",
+                    action='store_true')
+
 args = parser.parse_args()
+
 
 # Retrieve the snowtools root directory from the current script location
 snowtools_dir = os.path.dirname(os.path.dirname(__file__))
@@ -70,8 +74,11 @@ if sys.base_prefix == sys.prefix:
         if not os.path.isfile(os.path.join(venv, 'bin', 'pip')):
             # Create the virtual environment if it does not exist already
             from venv import create
-            create(venv, with_pip=True, system_site_packages=True)
-            # TODO : ajouter un message pour dire comment activer l'environnement virtuel créé ?
+            if 'hpc' in HOSTNAME:
+                # Do not create a virtual environment with system site packages on HPC
+                create(venv, with_pip=True)
+            else:
+                create(venv, with_pip=True, system_site_packages=True)
             outstr = outstr + "Snowtools has been installed in a new virtual environment.\n" \
                 "To activate it, run :\n" \
                 f"source {venv}/bin/activate"
@@ -129,31 +136,22 @@ print("Running command:")
 print(f"{pip} install --upgrade pip")
 subprocess.run([pip, 'install'] + pip_options + ['--upgrade', 'pip'])
 
+# Get a proper version of setuptools (more than 66 -> editable, less than 71 to avoir bug)
+print("Setuptools:")
+subprocess.run([pip, 'install'] + ['setuptools>=66.0.0,<71.0.0'])
+
 # Snowtools installation
 # ----------------------
 
 os.chdir(snowtools_dir)
 # Security : an existing "build" directory from a former installation may cause trouble
-#shutil.rmtree('build', ignore_errors=True)
-#shutil.rmtree('.mesonpy*', ignore_errors=True)
+# shutil.rmtree('build', ignore_errors=True)
+# shutil.rmtree('.mesonpy*', ignore_errors=True)
 
 if args.editable:
 
     if sys.version_info < (3, 10, 1):
         raise SystemError('Editable install is not possible with python versions lower than 3.10')
-
-    # Snowtools contains a compiled extension module written in Fortran.
-    # In order to render compiled extension modules editable similarly to ordinary python code,
-    # they are compiled at import time in an editable install rather than during
-    # installation in case of a classical install (:ref:`sec-install_users`).
-    # This means that the build dependencies have to be available at runtime in
-    # the virtual environment and not just temporarily during the install.
-    # The advantage is, that edits in the Fortran code trigger the (partial) re-compilation of
-    # the extension module at the next import in a new interpreter instance.
-    # https://mesonbuild.com/meson-python/how-to-guides/editable-installs.html
-    print("Running command:")
-    print(f"{pip} install {' '.join(pip_options)} numpy>=1.21.6 meson-python ninja")
-    subprocess.run([pip, 'install'] + pip_options + ['numpy>=1.21.6', 'meson-python', 'ninja'])
 
     # 'no-build-isolation' is required for an editable install
     pip_options.extend(['--no-build-isolation', '-e'])
@@ -165,12 +163,6 @@ print("Running command:")
 print(f"{pip} install {' '.join(pip_options)} .{optional}")
 subprocess.run([pip, 'install'] + pip_options + [f'.{optional}'])
 
-# Install vortex-cen plugin
-os.chdir('vortex-cen')
-print("Running command:")
-print(f"{pip} install .")
-subprocess.run([pip, 'install', '.'])
-
 # Write latest snowtools commit number into the virtual environment to keep a track of what has just been installed
 if os.path.isdir('.git'):
     commit = subprocess.check_output('git show --pretty=format:"%H" --no-patch', shell=True, encoding='utf-8')
@@ -179,7 +171,11 @@ if os.path.isdir('.git'):
 elif os.path.exists('.git_info'):
     shutil.copyfile('.git_info', os.path.join(venv, '.snowtools_info'))
 
-# TODO : DBUG non-editable install on HPC
+# Temporary step for Belenos because packages on nexus are not available from HPC
+if 'hpc' in HOSTNAME:
+    HOME = os.getenv('HOME')
+    subprocess.run([pip, 'install', f'{HOME}/Projects/mkjob/', f'{HOME}/Projects/vortex-gco',
+        f'{HOME}/Projects/vortex-olive'])
 
 # TODO : Crash if any subprces crashed
 
