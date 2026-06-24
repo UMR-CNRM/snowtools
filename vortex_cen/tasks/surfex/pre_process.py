@@ -188,17 +188,6 @@ class Soda_Namelist_Preprocess(SurfexCommonsMixin, _CenResearchTask):
     Outputs:
     --------
     - SODA namelist (OPTIONS.nam)
-
-    Mandatory configuration variables
-    ---------------------------------
-    * ``uenv`` User Environment in which the namelist is to be retrieved
-     type: str
-    * ``namelist_source`` Name of the namelist in the user environment
-     type: str
-    * ``nmembers`` Number of ensemble members in the background state
-     type: int
-    * ``xpid`` Experiment Identifier
-      type: str
     """
 
     def __init__(self, **kw):

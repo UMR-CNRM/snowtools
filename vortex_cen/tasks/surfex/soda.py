@@ -118,9 +118,9 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
             "scope+help=Type of the snow observation to assimilate;type=str",
             "soda_gvar",
             "prep",
-            "prep_namespace+help=Where to look for the PREP files ('vortex.cache.fr' if part of the 'assim' task');" +
+            "prep_namespace+help=Where to look for the PREP files ('vortex.cache.fr' if part of the 'assim' task);" +
             "type=str;choices=vortex.cache.fr (local cache), vortex.archive.fr (Hendrix), " +
-            "vortex.multi.fr (Hendrix + local cache)",
+            "vortex.multi.fr (Hendrix and local cache)",
             "pgd",
             "diff_xpid",
             "diff_user",
