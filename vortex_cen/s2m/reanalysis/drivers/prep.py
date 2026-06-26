@@ -46,7 +46,8 @@ class MakePrep(_Prep_Construct):
 
         MANDATORY_CONFIGURATION_VARIABLES = [
             "geometry",
-            "uenv|surfex_uenv",
+            "surfex_uenv|uenv",
+            "consts_surfex_uenv|uenv",
         ]
 
         OPTIONAL_CONFIGURATION_VARIABLES = [
@@ -80,7 +81,7 @@ class MakePrep(_Prep_Construct):
             model          = 'surfex',
             local          = 'PGD.nc',
             geometry       = self.conf.geometry,
-            genv           = self.conf.uenv,
+            genv           = self.conf.get('consts_surfex_uenv', self.conf.uenv),
             gvar           = 'PGD_[geometry:tag]',
         ),
         print(self.ticket.prompt, 'PGD =', pgd)

@@ -93,7 +93,7 @@ class PreProcess(_Preprocess):
 
         super().__init__(**kw)
         MANDATORY_CONFIGURATION_VARIABLES = [
-            "uenv|surfex_uenv",
+            "surfex_uenv|uenv",
         ]
 
         OPTIONAL_CONFIGURATION_VARIABLES = [
@@ -137,7 +137,7 @@ class Offline(_Offline_MPI):
         super().__init__(**kw)
 
         MANDATORY_CONFIGURATION_VARIABLES = [
-            "uenv|surfex_uenv",
+            "surfex_uenv|uenv",
         ]
 
         OPTIONAL_CONFIGURATION_VARIABLES = [

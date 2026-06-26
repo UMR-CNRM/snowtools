@@ -104,7 +104,7 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
             "dateend",
             "xpid",
             "geometry",
-            "uenv|surfex_uenv",
+            "surfex_uenv|uenv",
             "members",
         ]
 

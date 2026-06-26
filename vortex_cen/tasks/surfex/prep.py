@@ -74,7 +74,8 @@ class _Prep_Construct(PrepCommonsMixin, _CenResearchTask):
         MANDATORY_CONFIGURATION_VARIABLES = [
             "geometry",
             "xpid",
-            "uenv|surfex_uenv",
+            "consts_surfex_uenv|uenv",
+            "surfex_uenv|uenv",
         ]
         OPTIONAL_CONFIGURATION_VARIABLES = [
             "pgd",

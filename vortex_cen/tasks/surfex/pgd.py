@@ -121,7 +121,8 @@ class _Pgd_Construct(PgdCommonsMixin, _CenResearchTask):
         MANDATORY_CONFIGURATION_VARIABLES = [
             "geometry",
             "xpid",
-            "uenv|surfex_uenv",
+            "consts_surfex_uenv|uenv",
+            "surfex_uenv|uenv",
         ]
         OPTIONAL_CONFIGURATION_VARIABLES = [
             "forcing",
@@ -265,7 +266,7 @@ class Pgd_Uenv_Pgd(_Pgd_Construct):
     def __init__(self, **kw):
 
         MANDATORY_CONFIGURATION_VARIABLES = [
-            "uenv|surfex_uenv",
+            "surfex_uenv|uenv",
         ]
         OPTIONAL_CONFIGURATION_VARIABLES = [
         ]
@@ -347,7 +348,8 @@ class Pgd2D_Uenv_Pgd(_Pgd_Construct):
     def __init__(self, **kw):
 
         MANDATORY_CONFIGURATION_VARIABLES = [
-            "uenv|surfex_uenv",
+            "surfex_uenv|uenv",
+            "consts_surfex_uenv|uenv",
         ]
         OPTIONAL_CONFIGURATION_VARIABLES = [
         ]
@@ -389,7 +391,8 @@ class Pgd2D_Local_Pgd(_Pgd_Construct):
     def __init__(self, **kw):
 
         MANDATORY_CONFIGURATION_VARIABLES = [
-            "uenv|surfex_uenv",
+            "surfex_uenv|uenv",
+            "consts_surfex_uenv|uenv",
             "exesurfex",
         ]
         OPTIONAL_CONFIGURATION_VARIABLES = [
@@ -437,6 +440,8 @@ class GetPgd1D(_Pgd_Construct):
         MANDATORY_CONFIGURATION_VARIABLES = [
         ]
         OPTIONAL_CONFIGURATION_VARIABLES = [
+            "consts_surfex_uenv|uenv",
+            "surfex_uenv|uenv",
             "exesurfex",
             "pgdnc_gvar",
             "pgd",
@@ -541,7 +546,8 @@ class GetPgd2D(GetPgd1D):
     def __init__(self, **kw):
 
         MANDATORY_CONFIGURATION_VARIABLES = [
-            "uenv|surfex_uenv",
+            "consts_surfex_uenv|uenv",
+            "surfex_uenv|uenv",
         ]
         OPTIONAL_CONFIGURATION_VARIABLES = [
             "exesurfex",

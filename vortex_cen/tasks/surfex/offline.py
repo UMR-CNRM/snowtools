@@ -82,6 +82,8 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
             "dateend",
             "xpid",
             "geometry",
+            "consts_surfex_uenv|uenv",
+            "surfex_uenv|uenv",
         ]
 
         OPTIONAL_CONFIGURATION_VARIABLES = [
