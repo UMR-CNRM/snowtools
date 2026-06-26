@@ -324,8 +324,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         """
         Implement this method in unittest tasks to monitor the test results.
         """
-        if 'diff_xpid' in self.conf and self.conf.diff_xpid != 'False':
-            # TODO : trouver une façon plus élégante de désactiver ponctuellement un test de reproductibilité
+        if 'diff_xpid' in self.conf and self.conf.diff_xpid:
             self.diff()
 
     def diff(self):
