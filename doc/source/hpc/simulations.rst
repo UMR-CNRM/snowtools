@@ -7,17 +7,17 @@ This section contains all necessary information to launch simulations on HPC.
 Code organisation in applications and configurations
 ----------------------------------------------------
 
-.. automodule:: Crocus
+.. automodule:: vortex_cen.Crocus
    :members:
 
-.. automodule:: s2m
+.. automodule:: vortex_cen.s2m
    :members:
 
-.. automodule:: edelweiss
+.. automodule:: vortex_cen.edelweiss
    :members:
 
 ..
-  .. automodule:: meteo
+  .. automodule:: vortex_cen.meteo
      :members:
 
     Research configurations for the production of meteorological data.

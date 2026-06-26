@@ -16,6 +16,8 @@ epygram
 packaging
 xarray>=0.18.0
 rioxarray
+snowtools-crps@git+https://github.com/UMR-CNRM/snowtools-crps.git
+gdal==3.4.1
 
 # Optionnal requirements
 # "sql" extension

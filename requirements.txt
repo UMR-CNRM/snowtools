@@ -16,6 +16,8 @@ epygram
 packaging
 xarray>=0.18.0
 rioxarray
+scikit-learn
+vortex-nwp
 
 # Optionnal requirements
 # "sql" extension

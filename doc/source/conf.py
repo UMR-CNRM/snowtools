@@ -15,7 +15,9 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../../snowtools'))  # Folder inside snowtools
-sys.path.insert(0, os.path.abspath('../../vortex_cen'))  # Folder inside the vortex-cen plugin
+# Document the vortex_cen plugin explicitely with "vortex_cen.XXX" to avoid conflicts
+# between the "tools" and "scripts" folder common in both snowtools and vortex_cen
+sys.path.insert(0, os.path.abspath('../../'))
 
 
 # -- Project information -----------------------------------------------------
