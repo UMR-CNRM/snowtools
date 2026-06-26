@@ -112,7 +112,7 @@ class ConcatForcings(_CenTaylorRun):
         """Create a common instruction dictionary that will be used by the workers."""
         ddict = super()._default_common_instructions(rh, opts)
         avail_forcings = self.context.sequence.effective_inputs(role=self.role_members)
-        list_forcings = list(set([forcing.rh.container.basename for forcing in avail_forcings]))
+        list_forcings = [forcing.rh.container.basename for forcing in avail_forcings]
         ddict['list_forcings'] = list_forcings
         return ddict
 
