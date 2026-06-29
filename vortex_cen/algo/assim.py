@@ -1,5 +1,40 @@
 """
-Algo Components for ensemble S2M simulations.
+assim.py
+--------
+
+Algo Components for the exectution of SODA-related tasks within a snow data assimilation workflow.
+
+.. inheritance-diagram:: vortex_cen.algo.assim
+   :top-classes: vortex_cen.algo.components._CenParaBlindRun, vortex_cen.algo.components._CenTaylorRun,
+                 vortex_cen.algo.components._CenTaylorVortexWorker, vortex_cen.algo.components._CenWorkerBlindRun,
+                 vortex.algo.components.AlgoComponent, vortex.algo.components.Parallel, vortex.algo.components.TaylorRun
+   :private-bases:
+   :parts: 1
+
+.. autoclass:: Soda
+   :no-members:
+   :show-inheritance:
+
+.. autoclass:: SodaPreProcess
+   :no-members:
+   :show-inheritance:
+
+.. autoclass:: PerturbForcingComponent
+   :no-members:
+   :show-inheritance:
+
+.. autoclass:: PerturbForcingWorker
+   :no-members:
+   :show-inheritance:
+
+.. autoclass:: CrocOPostProcess
+   :no-members:
+   :show-inheritance:
+
+.. autoclass:: CrocOPostProcessWorker
+   :no-members:
+   :show-inheritance:
+
 """
 
 from bronx.fancies import loggers
@@ -186,7 +221,7 @@ class PerturbForcingComponent(TaylorRun):
     of a time series of deterministic input forcing files
     (worker for 1 member).
     Can not inherit from ensemble.PrepareForcingComponent because datebegin and dateend are dates, not lists.
-    Can not inherit from ensemble.S2MComponent because there is not any binary to run
+    Can not inherit from ensemble.SurfexComponent because there is not any binary to run
     (inheritance from TaylorRun, not ParaBlindRun)
     """
     _footprint = dict(
@@ -263,7 +298,7 @@ class CrocOPostProcess(_CenTaylorRun):
 
 
 @echecker.disabled_if_unavailable
-class CrocOPostProcess_Worker(_CenTaylorVortexWorker):
+class CrocOPostProcessWorker(_CenTaylorVortexWorker):
     """
     Worker associated to the `SodaPostProcess` algo component.
     Each worker concatenate the different PRO files covering the subperiods between assimilation dates
@@ -283,7 +318,7 @@ class CrocOPostProcess_Worker(_CenTaylorVortexWorker):
 
     def _commons(self, rundir, thisdir, rdict, **kwargs):
         """
-        Method called by the main **vortex_task** method of the **_S2MWorkerMixIn** class
+        Method called by the main **vortex_task** method of the **_CenWorkerMixIn** class
         """
         # Launch "core" algo
         cpp.execute(self.datebegin, self.dateend)

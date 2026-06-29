@@ -1,6 +1,15 @@
 # -*- coding: utf-8 -*-
-'''
-'''
+"""
+add_slopes.py
+-------------
+
+Add slopes to forcing file(s) in the SAFRAN "flat" massif geometry.
+
+.. autoclass:: AddSlopes
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+"""
 
 import vortex
 from vortex_cen.tasks.research_task_base import _CenResearchTask
@@ -8,14 +17,15 @@ from vortex_cen.tasks.research_task_base import _CenResearchTask
 
 class AddSlopes(_CenResearchTask):
     """
+    **Task : AddSlopes**
     Add slopes to forcing file in a "flat" geometry.
 
-    Inputs :
-    --------
+    **Input:**
+
     - SAFRAN-generated FORCING file in a "flat" geometry.
 
-    Outputs :
-    ---------
+    **Output:**
+
     - FORCING file wih slopes and aspects.
 
    """

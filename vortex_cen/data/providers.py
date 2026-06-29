@@ -1,5 +1,21 @@
+# -*- coding: utf-8 -*-
 """
-Specific CEN providers.
+providers.py
+------------
+
+Specific CEN providers for DATA STORED OUTSIDE THE VORTEX DATA TREE only.
+
+
+.. inheritance-diagram:: vortex_cen.data.providers
+   :private-bases:
+   :parts: 1
+
+.. autoclass:: S2MReanalysisProvider
+   :show-inheritance:
+
+.. autoclass:: CenSopranoDevProvider
+   :show-inheritance:
+
 """
 
 import importlib
@@ -35,6 +51,9 @@ class CenCfgParser(GenericConfigParser):
 
 
 class S2MReanalysisProvider(Provider):
+    """
+    Provider for input of the SAFRAN reanalysis (native observation and guess files).
+    """
 
     #: Path to the uget Store configuration file
     _config = CenCfgParser(
@@ -110,6 +129,11 @@ class S2MReanalysisProvider(Provider):
 
 
 class CenSopranoDevProvider(Provider):
+    """
+    Provider for real-time SAFRAN input files.
+
+    Note : This provider should not be used anymore.
+    """
 
     _config = CenCfgParser(
         importlib.resources.open_text(

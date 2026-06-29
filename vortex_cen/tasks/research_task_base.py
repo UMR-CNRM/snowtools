@@ -1,11 +1,22 @@
 # -*- coding: utf-8 -*-
 """
-Created on 18 March 2024
-@author: Vernay.M
+research_task_base.py
+---------------------
+
+Main class used for all CEN HPC research tasks.
+
+.. inheritance-diagram:: vortex_cen.tasks.research_task_base
+   :top-classes: mkjob.nodes.Node
+   :private-bases:
+   :parts: 4
+
+.. autoclass:: _CenResearchTask
+   :members:
+   :show-inheritance:
 """
 import vortex
 from mkjob.nodes import Task
-from vortex_cen.layout.nodes import S2MTaskMixIn
+from vortex_cen.tasks.oper_research_mixin import CENTaskMixIn
 from bronx.stdtypes.date import Date
 from footprints.stdtypes import FPDict, FPList
 from footprints.util import rangex
@@ -16,7 +27,7 @@ from vortex_cen.tools.monitoring import AlgoReportContext, TestReportContext
 from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
 
 
-class _CenResearchTask(Task, S2MTaskMixIn):
+class _CenResearchTask(Task, CENTaskMixIn):
     """
     Abstract class defining the common sequence of actions for CEN's vortex tasks.
 
@@ -46,10 +57,6 @@ class _CenResearchTask(Task, S2MTaskMixIn):
 
     Doc :
     http://intra.cnrm.meteo.fr/algopy/trainings/vortex_dev2022_1/presentation/beamer/vortex_dev_jobs2_presentation.pdf
-
-    TODO:
-    1. Make a separate abstract task for real-time applications ?
-    2. Move methods from S2MTaskMixIn here (or research-specific methods in case of #1) ?
 
     """
 
@@ -380,23 +387,19 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             # nmembers is the number of ensemble members (int)
             return rangex(1, self.conf.nmembers)
 
-    def get_forcing(self, localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc', alternate=True,
-            namespace='vortex.multi.fr'):
+    def get_forcing(self, localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc', namespace='vortex.multi.fr'):
         """
         Method to get meteorological forcing file(s) covering the simulation period.
-        First, check if an existing forcing file covers the full simulation period.
-        If no such file exists, check for files covering standard sub-periods (yearly or monthly files).
-
+        Look for files covering sub-periods defined by the `io_duration` configuration variable (current values:
+        "monthly", "yearly", "full")
 
         Arguments:
+        ----------
         :param localname: *local* footprint (how to name the file in the working directory).
-                          This is an algo/task-specific argument.
-                          Default name depends on the actual datebegin/dateend of each file.
-                          WARNING : in case a unique value is provided the user should ensure that a single
-                          file will be retrieved (for example set the alternate argument to False)
+            This is an algo/task-specific argument. Default name depends on the actual datebegin/dateend of each file.
+            WARNING : in case a unique value is provided the user should ensure that a single
+            file will be retrieved
         :type localname: str
-        :param alternate: Allow to search for alternative files covering sub-periods.
-        :type alternate: bool
 
         Mandatory configuration variables:
         ----------------------------------

@@ -1,5 +1,42 @@
+# -*- coding: utf-8 -*-
 """
+surfex.py
+---------
+
 SURFEX/Crocus output resources.
+
+.. inheritance-diagram:: Prep
+   :top-classes: vortex.nwp.data.modelstates.InitialCondition
+   :private-bases:
+   :parts: 5
+
+.. inheritance-diagram:: Pro
+   :top-classes: vortex_cen.data.flow.SurfaceIO, vortex_cen.data.flow.SurfaceIOVortex1,
+   :private-bases:
+   :parts: 2
+
+.. inheritance-diagram:: PrepVortex1
+   :top-classes: vortex.nwp.data.modelstates.InitialCondition
+   :private-bases:
+   :parts: 5
+
+.. inheritance-diagram:: ProVortex1
+   :top-classes: vortex_cen.data.flow.SurfaceIO, vortex_cen.data.flow.SurfaceIOVortex1,
+   :private-bases:
+   :parts: 2
+
+.. autoclass:: Pro
+   :show-inheritance:
+
+.. autoclass:: Prep
+   :show-inheritance:
+
+.. autoclass:: ProVortex1
+   :show-inheritance:
+
+.. autoclass:: PrepVortex1
+   :show-inheritance:
+
 """
 
 from bronx.stdtypes.date import Date

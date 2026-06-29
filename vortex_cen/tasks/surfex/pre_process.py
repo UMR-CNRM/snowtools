@@ -1,8 +1,38 @@
 # -*- coding: utf-8 -*-
 """
+pre_process.py
+--------------
+
+Tasks designed to launch the pre-process the OPTIONS.nam namelist before any SURFEX binary execution.
+
+.. inheritance-diagram:: vortex_cen.tasks.surfex.pre_process
+   :top-classes: vortex_cen.tasks.research_task_base._CenResearchTask
+   :private-bases:
+   :parts: 2
+
+.. autoclass:: _Preprocess
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: Preprocess_Uenv_Namelist
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: Preprocess_Local_Namelist
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: Soda_Namelist_Preprocess
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
 """
+
 import vortex
-# from vortex import toolbox
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 from vortex.util.helpers import InputCheckerError
 from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
@@ -10,18 +40,18 @@ from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
 
 class _Preprocess(SurfexCommonsMixin, _CenResearchTask):
     """
-    Task: _Preprocess
-    =================
+    **Task: _Preprocess**
+
     Abstract task for pre-processing namelist:
     add infos like points and dates from forcing to namelist.
 
-    Inputs:
-    -------
+    **Input:**
+
     - SURFEX namelist (OPTIONS.nam)
     - FORCING file
 
-    Outputs:
-    --------
+    **Output:**
+
     - Modified and ready-to-use SURFEX namelist
 
     """
@@ -120,8 +150,8 @@ class _Preprocess(SurfexCommonsMixin, _CenResearchTask):
 
 class Preprocess_Uenv_Namelist(_Preprocess):
     """
-    Task: Preprocess_Uenv_Namelist
-    ==============================
+    **Task: Preprocess_Uenv_Namelist**
+
     Task for pre-processing a namelist coming from a User Environment.
     NB : This is the task to use to guarantee the simulation's reproductibility
     """
@@ -147,8 +177,7 @@ class Preprocess_Uenv_Namelist(_Preprocess):
 
 class Preprocess_Local_Namelist(_Preprocess):
     """
-    Task: Preprocess_Local_Namelist
-    ===============================
+    **Task: Preprocess_Local_Namelist**
 
     Task for pre-processing a namelist coming from any user-defined absolute path.
     WARNING : The simulation's reproductibility can not be guaranteed with this task !
@@ -177,16 +206,16 @@ class Preprocess_Local_Namelist(_Preprocess):
 
 class Soda_Namelist_Preprocess(SurfexCommonsMixin, _CenResearchTask):
     """
-    Task: Soda_Namelist_Preprocess
-    ==============================
+    **Task: Soda_Namelist_Preprocess**
+
     Pre-process SURFEX namelist for SODA executable
 
-    Inputs:
-    -------
+    **Input:**
+
     - SODA namelist (OPTIONS.nam)
 
-    Outputs:
-    --------
+    **Outputs:**
+
     - SODA namelist (OPTIONS.nam)
     """
 

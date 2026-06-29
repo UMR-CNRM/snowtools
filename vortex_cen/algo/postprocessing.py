@@ -1,5 +1,45 @@
+# -*- coding: utf-8 -*-
 """
+postprocessing.py
+-----------------
+
 Algo Components for S2M post processing.
+
+.. inheritance-diagram:: vortex_cen.algo.postprocessing
+   :top-classes: vortex_cen.algo.components._CenParaBlindRun, vortex_cen.algo.components._CenTaylorRun,
+                 vortex_cen.algo.components._CenTaylorVortexWorker, vortex_cen.algo.components._CenWorkerBlindRun,
+                 vortex.algo.components.AlgoComponent, vortex.algo.components.Parallel,
+                 vortex.algo.components.TaylorRun, vortex.tools.parallelism.TaylorVortexWorker
+   :private-bases:
+
+.. autoclass:: S2m_ensemble_postprocessing
+   :no-members:
+   :show-inheritance:
+
+.. autoclass:: HydroWorker
+   :no-members:
+   :show-inheritance:
+
+.. autoclass:: HydroComponent
+   :no-members:
+   :show-inheritance:
+
+.. autoclass:: ExtractDates
+   :no-members:
+   :show-inheritance:
+
+.. autoclass:: ExtractDatesWorker
+   :no-members:
+   :show-inheritance:
+
+.. autoclass:: SnowCoverDuration
+   :no-members:
+   :show-inheritance:
+
+.. autoclass:: SnowCoverDurationWorker
+   :no-members:
+   :show-inheritance:
+
 """
 
 from bronx.fancies import loggers
@@ -222,7 +262,7 @@ class ExtractDates(_CenTaylorRun):
 
 
 @echecker.disabled_if_unavailable
-class ExtractDates_Worker(_CenTaylorVortexWorker):
+class ExtractDatesWorker(_CenTaylorVortexWorker):
     """
     """
 
@@ -243,7 +283,7 @@ class ExtractDates_Worker(_CenTaylorVortexWorker):
 
     def _commons(self, rundir, thisdir, rdict, **kwargs):
         """
-        Method called by the main **vortex_task** method of the **_S2MWorkerMixIn** class
+        Method called by the main **vortex_task** method of the **_CenWorkerMixIn** class
         """
         subdir = ''  # TODO : subdir should become optional in the extract_dates.execute method
         # Launch "core" algo
@@ -270,7 +310,7 @@ class SnowCoverDuration(_CenTaylorRun):
 
 
 @echecker.disabled_if_unavailable
-class SnowCoverDuration_Worker(_CenTaylorVortexWorker):
+class SnowCoverDurationWorker(_CenTaylorVortexWorker):
     """
     Worker associated to the `SnowCoverDuration` algo component and calling various
     snowtools methods to compute snow cover duration diagnostics of SURFEX-Crocus simulations :
@@ -293,7 +333,7 @@ class SnowCoverDuration_Worker(_CenTaylorVortexWorker):
 
     def _commons(self, rundir, thisdir, rdict, **kwargs):
         """
-        Method called by the main **vortex_task** method of the **_S2MWorkerMixIn** class
+        Method called by the main **vortex_task** method of the **_CenWorkerMixIn** class
         """
         # Launch "core" algo
         scd.execute()

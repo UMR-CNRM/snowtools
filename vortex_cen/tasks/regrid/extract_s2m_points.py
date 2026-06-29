@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+extract_s2m_points.py
+---------------------
+
+.. autoclass:: ExtractS2MForcing
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
 """
 
 from vortex_cen.tasks.research_task_base import _CenResearchTask
@@ -11,12 +18,12 @@ class ExtractS2MForcing(_CenResearchTask):
     Parallel extraction of a list of points from an ensemble of FORCING file(s) covering different time periods
     in the "massif" geometry according to their massif number, elevation, slope and aspect.
 
-    Inputs :
-    --------
+    **Input:**
+
     - SAFRAN-generated FORCING file(s) in the "massif" geometry.
 
-    Outputs :
-    ---------
+    **Outputs:**
+
     - FORCING file(s) with extracted points
 
     """

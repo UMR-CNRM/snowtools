@@ -1,4 +1,13 @@
 # -*- coding:Utf-8 -*-
+"""
+reforecast.py
+-------------
+
+.. autoclass:: SafranReforecast
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+"""
 
 import footprints
 from bronx.stdtypes.date import Period
@@ -8,14 +17,13 @@ from vortex_cen.tasks.research_task_base import _CenResearchTask
 
 class SafranReforecast(_CenResearchTask):
     """
-    Task : SafranReforecast
-    =======================
+    **Task : SafranReforecast**
 
     Safran ensemble re-forecast task (daily run covering J 6H --> J+4 6H).
     SAFRAN guess files come from both the PEARP ensemble and ARPEGE (as member 'N+1') from the 0 UTC run.
 
-    Inputs
-    ------
+    **Input:**
+
     - Guess : daily packed files containing all lead time of a given 0H run of ARPEGE / PERAP
     - listem : List of SAFRAN massifs
     - listeml : List of coordinates of the SAFRAN massifs
@@ -28,8 +36,8 @@ class SafranReforecast(_CenResearchTask):
     - syrpluie / syrmRR : Safran executables for precipitation spatio-temporal precipitation interpolation
     - sytist : Safran executable for hourly interpolation and the creation of FORCING files
 
-    Outputs
-    -------
+    **Output:**
+
     - FORCING_massifs.nc : Ensemble of forcing files on the "flat" massif geometry
     - FORCING_postes.nc : Ensemble of forcing files on the "postes" geometry
     """

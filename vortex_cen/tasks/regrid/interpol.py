@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-Created the 14 January 2026
-@author: Radanovics S.
+interpol.py
+-----------
+
+.. autoclass:: InterpolateS2MForcing
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
 """
 
 
@@ -13,14 +18,14 @@ class InterpolateS2MForcing(_CenResearchTask):
     """
     Interpolate a forcing file in "massif" geometry onto a 2D grid, or 1D grid, that is a list of points.
 
-    Inputs:
-    --------
+    **Inputs:**
+
     - FORCING file in the "massif" geometry.
     - GRID file containing the desired output grid.
     - interpolation binary
 
-    Outputs:
-    ---------
+    **Output:**
+
     - FORCING file on the new grid.
 
     """

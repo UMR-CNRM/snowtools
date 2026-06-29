@@ -46,9 +46,16 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.imgmath',
     'sphinx.ext.viewcode',
+    'sphinx.ext.graphviz',
+    'sphinx.ext.inheritance_diagram',
     'sphinxfortran.fortran_domain',
     'sphinxfortran.fortran_autodoc',
 ]
+
+# Format inheritance diagrams
+inheritance_graph_attrs = {
+    "rankdir": "LR",  # "TB" for vertical display
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

@@ -1,6 +1,24 @@
 # -*- coding: utf-8 -*-
-'''
-'''
+"""
+soda.py
+-------
+
+Tasks designed to launch the SODA executable.
+
+.. inheritance-diagram:: vortex_cen.tasks.surfex.soda
+   :top-classes: vortex_cen.tasks.research_task_base._CenResearchTask
+   :private-bases:
+   :parts: 2
+
+.. autoclass:: SodaCommonsMixin
+   :members:
+   :show-inheritance:
+
+.. autoclass:: Soda
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+"""
 
 import vortex
 from vortex_cen.tasks.research_task_base import _CenResearchTask
@@ -8,6 +26,9 @@ from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
 
 
 class SodaCommonsMixin(SurfexCommonsMixin):
+    """
+    Mixin methods for SODA binary IOs.
+    """
 
     def get_snow_observation(self):
 
@@ -80,19 +101,21 @@ class SodaCommonsMixin(SurfexCommonsMixin):
 
 class Soda(SodaCommonsMixin, _CenResearchTask):
     '''
+    **Task : Soda**
+
     SODA Particle Filter assimilation task.
     Reference : Cluzet et al. (2021): https://gmd.copernicus.org/articles/14/1595/2021/
 
-    Inputs:
-    -------
+    **Input:**
+
     - SODA namelist (OPTIONS.nam)
     - Ensemble of snowpack initial conditions ("PREP.nc") refered to as "background"
     - ecoclimapI_covers_param.bin and ecoclimapII_eu_covers_param.bin (binaries for vegetation generation)
     - drdt_bst_fit_60.nc (Crocus metamorphism parameters)
     - PGD.nc (Ground physiography)
 
-    Outputs:
-    --------
+    **Output:**
+
     - Modified ensemble of snowpack initial conditions ("PREP.nc") refered to as "analysis"
 
     '''

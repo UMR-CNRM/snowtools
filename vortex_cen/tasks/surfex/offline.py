@@ -1,5 +1,44 @@
 # -*- coding: utf-8 -*-
 """
+offline.py
+----------
+
+Tasks designed to launch the OFFLINE executable with MPI parallelisation.
+
+.. inheritance-diagram:: vortex_cen.tasks.surfex.offline
+   :top-classes: vortex_cen.tasks.research_task_base._CenResearchTask
+   :private-bases:
+   :parts: 2
+
+.. autoclass:: OfflineCommonsMixin
+   :members:
+   :show-inheritance:
+
+.. autoclass:: _Offline
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: _Offline_MPI
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: _Offline_NOMPI
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: Offline_MPI_Uenv
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: Offline_MPI_Local
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
 """
 
 import vortex
@@ -8,6 +47,10 @@ from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
 
 
 class OfflineCommonsMixin(SurfexCommonsMixin):
+    """
+
+    Common OFFLINE-specific IO resources.
+    """
 
     def get_executable_from_uenv(self, mpi=True, fatal=True):
         """
@@ -50,15 +93,14 @@ class OfflineCommonsMixin(SurfexCommonsMixin):
 
 class _Offline(OfflineCommonsMixin, _CenResearchTask):
     """
-    Task : _Offline
-    ===============
+    **Task : _Offline**
 
     Abstract task for OFFLINE binary execution.
 
     SURFEX/OFFLINE documentation : https://umr-cnrm.github.io/snowtools-doc/misc/surfex.html
 
-    Inputs:
-    -------
+    **Input:**
+
     - FORCING.nc files(s) (near-surface meteorological conditions during the simulation period)
     - OPTIONS.nam ready-to-use SURFEX namelist (coming from an execution of a "Preprocess_Task")
     - ecoclimapI_covers_param.bin and ecoclimapII_eu_covers_param.bin (binaries for vegetation generation)
@@ -66,8 +108,8 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
     - PGD.nc (Ground physiography)
     - PREP.nc (initial conditions)
 
-    Outputs:
-    --------
+    **Output:**
+
     - PRO.nc Snowpack simulations covering the entire simulation period
     - PREP.nc SURFEX/Crocus model state variables at the end of the simulation
     - CUMUL.nc TODO   Compléter et CHECKER la doc
@@ -282,8 +324,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
 
 class _Offline_MPI(_Offline):
     """
-    Task : _Offline_MPI
-    ===================
+    **Task : _Offline_MPI**
 
     Abstract task for the execution of OFFLINE binary with MPI parallelisation.
 
@@ -326,8 +367,7 @@ class _Offline_MPI(_Offline):
 
 class _Offline_NOMPI(_Offline):
     """
-    Task : _Offline_NOMPI
-    =====================
+    **Task : _Offline_NOMPI**
 
     Abstract task for the execution of OFFLINE binary without MPI parallelisation.
 
@@ -355,12 +395,11 @@ class _Offline_NOMPI(_Offline):
 
 class Offline_MPI_Uenv(_Offline_MPI):
     """
-    Task : Offline_MPI_Uenv
-    =======================
+    **Task : Offline_MPI_Uenv**
 
     Get OFFLINE executable from a User Environment.
 
-    NB : This is the task to use to guarantee the simulation's reproductibility
+    **NB :** This is the task to use to guarantee the simulation's reproductibility
     """
 
     def __init__(self, **kw):
@@ -386,12 +425,11 @@ class Offline_MPI_Uenv(_Offline_MPI):
 
 class Offline_MPI_Local(_Offline_MPI):
     """
-    Task : Offline_MPI_Local
-    ========================
+    **Task : Offline_MPI_Local**
 
     Get an OFFLINE executable from any user-defined absolute path locally.
 
-    WARNING : The simulation's reproductibility can not be guaranteed with this task !
+    **WARNING :** The simulation's reproductibility can not be guaranteed with this task !
     """
 
     def __init__(self, **kw):

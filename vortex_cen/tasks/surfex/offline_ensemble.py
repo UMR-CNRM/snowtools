@@ -1,5 +1,25 @@
 # -*- coding: utf-8 -*-
 """
+offline_ensemble.py
+-------------------
+
+Tasks designed to launch an OFFLINE executable WITHOUT MPI parallelisation
+several time in parallel.
+
+.. inheritance-diagram:: vortex_cen.tasks.surfex.offline_ensemble
+   :top-classes: vortex_cen.tasks.research_task_base._CenResearchTask
+   :private-bases:
+   :parts: 2
+
+.. autoclass:: Escroc
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: CrocO
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
 """
 
 import vortex
@@ -9,8 +29,7 @@ from vortex_cen.tasks.surfex.offline import _Offline
 
 class Escroc(_Offline):
     """
-    Task : Escroc
-    =============
+    **Task : Escroc**
 
     Multiple executions of an OFFLINE binary with a single meteorological FORCING but
     different Crocus physics (namelists) and no MPI parallelization.
@@ -123,8 +142,7 @@ class Escroc(_Offline):
 
 class CrocO(Escroc):
     """
-    Task : CrocO
-    ============
+    **Task : CrocO**
 
     Multiple executions of an OFFLINE binary with an ensemble of FORCING files
     and potentialy different Crocus physics (namelists).

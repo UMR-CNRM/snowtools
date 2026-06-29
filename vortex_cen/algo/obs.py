@@ -1,7 +1,24 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 """
-Algo Components for FORCING generation.
+obs.py
+------
+
+Algo Components for the manipulation of any observation data.
+
+.. inheritance-diagram:: vortex_cen.algo.obs
+   :top-classes: vortex_cen.algo.components._CenParaBlindRun, vortex_cen.algo.components._CenTaylorRun,
+                 vortex_cen.algo.components._CenTaylorVortexWorker, vortex_cen.algo.components._CenWorkerBlindRun
+                 vortex.algo.components.AlgoComponent, vortex.algo.components.Parallel, vortex.algo.components.TaylorRun
+   :private-bases:
+
+.. autoclass:: ReconstructObservations
+   :no-members:
+   :show-inheritance:
+
+.. autoclass:: ReconstructObservationsWorker
+   :no-members:
+   :show-inheritance:
 """
 from bronx.fancies import loggers
 from vortex_cen.algo.components import _CenTaylorRun, _CenTaylorVortexWorker
@@ -12,7 +29,7 @@ logger = loggers.getLogger(__name__)
 
 class ReconstructObservations(_CenTaylorRun):
     """
-    TODO
+    Generate an ensemble of `ReconstructObservationsWorker`
     """
 
     _footprint = dict(
@@ -31,7 +48,7 @@ class ReconstructObservations(_CenTaylorRun):
 
 class ReconstructObservationsWorker(_CenTaylorVortexWorker):
     """
-    TODO
+    Update SAFRAN-ready observation files (R*, S* and T* files) with reconstructed hourly temperature observations.
     """
 
     _footprint = dict(
@@ -48,7 +65,7 @@ class ReconstructObservationsWorker(_CenTaylorVortexWorker):
 
     def _commons(self, rundir, thisdir, rdict, **kwargs):
         """
-        Method called by the main **vortex_task** method of the **_S2MWorkerMixIn** class
+        Method called by the main **vortex_task** method of the **_CenWorkerMixIn** class
         """
         self.link_in('../listeo_reanalyse', 'listeo_reanalyse')
         replace_obs_tar('OBSERVATIONS.tar')

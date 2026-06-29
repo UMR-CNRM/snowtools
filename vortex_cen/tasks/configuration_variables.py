@@ -1,4 +1,12 @@
 # -*- coding: utf-8 -*-
+"""
+configuration_variables.py
+--------------------------
+
+Documentation of most frequently used configuration variables.
+See :ref:`dynamic_documentation` for more information on the documentation syntax conventions.
+
+"""
 
 # Standard attributes
 member_type = "int, footprints.stdtypes.FPList (ex : 'first-last-step')"

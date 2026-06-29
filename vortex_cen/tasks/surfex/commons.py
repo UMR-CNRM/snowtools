@@ -1,4 +1,15 @@
 # -*- coding: utf-8 -*-
+"""
+commons.py
+----------
+
+MixIn input common to all SURFEX tasks.
+
+.. autoclass:: SurfexCommonsMixin
+   :members:
+   :show-inheritance:
+
+"""
 
 import vortex
 from vortex.layout.dataflow import SectionFatalError
@@ -239,6 +250,10 @@ class SurfexCommonsMixin:
         return prep_tbi
 
     def get_init_TG_from_cache(self, fatal=True):
+        """
+        Get init_TG.nc file from the local vortex cache.
+        This method must be used only if the target file is produced by a previous task of the driver.
+        """
 
         try:
             self.sh.title('Input init_TG from Cache')
@@ -270,6 +285,9 @@ class SurfexCommonsMixin:
             raise e
 
     def get_init_TG_from_cache_or_archive(self, fatal=True):
+        """
+        Get init_TG.nc file from the vortex archive
+        """
 
         self.sh.title('Input init_TG from cache or archive')
         init_tg = vortex.input(
@@ -293,6 +311,9 @@ class SurfexCommonsMixin:
         return init_tg
 
     def get_init_TG_from_uenv(self, fatal=True):
+        """
+        Get init_TG.nc file from a user environment
+        """
         self.sh.title('Input init_TG from uenv')
         init_tg = vortex.input(
             role         = "InitialValuesOfGroundTemperature",
