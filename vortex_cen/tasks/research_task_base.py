@@ -163,6 +163,14 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         self.header('Toolbox defaults')
         vortex.defaults.show()
 
+    def force_configuration_variables(self):
+        """
+        Implement this method to force the value of some configuration variables in specific use cases of the task.
+        In particular, if an input for the task comes from the output of a previous task in the driver, the "block" of
+        the input is imposed by the output block of the producing task.
+        """
+        pass
+
     @property
     def debug(self):
         """
@@ -191,6 +199,8 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         :type io_duration: str
         """
         self.get_list_dates(duration=self.conf.get('io_duration', 'yearly'))
+
+        self.force_configuration_variables(self)
 
     def process(self):
         """
