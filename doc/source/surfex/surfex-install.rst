@@ -32,7 +32,7 @@ If you are a simple user (outside of Meteo-France where pre-compiled binaries ar
 
 You will need some additional packages that are provided by the SURFEX project. for the moment, these packages are not publicly available.
 
-- At Meteo-France/CEN, these files can be copied from ``/rd/cenfic3/cenmod/home/common/SURFEX_LIB``. Copy all the content of this folder into ``src/LIB`` folder of the cloned repository.
+- At Meteo-France/CEN, these files can be copied from ``/rd/cenfic3/cenmod/home/lafaysse/common/SURFEX_LIB``. Copy all the content of this folder into ``src/LIB`` folder of the cloned repository.
 - If you are not at CEN, please ask your contact person to transfer these libraries to you and then copy the files into the ``src/LIB`` directory.
 
 
