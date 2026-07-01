@@ -207,7 +207,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
         """
         self.get_list_dates(duration=self.conf.get('io_duration', 'yearly'))
 
-        self.force_configuration_variables(self)
+        self.force_configuration_variables()
 
     def process(self):
         """
