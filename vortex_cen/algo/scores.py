@@ -1,5 +1,34 @@
+# -*- coding: utf-8 -*-
 """
+scores.py
+---------
+
 Algo components for ESCROC scores.
+
+
+.. inheritance-diagram:: vortex_cen.algo.scores
+   :top-classes: vortex_cen.algo.components._CenParaBlindRun, vortex_cen.algo.components._CenTaylorRun,
+                 vortex_cen.algo.components._CenTaylorVortexWorker, vortex_cen.algo.components._CenWorkerBlindRun,
+                 vortex.algo.components.AlgoComponent, vortex.algo.components.Parallel,
+                 vortex.algo.components.TaylorRun, vortex.tools.parallelism.TaylorVortexWorker
+   :private-bases:
+
+.. autoclass:: Escroc_Score_Member
+   :no-members:
+   :show-inheritance:
+
+.. autoclass:: Escroc_Score_Ensemble
+   :no-members:
+   :show-inheritance:
+
+.. autoclass:: Escroc_Score_Subensemble
+   :no-members:
+   :show-inheritance:
+
+.. autoclass:: Escroc_Optim_Ensemble
+   :no-members:
+   :show-inheritance:
+
 """
 
 from bronx.compat import random

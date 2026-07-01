@@ -1,5 +1,20 @@
+# -*- coding: utf-8 -*-
 """
+meteo.py
+--------
+
 Resources related to SURFEX/Crocus meteorological FORCINGs
+
+.. inheritance-diagram:: vortex_cen.data.meteo
+   :top-classes: vortex_cen.data.flow.SurfaceIO, vortex_cen.data.flow.SurfaceIOVortex1
+   :private-bases:
+   :parts: 2
+
+.. autoclass:: SurfaceForcing
+   :show-inheritance:
+
+.. autoclass:: SurfaceForcingVortex1
+   :show-inheritance:
 """
 
 from vortex.syntax.stddeco import namebuilding_append
@@ -11,7 +26,7 @@ from vortex_cen.data.flow import SurfaceIO, SurfaceIOVortex1
 class SurfaceForcing(SurfaceIO):
     """
     Class for all kind of meteorological forcing files.
-    Files containing only some meteorological forcing variables can be identified with a
+    Files containing only some meteorological forcing variables can be identsince forcing
     different kind, which may be usefull for the developpement of EDELWEISS while forcing
     variables come from different sources (SAFRAN, PE-AROME, ANTILOPE,...)
     """
@@ -53,10 +68,7 @@ class SurfaceForcing(SurfaceIO):
 @namebuilding_append('src', lambda self: self.source_app, none_discard=True)
 class SurfaceForcingVortex1(SurfaceIOVortex1):
     """
-    Class for all kind of meteorological forcing files.
-    Files containing only some meteorological forcing variables can be identified with a
-    different kind, which may be usefull for the developpement of EDELWEISS while forcing
-    variables come from different sources (SAFRAN, PE-AROME, ANTILOPE,...)
+    This class is here for retro-compatibilty with resources produced before the migration to vortex2
     """
     _footprint = [
         dict(

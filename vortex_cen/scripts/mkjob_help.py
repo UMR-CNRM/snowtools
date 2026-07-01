@@ -10,6 +10,16 @@ import vortex
 from vortex_cen.tasks.configuration_variables import standard_variables
 
 
+class HiddenPrints:
+    def __enter__(self):
+        self._original_stdout = sys.stdout
+        sys.stdout = open(os.devnull, 'w')
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        sys.stdout.close()
+        sys.stdout = self._original_stdout
+
+
 def parse_command_line():
 
     parser = argparse.ArgumentParser(description='mkjob command line helper')
@@ -82,15 +92,29 @@ def get_driver(module):
     return driver
 
 
-def print_driver_help(driver):
+def print_driver_help(driver, verbose):
 
     # Print the driver's tree
-    print('    Driver tree:')
-    print('    ************')
-    print('\n'.join([f'    {x}' for x in driver.tree_str().split('\n')]))
+    print('Driver tree:')
+    print('============')
+    print()
+    print(driver.tag + ' (' + driver.__class__.__name__ + ')')
 
-    for task in driver.contents:
-        print(task.__doc__)
+    def print_driver_tree(driver, level):
+        level = level + 1
+        # In case the driver contains "Families", dug into the Family to look for actual tasks
+        for node in driver._contents:
+            if node.realkind == 'task':
+                print('    ' * level + '|--' + node.tag + ' (' + node.__class__.__name__ + ')')
+                if verbose:
+                    print(node.__doc__)
+            else:
+                print('    ' * level + '|--' + node.tag + ' (' + node.__class__.__name__ + ')')
+                print_driver_tree(node, level)
+
+    level = -1
+    print_driver_tree(driver, level)
+    print()
 
 
 def get_configuration(driver, bytask):
@@ -139,22 +163,34 @@ def get_configuration(driver, bytask):
 
         return conf
 
+    def get_tasks_from_driver(driver):
+        # In case the driver contains "Families", dug into the Family to look for actual tasks
+        for node in driver._contents:
+            if node.realkind == 'task':
+                if node not in tasks_list:
+                    tasks_list.append(node)
+            else:
+                get_tasks_from_driver(node)
+
+    # Get the actual list of tasks within the driver
+    tasks_list = list()
+    get_tasks_from_driver(driver)
     # Add mandatory and optional configuration variables for each task of the driver
     # Make 2 separate loops to remove mandatory variables from the "optional" category
     known_vars = list()
-    for task in driver.contents:
+    for task in tasks_list:
         mandatory_conf_vars[task] = dict()
         if 'MANDATORY_CONFIGURATION_VARIABLES' not in dir(task):
-            print(f"WARNING : no 'MANDATORY_CONFIGURATION_VARIABLES' for task {type(task).__name__}, "
+            print(f"WARNING : no 'MANDATORY_CONFIGURATION_VARIABLES' attribute for task {type(task).__name__}, "
                 "probably a mistake !")
         else:
             for key in task.MANDATORY_CONFIGURATION_VARIABLES:
                 mandatory_conf_vars[task] = update_configuration_variables(mandatory_conf_vars[task])
 
-    for task in driver.contents:
+    for task in tasks_list:
         optional_conf_vars[task] = dict()
         if 'OPTIONAL_CONFIGURATION_VARIABLES' not in dir(task):
-            print(f"WARNING : no 'OPTIONAL_CONFIGURATION_VARIABLES' for task {type(task).__name__}, "
+            print(f"WARNING : no 'OPTIONAL_CONFIGURATION_VARIABLES' attribute for task {type(task).__name__}, "
                 "probably a mistake !")
         else:
             for key in task.OPTIONAL_CONFIGURATION_VARIABLES:
@@ -326,7 +362,7 @@ def main():
         if os.path.basename(target) != '__init__.py':
             # target should be a driver
             driver = get_driver(module)
-            print_driver_help(driver)
+            print_driver_help(driver, args.verbose)
             mandatory, optional = get_configuration(driver, args.bytask)
             print_configuration_help(mandatory, optional, args.bytask, args.verbose)
         else:

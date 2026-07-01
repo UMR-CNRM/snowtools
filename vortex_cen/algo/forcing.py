@@ -1,7 +1,34 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 """
-Algo Components generating a FORCING file.
+forcing.py
+----------
+
+Algo Components for the generation or the modification of FORCING files.
+
+.. inheritance-diagram:: vortex_cen.algo.forcing
+   :top-classes: vortex_cen.algo.components._CenParaBlindRun, vortex_cen.algo.components._CenTaylorRun,
+                 vortex_cen.algo.components._CenTaylorVortexWorker, vortex_cen.algo.components._CenWorkerBlindRun
+                 vortex.algo.components.AlgoComponent, vortex.algo.components.Parallel, vortex.algo.components.TaylorRun
+   :private-bases:
+   :parts: 2
+
+.. autoclass:: ExtractMassifs
+   :no-members:
+   :show-inheritance:
+
+.. autoclass:: ExtractMassifsWorker
+   :no-members:
+   :show-inheritance:
+
+.. autoclass:: ConcatForcings
+   :no-members:
+   :show-inheritance:
+
+.. autoclass:: ConcatForcingsWorker
+   :no-members:
+   :show-inheritance:
+
 """
 from bronx.fancies import loggers
 from vortex_cen.algo.components import _CenTaylorRun, _CenTaylorVortexWorker
@@ -13,7 +40,7 @@ from snowtools.utils import xarray_snowtools  # noqa
 logger = loggers.getLogger(__name__)
 
 
-class ExtractForcing(_CenTaylorRun):
+class ExtractMassifs(_CenTaylorRun):
     """
     Algo component to extract a list of points from a set of S2M FORCING files in the "massif" geometry.
     """
@@ -112,7 +139,7 @@ class ConcatForcings(_CenTaylorRun):
         """Create a common instruction dictionary that will be used by the workers."""
         ddict = super()._default_common_instructions(rh, opts)
         avail_forcings = self.context.sequence.effective_inputs(role=self.role_members)
-        list_forcings = list(set([forcing.rh.container.basename for forcing in avail_forcings]))
+        list_forcings = [forcing.rh.container.basename for forcing in avail_forcings]
         ddict['list_forcings'] = list_forcings
         return ddict
 

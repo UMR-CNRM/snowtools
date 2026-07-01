@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+shadows.py
+----------
+
+.. autoclass:: Shadows
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
 """
 
 import vortex
@@ -8,17 +15,16 @@ from vortex_cen.tasks.research_task_base import _CenResearchTask
 
 class Shadows(_CenResearchTask):
     """
-    Task : Shadows
-    ==============
+    **Task : Shadows**
 
     Add relief-induced solar masks to a FORCING file in a "station" geometry.
 
-    Inputs :
-    --------
+    **Input:**
+
     - SAFRAN-generated FORCING file in the "station" geometry.
 
-    Outputs :
-    ---------
+    **Output:**
+
     - FORCING file with extracted solar masks added.
 
     """

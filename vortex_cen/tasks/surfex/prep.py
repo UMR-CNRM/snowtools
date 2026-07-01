@@ -1,5 +1,28 @@
 # -*- coding: utf-8 -*-
 """
+prep.py
+-------
+
+Tasks designed to launch the PREP executable.
+
+.. inheritance-diagram:: vortex_cen.tasks.surfex.prep
+   :top-classes: vortex_cen.tasks.research_task_base._CenResearchTask
+   :private-bases:
+   :parts: 2
+
+.. autoclass:: PrepCommonsMixin
+   :members:
+   :show-inheritance:
+
+.. autoclass:: _Prep_Construct
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: GetPrep
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
 """
 
 import vortex
@@ -8,6 +31,9 @@ from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
 
 
 class PrepCommonsMixin(SurfexCommonsMixin):
+    """
+    Mixin methods for PREP binary IOs.
+    """
 
     def get_prep_exe_from_uenv(self, mpi=True, fatal=True):
 
@@ -48,13 +74,11 @@ class PrepCommonsMixin(SurfexCommonsMixin):
 
 class _Prep_Construct(PrepCommonsMixin, _CenResearchTask):
     """
-    Task : _Prep_Construct
-    ======================
+    **Task : _Prep_Construct**
 
     Abstract task for the generation of initial conditions (PREP.nc file)
 
-    Inputs:
-    -------
+    **Input:**
 
     * ``OPTIONS.nam`` ready-to-use SURFEX namelist (coming from an execution of a "Preprocess_Task")
     * ``ecoclimapI_covers_param.bin`` and ``ecoclimapII_eu_covers_param.bin`` (binaries for vegetation generation)
@@ -63,8 +87,8 @@ class _Prep_Construct(PrepCommonsMixin, _CenResearchTask):
       (put there by an execution of an InitClimGroundTemperature or GetClimGroundTemperature task)
     * ``PGD.nc`` Ground physiography
 
-    Outputs:
-    --------
+    **Output:**
+
     - PREP.nc (initial conditions)
 
     """
@@ -74,10 +98,11 @@ class _Prep_Construct(PrepCommonsMixin, _CenResearchTask):
         MANDATORY_CONFIGURATION_VARIABLES = [
             "geometry",
             "xpid",
-            "uenv|surfex_uenv",
+            "consts_surfex_uenv|uenv",
+            "surfex_uenv|uenv",
         ]
         OPTIONAL_CONFIGURATION_VARIABLES = [
-            "pgd_cache",
+            "pgd",
             "ntasks",
             "nnodes",
             "nprocs",
@@ -202,8 +227,7 @@ class _Prep_Construct(PrepCommonsMixin, _CenResearchTask):
 
 class GetPrep(_Prep_Construct):
     """
-    Task : GetPrep
-    ==============
+    **Task : GetPrep**
 
     Generation of initial conditions (PREP.nc file)
     Look if the requested PREP.nc file is available in the cache or archive. If not,
@@ -211,8 +235,7 @@ class GetPrep(_Prep_Construct):
 
     WARNING : The simulation's reproductibility can not be guaranteed with this task !
 
-    Inputs:
-    -------
+    **Input:**
 
     * ``OPTIONS.nam`` ready-to-use SURFEX namelist (coming from an execution of a "Preprocess_Task")
     * ``ecoclimapI_covers_param.bin`` and ``ecoclimapII_eu_covers_param.bin`` (binaries for vegetation generation)
@@ -221,8 +244,8 @@ class GetPrep(_Prep_Construct):
       (put there by an execution of an InitClimGroundTemperature or GetClimGroundTemperature task)
     * ``PGD.nc`` Ground physiography
 
-    Outputs:
-    --------
+    **Output:**
+
     - PREP.nc (initial conditions)
 
     """
@@ -242,7 +265,7 @@ class GetPrep(_Prep_Construct):
             "tg_cache",
             "tg_gvar",
             "prep",
-            "pgd_cache",
+            "pgd",
         ]
         super().__init__(**kw)
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)

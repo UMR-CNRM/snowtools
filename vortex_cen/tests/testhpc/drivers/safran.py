@@ -4,7 +4,7 @@ Test the "Safran" unittask.
 """
 
 from mkjob.nodes import Driver
-from vortex_cen.tasks.safran.reanalysis import Safran
+from vortex_cen.tasks.safran.reanalysis import SafranReanalysis
 
 
 def setup(t, **kw):
@@ -12,7 +12,7 @@ def setup(t, **kw):
         tag='safran',
         ticket=t,
         nodes=[
-            Safran(tag='safran', ticket=t, **kw),
+            SafranReanalysis(tag='safran', ticket=t, **kw),
         ],
         options=kw,
     )

@@ -26,8 +26,8 @@ class install_snowtools(unittest.TestCase):
             subprocess.run(shlex.split(cmd, ' '), check=True)
 
     def test_without_venv(self):
-        # WARNING : This test will crash if it is called from within a virtual environment
-        # --> Don't worry, this is the exepected behavior !
+        print("WARNING : This test will crash if it is called from within a virtual environment")
+        print("--> Don't worry, this is the expected behavior !")
         self.install_cmd(f"python3 {SNOWTOOLS_CEN}/cenutils/install_snowtools.py", assertFail=True)
 
     def test_editable_install(self):

@@ -20,7 +20,7 @@ A Meteo-France/CNRM-specific documentation is also available here : https://cnrm
 .. toctree::
    :maxdepth: 1
 
-   CEN-specific vortex tools <vortex-cen.rst>
+   CEN-specific vortex tools <vortex-cen-index.rst>
 
 .. toctree::
    :maxdepth: 1

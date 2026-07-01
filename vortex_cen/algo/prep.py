@@ -1,5 +1,19 @@
+# -*- coding: utf-8 -*-
 """
-Algo Components for ensemble S2M simulations.
+prep.py
+-------
+
+Algo component to launch the SURFEX PREP executable.
+
+.. inheritance-diagram:: vortex_cen.algo.prep
+   :top-classes: vortex_cen.algo.components._CenParaBlindRun, vortex_cen.algo.components._CenTaylorRun,
+                 vortex_cen.algo.components._CenTaylorVortexWorker, vortex_cen.algo.components._CenWorkerBlindRun
+                 vortex.algo.components.AlgoComponent, vortex.algo.components.Parallel, vortex.algo.components.TaylorRun
+   :private-bases:
+
+.. autoclass:: Prep
+   :no-members:
+   :show-inheritance:
 """
 
 from bronx.fancies import loggers

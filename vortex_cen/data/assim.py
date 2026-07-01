@@ -1,5 +1,18 @@
+# -*- coding: utf-8 -*-
 """
-SODA execution flow resources
+assim.py
+--------
+
+SODA output resources
+
+.. inheritance-diagram:: vortex_cen.data.assim
+   :top-classes: vortex.data.flow.GeoFlowResource
+   :private-bases:
+   :parts: 4
+
+.. autoclass:: PfSample
+   :show-inheritance:
+
 """
 
 from bronx.stdtypes.date import Date

@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+concatenate.py
+--------------
+
+.. autoclass:: ForcingSpatialConcatenation
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
 """
 
 
@@ -13,12 +20,12 @@ class ForcingSpatialConcatenation(_CenResearchTask):
     FORCING files over different years are processed in parallel.
     Ex : concatenation of "postes" simulations over different mountain ranges
 
-    Inputs:
-    --------
+    **Input:**
+
     - Set of FORCING files to concatenate
 
-    Outputs:
-    ---------
+    **Output:**
+
     - Single FORCING file
 
     """

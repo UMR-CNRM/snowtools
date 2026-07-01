@@ -1,5 +1,20 @@
+# -*- coding: utf-8 -*-
 """
+executables.py
+--------------
+
 Specific CEN executables.
+
+.. inheritance-diagram:: vortex_cen.data.executables
+   :top-classes: vortex.data.executables.SurfaceModel, vortex.data.executables.Script
+   :private-bases:
+   :parts: 4
+
+.. autoclass:: Safran
+   :show-inheritance:
+
+.. autoclass:: SafranGribFiltering
+   :show-inheritance:
 """
 
 from bronx.fancies import loggers

@@ -1,5 +1,22 @@
+# -*- coding: utf-8 -*-
 """
-Abstract base class for all SURFEX/Crocus related flow resources.
+flow.py
+-------
+
+Abstract base classes for all SURFEX/Crocus IO flow resources.
+
+.. inheritance-diagram:: vortex_cen.data.flow
+   :top-classes: vortex.data.resources.Resource
+   :private-bases:
+   :parts: 1
+
+.. autoclass:: SurfaceIO
+   :members:
+   :show-inheritance:
+
+.. autoclass:: SurfaceIOVortex1
+   :no-members:
+   :show-inheritance:
 """
 
 from bronx.fancies import loggers
@@ -17,6 +34,12 @@ logger = loggers.getLogger(__name__)
 
 @namebuilding_delete('src')
 class SurfaceIO(GeoFlowResource):
+    """
+    Abstract base classe for all surface IO flow resources used in snowpack simulations.
+    `SurfaceIO` resources are NetCDF files covering a time period defined by the `datebegin` and `dateend` footprints.
+    Note that the `date` and `cutoff` footprints comonly used in NWP applications are optional and used only in
+    an operational context.
+    """
 
     _abstract = True
     _footprint = [
@@ -60,6 +83,9 @@ class SurfaceIO(GeoFlowResource):
 
 @namebuilding_delete('geo')
 class SurfaceIOVortex1(SurfaceIO):
+    """
+    This class is here for retro-compatibilty with resources produced before the migration to vortex2
+    """
 
     _abstract = True
     _footprint = [

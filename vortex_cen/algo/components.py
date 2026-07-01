@@ -1,4 +1,8 @@
+# -*- coding: utf-8 -*-
 """
+components.py
+-------------
+
 Abstract algo components classes for multiprocessing simulations with an external parallelisation (i.e not MPI).
 The parallelization is typically over the simulation members or independent sub-periods.
 All processes share the same executable (if any) but at least partially different IO environments or
@@ -28,11 +32,37 @@ to these files can be created in the Worker's working directory by the Worker it
 Two abstract "Worker" classes are defined here are:
 
     * :class:`_CenWorkerBlindRun`: launch an executable without MPI parallelization
-    * :class:`_CenTaylorRun`: launch a piece of Python code
+    * :class:`_CenTaylorVortexWorker`: launch a piece of Python code
 
 A third abstract "Worker" class is available in the main vortex-nwp package:
 
     * :class:`VortexWorkerBlindRun`: to launch a script multiple times in parallel
+
+Here is the full inheritance diagram of the available meta classes :
+
+.. inheritance-diagram:: vortex_cen.algo.components
+   :private-bases:
+   :parts: 1
+
+.. autoclass:: _CenParaBlindRun
+   :no-members:
+   :show-inheritance:
+
+.. autoclass:: _CenTaylorRun
+   :no-members:
+   :show-inheritance:
+
+.. autoclass:: _CenWorkerMixIn
+   :no-members:
+   :show-inheritance:
+
+.. autoclass:: _CenWorkerBlindRun
+   :no-members:
+   :show-inheritance:
+
+.. autoclass:: _CenTaylorVortexWorker
+   :no-members:
+   :show-inheritance:
 
 """
 
