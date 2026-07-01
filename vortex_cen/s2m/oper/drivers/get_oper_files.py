@@ -7,7 +7,7 @@ import sys
 import argparse
 from collections import defaultdict
 
-from vortex_cen.layout.nodes import S2MTaskMixIn
+from vortex_cen.tasks.oper_research_mixin import CENTaskMixIn
 import vortex
 from bronx.stdtypes.date import Date, daterange, tomorrow, today
 
@@ -68,7 +68,7 @@ class configcommanddev(_configcommand, configdev):
     pass
 
 
-class S2MExtractor(S2MTaskMixIn):
+class S2MExtractor(CENTaskMixIn):
     """
     Class to extract S2M results
     """

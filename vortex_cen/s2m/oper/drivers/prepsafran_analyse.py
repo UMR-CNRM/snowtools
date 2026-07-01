@@ -5,7 +5,7 @@ Prepare analysis SAFRAN guess files
 
 __all__ = []
 
-from vortex_cen.layout.nodes import S2MTaskMixIn
+from vortex_cen.tasks.oper_research_mixin import CENTaskMixIn
 from vortex_cen.tools.monitoring import InputReportContext, OutputReportContext
 import footprints
 import vortex
@@ -25,7 +25,7 @@ def setup(t, **kw):
     )
 
 
-class PrepSafran(Task, S2MTaskMixIn):
+class PrepSafran(Task, CENTaskMixIn):
     """
     Task : PrepSafran
     =================
@@ -72,11 +72,11 @@ class PrepSafran(Task, S2MTaskMixIn):
     OPTIONAL_CONFIGURATION_VARIABLES = []
 
     # Filter of errors to be applied in both oper and dev cases
-    filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
+    filter_execution_error = CENTaskMixIn.s2moper_filter_execution_error
     # Report execution warnings with CEN's method
-    report_execution_warning = S2MTaskMixIn.s2moper_report_execution_warning
+    report_execution_warning = CENTaskMixIn.s2moper_report_execution_warning
     # Report execution errors with CEN's method
-    report_execution_error = S2MTaskMixIn.s2moper_report_execution_error  # TO MODIFY for operationnal transfer
+    report_execution_error = CENTaskMixIn.s2moper_report_execution_error  # TO MODIFY for operationnal transfer
 
     def process(self):
         """Preparation of SAFRAN input files"""

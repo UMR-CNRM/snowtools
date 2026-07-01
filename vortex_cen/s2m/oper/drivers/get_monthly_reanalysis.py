@@ -4,7 +4,7 @@
 
 import sys
 
-from vortex_cen.layout.nodes import S2MTaskMixIn
+from vortex_cen.tasks.oper_research_mixin import CENTaskMixIn
 import vortex
 from bronx.stdtypes.date import Date, daterange, tomorrow, today
 from optparse import OptionParser
@@ -80,7 +80,7 @@ class configcommanddev(configdev):
         self.snow = options.snow
 
 
-class S2MExtractor(S2MTaskMixIn):
+class S2MExtractor(CENTaskMixIn):
 
     def __init__(self, conf):
         vortex.active_now = True

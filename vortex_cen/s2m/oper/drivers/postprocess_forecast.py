@@ -3,7 +3,7 @@
 """
 
 from mkjob.nodes import Driver, Task
-from vortex_cen.layout.nodes import S2MTaskMixIn
+from vortex_cen.tasks.oper_research_mixin import CENTaskMixIn
 import vortex
 import footprints
 
@@ -18,7 +18,7 @@ def setup(t, **kw):
     )
 
 
-class Four_Seasons_Task_Replay(S2MTaskMixIn, Task):
+class Four_Seasons_Task_Replay(CENTaskMixIn, Task):
     """
     Post-processing task for the 4 seasons bulletin. Uses S2m ensemble forecasts based on PEARP.
     Calculates ensemble deciles for the 12hourly and 1day snow accumulation for the moment.

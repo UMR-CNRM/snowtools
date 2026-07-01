@@ -8,7 +8,7 @@ __all__ = []
 
 from bronx.stdtypes.date import Date
 from bronx.stdtypes.date import Period
-from vortex_cen.layout.nodes import S2MTaskMixIn
+from vortex_cen.tasks.oper_research_mixin import CENTaskMixIn
 import footprints
 #import glob
 #import os
@@ -34,7 +34,7 @@ def setup(t, **kw):
     )
 
 
-class PrepSafran(Task, S2MTaskMixIn):
+class PrepSafran(Task, CENTaskMixIn):
     """
     Task : PrepSafran
     =================
@@ -73,9 +73,9 @@ class PrepSafran(Task, S2MTaskMixIn):
     ]
     OPTIONAL_CONFIGURATION_VARIABLES = []
 
-    filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
-    report_execution_warning = S2MTaskMixIn.s2moper_report_execution_warning
-    report_execution_error = S2MTaskMixIn.s2moper_report_execution_error
+    filter_execution_error = CENTaskMixIn.s2moper_filter_execution_error
+    report_execution_warning = CENTaskMixIn.s2moper_report_execution_warning
+    report_execution_error = CENTaskMixIn.s2moper_report_execution_error
 
     def refill(self):
 

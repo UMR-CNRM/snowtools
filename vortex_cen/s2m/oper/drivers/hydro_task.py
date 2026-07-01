@@ -3,7 +3,7 @@
 """
 from bronx.stdtypes.date import yesterday
 from mkjob.nodes import Driver, Task
-from vortex_cen.layout.nodes import S2MTaskMixIn
+from vortex_cen.tasks.oper_research_mixin import CENTaskMixIn
 import vortex
 import footprints
 
@@ -18,7 +18,7 @@ def setup(t, **kw):
     )
 
 
-class Hydro_Task(S2MTaskMixIn, Task):
+class Hydro_Task(CENTaskMixIn, Task):
     """
     Task : Hydro_Task
     =================
