@@ -1,1 +1,1 @@
-profile=rd-belenos-mt name=refill_prep.job package=drivers_dev task=refill_prep
+profile=rd-belenos-mt name=refill_prep package=drivers_dev task=refill_prep

@@ -106,6 +106,7 @@ class _Prep_Construct(PrepCommonsMixin, _CenResearchTask):
             "ntasks",
             "nnodes",
             "nprocs",
+            "date",
             "tg_gvar",
             "diff_xpid",
             "diff_user",
@@ -181,20 +182,20 @@ class _Prep_Construct(PrepCommonsMixin, _CenResearchTask):
         """
         self.sh.title('Output PREP')
         prep_tbo = vortex.output(
-            local       = 'PREP.nc',
-            role        = 'SnowpackInit',
-            experiment  = self.conf.xpid,
-            date        = self.conf.get('date', self.conf.get('datebegin', None)),
-            vapp        = self.conf.vapp,
-            vconf       = self.conf.vconf,
-            geometry    = self.conf.geometry,
-            nativefmt   = 'netcdf',
-            kind        = 'PREP',
-            model       = 'surfex',
-            namespace   = 'vortex.multi.fr',
-            namebuild   = 'flat@cen',  # TODO : passer en variable de configuration
-            block       = 'prep',
-            member      = self.conf.get('member', None),
+            local        = 'PREP.nc',
+            role         = 'SnowpackInit',
+            experiment   = self.conf.xpid,
+            datevalidity = self.conf.get('date', self.conf.get('dateend', None)),
+            vapp         = self.conf.vapp,
+            vconf        = self.conf.vconf,
+            geometry     = self.conf.geometry,
+            nativefmt    = 'netcdf',
+            kind         = 'PREP',
+            model        = 'surfex',
+            namespace    = 'vortex.multi.fr',
+            namebuild    = 'flat@cen',  # TODO : passer en variable de configuration
+            block        = 'prep',
+            member       = self.conf.get('member', None),
         ),
         print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
         print()
@@ -205,21 +206,21 @@ class _Prep_Construct(PrepCommonsMixin, _CenResearchTask):
         """
         self.sh.title("Reproductibility check : PREP")
         diff = vortex.diff(
-            local       = 'PREP.nc',
-            role        = 'SnowpackInit',
-            experiment  = self.conf.diff_xpid,
-            username   = self.conf.get('diff_user', None),
-            date        = self.conf.get('date', self.conf.get('datebegin', None)),
-            vapp        = self.conf.vapp,
-            vconf       = self.conf.vconf,
-            geometry    = self.conf.geometry,
-            nativefmt   = 'netcdf',
-            kind        = 'PREP',
-            model       = 'surfex',
-            namespace   = 'vortex.multi.fr',
-            namebuild   = 'flat@cen',  # TODO : passer en variable de configuration
-            block       = 'prep',
-            member      = self.conf.get('member', None),
+            local        = 'PREP.nc',
+            role         = 'SnowpackInit',
+            experiment   = self.conf.diff_xpid,
+            username     = self.conf.get('diff_user', None),
+            datevalidity = self.conf.get('date', self.conf.get('dateend', None)),
+            vapp         = self.conf.vapp,
+            vconf        = self.conf.vconf,
+            geometry     = self.conf.geometry,
+            nativefmt    = 'netcdf',
+            kind         = 'PREP',
+            model        = 'surfex',
+            namespace    = 'vortex.multi.fr',
+            namebuild    = 'flat@cen',  # TODO : passer en variable de configuration
+            block        = 'prep',
+            member       = self.conf.get('member', None),
         ),
         print(self.ticket.prompt, 'diff =', diff)
         print()

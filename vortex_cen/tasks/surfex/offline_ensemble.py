@@ -123,11 +123,11 @@ class Escroc(_Offline):
 
         self.sh.title('Output PREP')
         prep_tbo = vortex.output(
-            local          = 'mb[member%04d]/PREP_[date:ymdh].nc',
+            local          = 'mb[member%04d]/PREP_[datevalidity:ymdh].nc',
             role           = 'SnowpackInit',
             experiment     = self.conf.xpid,
             geometry       = self.conf.geometry,
-            date           = self.list_dates_end_pro,
+            datevalidity   = self.list_dates_end_pro,
             nativefmt      = 'netcdf',
             kind           = 'PREP',
             model          = 'surfex',

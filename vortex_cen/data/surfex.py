@@ -102,9 +102,13 @@ class Prep(InitialCondition):
                 # but the validity date of the file can be different.
                 # In research applications, there is only the validity date which makes sense.
                 datevalidity = dict(
+                    info = "The validity date of the PREP file",
+                    type = Date,
+                ),
+                date = dict(
+                    info = "The production date of the PREP file",
                     optional = True,
                     type = Date,
-                    default = '[date]',
                 ),
                 # This notion does not mean anything in our case (and seems to be rather
                 # ambiguous also in other cases)
@@ -179,9 +183,13 @@ class PrepVortex1(InitialCondition):
                 # but the validity date of the file can be different.
                 # In research applications, there is only the validity date which makes sense.
                 datevalidity = dict(
+                    info = "The validity date of the PREP file",
+                    type = Date,
+                ),
+                date = dict(
+                    info = "The production date of the PREP file",
                     optional = True,
                     type = Date,
-                    default = '[date]',
                 ),
                 # This notion does not mean anything in our case (and seems to be rather
                 # ambiguous also in other cases)

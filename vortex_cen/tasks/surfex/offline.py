@@ -222,7 +222,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
             # TODO : faire une tâche spécifique "reforecast" pour la production de PREP quotidiens
             # date           = list_dates_end_pro if not self.conf.dailyprep else
             #                       list(daterange(tomorrow(base=datebegin), dateend)),
-            date           = self.list_dates_end_pro,
+            datevalidity   = self.list_dates_end_pro,
             nativefmt      = 'netcdf',
             kind           = 'PREP',
             model          = 'surfex',
