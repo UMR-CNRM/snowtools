@@ -207,13 +207,13 @@ class SurfexCommonsMixin:
         print(self.ticket.prompt, 'namelist_tbi =', namelist_tbi)
         print()
 
-    def get_prep(self, fatal=True):
+    def get_prep(self, fatal=True, local='PREP.nc'):
         """
         Standard method to get a PREP file.
         """
         self.sh.title('Input PREP')
         prep_tbi = vortex.input(
-            local          = 'PREP.nc',
+            local          = local,
             role           = 'SnowpackInit',
             # MV : pour permettre de récupérer le PREP depuis une expérience indépendante
             # --> possibilité de renseigner 'prep_xpid' dans le fichier de conf
@@ -221,7 +221,7 @@ class SurfexCommonsMixin:
             username       = self.conf.get('prep_user', None),
             # MV : il faut définir la date de validité du fichier PREP qui par défaut
             # est la *datebegin* de simulation mais peut être arbitraire si 'date_prep' est renseigné
-            date           = self.conf.get('prep_date', self.conf.datebegin),
+            datevalidity   = self.conf.get('prep_date', self.conf.datebegin),
             # MV : Pour prévoir les cas où le PREP vient d'un vapp / vconf différent
             # de ceux de la tâche
             vapp           = self.conf.get('prep_vapp', self.conf.vapp),
