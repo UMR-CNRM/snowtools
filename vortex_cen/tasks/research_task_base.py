@@ -363,7 +363,16 @@ class _CenResearchTask(Task, CENTaskMixIn):
                 get_list_dates_files(Date(self.conf.datebegin), Date(self.conf.dateend), duration)
             self.dict_dates_end = get_dic_dateend(self.list_dates_begin, list_dates_end)
             self.dict_dates_end_pro = get_dic_dateend(self.list_dates_begin_pro, self.list_dates_end_pro)
+        elif 'rundate' in self.conf:  # Real-time only --> make a specific default class ?
+            # TODO : Trouver une meilleur solution que ce comportement implicite
+            self.conf.datebegin = self.conf.rundate
+            self.conf.dateend = self.conf.rundate
+            self.list_dates_begin = [self.conf.rundate]
+            self.dict_dates_end   = {self.conf.rundate: self.conf.rundate}
         elif 'date' in self.conf:  # Real-time only --> make a specific default class ?
+            # TODO : Trouver une meilleur solution que ce comportement implicite
+            self.conf.datebegin = self.conf.date
+            self.conf.dateend = self.conf.date
             self.list_dates_begin = [self.conf.date]
             self.dict_dates_end   = {self.conf.date: self.conf.date}
         else:
