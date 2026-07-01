@@ -40,7 +40,7 @@ class PrepSafran(_CenResearchTask):
     **Output:**
 
     - PYYMMDDHH : Safran guess files, grouped in tar archives containing all 'P' files from all members and lead times
-    of a given model run
+                  of a given model run
     """
 
     def __init__(self, **kw):
