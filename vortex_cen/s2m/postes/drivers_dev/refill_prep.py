@@ -7,6 +7,7 @@ Warm-start a real-time experiment by refilling its cache with a PREP file coming
 
 """
 
+import footprints
 import vortex
 from mkjob.nodes import Driver
 from vortex_cen.tasks.research_task_base import _CenResearchTask
@@ -18,7 +19,7 @@ def setup(t, **kw):
         tag='refill',
         ticket=t,
         nodes=[
-            PrepRefill(tag='preprefill', ticket=t, **kw),
+            PrepRefill(tag='refill_prep', ticket=t, **kw),
         ],
         options=kw,
     )
@@ -48,6 +49,7 @@ class PrepRefill(_CenResearchTask, SurfexCommonsMixin):
             "xpid",
             "rundate+help=Date of run;choices=YYYYMMDD[03 06 09 12];type=str or Date",
             "members",
+            "datevalidity",
         ]
         OPTIONAL_CONFIGURATION_VARIABLES = [
             "prep_user",
@@ -68,18 +70,27 @@ class PrepRefill(_CenResearchTask, SurfexCommonsMixin):
     def get_remote_inputs(self):
         self.get_prep()
 
+    def get_local_inputs(self):
+        pass
+
+    def algo(self):
+        pass
+
+    def launch_algo(self, algo):
+        pass
+
     def put_outputs(self):
 
         self.sh.title('Output PREP(s)')
         prep = vortex.output(
             role           = 'SnowpackInit',
-            local          = 'mb[member]/PREP.nc',
+            local          = 'PREP.nc',
             block          = 'prep',
             experiment     = self.conf.xpid,
             geometry       = self.conf.geometry,
-            datevalidity   = self.conf.prep_date,
+            datevalidity   = self.conf.datevalidity,
             date           = self.conf.rundate,
-            member         = self.conf.members,
+            member         = footprints.util.rangex(self.conf.members),
             nativefmt      = 'netcdf',
             kind           = 'PREP',
             model          = 'surfex',

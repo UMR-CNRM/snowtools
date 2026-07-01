@@ -40,7 +40,7 @@ class SodaCommonsMixin(SurfexCommonsMixin):
             nativefmt       = 'netcdf',
             vapp            = self.conf.get('observation_vapp', self.conf.vapp),
             vconf           = self.conf.get('observation_vconf', self.conf.vconf),
-            datevalidity    = self.conf.date,  # TODO : autoriser une date =/= ? de la date de run ?
+            date            = self.conf.date,  # TODO : autoriser une date =/= ? de la date de run ?
             block           = self.conf.get('sensor', None),
             scope           = self.conf.get('scope', None),
             namespace       = 'vortex.multi.fr',
@@ -81,11 +81,11 @@ class SodaCommonsMixin(SurfexCommonsMixin):
             member         = self.get_list_members(),
             vapp           = self.conf.get('prep_vapp', self.conf.vapp),
             vconf          = self.conf.get('prep_vconf', self.conf.vconf),
-            local          = 'mb[member]/PREP_[date:ymdh].nc',
+            local          = 'mb[member]/PREP_[datevalidity:ymdh].nc',
             experiment     = self.conf.get('prep_xpid', self.conf.xpid),
             username       = self.conf.get('prep_user', None),
             geometry       = self.conf.geometry,
-            date           = self.conf.date,
+            datevalidity   = self.conf.get('datevalidity', self.conf.date),
             nativefmt      = 'netcdf',
             kind           = 'PREP',
             model          = 'surfex',
@@ -129,6 +129,7 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
             "geometry",
             "surfex_uenv|uenv",
             "members",
+            "date",
         ]
 
         OPTIONAL_CONFIGURATION_VARIABLES = [
@@ -147,6 +148,7 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
             "pgd",
             "diff_xpid",
             "diff_user",
+            "datevalidity",
         ]
 
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)

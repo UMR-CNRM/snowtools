@@ -395,7 +395,7 @@ class Ensemble_Surfex_Task(CENTaskMixIn, Task):
                             experiment     = self.ref_reanalysis,
                             geometry       = self.conf.geometry,
                             vconf          = self.conf.geometry.tag,
-                            date           = datebegin,
+                            datevalidity   = datebegin,
                             intent         = 'inout',
                             nativefmt      = 'netcdf',
                             kind           = 'PREP',

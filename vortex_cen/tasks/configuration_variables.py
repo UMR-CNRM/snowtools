@@ -28,10 +28,17 @@ standard_variables = dict(
         help = "End date of the simulation",
         type  = "str or Date",
     ),
+    datevalidity = dict(
+        help = "The validity date of the PREP file",
+        type = "Date",
+    ),
+    rundate = dict(
+        help = "Run date",
+        type = "str or Date",
+    ),
     date = dict(
         help = "Run date",
         type = "str or Date",
-        singular = True,
     ),
     xpid   = dict(
         help = "Experiment identifier of the simulation",
