@@ -363,6 +363,27 @@ class Pgd2D_Uenv_Pgd(_Pgd_Construct):
         self.get_2D_databases()
         self.get_pgd_exe_from_uenv()
 
+    def diff(self):
+        """
+        Test output reproductibility [OPTIONAL]
+        """
+        self.sh.title("Reproductibility check : PGD")
+        diff = vortex.diff(
+            local      = 'PGD.nc',
+            role       = 'SurfexClim',
+            experiment = self.conf.diff_xpid,
+            username   = self.conf.get('diff_user', None),
+            geometry   = self.conf.geometry,
+            nativefmt  = 'netcdf',
+            kind       = 'pgdnc',
+            model      = 'surfex',
+            namespace  = 'vortex.multi.fr',
+            namebuild  = 'flat@cen',
+            block      = 'pgd2d/pgd',
+        ),
+        print(self.ticket.prompt, 'diff =', diff)
+        print()
+
 
 class Pgd2D_Local_Pgd(_Pgd_Construct):
     """
