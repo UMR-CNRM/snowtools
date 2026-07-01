@@ -553,17 +553,17 @@ class S2MComponent(_CenParaBlindRun):
     * send notifications...
 
     For CEN R&D needs, this can be easily implemented in the Task classes
-    provided they inherit from the  :class:`vortex_cen.layout.nodes.S2MTaskMixIn`
+    provided they inherit from the  :class:`vortex_cen.layout.nodes.CENTaskMixIn`
     mixin. For example:
 
     * To filter execution errors, just define
       ``filter_execution_error`` in your Task class:
-      ``filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error``
+      ``filter_execution_error = CENTaskMixIn.s2moper_filter_execution_error``
 
     * To send notification emails about fatal and non-fatal errors:
-      ``report_execution_warning = S2MTaskMixIn.s2moper_report_execution_warning``
+      ``report_execution_warning = CENTaskMixIn.s2moper_report_execution_warning``
       and
-      ``report_execution_errors = S2MTaskMixIn.s2moper_report_execution_errors``
+      ``report_execution_errors = CENTaskMixIn.s2moper_report_execution_errors``
 
     """
 

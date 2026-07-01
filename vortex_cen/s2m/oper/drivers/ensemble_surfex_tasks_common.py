@@ -3,24 +3,23 @@
 """
 
 from mkjob.nodes import Task
-from vortex_cen.layout.nodes import S2MTaskMixIn
+from vortex_cen.tasks.oper_research_mixin import CENTaskMixIn
 from vortex_cen.tools.monitoring import InputReportContext, OutputReportContext
 import vortex
 from bronx.stdtypes.date import daterange, yesterday, tomorrow
 import footprints
 
 
-class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
+class Ensemble_Surfex_Task(CENTaskMixIn, Task):
     """
-    Task : Ensemble_Surfex_Task
-    ===========================
+    **Task : Ensemble_Surfex_Task**
 
     Task for operational ensemble SURFEX simulation used in the Drivers of
     ensemble_surfex_tasks_analysis.py and in ensemble_surfex_tasks_forecast.py
     Ensemble member include FORCING files derived from ARPEGE and PEARP, plus a specific "SYTRON" member.
 
-    Inputs
-    ------
+    **Input:**
+
     - ensemble of FORCING files in a "slopes geometry"
         * [ALTERNATE] ensemble of FORCING files in a "flat geometry"
     - PGD.nc (Ground physiography)
@@ -30,8 +29,8 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
     - drdt_bst_fit_60.nc (Crocus metamorphism parameters)
     - OFFLINE_NOMPI binary
 
-    Outputs
-    -------
+    **Output:**
+
     - PRO.nc : Snowpack simulation output
     - [OPTIONAL] FORCING.nc in a "slopes geometry"
     - PREP.nc : Snowpack state at the end of the simulation
@@ -51,13 +50,14 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
         "threshold+help=Threshold to apply to the snow water equivalent (in kg/m2);type=int",
     ]
     OPTIONAL_CONFIGURATION_VARIABLES = [
+        "prep_vortex1+help=If the 'warmstart' target PREP.nc file was produced with vortex1,type=bool",
     ]
     # Filter of errors to be applied in both oper and dev cases
-    filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
+    filter_execution_error = CENTaskMixIn.s2moper_filter_execution_error
     # only in dev for CEN, to be defined for IGA
-    report_execution_warning = S2MTaskMixIn.s2moper_report_execution_warning
+    report_execution_warning = CENTaskMixIn.s2moper_report_execution_warning
     # only in dev for CEN, keep IGA method for oper
-    report_execution_error = S2MTaskMixIn.s2moper_report_execution_error
+    report_execution_error = CENTaskMixIn.s2moper_report_execution_error
 
     def process(self):
 
@@ -230,6 +230,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                         kind           = 'PREP',
                         model          = 'surfex',
                         namespace      = self.conf.namespace_in,
+                        vortex1        = self.conf.get('prep_vortex1', False),
                         fatal          = False,
                         cutoff         = 'assimilation'
                     ),
@@ -253,6 +254,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                             kind           = 'PREP',
                             model          = 'surfex',
                             namespace      = self.conf.namespace_in,
+                            vortex1        = self.conf.get('prep_vortex1', False),
                             fatal          = False,
                             cutoff         = alternate_prep[1]
                         ),
@@ -276,6 +278,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                             kind           = 'PREP',
                             model          = 'surfex',
                             namespace      = self.conf.namespace_in,
+                            vortex1        = self.conf.get('prep_vortex1', False),
                             fatal          = False,
                             cutoff         = 'assimilation'
                         ),
@@ -299,6 +302,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                                 kind           = 'PREP',
                                 model          = 'surfex',
                                 namespace      = self.conf.namespace_in,
+                                vortex1        = self.conf.get('prep_vortex1', False),
                                 fatal          = False,
                                 cutoff         = alternate_prep[1]
                             ),
@@ -322,6 +326,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                         kind           = 'PREP',
                         model          = 'surfex',
                         namespace      = self.conf.namespace_in,
+                        vortex1        = self.conf.get('prep_vortex1', False),
                         fatal          = False,
                         cutoff         = 'assimilation'
                     ),
@@ -348,6 +353,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                             kind           = 'PREP',
                             model          = 'surfex',
                             namespace      = self.conf.namespace_in,
+                            vortex1        = self.conf.get('prep_vortex1', False),
                             fatal          = False,
                             cutoff         = alternate_prep[1]
                         ),
@@ -372,6 +378,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                             kind           = 'PREP',
                             model          = 'surfex',
                             namespace      = self.conf.namespace_in,
+                            vortex1        = self.conf.get('prep_vortex1', False),
                             fatal          = False,
                             cutoff         = 'assimilation'
                         ),
@@ -394,6 +401,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                             kind           = 'PREP',
                             model          = 'surfex',
                             namespace      = 'vortex.multi.fr',  # IGA can keep that: this is only for last chance rescue mode
+                            vortex1        = self.conf.get('prep_vortex1', False),
                             namebuild      = 'flat@cen',
                             block          = 'prep',
                             fatal          = False,

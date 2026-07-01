@@ -3,7 +3,7 @@
 '''
 
 from mkjob.nodes import Driver, Task
-from vortex_cen.layout.nodes import S2MTaskMixIn
+from vortex_cen.tasks.oper_research_mixin import CENTaskMixIn
 import vortex
 from bronx.stdtypes.date import daterange, yesterday, tomorrow, Period
 import footprints
@@ -21,12 +21,12 @@ def setup(t, **kw):
     )
 
 
-class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
+class Monthly_Surfex_Reanalysis(CENTaskMixIn, Task):
     '''
 
     '''
 
-    filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
+    filter_execution_error = CENTaskMixIn.s2moper_filter_execution_error
     def refill(self):
 
         t = self.ticket
