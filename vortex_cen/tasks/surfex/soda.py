@@ -197,11 +197,11 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
 
         self.sh.title('Output PREP (analysis)')
         prep = vortex.output(
-            local          = 'mb[member]/PREP_[date:ymdh].nc',
+            local          = 'mb[member]/PREP_[datevalidity:ymdh].nc',
             role           = 'SnowpackInit',
             experiment     = self.conf.xpid,
             geometry       = self.conf.geometry,
-            date           = self.conf.date,
+            datevalidity   = self.conf.date,
             member         = self.get_list_members(),
             nativefmt      = 'netcdf',
             kind           = 'PREP',
@@ -236,12 +236,12 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
         """
         self.sh.title("Reproductibility check : PREP")
         diff = vortex.diff(
-            local          = 'mb[member]/PREP_[date:ymdh].nc',
+            local          = 'mb[member]/PREP_[datevalidity:ymdh].nc',
             role           = 'SnowpackInit',
             experiment     = self.conf.diff_xpid,
             username       = self.conf.get('diff_user', None),
             geometry       = self.conf.geometry,
-            date           = self.conf.date,
+            datevalidity   = self.conf.date,
             member         = self.get_list_members(),
             nativefmt      = 'netcdf',
             kind           = 'PREP',

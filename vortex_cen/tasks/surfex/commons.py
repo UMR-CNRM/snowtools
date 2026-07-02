@@ -139,7 +139,7 @@ class SurfexCommonsMixin:
         pgd = vortex.input(
             role      = 'SurfexClim',
             genv      = self.conf.get('consts_surfex_uenv', self.conf.uenv),
-            gvar      = self.conf.get('pgdnc_gvar', 'pgd_[geometry::tag]'),
+            gvar      = self.conf.get('pgdnc_gvar', 'pgd_[geometry:area]'),
             kind      = 'pgdnc',
             model     = 'surfex',
             geometry  = self.conf.get('pgd_geometry', self.conf.geometry),

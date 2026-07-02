@@ -139,6 +139,9 @@ class Escroc(_Offline):
         print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
         print()
 
+    def diff(self):
+        pass
+
 
 class CrocO(Escroc):
     """
