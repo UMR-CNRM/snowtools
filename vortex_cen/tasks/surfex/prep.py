@@ -14,7 +14,7 @@ Tasks designed to launch the PREP executable.
    :members:
    :show-inheritance:
 
-.. autoclass:: _Prep_Construct
+.. autoclass:: Prep_Construct
    :no-members:
    :class-doc-from: class
    :show-inheritance:
@@ -72,11 +72,11 @@ class PrepCommonsMixin(SurfexCommonsMixin):
         print()
 
 
-class _Prep_Construct(PrepCommonsMixin, _CenResearchTask):
+class Prep_Construct(PrepCommonsMixin, _CenResearchTask):
     """
-    **Task : _Prep_Construct**
+    **Task : Prep_Construct**
 
-    Abstract task for the generation of initial conditions (PREP.nc file)
+    Task for the generation of initial conditions (PREP.nc file)
 
     **Input:**
 
@@ -142,19 +142,13 @@ class _Prep_Construct(PrepCommonsMixin, _CenResearchTask):
         Get OPTIONS.nam which is always in cache and
         init_TG.nc that should be in cache as well at this point.
         """
-        self.get_namelist()
-
-    def get_namelist(self):
-        """
-        Call either "get_namelist_from_cache" or "get_namelist_from_uenv" method.
-        """
-        raise NotImplementedError("A namelist is expected to launch the PREP executable")
+        self.get_namelist_from_cache()
 
     def get_prep_executable(self):
         """
         Call either "get_prep_exe_from_path" or "get_prep_exe_from_uenv" method.
         """
-        pass
+        self.get_prep_exe_from_uenv()
 
     def algo(self):
         """
@@ -226,7 +220,7 @@ class _Prep_Construct(PrepCommonsMixin, _CenResearchTask):
         print()
 
 
-class GetPrep(_Prep_Construct):
+class GetPrep(Prep_Construct):
     """
     **Task : GetPrep**
 
@@ -279,10 +273,6 @@ class GetPrep(_Prep_Construct):
             self.get_prep_exe_from_path()
         else:
             self.get_prep_exe_from_uenv()
-
-    def get_namelist(self):
-        # This task must be launched after a namelist pre-process task
-        self.get_namelist_from_cache()
 
     def get_init_TG(self):
         # Try to get an existing init_TG file but do not crash if there is none because
