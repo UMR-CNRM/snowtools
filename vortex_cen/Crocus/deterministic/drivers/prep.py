@@ -7,7 +7,7 @@ This "prep" driver allows to generate a PREP.nc file (initial conditions) from a
 from mkjob.nodes import Driver
 from vortex_cen.tasks.surfex.pre_process import Preprocess_Uenv_Namelist
 from vortex_cen.tasks.surfex.init_clim_ground_temperature import InitClimGroundTemperature
-from vortex_cen.tasks.surfex.prep import _Prep_Construct
+from vortex_cen.tasks.surfex.prep import Prep_Construct
 
 
 def setup(t, **kw):
@@ -23,7 +23,7 @@ def setup(t, **kw):
     )
 
 
-class MakePrep(_Prep_Construct):
+class MakePrep(Prep_Construct):
 
     def get_prep_executable(self):
         self.get_prep_exe_from_uenv()
