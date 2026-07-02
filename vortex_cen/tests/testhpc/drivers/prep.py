@@ -17,7 +17,7 @@ def setup(t, **kw):
         nodes=[
             Preprocess_Uenv_Namelist(tag='preprocess_uenv_namelist', ticket=t, **kw),
             GetClimGroundTemperature(tag='getClimGroundTemperature', ticket=t, **kw),
-            GetPrep(tag='getprep', ticket=t, **kw),
+            Prep_Construct(tag='getprep', ticket=t, **kw),
         ],
         options=kw,
     )

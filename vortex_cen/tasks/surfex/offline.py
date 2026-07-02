@@ -215,7 +215,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
 
         self.sh.title('Output PREP')
         prep_tbo = vortex.output(
-            local          = 'PREP_[date:ymdh].nc',
+            local          = 'PREP_[datevalidity:ymdh].nc',
             role           = 'SnowpackInit',
             experiment     = self.conf.xpid,
             geometry       = self.conf.geometry,
@@ -304,12 +304,12 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
         # --> check reproductibility on PREP file
         self.sh.title("Reproductibility check : PREP")
         diff = vortex.diff(
-            local          = 'PREP_[date:ymdh].nc',
+            local          = 'PREP_[datevalidity:ymdh].nc',
             role           = 'SnowpackInit',
             experiment     = self.conf.diff_xpid,
             username       = self.conf.diff_user,
             geometry       = self.conf.geometry,
-            date           = self.list_dates_end_pro,
+            datevalidity   = self.list_dates_end_pro,
             nativefmt      = 'netcdf',
             kind           = 'PREP',
             model          = 'surfex',

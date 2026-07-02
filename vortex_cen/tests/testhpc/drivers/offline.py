@@ -24,7 +24,7 @@ def setup(t, **kw):
             Preprocess_Uenv_Namelist(tag='preprocess_uenv_namelist', ticket=t, **kw),
             GetClimGroundTemperature(tag='getClimGroundTemperature', ticket=t, **kw),
             GetPgd1D(tag='getpgd1d', ticket=t, **kw),
-            GetPrep(tag='getprep', ticket=t, **kw),
+            GetPrep(tag='offline_getprep', ticket=t, **kw),
             Offline_MPI_Uenv(tag='offline_mpi_uenv', ticket=t, **kw),
         ],
         options=kw,
