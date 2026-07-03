@@ -1,5 +1,9 @@
+# -*- coding: utf-8 -*-
 """
-This modules defines specific CEN addons for the Task base class.
+oper_research_mixin.py
+----------------------
+
+This modules defines specific CEN common addons for research and operational tasks.
 Multiple inheritence together with the standard Task class is required to use this module.
 """
 
@@ -18,8 +22,10 @@ with echecker:
 logger = loggers.getLogger(__name__)
 
 
-class S2MTaskMixIn:
-    """Usefull addtions for any S2M task."""
+class CENTaskMixIn:
+    """
+    Usefull methods for any CEN (oper or research) task
+    """
 
     nightruntime = Time(hour=3, minute=0)
     firstassimruntime = Time(hour=6, minute=0)
@@ -62,6 +68,9 @@ class S2MTaskMixIn:
         return accept_errors, warning
 
     def s2moper_report_execution_warning(self, exc, **kw_infos):
+        """
+        Send warning mail in case of non-fatal errors in the oper chain.
+        """
         if 'nfail' in kw_infos.keys():
             warning = self.warningmessage(kw_infos['nfail'], exc)
             logger.warning(warning)
@@ -70,6 +79,9 @@ class S2MTaskMixIn:
             ad.cenmail(to=self.conf.mail_to, id='s2mdev_warning', report=warning)
 
     def s2moper_report_execution_error(self, exc, **kw_infos):
+        """
+        Send error mail in case of fatal errors in the oper chain.
+        """
         if 'nfail' in kw_infos.keys():
             warning = self.warningmessage(kw_infos['nfail'], exc)
             logger.warning(warning)
@@ -78,6 +90,9 @@ class S2MTaskMixIn:
             ad.cenmail(to=self.conf.mail_to, id='s2mdev_error', report=warning)
 
     def reforecast_filter_execution_error(self, exc):
+        """
+        Define the behaviour in case of errors in the reforecast task.
+        """
         warning = {}
         accept_errors = False
         if isinstance(exc, DelayedAlgoComponentError):
@@ -128,6 +143,8 @@ class S2MTaskMixIn:
         return datebegin, dateend
 
     def get_rundate_forcing(self):
+        # WARNING : oper-only, ne pas utiliser en recherche !
+
         if self.conf.previ:
             # SAFRAN only generates new forecasts once a day during the night run
             rundate_forcing = self.conf.rundate.replace(hour=self.nightruntime.hour)
@@ -137,6 +154,7 @@ class S2MTaskMixIn:
         return rundate_forcing
 
     def get_rundate_prep(self):
+        # WARNING : oper-only, ne pas utiliser en recherche !
 
         alternates = []
         if hasattr(self.conf, 'reinit'):
@@ -200,6 +218,8 @@ class S2MTaskMixIn:
         return rundate_prep, alternates
 
     def get_list_members(self, sytron=True):
+        # WARNING : oper-only, ne pas utiliser !
+
         if 'nmembers' not in self.conf.keys() or self.conf.nmembers == 0:
             return list(), list()  # Return empty lists to indicate only a deterministic run must be considered
         startmember = int(self.conf.startmember) if hasattr(self.conf, "startmember") else 0
@@ -213,18 +233,14 @@ class S2MTaskMixIn:
         else:
             return list(range(startmember, lastmember + 1)), list(range(startmember, lastmember + 3))
 
-    def split_geo_interpol(self):
-        geoin, geoout = self.conf.geometry.list.split(":")
-        return geoin, geoout
-
     def get_list_geometry(self, meteo="safran"):
+        # WARNING : oper-only, ne pas utiliser en recherche !
 
         if hasattr(self.conf, "geoin"):
             return [self.conf.geoin]
         else:
             source_safran, block_safran = self.get_source_safran(meteo=meteo)
 
-            list_suffix = ['_allslopes', '_flat']
             if source_safran == "safran":
                 if self.conf.geometry.area == "postes":
                     return self.conf.geometry.list.split(",")
@@ -237,6 +253,7 @@ class S2MTaskMixIn:
                 return [self.conf.geometry.tag]
 
     def get_alternate_safran(self):
+        # WARNING : ne plus utiliser !
         if self.conf.geometry.area == 'postes':
             return "safran", "postes", self.conf.geometry.list.split(",")
         else:
@@ -248,12 +265,16 @@ class S2MTaskMixIn:
             return "safran", "massifs", alternate_geo
 
     def get_block_safran_from_geometry(self):
+        # WARNING : ne plus utiliser !
+        # --> utiliser une variable explicite dans le fichier de conf
         if self.conf.geometry.area == 'postes':
             return 'postes'
         else:
             return 'massifs'
 
     def get_source_safran(self, meteo="safran"):
+        # WARNING : ne plus utiliser !
+        # --> utiliser une variable explicite dans le fichier de conf
 
         if hasattr(self.conf, 'blockin'):
             if meteo == "safran":
@@ -276,6 +297,8 @@ class S2MTaskMixIn:
             return meteo, "meteo"
 
     def get_safran_sources(self, list_datebegin, era5=False):
+        # WARNING : ne plus utiliser !
+        # --> utiliser une variable explicite dans le fichier de conf
 
         if era5:
             source_app = dict(
@@ -326,13 +349,12 @@ class S2MTaskMixIn:
 
         if hasattr(self.conf, "exesurfex"):
             reprod_info['surfex_commit'] = get_summary_git(self.sh.path.dirname(self.sh.path.realpath(
-                                           self.conf.exesurfex)))
+                self.conf.exesurfex)))
         elif hasattr(self.conf, "genv"):
             reprod_info['surfex_genv'] = self.conf.genv
 
         reprod_info['vortex_commit'] = get_summary_git(self.sh.path.dirname(
-                                                        self.sh.path.dirname(
-                                                         self.sh.path.dirname(vortexfile))))
+            self.sh.path.dirname(self.sh.path.dirname(vortexfile))))
 
         reprod_info['snowtools_commit'] = get_summary_git(SNOWTOOLS_CEN)
 

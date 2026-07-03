@@ -1,4 +1,27 @@
-# from vortex import toolbox
+# -*- coding: utf-8 -*-
+"""
+init_clim_ground_temperature.py
+-------------------------------
+
+Tasks designed to generate an init_TG.nc file.
+
+.. inheritance-diagram:: vortex_cen.tasks.surfex.init_clim_ground_temperature
+   :top-classes: vortex_cen.tasks.research_task_base._CenResearchTask
+   :private-bases:
+   :parts: 2
+
+.. autoclass:: InitClimGroundTemperature
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: GetClimGroundTemperature
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+"""
+
 import vortex
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
@@ -6,17 +29,16 @@ from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
 
 class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
     """
-    Task : InitClimGroundTemperature
-    ================================
+    **Task : InitClimGroundTemperature**
 
     Initialize Surfex ground temperature (GT) by taking the climatological mean of the input forcing air temperature.
 
-    Inputs :
-    --------
+    **Input:**
+
     - FORCING file(s) on simulation geometry
 
-    Outputs :
-    ---------
+    **Output:**
+
     - Init_TG file (initial values of ground temperature)
     """
 
@@ -29,6 +51,10 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
 
         OPTIONAL_CONFIGURATION_VARIABLES = [
             "forcing",
+            "out_block+default=init_tg/prep",
+            "diff_xpid",
+            "diff_user",
+            "diff_block+default=init_tg/prep",
         ]
 
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
@@ -57,7 +83,7 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
 
         self.sh.title("Toolbox algo")
         algo = vortex.task(
-            engine="s2m",
+            engine="algo",
             kind="clim",
         )
         print(self.ticket.prompt, "algo =", algo)
@@ -88,20 +114,43 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
             model      = "surfex",
             namespace  = "vortex.multi.fr",
             namebuild  = "flat@cen",
-            block      = "prep",
+            block      = self.conf.get("out_block", "init_tg/prep"),
         )
         print(self.ticket.prompt, "Output init ground temperature =", init_ground_temperature_out)
+        print()
+
+    def diff(self):
+        """
+        Test output reproductibility [OPTIONAL]
+        """
+
+        self.sh.title("Reproductibility check : init_TG")
+        init_tg_diff = vortex.diff(
+            role       = "InitialValuesOfGroundTemperature",
+            kind       = "climTG",
+            nativefmt  = "netcdf",
+            local      = "init_TG.nc",
+            experiment = self.conf.diff_xpid,
+            username   = self.conf.get("diff_user", None),
+            geometry   = self.conf.geometry,
+            model      = "surfex",
+            namespace  = "vortex.multi.fr",
+            namebuild  = "flat@cen",
+            block      = self.conf.get("diff_block", "init_tg/prep"),
+        )
+        print(self.ticket.prompt, "diff init_tg =", init_tg_diff)
         print()
 
 
 class GetClimGroundTemperature(InitClimGroundTemperature):
     """
-    Task : GetClimGroundTemperature
-    ===============================
+    **Task : GetClimGroundTemperature**
 
     If InitTG is available in cache or archive for the current experiment fetch it.
     If not, try to get it from an uenv.
     If not either, generate it by calling the methods from the mother class.
+
+    **WARNING :** The simulation's reproductibility can not be guaranteed with this task !
 
     """
 

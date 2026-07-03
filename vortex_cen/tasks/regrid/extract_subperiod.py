@@ -33,7 +33,7 @@ class ExtractSubPeriod(_CenResearchTask):
         get forcing files in the "massif" geometry, output grid file and interpolation binary.
 
         """
-        self.get_forcing(localname='FORCING.nc')
+        self.get_forcing(localname='FORCING_before_time_cut.nc')
 
     def get_local_inputs(self):
         pass
@@ -44,10 +44,9 @@ class ExtractSubPeriod(_CenResearchTask):
         """
         import xarray as xr
 
-        ds = xr.open_dataset('FORCING.nc')
+        ds = xr.open_dataset('FORCING_before_time_cut.nc')
         shorter_forcing = ds.sel(time=slice(self.conf.datebegin, self.conf.dateend))
-        shorter_forcing.to_netcdf('FORCING_' + str(self.conf.datebegin.strftime("%Y%m%d%H")) + '_' + str(self.conf.dateend.strftime("%Y%m%d%H")) + '.nc',
-                format='NETCDF4_CLASSIC')
+        shorter_forcing.to_netcdf('FORCING.nc', format='NETCDF4_CLASSIC')
 
         return None
 
@@ -62,7 +61,7 @@ class ExtractSubPeriod(_CenResearchTask):
 
         self.sh.title('Output sub-forcing file')
         forcing_tbo = vortex.output(
-            local       = 'FORCING_' + str(self.conf.datebegin.strftime("%Y%m%d%H")) + '_' + str(self.conf.dateend.strftime("%Y%m%d%H")) + '.nc',
+            local       = 'FORCING.nc',
             experiment  = self.conf.xpid,
             # MV : il faut forcer la géométrie de sortie à la géométrie d'entrée puisqu'il n'y a
             # pas de changement de géométrie (--> sortir du répertoire "regrid" pour clarifier).

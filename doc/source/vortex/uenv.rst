@@ -4,7 +4,14 @@ Constant data managment with User Environments
 A general documentation (in french) can be found in:
    http://intra.cnrm.meteo.fr/algopy/sphinx/vortex/current/technical/uget.html
 
-There is a list of useful commands at the end
+There is a list of useful commands at the end of this section.
+
+The main motivations to use User Environments are :
+* allowing for reliable, standardized data archiving
+* ensuring the simulations reproductibility
+* facilitating and optimizing the exchange of data between users
+* partitioning the data used in different simulations in a clear and secure way
+* minimizing the number of circulating files
 
 Install the vortex-gco plugin
 -----------------------------
@@ -18,11 +25,19 @@ Install the vortex-gco plugin
 Create a User Environment from scratch
 --------------------------------------
 
+Step by step
+^^^^^^^^^^^^
+
 1. Put the file(s) you need in your UEnv in ``$HOME/.vortexrc/hack/uget/your_username/data``
 
-Your file(s) should have a name and a number: ``AFirstFile.0``, ``ASecondFile.1``
+Name your file(s) with a distinctive suffix (version number, git commit or tag,...) : ``AFirstFile.0``, ``ASecondFile.1``
 
-2. Create a text file which is the name of your UEnv (ex ``MyFirstUenv.0``) in ``$HOME/.vortexrc/hack/uget/your_username/env``
+.. note::
+
+   Namelists are a special case : serveral namelist files can be added under ``$HOME/.vortexrc/hack/uget/your_username/data/<namelist_dir_XXX>``
+
+
+2. Create a text file with a distinctive name which is the name of your UEnv (ex ``MyFirstUenv.0``) in ``$HOME/.vortexrc/hack/uget/your_username/env``
 
 3. In this text file, associate a key to each file:
 
@@ -31,6 +46,11 @@ Your file(s) should have a name and a number: ``AFirstFile.0``, ``ASecondFile.1`
    FIRST_KEY="uenv:AFirstFile.0@your_username"
    SECOND_KEY="uenv:ASecondFile.1@your_username"
 
+.. note::
+
+   For namelists, the line looks like :
+   NAMELISTS_<MODEL>="uenv:namelist_dir_XXX@your_username"
+
 4. UEnv is ready, you can access to file(s) with the command:
 
 .. code-block:: bash
@@ -38,13 +58,28 @@ Your file(s) should have a name and a number: ``AFirstFile.0``, ``ASecondFile.1`
    toolbox.input(genv='uenv:MyFirstUenv.0@your_username', gvar='FIRST_KEY', unknown=True, filename='...')
    toolbox.input(genv='uenv:MyFirstUenv.0@your_username', gvar='SECOND_KEY', unknown=True, filename='...')
 
-5. In order to store and share your UEnv (vortex1 command) :
+.. note::
+
+   For namelists, the additional *namelist_source* entry must be provided to specify the target namelist's name from the pool of namelists:
+   toolbox.input(genv='uenv:MyFirstUenv.0@your_username', gvar='SECOND_KEY', unknown=True, filename='...', namelist_source=<name_of_namelist>)
+
+5. In order to archive and share your UEnv :
 
 .. code-block:: bash
 
-   $VORTEX/bin/uget.py push env MyFirstUenv.0@your_username
+   uget push env MyFirstUenv.0@your_username
 
 **NB:** On HPC this can only be done from a TRANSFERT node
+
+.. note::
+
+   * By convention, the "keys" of SURFEX executables are MASTER_SURFEX_<NAME_OF_EXEC>_MPI or MASTER_SURFEX_<NAME_OF_EXEC>_NOMPI.
+   * It is possible to use files from another user's UEnv in your own UEnv : simply copy the corresponding lines from their UEnv file into yours
+
+.. _uenv_surfex:
+
+Example : create a UEnv with SURFEX executables and namelists
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. _uenv_modification:
 
@@ -56,7 +91,7 @@ Modifying an existing UEnv
 
 .. code-block:: bash
 
-   $VORTEX/bin/uget.py hack env Existing_UEnv.0@username_uenv_owner into MyNewUenv.0@your_username
+   uget hack env Existing_UEnv.0@username_uenv_owner into MyNewUenv.0@your_username
 
 Now, A text file ``MyNewUenv.0`` has been creates in ``$HOME/.vortexrc/hack/uget/your_username/env``
 
@@ -68,7 +103,7 @@ Example:
 
    ssh belenostransfert
    source path/to/venv/with/vortex-gco/bin/activate
-   $VORTEX/bin/uget.py hack env Existing_UEnv.0@username_uenv_owner into MyNewUenv.0@your_yousername
+   uget hack env Existing_UEnv.0@username_uenv_owner into MyNewUenv.0@your_yousername
 
 .. note::
 
@@ -100,8 +135,8 @@ Concatenation of 2 existing UEnv
 
 .. code-block:: bash
 
-   $VORTEX/bin/uget.py hack env UEnv1@user_who_own_this_uenv into UEnv1_copy@your_username
-   $VORTEX/bin/uget.py hack env UEnv2@maybe_another_user into UEnv2_copy@your_username
+   uget hack env UEnv1@user_who_own_this_uenv into UEnv1_copy@your_username
+   uget hack env UEnv2@maybe_another_user into UEnv2_copy@your_username
 
 Now, the files ``UEnv1_copy`` and ``UEnv2_copy`` are copied in ``$HOME/.vortexrc/hack/uget/your_username/env``
 
@@ -120,7 +155,7 @@ Using UEnv ``TargetUEnv.X`` owned by another user
 
 .. code-block:: bash
 
-   $VORTEX/bin/uget.py check env TargetUEnv.X@the_other_user
+   uget check env TargetUEnv.X@the_other_user
 
 2. Get the file of interest with his key ``Key_from_TargetUEnv.X``:
 

@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+Test the "InitClimGroundTemperature" unit task, including a reproductibility test of the output file.
+"""
+
 import vortex
 from mkjob.nodes import Driver
 from vortex_cen.tasks.surfex.init_clim_ground_temperature import \
@@ -29,7 +34,7 @@ class TestInitClimGroundTemperature(InitClimGroundTemperature):
         Reproductibility test : compare output to reference.
         """
         self.sh.title("Reference File")
-        forcing_diff = vortex.diff(
+        init_tg_diff = vortex.diff(
             role       = "InitialValuesOfGroundTemperature",
             kind       = "climTG",
             nativefmt  = "netcdf",
@@ -42,5 +47,5 @@ class TestInitClimGroundTemperature(InitClimGroundTemperature):
             namebuild  = "flat@cen",
             block      = "prep",
         )
-        print(self.ticket.prompt, "diff forcing =", forcing_diff)
+        print(self.ticket.prompt, "diff init_tg =", init_tg_diff)
         print()

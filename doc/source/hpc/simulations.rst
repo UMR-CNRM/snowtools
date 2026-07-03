@@ -7,17 +7,17 @@ This section contains all necessary information to launch simulations on HPC.
 Code organisation in applications and configurations
 ----------------------------------------------------
 
-.. automodule:: Crocus
+.. automodule:: vortex_cen.Crocus
    :members:
 
-.. automodule:: s2m
+.. automodule:: vortex_cen.s2m
    :members:
 
-.. automodule:: edelweiss
+.. automodule:: vortex_cen.edelweiss
    :members:
 
 ..
-  .. automodule:: meteo
+  .. automodule:: vortex_cen.meteo
      :members:
 
     Research configurations for the production of meteorological data.
@@ -25,22 +25,24 @@ Code organisation in applications and configurations
 Code organisation for a given configuration
 -------------------------------------------
 
-The "drivers" repository
-^^^^^^^^^^^^^^^^^^^^^^^^
+All configurations follow the following directory structure :
+
+.. code::
+
+   vortex_cen/
+       vapp/
+           vconf/
+               drivers/
+               conf/
+               jobs/
 
 The *drivers* repository contains all the drivers (a sequence of unit tasks) related to a given configuration.
-
-The "conf" repository
-^^^^^^^^^^^^^^^^^^^^^
 
 The *conf* repository contains configuration files associated to specific experiments.
 A configuration file contains all the relevant variable values for a specific set of tasks relating to a particular experiment.
 Default configuration files can also provide the minimum set of variable values required to perform specific tasks, such as launching SURFEX/Crocus simulations.
 
-The "jobs" repository
-^^^^^^^^^^^^^^^^^^^^^
-
-The job repository contains files that provide the information needed to carry out one or several specific job(s) (the minimal information beiing the job(s) name(s) and the associated driver(s)).
+The *jobs* repository contains files that provide the information needed to carry out one or several specific job(s) (the minimal information beiing the job(s) name(s) and the associated driver(s)).
 The use of these files is optional, but it is recommended because it allows to set default CEN-specific launcher variables.
 
 
@@ -75,13 +77,55 @@ The following example of an mkjob command line allows to launch a SURFEX simulat
 
    mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2020080106 dateend=2021080106 geometry=cor2_allslopes
 
+If the job description file contains several jobs and you want to launch only a subset, il is possible to access the list of available job names with option -l. For example :
+
+.. code-block::
+
+   > mkjob -f $SNOWTOOLS_CEN/vortex_cen/s2m/reanalysis/jobs/safran.jobs -c $SNOWTOOLS_CEN/vortex_cen/s2m/reanalysis/conf/s2m_reanalysis.ini -l
+   {'name': 'safran_reanalysis_alp', 'package': 'drivers', 'task': 'safran', 'profile': 'rd-belenos-mt', 'geometry': 'alp27_flat'}
+   {'name': 'safran_reanalysis_pyr', 'package': 'drivers', 'task': 'safran', 'profile': 'rd-belenos-mt', 'geometry': 'pyr24_flat'}
+   {'name': 'safran_reanalysis_cor', 'package': 'drivers', 'task': 'safran', 'profile': 'rd-belenos-mt', 'geometry': 'cor2_flat'}
+   {'name': 'safran_reanalysis_mac', 'package': 'drivers', 'task': 'safran', 'profile': 'rd-belenos-mt', 'geometry': 'mac11_flat'}
+   {'name': 'safran_reanalysis_jur', 'package': 'drivers', 'task': 'safran', 'profile': 'rd-belenos-mt', 'geometry': 'jur4_flat'}
+   {'name': 'safran_reanalysis_vog', 'package': 'drivers', 'task': 'safran', 'profile': 'rd-belenos-mt', 'geometry': 'vog3_flat'}
+
+Then you can choose a subset of jobs to launch with the "-n" option :
+
+.. code-block::
+
+   mkjob -f $SNOWTOOLS_CEN/vortex_cen/s2m/reanalysis/safran.jobs -c $SNOWTOOLS_CEN/vortex_cen/s2m/reanalysis/conf/s2m_reanalysis.ini -n safran_reanalysis_alp safran_reanalysis_pyr safran_reanalysis_cor -a datebegin=... dateend=... xpid=...
+
+If the job description file contains several jobs and you want to launch only a subset, il is possible to access the list of available job names with option -l :
+
+.. code-block::
+
+   > mkjob -f $SNOWTOOLS_CEN/vortex_cen/s2m/reanalysis/jobs/safran.jobs -c $SNOWTOOLS_CEN/vortex_cen/s2m/reanalysis/conf/s2m_reanalysis.ini -l
+   {'name': 'safran_reanalysis_alp', 'package': 'drivers', 'task': 'safran', 'profile': 'rd-belenos-mt', 'geometry': 'alp27_flat'}
+   {'name': 'safran_reanalysis_pyr', 'package': 'drivers', 'task': 'safran', 'profile': 'rd-belenos-mt', 'geometry': 'pyr24_flat'}
+   {'name': 'safran_reanalysis_cor', 'package': 'drivers', 'task': 'safran', 'profile': 'rd-belenos-mt', 'geometry': 'cor2_flat'}
+   {'name': 'safran_reanalysis_mac', 'package': 'drivers', 'task': 'safran', 'profile': 'rd-belenos-mt', 'geometry': 'mac11_flat'}
+   {'name': 'safran_reanalysis_jur', 'package': 'drivers', 'task': 'safran', 'profile': 'rd-belenos-mt', 'geometry': 'jur4_flat'}
+   {'name': 'safran_reanalysis_vog', 'package': 'drivers', 'task': 'safran', 'profile': 'rd-belenos-mt', 'geometry': 'vog3_flat'}
+
+Then you can choose a subset of jobs to launch with the "-n" option :
+
+.. code-block::
+
+   mkjob -f $SNOWTOOLS_CEN/vortex_cen/s2m/reanalysis/safran.jobs -c $SNOWTOOLS_CEN/vortex_cen/s2m/reanalysis/conf/s2m_reanalysis.ini -n safran_reanalysis_alp safran_reanalysis_pyr safran_reanalysis_cor -a datebegin=... dateend=... xpid=...
+
+
+Configuration files
+^^^^^^^^^^^^^^^^^^^
+
+The "mkjob" configuration files have 3 levels of reading : the "DEFAULT" level, the "job" level and the "task" level.
+
+* Configuration variables provided in the `[DEFAULT]` section are made available at each use of the configuration file.
+* Configuration variables provided in the `[job]` sections are made available only for the corresponding job. These sections must contain the configuration variables of the job itself (partition, nnodes, walltime,...) and the potential variables with a common value for all tasks associated to the job. The variables already provided in the `[DEFAULT]` section are overwritten.
+* Configuration variables provided in the `[task]` sections are made available only for the corresponding task. The variables already provided in the `[DEFAULT]` and `[job]` sections are overwritten.
+
 .. note::
-
-   Alternatively, it is possible to avoid using a job description file (*-f* argument) and to provide the full job description (including the job name, the associated task and the profile) with the *-j* argument.
-
-   The exact same result of the example above can be achieved with the following command line:
-
-   mkjob -j profile=rd-belenos-mt name=surfex package=drivers task=surfex xpid=first_test datebegin=2020080106 dateend=2021080106 geometry=cor2_allslopes -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini
+   * The names of the `job` sections is the name of the job as provided in the "job" files (name=<jobname>) or directly in the mkjob command line
+   * The names of the `task` sections is the tag of the task in the driver of tasks. If a given task is used in different drivers or several times in a single driver, different tags must be given
 
 If the job description file contains several jobs and you want to launch only a subset, il is possible to access the jobname wit option -l :
 
@@ -109,14 +153,27 @@ An mkjob command launches a job associated to a specific driver.
 From a user point of view, the first question that arises is : what are the possible configuration variables associated to this scpecific driver ?
 The "mkjob-help" command line is provided to answer this question.
 
-For more information, try:
+There are two possible usage of the mkjob help command :
 
-.. code-block::
+1. provide directly the absolute path to the driver to document with the "-p" argument
+2. provide the target application ("-a" argument), configuration ("-c" argument) and driver name ("-d" argument)
 
-    mkjob-help -h
+By default, the information displayed include:
+* The driver's documentation
+* The driver's tree (the sequence of tasks)
+* A compact list of mandatory and optional configuration variables for this specific driver
 
-..
-  TODO: Compléter doc
+Two additionnal arguments allow to refine the information to display :
+
+* "--bytask" displays the list of mandatory and optional configuration variables for each individual task of the driver
+* "--verbose" displays additional information such as the individual task's documentation and the full list of mandatory and optional configuration variables
+
+.. note::
+
+   * If no argument is provided, the general documentation of available applications in the vortex-cen package is displayed.
+   * If only the target application ("-a" argument) is provided, the general documentation of this specific application is displayed
+   * If only the target application ("-a" argument) and configuration ("-c" argument) are provided, the general documentation of this specific configuration is displayed
+
 
 The "assim" launcher
 ^^^^^^^^^^^^^^^^^^^^
@@ -144,10 +201,11 @@ By default, SURFEX/Crocus simulations use FORCING files from the S2M-reanalysis 
 
 These arguments can either be added in the configuration file, or be provided to the mkjob command line through the "-a" option :
 
+**NB** it is recomended to add all your configuration variables other than *datebegin*, *dateend* and *geometry* in a configuration file (in the "conf" directory of the configuration) named after your experiment identifier (*xpid*).
+
 .. code-block::
 
    mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2020080106 dateend=2021080106 geometry=cor2_allslopes
-
 
 Reproductible simulations with a user-controlled SURFEX/Crocus configuration
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -160,6 +218,9 @@ After compiling SURFEX, put the compiled executables in the $HOME/.vortexrc/hack
 
 * *exec_name* is "OFFLINE", "PGD", "PREP" or "SODA"
 * *SURFEX_git_commit* can be retrieved from the ".git_info" in your SURFEX root directory (make sure that the compiled executables match this commit)
+
+.. note::
+   This step can also be achived with the "surfex_uenv.py" script available under vortex_cen/scripts
 
 To create a new UEnv, open a file in $HOME/.vortexrc/hack/uget/<your_username>/env with the name of your choice (for example "new_env_name").
 To update an existing UEnv named "reference_uenv" owned by the user "uenv_owner", create a copy of this UEnv into a "new_env_name":
@@ -182,39 +243,55 @@ Then add or modify the following lines in file $HOME/.vortexrc/hack/uget/<your_u
   MASTER_SODA_MPI="uget:SODA_MPI_<SURFEX_git_commit>@<your_username>"
   MASTER_SODA_NOMPI="uget:SODA_NOMPI_<SURFEX_git_commit>@<your_username>"
 
-Similarly, put your SURFEX namelists in the $HOME/.vortexrc/hack/uget/<your_username>/data/namelists_surfex directory, and add the following line to the file $HOME/.vortexrc/hack/uget/<your_username>/env/<new_env_name> :
+Similarly, put your SURFEX namelists in the $HOME/.vortexrc/hack/uget/<your_username>/data/namelists_surfex_vXX directory, and add the following line to the file $HOME/.vortexrc/hack/uget/<your_username>/env/<new_env_name> :
 
 .. code-block::
 
-   NAMELIST_SURFEX="uget:namelists_surfex.tar@<your_username>"
+   NAMELIST_SURFEX="uget:namelists_surfex_vXX.tar@<your_username>"
 
-You can now use your own executables and namelists by adding the "surfex_uenv=new_env_name" to your mkjob command line, as well as the target namelist from your pool of namelists with the *namelist_source* argument.
-For example if your $HOME/.vortexrc/hack/uget/<your_username>/data/namelists_surfex directory contains two namelists named "OPTIONS_PAPPUS.nam" and "OPTIONS_NO_PAPPUS.nam", you can choose to use the "OPTIONS_PAPPUS.nam" namelist with the following command line :
-
-.. code-block::
-
-   mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2020080106 dateend=2021080106 geometry=cor2_allslopes surfex_uenv=new_env_name namelist_source=OPTIONS_PAPPUS.nam
-
-
-Non-reproductible simulations with a user-controlled SURFEX/Crocus configuration
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-.. warning::
-
-    The reproductibility of your simulations can not be guaranteed if you follow the instructions of this section.
-    To ensure the reproductibility of you simulations, you should provide your namelist and executables in a proper User Environment (see previous section)
-
-You can also use your own namelist by setting the *namelist_path* variable to point to your target namelist.
+You can now use your own executables and namelists by adding the "surfex_uenv=new_env_name" to your configuration file, as well as the target namelist from your pool of namelists with the *namelist_source* variable.
+For example if your $HOME/.vortexrc/hack/uget/<your_username>/data/namelists_surfex_vXX directory contains two namelists named "OPTIONS_PAPPUS.nam" and "OPTIONS_NO_PAPPUS.nam", you can choose to use the "OPTIONS_PAPPUS.nam" namelist with the following block in a "first_test.ini" configuration file deriving from the "default_conf.ini" configuration file :
 
 .. code-block::
 
-   mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2017080106 dateend=2018080106 geometry=GrandesRousses250m forcing_xpid=ALPAGA forcing_user=vernaym forcing_member=0 forcing_vapp=edelweiss forcing_vconf=grandesrousses250m forcing_vortex1=True namelist_path=/home/cnrm_other/cen/mrns/vernaym/EDELWEISS/namelist_surfex/OPTIONS_NO_PAPPUS.nam
+   [surfex]
+   surfex_uenv=new_env_name
+   namelist_source=OPTIONS_PAPPUS.nam
 
-Similarly, you can use your own SURFEX executables by setting the *exesurfex* variable:
+and the associated mkjob command line would be :
 
 .. code-block::
 
-   mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2020080106 dateend=2021080107 geometry=cor2_allslopes exesurfex=/home/cnrm_other/cen/mrns/vernaym/SURFEX/exe
+   mkjob -f surfex.job -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/first_test.ini -a xpid=first_test datebegin=2020080106 dateend=2021080106 geometry=cor2_allslopes
+
+This allows you to clearly identify the specific SURFEX configuration associated with your *xpid*, and to keep a written and traceable record of your different simulations (in addition to shorten the
+mkjob command lines).
+
+.. note::
+
+   To fine-tune your configurations, use the 'mkjob-help -a Crocus -c deterministic -d surfex --bytask' command.
+   This will tell you the list of possible configuration variables for each task of the surfex driver.
+
+..
+    Non-reproductible simulations with a user-controlled SURFEX/Crocus configuration
+    """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+    .. warning::
+
+        The reproductibility of your simulations can not be guaranteed if you follow the instructions of this section.
+        To ensure the reproductibility of you simulations, you should provide your namelist and executables in a proper User Environment (see previous section)
+
+    You can also use your own namelist by setting the *namelist_path* variable to point to your target namelist.
+
+    .. code-block::
+
+       mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2017080106 dateend=2018080106 geometry=GrandesRousses250m forcing_xpid=ALPAGA forcing_user=vernaym forcing_member=0 forcing_vapp=edelweiss forcing_vconf=grandesrousses250m forcing_vortex1=True namelist_path=/home/cnrm_other/cen/mrns/vernaym/EDELWEISS/namelist_surfex/OPTIONS_NO_PAPPUS.nam
+
+    Similarly, you can use your own SURFEX executables by setting the *exesurfex* variable:
+
+    .. code-block::
+
+       mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2020080106 dateend=2021080107 geometry=cor2_allslopes exesurfex=/home/cnrm_other/cen/mrns/vernaym/SURFEX/exe
 
 
 Simulations based on other FORCING files
@@ -235,16 +312,40 @@ You can also provide additional information, such as:
 
 .. note::
    The geometry of the FORCING file should be the same as the simulation's geometry, but you can make this explicit by setting the *forcing_geometry* variable.
-   IMPORTANT : this geometry must be properly described in your "geometries.ini" file
+   IMPORTANT : this geometry must be properly described in your "geometries.ini" file in case it is a custom geometry.
 
 .. note::
-   If the target FORCING file was produced with a version of vortrex <2, you also have to add  "forcing_vortex1=True"
+   If the target FORCING file was produced before the migration to the version 2 of vortex, you also have to add  "forcing_vortex1=True"
 
-The following example illustrates the launch of a SURFEX/Crocus simulation with a 2D FORCING file from the ensemble "ALPAGA" experiment:
+The following example illustrates the launch of a SURFEX/Crocus simulation with a 2D FORCING file from the ensemble "ALPAGA" experiment.
+
+First, create a copy of "default_conf.ini" into a "first_test.ini" configuration file.
+
+.. code-block:: bash
+
+   cd $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf
+   cp default_conf.ini first_test.ini
+
+The add the target forcing description and your surfex uenv informations to the "first_test.ini" configuration file:
 
 .. code-block::
 
-   mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2021080107 dateend=2022080106 geometry=GrandesRousses250m forcing_datebegin=2021080106 dateend=2022080106 forcing_xpid=ALPAGA forcing_user=vernaym forcing_member=0 forcing_vapp=edelweiss forcing_vconf=grandesrousses250m forcing_vortex1=True namelist_path=/home/cnrm_other/cen/mrns/vernaym/EDELWEISS/namelist_surfex/OPTIONS_V9.nam
+   [surfex]
+   surfex_uenv=new_env_name
+   namelist_source=OPTIONS_PAPPUS.nam
+   forcing_xpid=ALPAGA
+   forcing_user=vernaym
+   forcing_member=0  # or member = 0 if you want the output file stored in a "mb000" sub-directory.
+   forcing_vapp=edelweiss
+   forcing_vconf=grandesrousses250m
+   forcing_vortex1=True
+
+Then launch mkjob with the "first_test.ini" configuration file in the "-c" argument
+
+.. code-block::
+
+   mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/first_test.ini -a xpid=first_test datebegin=2021080107 dateend=2022080106 geometry=GrandesRousses250m
+
 
 Configuring your job
 """"""""""""""""""""
@@ -255,20 +356,44 @@ You can set your job configuration with the following variables :
 * *nnodes* : the number of nodes to allocate to the job (default : 1)
 * *partition* : the target partition (default : normal256)
 
-For example, to increase your job's wall time to 1 hour, add "time=1:00:00" to your mkjob command line :
+For example, to increase your job's wall time to 1 hour, add "time=1:00:00" to your first_test.ini configuration file:
 
 .. code-block::
 
-   mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2021080107 dateend=2022080106 geometry=GrandesRousses250m forcing_datebegin=2021080106 dateend=2022080106 forcing_xpid=ALPAGA forcing_user=vernaym forcing_member=0 forcing_vapp=edelweiss forcing_vconf=grandesrousses250m forcing_vortex1=True namelist_path=/home/cnrm_other/cen/mrns/vernaym/EDELWEISS/namelist_surfex/OPTIONS_V9.nam time=1:00:00
+   [surfex]
+   surfex_uenv=new_env_name
+   namelist_source=OPTIONS_PAPPUS.nam
+   forcing_xpid=ALPAGA
+   forcing_user=vernaym
+   forcing_member=0  # or member = 0 if you want the output file stored in a "mb000" sub-directory.
+   forcing_vapp=edelweiss
+   forcing_vconf=grandesrousses250m
+   forcing_vortex1=True
+   time=1:00:00
 
 ..
   TODO : exemple de lancement d'une simu SURFEX
 
   * Force a specific PREP file
 
+Reproductibility check
+----------------------
 
-Simulation outputs
-------------------
+In certain situations, you may wish to verify that the files produced are identical to the reference files produced by a previous experiment that you are attempting to replicate.
+In this case, simply provide the reference experiment identifier in the "diff_xpid" configuration variable (and optionaly the username of the owner of this experiment in the "diff_user" configuration variable and the block in the "diff_block" configuration variable) :
+
+.. code-block::
+
+   mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2020080106
+   dateend=2021080106 geometry=cor2_allslopes diff_xpid=<reference_xpid> [diff_user=<username>] [diff_block=<block_of_reference_file>]
+
+.. note::
+
+   the `diff_*` variables can be parsed directly in the mkjob command line since they don't affect the simulation's output
+
+
+Simulation log
+--------------
 ..
   TODO : copie d'écran pour montrer ou trouver le numéro XXXX
   /scratch/mtool/<username>/depot/mstepXXXX --> actual jobs ("step.0[123]") + output logs ("step.0[123].out)

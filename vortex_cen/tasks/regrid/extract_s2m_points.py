@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+extract_s2m_points.py
+---------------------
+
+.. autoclass:: ExtractS2MForcing
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
 """
 
 from vortex_cen.tasks.research_task_base import _CenResearchTask
@@ -11,12 +18,12 @@ class ExtractS2MForcing(_CenResearchTask):
     Parallel extraction of a list of points from an ensemble of FORCING file(s) covering different time periods
     in the "massif" geometry according to their massif number, elevation, slope and aspect.
 
-    Inputs :
-    --------
+    **Input:**
+
     - SAFRAN-generated FORCING file(s) in the "massif" geometry.
 
-    Outputs :
-    ---------
+    **Outputs:**
+
     - FORCING file(s) with extracted points
 
     """
@@ -38,6 +45,10 @@ class ExtractS2MForcing(_CenResearchTask):
             "slopes",
             "elevations",
             "aspects",
+            "out_block+default=extract_s2m",
+            "diff_xpid",
+            "diff_user",
+            "diff_block+default=extract_s2m",
         ]
         overwrite = [
             "datebegin",
@@ -47,6 +58,11 @@ class ExtractS2MForcing(_CenResearchTask):
 
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES,
                 overwrite=overwrite)
+
+        # Security to avoid overwriting the original FORCING file(s)
+        if self.conf.geometry == self.conf.forcing_geometry:
+            raise ValueError("The output 'geometry' can not be the same as the input 'forcing_geometry' one.\n"
+                             "Please provide a different 'geometry' configuration variable")
 
     def get_remote_inputs(self):
         """
@@ -97,30 +113,37 @@ class ExtractS2MForcing(_CenResearchTask):
         """
         Save the output FORCING file(s) in the new geometry.
         WARNING : the output geometry must be in a valid "geometries.ini" file.
-
-        Arguments:
-        :param geometry: Geometry of the output file(s)
-        :type geometry: str
-        :param xpid: Experiment identifier
-        :type xpid: str
         """
 
-        # Security to avoid overwriting the original FORCING file(s)
-        if self.conf.geometry == self.conf.forcing_geometry:
-            raise ValueError("The output 'geometry' can not be the same as the input 'forcing_geometry' one.\n"
-                             "Please provide a different 'geometry' configuration variable")
-        else:
-            self.sh.title('Output FORCING')
-            forcing_out = vortex.output(
-                kind           = 'MeteorologicalForcing',
-                datebegin      = self.list_dates_begin,
-                dateend        = self.dict_dates_end,
-                geometry       = self.conf.geometry,
-                experiment     = self.conf.xpid,
-                namebuild      = 'flat@cen',
-                local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_OUT.nc',
-                block          = 'meteo',
-                model          = 'safran',
-            ),
-            print(self.ticket.prompt, 'Output forcing =', forcing_out)
-            print()
+        self.sh.title('Output FORCING')
+        forcing_out = vortex.output(
+            kind           = 'MeteorologicalForcing',
+            datebegin      = self.list_dates_begin,
+            dateend        = self.dict_dates_end,
+            geometry       = self.conf.geometry,
+            experiment     = self.conf.xpid,
+            namebuild      = 'flat@cen',
+            local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_OUT.nc',
+            block          = self.conf.get('out_block', 'extract_s2m'),
+        ),
+        print(self.ticket.prompt, 'Output forcing =', forcing_out)
+        print()
+
+    def diff(self):
+        """
+        Test output reproductibility [OPTIONAL]
+        """
+        self.sh.title("Reproductibility check : FORCING")
+        diff = vortex.diff(
+            kind           = 'MeteorologicalForcing',
+            datebegin      = self.list_dates_begin,
+            dateend        = self.dict_dates_end,
+            geometry       = self.conf.geometry,
+            experiment     = self.conf.diff_xpid,
+            username       = self.conf.get('diff_user', None),
+            namebuild      = 'flat@cen',
+            local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_OUT.nc',
+            block          = self.conf.get('diff_block', 'extract_s2m'),
+        ),
+        print(self.ticket.prompt, 'diff =', diff)
+        print()

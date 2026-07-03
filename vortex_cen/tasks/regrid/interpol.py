@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-Created the 14 January 2026
-@author: Radanovics S.
+interpol.py
+-----------
+
+.. autoclass:: InterpolateS2MForcing
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
 """
 
 
@@ -13,14 +18,14 @@ class InterpolateS2MForcing(_CenResearchTask):
     """
     Interpolate a forcing file in "massif" geometry onto a 2D grid, or 1D grid, that is a list of points.
 
-    Inputs:
-    --------
+    **Inputs:**
+
     - FORCING file in the "massif" geometry.
     - GRID file containing the desired output grid.
     - interpolation binary
 
-    Outputs:
-    ---------
+    **Output:**
+
     - FORCING file on the new grid.
 
     """
@@ -40,6 +45,10 @@ class InterpolateS2MForcing(_CenResearchTask):
         OPTIONAL_CONFIGURATION_VARIABLES = [
             "forcing",
             "member",
+            "out_block+default=interpol",
+            "diff_xpid",
+            "diff_user",
+            "diff_block+default=interpol",
         ]
         overwrite = [
             "datebegin",
@@ -50,6 +59,14 @@ class InterpolateS2MForcing(_CenResearchTask):
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES,
                 overwrite=overwrite)
 
+        # MF: during initialisation, self.conf is None
+        # -> there is no attribute 'forcing_geometry', the check under should be done in another way
+        #
+        #if self.conf.forcing_geometry == self.conf.geometry:
+        #    print(self.conf.forcing_geometry, self.conf.geometry)
+        #    raise ValueError("The output 'geometry' can not be the same as the input one.\n"
+        #                     "Please provide two different 'geometry' and 'forcing_geometry' configuration variables")
+
     def get_remote_inputs(self):
         """
         get forcing files in the "massif" geometry, output grid file and interpolation binary.
@@ -57,18 +74,13 @@ class InterpolateS2MForcing(_CenResearchTask):
         """
         # Target grid file for interpolation
         # the path must be provided in the configuration file
-        self.sh.title('Toolbox input output grid definition')
+        self.sh.title('Input definition of the output grid')
         grid_tbi = vortex.input(
             role='gridout',
             kind='interpolgrid',
             model='surfex',
-            # TODO : ne pas utiliser de "remote" dans les tâches unitaires de base, utiliser l'héritage
-            # pour créer une tâche spécifique identifiée comme "non reproductible"
-            # --> pour cela il faut pouvoir surcharger cette "toolbox input" spécifiquement et donc
-            # la mettre dans une méthode spécifique de "Mixin"
-            remote=self.conf.gridout,
-            # genv=self.conf.uenv,
-            # gvar='DEM',
+            genv=self.conf.uenv,
+            gvar='DEM',
             local='GRID.nc',
         )
         print(self.ticket.prompt, 'toolbox input grid definition file =', grid_tbi)
@@ -118,32 +130,47 @@ class InterpolateS2MForcing(_CenResearchTask):
         self.launch_executable(algo=algo)
 
     def put_outputs(self):
-        """
 
+        self.sh.title('Toolbox output interpolated forcing file')
+        forcing_tbo = vortex.output(
+            local       = 'FORCING.nc',
+            experiment  = self.conf.xpid,
+            geometry    = self.conf.geometry,
+            datebegin   = self.conf.datebegin,
+            dateend     = self.conf.dateend,
+            nativefmt   = 'netcdf',
+            kind        = 'MeteorologicalForcing',
+            model       = 's2m',
+            namespace   = self.namespace_out,
+            namebuild   = 'flat@cen',
+            block       = self.conf.get('out_block', 'interpol'),
+            member      = self.conf.get('member', None),
+        ),
+        print(self.ticket.prompt, 'interpolated forcing file toolbox =', forcing_tbo)
+        print()
+
+    def diff(self):
         """
-        if self.conf.forcing_geometry == self.conf.geometry:
-            print(self.conf.forcing_geometry, self.conf.geometry)
-            raise ValueError("The output 'geometry' can not be the same as the input one.\n"
-                             "Please provide two different 'geometry' and 'forcing_geometry' configuration variables")
-        else:
-            self.sh.title('Toolbox output interpolated forcing file')
-            forcing_tbo = vortex.output(
-                #local       = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
-                local       = 'FORCING.nc',
-                experiment  = self.conf.xpid,
-                geometry    = self.conf.geometry,
-                datebegin   = self.conf.datebegin,
-                dateend     = self.conf.dateend,
-                nativefmt   = 'netcdf',
-                kind        = 'MeteorologicalForcing',
-                model       = 's2m',
-                namespace   = self.namespace_out,
-                namebuild   = 'flat@cen',
-                block       = 'meteo',
-                member      = self.conf.get('member', None),
-            ),
-            print(self.ticket.prompt, 'interpolated forcing file toolbox =', forcing_tbo)
-            print()
+        Test output reproductibility [OPTIONAL]
+        """
+        self.sh.title("Reproductibility check : FORCING")
+        diff = vortex.diff(
+            local       = 'FORCING.nc',
+            experiment  = self.conf.diff_xpid,
+            username    = self.conf.get('diff_user', None),
+            geometry    = self.conf.geometry,
+            datebegin   = self.conf.datebegin,
+            dateend     = self.conf.dateend,
+            nativefmt   = 'netcdf',
+            kind        = 'MeteorologicalForcing',
+            model       = 's2m',
+            namespace   = self.namespace_out,
+            namebuild   = 'flat@cen',
+            block       = self.conf.get('diff_block', 'interpol'),
+            member      = self.conf.get('member', None),
+        ),
+        print(self.ticket.prompt, 'diff =', diff)
+        print()
 
 class InterpolateS2MRemoteForcing(InterpolateS2MForcing):
     """
@@ -188,12 +215,10 @@ class InterpolateS2MLocalForcing(InterpolateS2MForcing):
 
     def get_local_inputs(self):
         """
-        FORCING can come from local cache because if just a subpart of yearly forcing is used.
+        FORCING can come from local cache because just a subpart of yearly forcing is used.
         """
-        # FORCING coming from cache after extraction of a sub-period
         self.sh.title('Input sub-forcing file')
         forcing_tbi = vortex.input(
-            #local       = 'FORCING_' + str(self.conf.datebegin.strftime("%Y%m%d%H")) + '_' + str(self.conf.dateend.strftime("%Y%m%d%H")) + '.nc',
             local       = 'FORCING.nc',
             experiment  = self.conf.xpid,
             # MV : il faut forcer la géométrie de sortie à la géométrie d'entrée puisqu'il n'y a

@@ -260,10 +260,27 @@ Source the ``~/.bashrc`` file and start installation
 .. code-block:: bash
 
     source ~/.bashrc
-    cd $SNOWTOOLS_CEN
     module load python/3.10.12 gcc/15.2.0
 
 **NB** The installation should also work with python/3.12.12, but the installation fails in some cases.
+
+**FOR BELENOS ONLY [Temporary step]**
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Configure gitlab for HPC via SSH using the documentation (in french):
+
+http://confluence.meteo.fr/display/~thomas.carrel-billiard@meteo.fr/Configurer+GitLab
+
+Then clone the following repositories in a "Projects" on your $HOME :
+
+.. code-block:: bash
+
+    mkdir $HOME/Projects
+    cd $HOME/Projects
+    git clone git@gitlab.meteo.fr:cnrm-gmap/mkjob.git
+    git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-gco.git
+    git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-olive.git
+
 
 **FOR SXCEN ONLY:** Environment and start installation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -282,7 +299,6 @@ Source the ``~/.bashrc`` file and start installation
 .. code-block:: bash
 
     source ~/.bashrc
-    cd $SNOWTOOLS_CEN
 
 
 By default, Pip fetches package distributions from the global Python package registry, pypi.org. To install internal vortex plugins, configure Pip so that it can reach MF’s internal Nexus package registry. To do so, add the following lines to ~/.config/pip/pip.ini:
@@ -293,31 +309,6 @@ By default, Pip fetches package distributions from the global Python package reg
     index = https://nexus-sidev.meteo.fr/repository/pypi-group/pypi
     index-url = https://nexus-sidev.meteo.fr/repository/pypi-group/simple
     extra-index-url = https://nexus.meteo.fr/pypi-vortex-releases/simple
-
-**FOR BELENOS ONLY** : Temporary step
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Configure gitlab for HPC via SSH using the documentation (in french):
-
-http://confluence.meteo.fr/display/~thomas.carrel-billiard@meteo.fr/Configurer+GitLab
-
-Then clone the following repositories in a  "Projects" on your $HOME :
-
-.. code-block:: bash
-
-    mkdir $HOME/Projects
-    cd $HOME/Projects
-    git clone git@gitlab.meteo.fr:cnrm-gmap/mkjob.git
-    git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-gco.git
-    git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-olive.git
-
-Go in the mkjob directory and checkout to branch "mv-add-command-line-xpid":
-
-.. code-block:: bash
-
-    cd mkjob
-    git checkout mv-add-command-line-xpid
-    cd ..
 
 Continue installation for Belenos and SXCEN
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -333,6 +324,13 @@ Continue installation for Belenos and SXCEN
 .. code-block:: bash
 
    python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -v ~/my_envs/snowtools_env_stable
+
+Activate the virtual environment containaing the snowtools install with :
+
+.. code-block:: bash
+
+    source ~/my_envs/snowtools_env/bin/activate
+
 
 Configure Vortex
 ^^^^^^^^^^^^^^^^
@@ -500,6 +498,7 @@ To compile the interpol binary:
 
 CRPS scores
 ^^^^^^^^^^^
-If you need to use CRPS scoring tools, which parts are written in Fortran, you need to compile them.
+CRPS score is now as an independent package available at https://github.com/UMR-CNRM/snowtools-crps
 
-For CRPS scores, go to the ``snowtools/scores``, and run ``./install_ubuntu.sh`` (or ``./install_belenos.sh`` if you are on a Meteo-France super computer).
+To install it along with snowtools, just install the optional dependency ``snowtools[scores]`` or ``pip install .[all]``.
+Note that you may need to upgrade pip to version above 23.0 to install scores dependency due to a bug in previous pip versions.

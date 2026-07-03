@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+concatenate.py
+--------------
+
+.. autoclass:: ForcingSpatialConcatenation
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
 """
 
 
@@ -13,12 +20,12 @@ class ForcingSpatialConcatenation(_CenResearchTask):
     FORCING files over different years are processed in parallel.
     Ex : concatenation of "postes" simulations over different mountain ranges
 
-    Inputs:
-    --------
+    **Input:**
+
     - Set of FORCING files to concatenate
 
-    Outputs:
-    ---------
+    **Output:**
+
     - Single FORCING file
 
     """
@@ -38,7 +45,10 @@ class ForcingSpatialConcatenation(_CenResearchTask):
             "concat_dim",
             "max_ntasks",
             "forcing",
-            "block+default=meteo",
+            "out_block+default=concatenate",
+            "diff_xpid",
+            "diff_user",
+            "diff_block+default=concatenate",
         ]
         overwrite = [
             "datebegin",
@@ -102,7 +112,26 @@ class ForcingSpatialConcatenation(_CenResearchTask):
             experiment     = self.conf.xpid,
             namebuild      = 'flat@cen',
             local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_OUT.nc',
-            block          = self.conf.get('block', 'meteo'),
+            block          = self.conf.get('out_block', 'concatenate'),
         ),
         print(self.ticket.prompt, 'Output forcing =', forcing_out)
+        print()
+
+    def diff(self):
+        """
+        Test output reproductibility [OPTIONAL]
+        """
+        self.sh.title("Reproductibility check : FORCING")
+        diff = vortex.diff(
+            kind           = 'MeteorologicalForcing',
+            datebegin      = self.list_dates_begin,
+            dateend        = self.dict_dates_end,
+            geometry       = self.conf.geometry,
+            experiment     = self.conf.diff_xpid,
+            username       = self.conf.get('diff_user', None),
+            namebuild      = 'flat@cen',
+            local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_OUT.nc',
+            block          = self.conf.get('diff_block', 'concatenate'),
+        ),
+        print(self.ticket.prompt, 'diff =', diff)
         print()

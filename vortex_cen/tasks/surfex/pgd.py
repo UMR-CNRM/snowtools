@@ -1,5 +1,54 @@
 # -*- coding: utf-8 -*-
 """
+pdg.py
+------
+
+Tasks designed to launch the PGD executable.
+
+.. inheritance-diagram:: vortex_cen.tasks.surfex.pgd
+   :top-classes: vortex_cen.tasks.research_task_base._CenResearchTask
+   :private-bases:
+   :parts: 2
+
+.. autoclass:: PgdCommonsMixin
+   :members:
+   :show-inheritance:
+
+.. autoclass:: _Pgd_Construct
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: Pgd_Uenv_Pgd
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: Pgd_Local_Pgd
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: Pgd2D_Uenv_Pgd
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: Pgd2D_Local_Pgd
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: GetPgd1D
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: GetPgd2D
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
 """
 
 import vortex
@@ -97,21 +146,20 @@ class PgdCommonsMixin(SurfexCommonsMixin):
 
 class _Pgd_Construct(PgdCommonsMixin, _CenResearchTask):
     """
-    Task : _Pgd_Construct
-    =====================
+    **Task : _Pgd_Construct**
 
     Abstract task for the generation of ground physiography (PGD.nc file).
 
-   Inputs:
-    -------
+   **Input:**
+
     - FORCING file
     - OPTIONS.nam ready-to-use SURFEX namelist (coming from an execution of a "Preprocess_Task")
     - ecoclimapI_covers_param.bin and ecoclimapII_eu_covers_param.bin (binaries for vegetation generation)
     - drdt_bst_fit_60.nc (Crocus metamorphism parameters)
     - PGD executable
 
-    Outputs:
-    --------
+    **Output:**
+
     - PGD.nc (Ground physiography)
 
     """
@@ -121,13 +169,16 @@ class _Pgd_Construct(PgdCommonsMixin, _CenResearchTask):
         MANDATORY_CONFIGURATION_VARIABLES = [
             "geometry",
             "xpid",
-            "uenv|surfex_uenv",
+            "consts_surfex_uenv|uenv",
+            "surfex_uenv|uenv",
         ]
         OPTIONAL_CONFIGURATION_VARIABLES = [
             "forcing",
             "ntasks",
             "nnodes",
             "nprocs",
+            "diff_xpid",
+            "diff_user",
         ]
         super().__init__(**kw)
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
@@ -217,32 +268,52 @@ class _Pgd_Construct(PgdCommonsMixin, _CenResearchTask):
         print(self.ticket.prompt, 'pgd_tbo =', pgd_tbo)
         print()
 
+    def diff(self):
+        """
+        Test output reproductibility [OPTIONAL]
+        """
+        self.sh.title("Reproductibility check : PGD")
+        diff = vortex.diff(
+            local      = 'PGD.nc',
+            role       = 'SurfexClim',
+            experiment = self.conf.diff_xpid,
+            username   = self.conf.get('diff_user', None),
+            geometry   = self.conf.geometry,
+            nativefmt  = 'netcdf',
+            kind       = 'pgdnc',
+            model      = 'surfex',
+            namespace  = 'vortex.multi.fr',
+            namebuild  = 'flat@cen',
+            block      = 'pgd',
+        ),
+        print(self.ticket.prompt, 'diff =', diff)
+        print()
+
 
 class Pgd_Uenv_Pgd(_Pgd_Construct):
     """
-    Task : Pgd_Uenv_Pgd
-    ===================
+    **Task : Pgd_Uenv_Pgd**
 
     Generation of ground physiography (PGD.nc file).
     Get PGD executable from Uenv
 
-   Inputs:
-    -------
+    **Input:**
+
     - FORCING file
     - OPTIONS.nam ready-to-use SURFEX namelist (coming from an execution of a "Preprocess_Task")
     - ecoclimapI_covers_param.bin and ecoclimapII_eu_covers_param.bin (binaries for vegetation generation)
     - drdt_bst_fit_60.nc (Crocus metamorphism parameters)
     - PGD executable
 
-    Outputs:
-    --------
+    **Outputs:**
+
     - PGD.nc (Ground physiography)
     """
 
     def __init__(self, **kw):
 
         MANDATORY_CONFIGURATION_VARIABLES = [
-            "uenv|surfex_uenv",
+            "surfex_uenv|uenv",
         ]
         OPTIONAL_CONFIGURATION_VARIABLES = [
         ]
@@ -259,23 +330,22 @@ class Pgd_Uenv_Pgd(_Pgd_Construct):
 
 class Pgd_Local_Pgd(_Pgd_Construct):
     """
-    Task : Pgd_Local_Pgd
-    ====================
+    **Task : Pgd_Local_Pgd**
 
     Generation of ground physiography (PGD.nc file).
     Get PGD executable locally
     WARNING : The simulation's reproductibility can not be guaranteed with this task !
 
-    Inputs:
-    -------
+    **Input:**
+
     - FORCING file
     - OPTIONS.nam ready-to-use SURFEX namelist (coming from an execution of a "Preprocess_Task")
     - ecoclimapI_covers_param.bin and ecoclimapII_eu_covers_param.bin (binaries for vegetation generation)
     - drdt_bst_fit_60.nc (Crocus metamorphism parameters)
     - PGD executable
 
-    Outputs:
-    --------
+    **Output:**
+
     - PGD.nc (Ground physiography)
     """
 
@@ -297,31 +367,34 @@ class Pgd_Local_Pgd(_Pgd_Construct):
         self.get_pgd_exe_from_local_path()
 
 
+# MV : La distinction 1D/2D doit pouvoir se gérer avec une simple variable de configuration activant le passage
+# dans "get_2D_databases" ou non pour alléger le nombre de classe "similaires"
+
 class Pgd2D_Uenv_Pgd(_Pgd_Construct):
     """
-    Task : Pgd2D_Uenv_Pgd
-    =====================
+    **Task : Pgd2D_Uenv_Pgd**
 
     Generation of ground physiography (PGD.nc file).
     Get PGD executable from Uenv
 
-    Inputs:
-    -------
+    **Input:**
+
     - FORCING file
     - OPTIONS.nam ready-to-use SURFEX namelist (coming from an execution of a "Preprocess_Task")
     - ecoclimapI_covers_param.bin and ecoclimapII_eu_covers_param.bin (binaries for vegetation generation)
     - drdt_bst_fit_60.nc (Crocus metamorphism parameters)
     - PGD executable
 
-    Outputs:
-    --------
+    **Output:**
+
     - PGD.nc (Ground physiography)
     """
 
     def __init__(self, **kw):
 
         MANDATORY_CONFIGURATION_VARIABLES = [
-            "uenv|surfex_uenv",
+            "surfex_uenv|uenv",
+            "consts_surfex_uenv|uenv",
         ]
         OPTIONAL_CONFIGURATION_VARIABLES = [
         ]
@@ -339,31 +412,31 @@ class Pgd2D_Uenv_Pgd(_Pgd_Construct):
 
 class Pgd2D_Local_Pgd(_Pgd_Construct):
     """
-    Task : Pgd2D_Local_Pgd
-    ======================
+    **Task : Pgd2D_Local_Pgd**
 
     Generation of ground physiography (PGD.nc file).
     Get PGD executable locally
 
     WARNING : The simulation's reproductibility can not be guaranteed with this task !
 
-    Inputs:
-    -------
+    **Input:**
+
     - FORCING file
     - OPTIONS.nam ready-to-use SURFEX namelist (coming from an execution of a "Preprocess_Task")
     - ecoclimapI_covers_param.bin and ecoclimapII_eu_covers_param.bin (binaries for vegetation generation)
     - drdt_bst_fit_60.nc (Crocus metamorphism parameters)
     - PGD executable
 
-    Outputs:
-    --------
+    **Output:**
+
     - PGD.nc (Ground physiography)
     """
 
     def __init__(self, **kw):
 
         MANDATORY_CONFIGURATION_VARIABLES = [
-            "uenv|surfex_uenv",
+            "surfex_uenv|uenv",
+            "consts_surfex_uenv|uenv",
             "exesurfex",
         ]
         OPTIONAL_CONFIGURATION_VARIABLES = [
@@ -382,8 +455,7 @@ class Pgd2D_Local_Pgd(_Pgd_Construct):
 
 class GetPgd1D(_Pgd_Construct):
     """
-    Task : GetPgd1D
-    ===============
+    **Task : GetPgd1D**
 
     Generation of ground physiography (PGD.nc file).
     If PGD.nc is available in cache or archive for the current experiment fetch it.
@@ -392,16 +464,16 @@ class GetPgd1D(_Pgd_Construct):
 
     WARNING : The simulation's reproductibility can not be guaranteed with this task !
 
-    Inputs:
-    -------
+    **Input:**
+
     - FORCING file
     - OPTIONS.nam ready-to-use SURFEX namelist (coming from an execution of a "Preprocess_Task")
     - ecoclimapI_covers_param.bin and ecoclimapII_eu_covers_param.bin (binaries for vegetation generation)
     - drdt_bst_fit_60.nc (Crocus metamorphism parameters)
     - PGD executable
 
-    Outputs:
-    --------
+    **Output:**
+
     - PGD.nc (Ground physiography)
 
     """
@@ -411,9 +483,11 @@ class GetPgd1D(_Pgd_Construct):
         MANDATORY_CONFIGURATION_VARIABLES = [
         ]
         OPTIONAL_CONFIGURATION_VARIABLES = [
+            "consts_surfex_uenv|uenv",
+            "surfex_uenv|uenv",
             "exesurfex",
             "pgdnc_gvar",
-            "pgd_cache",
+            "pgd",
         ]
         super().__init__(**kw)
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
@@ -491,31 +565,31 @@ class GetPgd1D(_Pgd_Construct):
 
 class GetPgd2D(GetPgd1D):
     """
-    Task : GetPgd2D
-    ===============
+    **Task : GetPgd2D**
 
     Generation of ground physiography (PGD.nc file).
     Get Pgd file for 2D cases. For further documentation see GetPgd1D.
 
     WARNING : The simulation's reproductibility can not be guaranteed with this task !
 
-    Inputs:
-    -------
+    **Input:**
+
     - FORCING file
     - OPTIONS.nam ready-to-use SURFEX namelist (coming from an execution of a "Preprocess_Task")
     - ecoclimapI_covers_param.bin and ecoclimapII_eu_covers_param.bin (binaries for vegetation generation)
     - drdt_bst_fit_60.nc (Crocus metamorphism parameters)
     - PGD executable
 
-    Outputs:
-    --------
+    **Output:**
+
     - PGD.nc (Ground physiography)
     """
 
     def __init__(self, **kw):
 
         MANDATORY_CONFIGURATION_VARIABLES = [
-            "uenv|surfex_uenv",
+            "consts_surfex_uenv|uenv",
+            "surfex_uenv|uenv",
         ]
         OPTIONAL_CONFIGURATION_VARIABLES = [
             "exesurfex",

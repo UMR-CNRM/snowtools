@@ -41,7 +41,7 @@ class PreProcess(_Preprocess):
 
         super().__init__(**kw)
         MANDATORY_CONFIGURATION_VARIABLES = [
-            "uenv|surfex_uenv",
+            "surfex_uenv|uenv",
             "namelist_source",
         ]
         OPTIONAL_CONFIGURATION_VARIABLES = [

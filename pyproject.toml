@@ -67,12 +67,18 @@ plot = [
     'rioxarray',
 ]
 
+scores = [
+    'snowtools-crps@git+https://github.com/UMR-CNRM/snowtools-crps.git',
+]
+
+
 # For a full installation
 all = [
     'psycopg2',
     'matplotlib',
     'cartopy',
     'rioxarray',
+    'snowtools-crps@git+https://github.com/UMR-CNRM/snowtools-crps.git',
 ]
 
 [project.urls]

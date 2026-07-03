@@ -1,5 +1,23 @@
+# -*- coding: utf-8 -*-
 """
+obs.py
+------
+
 Snow observation resources
+
+.. inheritance-diagram:: vortex_cen.data.obs
+   :top-classes: vortex.data.flow.GeoFlowResource
+   :private-bases:
+   :parts: 4
+
+.. autoclass:: SnowObs
+   :show-inheritance:
+
+.. autoclass:: SnowObsPeriod
+   :show-inheritance:
+
+.. autoclass:: SnowObsOneDate
+   :show-inheritance:
 """
 
 from bronx.stdtypes.date import Date

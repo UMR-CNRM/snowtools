@@ -24,7 +24,7 @@ parser.add_argument('-v', '--venv', type=str, required=False, default=None,
                          "If this script is already called from a virtual environment,"
                          "this argument is ignored.")
 
-parser.add_argument('-o', '--optional', choices=['plot', 'sql', 'all'], nargs='*', default=['all'],
+parser.add_argument('-o', '--optional', choices=['plot', 'sql', 'scores', 'all'], nargs='*', default=['all'],
                     help="Install optional dependencies (this option is ignored on MF's HPC):\n" +
                          "* 'plot' install graphical tools\n" +
                          "* 'sql' install sql extraction tools\n" +
@@ -144,16 +144,19 @@ subprocess.run([pip, 'install'] + ['setuptools>=66.0.0,<71.0.0'])
 # ----------------------
 
 os.chdir(snowtools_dir)
-# Security : an existing "build" directory from a former installation may cause trouble
-# shutil.rmtree('build', ignore_errors=True)
-# shutil.rmtree('.mesonpy*', ignore_errors=True)
 
 if args.editable:
 
     if sys.version_info < (3, 10, 1):
         raise SystemError('Editable install is not possible with python versions lower than 3.10')
 
-    # 'no-build-isolation' is required for an editable install
+    # 'no-build-isolation' is required for an editable install in order to get a reproductible installation independent
+    # of the user's runtime environment.
+    # However, this suppose to ensure that the build environment is managed appropriately.
+    # In particular, for meson-based packages such as the snowtools_CRPS package, this impose to install meson-python,
+    # ninja, numpy and wheel manually.
+    if any([option in ['scores', 'all'] for option in args.optional]):
+        subprocess.run([pip, 'install', 'meson-python', 'ninja', 'numpy>=1.24.4', 'wheel'])
     pip_options.extend(['--no-build-isolation', '-e'])
 
 

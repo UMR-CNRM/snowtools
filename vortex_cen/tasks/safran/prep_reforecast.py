@@ -1,5 +1,13 @@
 # -*- coding:Utf-8 -*-
+"""
+prep_reforecast.py
+------------------
 
+.. autoclass:: PrepSafran
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+"""
 
 __all__ = []
 
@@ -16,22 +24,21 @@ from bronx.stdtypes.date import Period
 
 class PrepSafran(_CenResearchTask):
     """
-    Task : PrepSafran
-    =================
+    **Task : PrepSafran**
 
     Generation of guess files for the Safran ensemble re-forecast task (daily run covering J 6H --> J+4 6H).
     SAFRAN guess files come from both the PEARP ensemble and ARPEGE (as member 'N+1') from the 0 UTC run.
 
-    Inputs
-    ------
+    **Input:**
+
     - METADATA : Description of the ARPEGE / PEARP grib files grid / geometry
     - ARPEGE.grib : ARPEGE forecasts
     - PEARP.grib : PEARP ensemble forecasts
     - massifs_safran.tar : shapefile describing the Safran massifs
     - makeP.py : script generating the Safran guess files from the ARPEGE / PEARP forecasts
 
-    Outputs
-    -------
+    **Output:**
+
     - PYYMMDDHH : Safran guess files, grouped in tar archives containing all 'P' files from all members and lead times
     of a given model run
     """

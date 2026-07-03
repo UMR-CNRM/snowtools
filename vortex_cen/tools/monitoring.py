@@ -3,6 +3,7 @@ TODO: module documentation.
 """
 
 from bronx.fancies import loggers
+from bronx.stdtypes.date import Date
 
 #: No automatic export
 __all__ = []
@@ -46,9 +47,10 @@ class InputReportContext(_ReportContext):
         else:
             t.sh.header('Input informations: one of the input failed')
             if 'test' in self._task.conf:
-                outdir = self._task.conf.test_report_dir
+                outdir = t.sh.path.join(self._task.conf.test_report_dir, t.env['USER'])
                 with open(t.sh.path.join(outdir, 'FailTests.txt'), 'a') as f:
-                    f.write(f'Test informations: the input step of test "{self._task._tag}" failed\n')
+                    time = Date.now().strftime('%Y-%m-%d %H:%M')
+                    f.write(f'{time} Test informations: the input step of test "{self._task._tag}" failed\n')
 
 
 class AlgoReportContext(_ReportContext):
@@ -57,9 +59,10 @@ class AlgoReportContext(_ReportContext):
     def _report(self, t, try_ok=True, **kw):
         """Report status of the session (test review)."""
         if not try_ok and 'test' in self._task.conf:
-            outdir = self._task.conf.test_report_dir
+            outdir = t.sh.path.join(self._task.conf.test_report_dir, t.env['USER'])
             with open(t.sh.path.join(outdir, 'FailTests.txt'), 'a') as f:
-                f.write(f'Test informations: the algo step of test "{self._task._tag}" failed\n')
+                time = Date.now().strftime('%Y-%m-%d %H:%M')
+                f.write(f'{time} Test informations: the algo step of test "{self._task._tag}" failed\n')
 
 
 class OutputReportContext(_ReportContext):
@@ -72,9 +75,10 @@ class OutputReportContext(_ReportContext):
         else:
             t.sh.header('Output informations: one of the output failed')
             if 'test' in self._task.conf:
-                outdir = self._task.conf.test_report_dir
+                outdir = t.sh.path.join(self._task.conf.test_report_dir, t.env['USER'])
                 with open(t.sh.path.join(outdir, 'FailTests.txt'), 'a') as f:
-                    f.write(f'Test informations: the output step of test "{self._task._tag}" failed\n')
+                    time = Date.now().strftime('%Y-%m-%d %H:%M')
+                    f.write(f'{time} Test informations: the output step of test "{self._task._tag}" failed\n')
 
 
 class TestReportContext(_ReportContext):
@@ -82,12 +86,14 @@ class TestReportContext(_ReportContext):
 
     def _report(self, t, try_ok=True, **kw):
         """Report status of the session (test review)."""
-        outdir = self._task.conf.test_report_dir
+        outdir = t.sh.path.join(self._task.conf.test_report_dir, t.env['USER'])
         if try_ok:
             t.sh.header('Test informations: everything is ok')
             with open(t.sh.path.join(outdir, 'OKTests.txt'), 'a') as f:
-                f.write(f'Test informations: everything is ok for test {self._task._tag}\n')
+                time = Date.now().strftime('%Y-%m-%d %H:%M')
+                f.write(f'{time} Test informations: everything is ok for test {self._task._tag}\n')
         else:
             t.sh.header('Test informations: the test failed')
             with open(t.sh.path.join(outdir, 'FailTests.txt'), 'a') as f:
-                f.write(f'Test informations: the test "{self._task._tag}" failed\n')
+                time = Date.now().strftime('%Y-%m-%d %H:%M')
+                f.write(f'{time} Test informations: task "{self._task._tag}" failed reproductibility check\n')

@@ -1,8 +1,38 @@
 # -*- coding: utf-8 -*-
 """
+pre_process.py
+--------------
+
+Tasks designed to launch the pre-process the OPTIONS.nam namelist before any SURFEX binary execution.
+
+.. inheritance-diagram:: vortex_cen.tasks.surfex.pre_process
+   :top-classes: vortex_cen.tasks.research_task_base._CenResearchTask
+   :private-bases:
+   :parts: 2
+
+.. autoclass:: _Preprocess
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: Preprocess_Uenv_Namelist
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: Preprocess_Local_Namelist
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: Soda_Namelist_Preprocess
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
 """
+
 import vortex
-# from vortex import toolbox
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 from vortex.util.helpers import InputCheckerError
 from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
@@ -10,18 +40,18 @@ from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
 
 class _Preprocess(SurfexCommonsMixin, _CenResearchTask):
     """
-    Task: _Preprocess
-    =================
+    **Task: _Preprocess**
+
     Abstract task for pre-processing namelist:
     add infos like points and dates from forcing to namelist.
 
-    Inputs:
-    -------
+    **Input:**
+
     - SURFEX namelist (OPTIONS.nam)
     - FORCING file
 
-    Outputs:
-    --------
+    **Output:**
+
     - Modified and ready-to-use SURFEX namelist
 
     """
@@ -32,7 +62,9 @@ class _Preprocess(SurfexCommonsMixin, _CenResearchTask):
         ]
 
         OPTIONAL_CONFIGURATION_VARIABLES = [
-            "forcing"
+            "forcing",
+            "diff_xpid",
+            "diff_user",
         ]
 
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
@@ -95,11 +127,31 @@ class _Preprocess(SurfexCommonsMixin, _CenResearchTask):
         print(self.ticket.prompt, 'namelist_tbo =', namelist_tbo)
         print()
 
+    def diff(self):
+        """
+        Test output reproductibility [OPTIONAL]
+        """
+        pass
+#        self.sh.title("Reproductibility check : OPTIONS.nam")
+#        diff = vortex.diff(
+#            role         = 'Nam_surfex',
+#            kind         = 'namelist',
+#            model        = 'surfex',
+#            local        = 'OPTIONS.nam',
+#            experiment   = self.conf.diff_xpid,
+#            username     = self.conf.get('diff_user', None),
+#            namespace    = 'vortex.multi.fr',  # A single reference namelist should be on Hendrix
+#            block        = 'namelist',
+#            nativefmt    = 'nam',
+#        ),
+#        print(self.ticket.prompt, 'diff =', diff)
+#        print()
+
 
 class Preprocess_Uenv_Namelist(_Preprocess):
     """
-    Task: Preprocess_Uenv_Namelist
-    ==============================
+    **Task: Preprocess_Uenv_Namelist**
+
     Task for pre-processing a namelist coming from a User Environment.
     NB : This is the task to use to guarantee the simulation's reproductibility
     """
@@ -108,7 +160,7 @@ class Preprocess_Uenv_Namelist(_Preprocess):
 
         super().__init__(**kw)
         MANDATORY_CONFIGURATION_VARIABLES = [
-            "uenv|surfex_uenv",
+            "surfex_uenv|uenv",
             "namelist_source",
         ]
         OPTIONAL_CONFIGURATION_VARIABLES = [
@@ -125,8 +177,7 @@ class Preprocess_Uenv_Namelist(_Preprocess):
 
 class Preprocess_Local_Namelist(_Preprocess):
     """
-    Task: Preprocess_Local_Namelist
-    ===============================
+    **Task: Preprocess_Local_Namelist**
 
     Task for pre-processing a namelist coming from any user-defined absolute path.
     WARNING : The simulation's reproductibility can not be guaranteed with this task !
@@ -155,35 +206,24 @@ class Preprocess_Local_Namelist(_Preprocess):
 
 class Soda_Namelist_Preprocess(SurfexCommonsMixin, _CenResearchTask):
     """
-    Task: Soda_Namelist_Preprocess
-    ==============================
+    **Task: Soda_Namelist_Preprocess**
+
     Pre-process SURFEX namelist for SODA executable
 
-    Inputs:
-    -------
+    **Input:**
+
     - SODA namelist (OPTIONS.nam)
 
-    Outputs:
-    --------
-    - SODA namelist (OPTIONS.nam)
+    **Outputs:**
 
-    Mandatory configuration variables
-    ---------------------------------
-    * ``uenv`` User Environment in which the namelist is to be retrieved
-     type: str
-    * ``namelist_source`` Name of the namelist in the user environment
-     type: str
-    * ``nmembers`` Number of ensemble members in the background state
-     type: int
-    * ``xpid`` Experiment Identifier
-      type: str
+    - SODA namelist (OPTIONS.nam)
     """
 
     def __init__(self, **kw):
 
         super().__init__(**kw)
         MANDATORY_CONFIGURATION_VARIABLES = [
-            "uenv|surfex_uenv",
+            "surfex_uenv|uenv",
             "namelist_source",
             "nmembers",
 

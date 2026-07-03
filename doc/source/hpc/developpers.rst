@@ -285,7 +285,7 @@ The following mkjob command is now equivalent to the one above :
 
 .. code-block::
 
-   mkjob -f job_directives_file -c $SNOWTOOLS_CEN/vortex_cen/*vapp*/*vconf*/conf/conf_example.ini
+   mkjob -f $SNOWTOOLS_CEN/vortex_cen/*vapp*/*vconf*/jobs/job_directives_file -c $SNOWTOOLS_CEN/vortex_cen/*vapp*/*vconf*/conf/conf_example.ini
 
 
 Adding a unit test for the task
@@ -296,6 +296,42 @@ To add a unit test, follow the exact same steps than the previous section (:ref:
 .. note::
 
    The configuration variables should be set to minimise the execution time, this is only a test !
+
+It is also recommended that you add a reproducibility check by defining a 'diff' method.
+In the example of section :ref:`minimal_example`, this would look like :
+
+.. code-block:: python
+
+  def diff(self):
+      self.sh.title('"Reproductibility check : FORCING')
+      diff = vortex.diff(
+          kind        = 'MeteorologicalForcing',
+          local       = 'FORCING_OUT.nc',
+          experiment  = self.conf.diff_xpid,
+          username    = self.conf.get('diff_user', None),
+          datebegin   = self.conf.datebegin,
+          dateend     = self.conf.dateend,
+          geometry    = self.conf.get('forcing_geometry', self.conf.geometry),
+          block       = self.conf.get('diff_block', 'extract_subperiod'),
+          nativefmt   = 'netcdf',
+          namespace   = 'vortex.cache.fr',  # Do not archive the output file on Hendrix in this exemple (duplicated data)
+          namebuild   = 'flat@cen',
+      ),
+      print(self.ticket.prompt, 'Output forcing =', output_forcing)
+      print()
+
+**NB** Do not forget to update the task's documentation with the optional "diff_xpid", "diff_user" and "diff_block" variables:
+
+.. code-block::
+
+   OPTIONAL_CONFIGURATION_VARIABLES = [
+       ...
+       "diff_xpid+...",
+       "diff_user+...",
+       "diff_block+...",
+   ]
+
+In this case, you also have to provide a reference output file for the testbase (by convention under the "reference" *xpid*).
 
 
 Tutorial : creation of an algo component
@@ -721,3 +757,46 @@ For example, the following class attributes
 
 states that for this given task, the value of the *forcing_geometry* configuration variable must be a list (instead of 'str or list') and that there is no default value.
 This syntax can also be used to document variables not in the "standard_variables" dictionnary. In this case, at least the "help" message and the variable "type" must be provided.
+
+Testing unit tasks
+------------------
+
+The HPC testbase configuration is under vortex_cen/tests/testhpc.
+
+In order to launch the entire testbase, simply launch the following command on Belenos :
+
+.. code-block::
+
+   mkjob -f $SNOWTOOLS_CEN/vortex_cen/tests/testhpc/jobs/create_job -c $SNOWTOOLS_CEN/vortex_cen/tests/testhpc/conf/tests_testhpc.ini
+
+An monitor the tests results under /scratch/mtool/$USER : Any failed test and the step that caused them to fail will be recorded in a 'FailTests.txt' file.
+On the contrary, successfull tests will be recorded in a 'OKTests.txt' file.
+
+If you want to launch a specific test, identify the associated job name with :
+
+.. code-block::
+
+   mkjob -f $SNOWTOOLS_CEN/vortex_cen/tests/testhpc/jobs/create_job -c $SNOWTOOLS_CEN/vortex_cen/tests/testhpc/conf/tests_testhpc.ini -l
+
+And launch it with :
+
+.. code-block::
+
+   mkjob -f $SNOWTOOLS_CEN/vortex_cen/tests/testhpc/jobs/create_job -c $SNOWTOOLS_CEN/vortex_cen/tests/testhpc/conf/tests_testhpc.ini -n <jobname>
+
+.. note::
+
+   The test monitoring is done by Context managers stored in vortex_cen/tools/monitoring.py
+
+**NB** There is currently a bug in the netcdf comparison tools of vortex leading to "failed reproductibility check" errors.
+You can either ignore there errors, or install the `mv-diff-netcdf` bug-fix branch of vortex in your "snowtools" virtual environment :
+
+.. code-block::
+
+   cd $HOME/Projects
+   git clone https://github.com/vernaym/vortex.git vortex-nwp
+   cd vortex-nwp
+   git checkout -b mv-diff-netcdf
+   git branch --set-upstream-to=origin/mv-diff-netcdf mv-diff-netcdf
+   git pull
+   pip install -e .

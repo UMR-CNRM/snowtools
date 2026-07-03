@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+Test the "ForcingSpatialConcatenation" unit task.
+"""
 
 from mkjob.nodes import Driver
 from vortex_cen.tasks.regrid.concatenate import ForcingSpatialConcatenation

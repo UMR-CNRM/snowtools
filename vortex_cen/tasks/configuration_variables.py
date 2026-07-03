@@ -1,4 +1,12 @@
 # -*- coding: utf-8 -*-
+"""
+configuration_variables.py
+--------------------------
+
+Documentation of most frequently used configuration variables.
+See :ref:`dynamic_documentation` for more information on the documentation syntax conventions.
+
+"""
 
 # Standard attributes
 member_type = "int, footprints.stdtypes.FPList (ex : 'first-last-step')"
@@ -44,6 +52,10 @@ standard_variables = dict(
         type = member_type,
         default = "None",
     ),
+    nmembers = dict(
+        help = "Number of ensemble members",
+        type = "int",
+    ),
     uenv     = dict(
         help = "Name of the User Environment containing constant files",
         type = "str",
@@ -51,6 +63,12 @@ standard_variables = dict(
         # TODO : définir un uenv par défaut
     ),
     surfex_uenv     = dict(
+        help = "Name of the User Environment containing SURFEX executables and namelists",
+        type = "str",
+        format = uenv_format,
+        default = "*uenv*",
+    ),
+    consts_surfex_uenv     = dict(
         help = "Name of the User Environment containing all SURFEX constant files",
         type = "str",
         format = uenv_format,
@@ -156,7 +174,7 @@ standard_variables = dict(
         type = "bool",
         default = "False",
     ),
-    pgd_cache = dict(
+    pgd = dict(
         metavar = True,
         help = "Footprint description of a PGD.nc file stored in a Vortex cache",
         values = ["pgd_xpid", "pgd_user", "pgd_vapp", "pgd_vconf", "pgd_geometry", "pgd_vortex1"],
@@ -294,7 +312,7 @@ standard_variables = dict(
         singular = True,
     ),
     exesurfex = dict(
-        help = "Absolute path to SURFEX executables",
+        help = "Absolute path to SURFEX executables (WARNING : non-reproductible simulations)",
         type = "str",
     ),
     tg_cache = dict(
@@ -340,7 +358,7 @@ standard_variables = dict(
         default = "False",
     ),
     namelist_path     = dict(
-        help = "Absolute path to the SURFEX namelist",
+        help = "Absolute path to the SURFEX namelist (WARNING : non-reproductible simulations)",
         type = "str",
     ),
     namelist_source     = dict(
@@ -377,10 +395,6 @@ standard_variables = dict(
         default = "False",
         singular = True,
     ),
-    nmembers = dict(
-        help = "Number of ensemble members",
-        type = "int",
-    ),
     concat_dim = dict(
         help = "Dimensions along which to concatenate variables, as used by xarray.concat()",
         type = "str",
@@ -391,7 +405,7 @@ standard_variables = dict(
         type = "int",
         default = "*ntasks*",
     ),
-    block = dict(
+    out_block = dict(
         help = "Set the output resource's block",
         type = "str",
     ),
@@ -452,5 +466,19 @@ standard_variables = dict(
         help = "List of output geometries of the simulation (these must be valid geometry tags in your"
         "'$HOME/.vortexrc/geometries.ini' file.",
         type  = "'list'",
+    ),
+    diff_xpid = dict(
+        help = "Experiment identifier of the reference file for reproductibility check",
+        type = "str",
+        default = xpid_default,
+    ),
+    diff_user = dict(
+        help = "Username of the producer of the reference file for reproductibility check",
+        type  = "str",
+        default = "$USER",
+    ),
+    diff_block = dict(
+        help = "The reference's block for reproductibiliy check",
+        type = "str",
     ),
 )

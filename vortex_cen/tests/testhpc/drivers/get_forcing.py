@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+Test the retrieval of a single and a set of multiple FORCING files.
+"""
 
 from mkjob.nodes import Driver
 from vortex_cen.tasks.research_task_base import _CenResearchTask
@@ -30,4 +33,3 @@ class GetForcing(_CenResearchTask):
 
     def launch_algo(self, algo, **kw):
         pass
-

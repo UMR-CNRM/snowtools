@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+Test the "Soda" unittask. The driver also includes the "Soda_Namelist_Preprocess" task.
+"""
 
 from mkjob.nodes import Driver
 from vortex_cen.tasks.surfex.pre_process import Soda_Namelist_Preprocess

@@ -1,35 +1,63 @@
 # -*- coding: utf-8 -*-
 """
+offline_ensemble.py
+-------------------
+
+Tasks designed to launch an OFFLINE executable WITHOUT MPI parallelisation
+several time in parallel.
+
+.. inheritance-diagram:: vortex_cen.tasks.surfex.offline_ensemble
+   :top-classes: vortex_cen.tasks.research_task_base._CenResearchTask
+   :private-bases:
+   :parts: 2
+
+.. autoclass:: Escroc
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: CrocO
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
 """
 
 import vortex
-import footprints
 from bronx.stdtypes.date import Date
 from vortex_cen.tasks.surfex.offline import _Offline
 
 
 class Escroc(_Offline):
     """
-    Task for the multiple executions of an OFFLINE binary with a single meteorological FORCING but
+    **Task : Escroc**
+
+    Multiple executions of an OFFLINE binary with a single meteorological FORCING but
     different Crocus physics (namelists) and no MPI parallelization.
 
     Lafaysse et al. (2017) : https://tc.copernicus.org/articles/11/1173/2017/
 
-    Additional mandatory configuration variables:
-    ---------------------------------------------
-    :param escroc_members: List of escroc ensemble members
-    :type escroc_members: list
-    :param ntasks: Number of parallel tasks to allocate to the execution
-    :type ntasks: int
-
-    Additional optional configuration variables:
-    ---------------------------------------------
-    :param subensemble: Name of the predefined escroc sub-ensemble to use
-    :type subensemble: str
-    :param output_storage: Name of the archive / server where the output files will be stored
-    :type output_starage: str
-
     """
+
+    def __init__(self, **kw):
+
+        super().__init__(**kw)
+
+        MANDATORY_CONFIGURATION_VARIABLES = [
+            "nmembers",
+        ]
+
+        OPTIONAL_CONFIGURATION_VARIABLES = [
+            "drhook",
+            "august_threshold",
+            "ntasks",
+            "nnodes",
+            "nprocs",
+            "subensemble+help=Name of the predefined escroc sub-ensemble to use;type=str;default=E2",
+            "output_storage+help=Name of the archive / server where the output files will be stored;type=str",
+        ]
+
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
+
     def get_executable(self):
         self.get_executable_from_uenv(mpi=False)
 
@@ -40,7 +68,8 @@ class Escroc(_Offline):
         self.sh.title('Algo OFFLINE-ESCROC')
         algo = vortex.task(
             kind           = "escroc",
-            engine         = 's2m',
+            engine         = 'blind',
+            # binary         = 'OFFLINE',  # unused
             verbose        = True,
             # MV TODO : gérer la conversion en Date dans l'algo
             datebegin      = Date(self.conf.datebegin),
@@ -48,12 +77,12 @@ class Escroc(_Offline):
             dateinit       = Date(self.conf.get('prep_date', self.conf.datebegin)),
             # MV TODO :  La valeur par défaut de "threshold" est à sortir de la tâche
             threshold      = self.conf.get('august_threshold', -999),
-            members        = footprints.util.rangex(self.conf.escroc_members),
+            members        = self.get_list_members(),
             geometry_in    = [self.conf.geometry.tag],
             geometry_out   = self.conf.geometry.tag,
             # MV TODO : La valeur par défaut de "subensemble" est à sortir de la tâche
             subensemble    = self.conf.get('subensemble', 'E2'),
-            ntasks         = self.conf.get('ntasks', len(footprints.util.rangex(self.conf.escroc_members))),
+            ntasks         = self.conf.get('ntasks', self.conf.nmembers),
             reprod_info    = self.get_reprod_info,
         )
         print(self.ticket.prompt, 'Algo =', algo)
@@ -85,7 +114,7 @@ class Escroc(_Offline):
             namespace      = self.namespace_out,
             namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
             block          = 'pro',
-            member         = footprints.util.rangex(self.conf.escroc_members),
+            member         = self.get_list_members(),
         ),
         print(self.ticket.prompt, 'pro =', pro)
         print()
@@ -98,9 +127,6 @@ class Escroc(_Offline):
             role           = 'SnowpackInit',
             experiment     = self.conf.xpid,
             geometry       = self.conf.geometry,
-            # TODO : faire une tâche spécifique "reforecast" pour la production de PREP quotidiens
-            # date           = list_dates_end_pro if not self.conf.dailyprep else
-            #                       list(daterange(tomorrow(base=datebegin), dateend)),
             date           = self.list_dates_end_pro,
             nativefmt      = 'netcdf',
             kind           = 'PREP',
@@ -108,7 +134,7 @@ class Escroc(_Offline):
             namespace      = self.namespace_out,
             namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
             block          = 'prep',
-            member         = footprints.util.rangex(self.conf.escroc_members),
+            member         = self.get_list_members(),
         ),
         print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
         print()
@@ -116,13 +142,10 @@ class Escroc(_Offline):
 
 class CrocO(Escroc):
     """
-    Task for the multiple executions of an OFFLINE binary with an ensemble of FORCING files
-    and different Crocus physics (namelists).
+    **Task : CrocO**
 
-    Additional mandatory configuration variables:
-    ---------------------------------------------
-    :param croco_members: List of croco ensemble members
-    :type croco_members: list
+    Multiple executions of an OFFLINE binary with an ensemble of FORCING files
+    and potentialy different Crocus physics (namelists).
 
     """
 
@@ -137,8 +160,9 @@ class CrocO(Escroc):
 
         self.sh.title('Algo Offline-CorcO')
         algo = vortex.algo(
-            engine         = 's2m',
+            engine         = 'blind',
             kind           = "croco",
+            # binary         = 'OFFLINE',  # unused
             verbose        = True,
             # MV TODO : gérer la conversion en Date dans l'algo
             datebegin      = Date(self.conf.datebegin),
@@ -146,13 +170,12 @@ class CrocO(Escroc):
             dateinit       = Date(self.conf.get('prep_date', self.conf.datebegin)),
             # MV TODO :  La valeur par défaut de "threshold" est à sortir de la tâche
             threshold      = self.conf.get('august_threshold', -999),
-            members        = footprints.util.rangex(self.conf.croco_members),
+            members        = self.get_list_members(),
             geometry_in    = [self.conf.geometry.tag],
             geometry_out   = self.conf.geometry.tag,
             # MV TODO : La valeur par défaut de "subensemble" est à sortir de la tâche
             subensemble    = self.conf.get('subensemble', 'E2'),
-            ntasks         = self.conf.get('ntasks', len(footprints.util.rangex(self.conf.escroc_members))),
-            subensemble    = self.conf.subensemble,
+            ntasks         = self.conf.get('ntasks', self.conf.nmembers),
             # MV : "nforcing" n'est pas un footprint de l'algo !
             # nforcing       = self.conf.nforcing,
             reprod_info    = self.get_reprod_info,

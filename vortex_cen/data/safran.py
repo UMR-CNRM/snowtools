@@ -1,5 +1,27 @@
+# -*- coding: utf-8 -*-
 """
+safran.py
+---------
+
 SAFRAN-specific flow resources.
+
+.. inheritance-diagram:: vortex_cen.data.safran
+   :top-classes: vortex.data.flow.GeoFlowResource, vortex.nwp.data.obs.ObsRaw
+   :private-bases:
+   :parts: 5
+
+.. autoclass:: SafranGuess
+   :show-inheritance:
+
+.. autoclass:: SafranObsRaw
+   :show-inheritance:
+
+.. autoclass:: SafranPackedFiles
+   :show-inheritance:
+
+.. autoclass:: SafranPackedFilesVortex1
+   :show-inheritance:
+
 """
 
 from bronx.stdtypes.date import Time

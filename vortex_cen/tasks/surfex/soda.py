@@ -1,14 +1,34 @@
 # -*- coding: utf-8 -*-
-'''
-'''
+"""
+soda.py
+-------
+
+Tasks designed to launch the SODA executable.
+
+.. inheritance-diagram:: vortex_cen.tasks.surfex.soda
+   :top-classes: vortex_cen.tasks.research_task_base._CenResearchTask
+   :private-bases:
+   :parts: 2
+
+.. autoclass:: SodaCommonsMixin
+   :members:
+   :show-inheritance:
+
+.. autoclass:: Soda
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+"""
 
 import vortex
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
-import footprints
 
 
 class SodaCommonsMixin(SurfexCommonsMixin):
+    """
+    Mixin methods for SODA binary IOs.
+    """
 
     def get_snow_observation(self):
 
@@ -58,7 +78,7 @@ class SodaCommonsMixin(SurfexCommonsMixin):
         self.sh.title('Input SODA background PREPs')
         prep = vortex.input(
             role           = 'SnowpackInit',
-            member         = footprints.util.rangex(self.conf.members),
+            member         = self.get_list_members(),
             vapp           = self.conf.get('prep_vapp', self.conf.vapp),
             vconf          = self.conf.get('prep_vconf', self.conf.vconf),
             local          = 'mb[member]/PREP_[date:ymdh].nc',
@@ -81,71 +101,55 @@ class SodaCommonsMixin(SurfexCommonsMixin):
 
 class Soda(SodaCommonsMixin, _CenResearchTask):
     '''
+    **Task : Soda**
+
     SODA Particle Filter assimilation task.
+    Reference : Cluzet et al. (2021): https://gmd.copernicus.org/articles/14/1595/2021/
 
-    Cluzet et al. (2021): https://gmd.copernicus.org/articles/14/1595/2021/
+    **Input:**
 
-    Inputs:
-    -------
     - SODA namelist (OPTIONS.nam)
     - Ensemble of snowpack initial conditions ("PREP.nc") refered to as "background"
     - ecoclimapI_covers_param.bin and ecoclimapII_eu_covers_param.bin (binaries for vegetation generation)
     - drdt_bst_fit_60.nc (Crocus metamorphism parameters)
     - PGD.nc (Ground physiography)
 
-    Outputs:
-    --------
+    **Output:**
+
     - Modified ensemble of snowpack initial conditions ("PREP.nc") refered to as "analysis"
 
-    Mandatory configuration variables
-    ---------------------------------
-    :param date: *date* of the analysis
-    :type date: str, Date
-    :param geometry: *geometry* of the PREP files
-    :type geometry: str, footprints.stdtypes.FPList
-    :param xpid: Experiment identifier
-    :type xpid: str
-    :param uenv: User Environment in which the following resources are to be retrieved :
-                 Format : uenv:{uenv_name}@{user}
-    :type uenv: str
-    :param sensor: Sensor used for the observation (ex: MODIS, PLEIADES, VIIRS)
-    :type sensor: str
-    :param members: Ensemble members
-    :type members: footprints.stdtypes.FPList
-
-    Optionnal configuration variables
-    ---------------------------------
-    :param scope: Scope of the observation
-    :type scope: str
-    :param observation_xpid: Experiment identifier of the observation file
-    :type observation_xpid: str
-    :param observation_user: User who produced / owns the observation file
-    :type observation_user: str
-    :parm observation_vapp: *vapp* of the observation file
-    :type observation_vapp: str
-    :parm observation_vconf: *vconf* of the observation file
-    :type observation_vconf: str
-    :parm prep_vapp: *vapp* of the PREP files
-    :type prep_vapp: str
-    :parm prep_vconf: *vconf* of the PREP files
-    :type prep_vconf: str
-    :parm prep_xpid: Exepriment Identifier of the PREP files
-    :type prep_xpid: str
-    :parm prep_user: User who produced the PREP files
-    :type prep_user: str
-    :parm prep_vortex1: Whether or not the PREP files have been produced with Vortex-v1
-    :type prep_vortex1: bool
-    :parm pgd_vapp: *vapp* of the PGD file
-    :type pgd_vapp: str
-    :parm pgd_vconf: *vconf* of the PGD file
-    :type pgd_vconf: str
-    :parm pgd_xpid: Exepriment Identifier of the PGD file
-    :type pgd_xpid: str
-    :parm pgd_user: User who produced the PGD file
-    :type pgd_user: str
-    :parm pgd_vortex1: Whether or not the PGD files have been produced with Vortex-v1
-    :type pgd_vortex1: bool
     '''
+    def __init__(self, **kw):
+
+        super().__init__(**kw)
+        MANDATORY_CONFIGURATION_VARIABLES = [
+            "datebegin",
+            "dateend",
+            "xpid",
+            "geometry",
+            "surfex_uenv|uenv",
+            "members",
+        ]
+
+        OPTIONAL_CONFIGURATION_VARIABLES = [
+            "observation_vapp+help=*vapp* of the snow observation to assimilate;type=str;default=*vapp*",
+            "observation_vconf+help=*vconf* of the snow observation to assimilate;type=str;default=*vconf*",
+            "observation_xpid+help=Experiment identifier of the snow observation to assimilate;type=str;default=*xpid*",
+            "observation_user+help=Name of the user who owns the snow observation file to assimilate;" +
+            "type=str;default=$USER",
+            "sensor+help=Sensor used for the snow observation to assimilate (ex MODIS, PLEIADES, VIIRS,...);type=str",
+            "scope+help=Type of the snow observation to assimilate;type=str",
+            "soda_gvar",
+            "prep",
+            "prep_namespace+help=Where to look for the PREP files ('vortex.cache.fr' if part of the 'assim' task);" +
+            "type=str;choices=vortex.cache.fr (local cache), vortex.archive.fr (Hendrix), " +
+            "vortex.multi.fr (Hendrix and local cache)",
+            "pgd",
+            "diff_xpid",
+            "diff_user",
+        ]
+
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
 
     def get_remote_inputs(self):
 
@@ -196,13 +200,13 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
             experiment     = self.conf.xpid,
             geometry       = self.conf.geometry,
             date           = self.conf.date,
-            member         = footprints.util.rangex(self.conf.members),
+            member         = self.get_list_members(),
             nativefmt      = 'netcdf',
             kind           = 'PREP',
             model          = 'surfex',
             namespace      = 'vortex.multi.fr',
             namebuild      = 'flat@cen',
-            block          = 'prep/analysis',
+            block          = 'soda/analysis',
             fatal          = True
         ),
         print(t.prompt, 'SODA analysis =', prep)
@@ -222,4 +226,28 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
             fatal          = False,  # TODO : cela pourrait dépendre du "kind" pour plus de felxibilité
         )
         print(t.prompt, 'SODA diags =', diags)
+        print()
+
+    def diff(self):
+        """
+        Test output reproductibility [OPTIONAL]
+        """
+        self.sh.title("Reproductibility check : PREP")
+        diff = vortex.diff(
+            local          = 'mb[member]/PREP_[date:ymdh].nc',
+            role           = 'SnowpackInit',
+            experiment     = self.conf.diff_xpid,
+            username       = self.conf.get('diff_user', None),
+            geometry       = self.conf.geometry,
+            date           = self.conf.date,
+            member         = self.get_list_members(),
+            nativefmt      = 'netcdf',
+            kind           = 'PREP',
+            model          = 'surfex',
+            namespace      = 'vortex.multi.fr',
+            namebuild      = 'flat@cen',
+            block          = 'soda/analysis',
+            fatal          = True
+        ),
+        print(self.ticket.prompt, 'diff =', diff)
         print()

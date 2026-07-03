@@ -1,5 +1,27 @@
+# -*- coding: utf-8 -*-
 """
+postprocess.py
+--------------
+
 SURFEX/Crocus post-processing resources.
+
+.. inheritance-diagram:: vortex_cen.data.postprocess
+   :top-classes: vortex_cen.data.flow.SurfaceIO, vortex_cen.data.flow.SurfaceIOVortex1
+   :private-bases:
+   :parts: 2
+
+.. autoclass:: Postproc
+   :show-inheritance:
+
+.. autoclass:: ScoresSnow
+   :show-inheritance:
+
+.. autoclass:: PostprocVortex1
+   :show-inheritance:
+
+.. autoclass:: ScoresSnowVortex1
+   :show-inheritance:
+
 """
 
 from vortex_cen.data.flow import SurfaceIO, SurfaceIOVortex1

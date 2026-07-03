@@ -141,24 +141,28 @@ SNOWPAPPUS
 
 SNOWPAPPUS cumulated outputs: (MPI grid only)
 
-- QDEP_TOT = total wind-blown snow net deposition rate q dep (kg.m -2 .s -1 )
-- QT_TOT = total wind-blown horizontal vertically integrated snow transport rate Q t (kg.m -1 .s -1 )
-- Q_OUT_SUBL = sublimation rate q subl (kg.m -2 .s -1 )
-- SNOWDEBTC = cumulated amount of snow which should have been removed on the point but was not because it became snow-free (kg.m -2 )
+- QDEP_TOT_PAP = total wind-blown snow net deposition rate (kg.m -2 .s -1 )
+- QT_TOT_PAP = total wind-blown horizontal vertically integrated snow transport rate (kg.m -1 .s -1 )
+- QOUTSUBL_PAP = sublimation rate (kg.m -2 .s -1 )
+- SNWDEBTC_PAP = cumulated amount of snow which should have been removed on the point but was not because it became snow-free (kg.m -2 )
 
 SNOWPAPPUS instantaneous outputs:
 
-- BLOWSNWFLUX_1M = horizontal blowing snow flux 1 m above snow surface (kg.m -2 .s -1 )
-- BLOWSNWFLUXINT = average horizontal blowing snow flux between 0.2 and 1.2 m Q t,int (kg.m -1 .s -1 )
-- Q_OUT_SALT = total horizontal transport rate in the saltation layer Q salt (kg.m -1 .s -1 )
-- Q_OUT_SUSP = total horizontal transport rate in the suspension layer Q susp (kg.m -1 .s -1 )
-- XVFRIC_PAPPUS = wind friction velocity computed by Snowpappus u_star (m.s -1 )
-- XVFRIC_T_PAPPUS = threshold friction velocity (at ground level) for snow transport u_star,t (m.s -1 )
-- XPZ0_PAPPUS = roughness length for momentum z 0 (m) used by Snowpappus
-- XVFALL_PAPPUS = mass averaged terminal fall velocity of snow particles at the bottom of the suspension layer v f (m.s -1 )
-- SNFLX_1M_P = snow transport flux integrated up to 1m height
-- SNFLXINT_P = snow transport flux integrated on height
+- SNFLX_1M_PAP = horizontal blowing snow flux 1 m above snow surface (kg.m -2 .s -1 )
+- SNFLXINT_PAP = average horizontal blowing snow flux between 0.2 and 1.2 m (kg.m -1 .s -1 )
+- QOUTSALT_PAP = total horizontal transport rate in the saltation layer (kg.m -1 .s -1 )
+- QOUTSUSP_PAP = total horizontal transport rate in the suspension layer (kg.m -1 .s -1 )
 
+SNOWPAPPUS debug outputs:
+
+- VFRIC_DPAP = wind friction velocity computed by Snowpappus (m.s -1 )
+- VFRIC_T_DPAP = threshold friction velocity at ground level for snow transport (m.s -1 )
+- PZ0_DPAP = roughness length for momentum z0 used by Snowpappus (m) 
+- VFALL_DPAP = mass averaged terminal fall velocity of snow particles at the bottom of the suspension layer (m.s -1 )
+- JJ_DPAP = debug mpi: processor local point index (-)
+- NRANK_DPAP = debug mpi: processor rank (-)
+- ILOCNIY_DPAP = debug mpi: processor local number of lines (-)
+- SIZTASK_DPAP = debug mpi: processor number of points (-)
 
 Impurities
 ^^^^^^^^^^
