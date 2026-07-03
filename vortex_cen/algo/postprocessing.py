@@ -83,6 +83,7 @@ class S2m_ensemble_postprocessing(AlgoComponent):
                 method = dict(
                     info        = "Method used to compute distribution of probabilty",
                     default     = 'quantiles',
+                    optional    = True,
                     values      = ['quantiles', 'emos']
                 ),
                 engine = dict(
