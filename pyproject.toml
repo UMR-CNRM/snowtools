@@ -24,7 +24,7 @@ dependencies = [
     'bottleneck',
     'epygram>=2.0',
     'scikit-learn',  # For SAFRAN guess generation
-    'vortex-nwp',
+    'vortex-nwp@git+https://github.com/UMR-CNRM/vortex.git',  # A remplacer par 'vortex-nwp' dès que possible
 ]
 requires-python = ">=3.6"
 readme = "README.md"
@@ -71,6 +71,11 @@ scores = [
     'snowtools-crps@git+https://github.com/UMR-CNRM/snowtools-crps.git',
 ]
 
+hpc = [
+    'mkjob@file:///home/cnrm_other/cen/mrns/vernaym/Projects/mkjob',
+    'vortex-gco@file:///home/cnrm_other/cen/mrns/vernaym/Projects/vortex-gco',
+    'vortex-olive@file:///home/cnrm_other/cen/mrns/vernaym/Projects/vortex-olive',
+]
 
 # For a full installation
 all = [
