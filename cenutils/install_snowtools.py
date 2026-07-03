@@ -12,6 +12,7 @@ import subprocess
 
 # TODO : Fix script avec python3.12.12 sur HPC
 
+# TODO : Crash if any subprces crashed
 
 description = "Snowtools installation script for MF developpers"
 parser = argparse.ArgumentParser(description=description)
@@ -117,10 +118,12 @@ else:
     venv = sys.prefix
     pip = 'pip'
 
-if args.optional is None or 'hpc' in HOSTNAME:
-    # Optional dependencies are unavailable on MF HPC (that is the reason they are optional)
-    print("The '-o' argument will be ignored because optional dependencies are not available on MF HPC")
+if args.optional is None:
     optional = ''
+elif 'hpc' in HOSTNAME:
+    # Optional dependencies are unavailable on MF HPC (that is the reason they are optional)
+    print("The '-o' argument automatically is set to 'hpc' on MF HPC")
+    optional = '[hpc]'
 else:
     optional = '[' + ','.join(args.optional) + ']'
 
@@ -160,7 +163,7 @@ if args.editable:
     pip_options.extend(['--no-build-isolation', '-e'])
 
 
-# Install snowtools snowtools
+# Install snowtools
 # pip install [--no-build-isolation -e] .
 print("Running command:")
 print(f"{pip} install {' '.join(pip_options)} .{optional}")
@@ -174,13 +177,22 @@ if os.path.isdir('.git'):
 elif os.path.exists('.git_info'):
     shutil.copyfile('.git_info', os.path.join(venv, '.snowtools_info'))
 
-# Temporary step for Belenos because packages on nexus are not available from HPC
-if 'hpc' in HOSTNAME:
-    HOME = os.getenv('HOME')
-    subprocess.run([pip, 'install', f'{HOME}/Projects/mkjob/', f'{HOME}/Projects/vortex-gco',
-        f'{HOME}/Projects/vortex-olive'])
-
-# TODO : Crash if any subprces crashed
+# Configure Vortex
+vortex_config = os.path.join(os.environ['HOME'], '.vortex.d', 'vortex.toml')
+if not os.path.exists(vortex_config):
+    config_dir = os.path.join(os.environ['HOME'], '.vortex.d')
+    if not os.path.exists(config_dir):
+        os.makedirs(config_dir)
+    config_path = os.path.join(snowtools_dir, 'vortex_cen', 'vortex_configs')
+    if 'belenos' in HOSTNAME:
+        target_config = 'vortex_belenos.toml'
+    elif 'taranis' in HOSTNAME:
+        target_config = 'vortex_taranis.toml'
+    elif 'sxcen' in HOSTNAME:
+        target_config = 'vortex_sxcen.toml'
+    else:
+        target_config = 'vortex_pc.toml'
+    os.symlink(os.path.join(config_path, target_config), vortex_config)
 
 print(outstr)
 print()
