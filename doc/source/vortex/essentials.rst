@@ -20,10 +20,10 @@ Installing and configuring Vortex
 Installing snowtools automatically installs Vortex. Please follow the snowtools installation documentation to ensure a valid installation of Vortex and associated tools.
 For an independent installation, follow the Vortex documentation.
 
-Vortex data management
-----------------------
-
-TODO
+..
+    Votex data management
+    ----------------------
+    TODO
 
 The vortex data tree
 --------------------
@@ -252,10 +252,65 @@ The *cutoff* footprint (type string) is a (confusing) NWP-derived term to distin
 The *cutoff*  footprint is optional for the "cen" namebuilder, but is mandatory for the standard vortex namebuilder (it appears as a letter at the *date* level, with a format yyyymmddThhmm[**AP**]).
 
 
-Parallelisation management with vortex
---------------------------------------
+Get data archived with vortex at CEN
+------------------------------------
 
-TODO
+As mentioned in the introduction, Vortex provides simulation IOs manipulation tools.
+Getting data archived with Vortex requires to provide a valid footprint description of the target file(s).
+Vortex provides the `vtx` command line to fetch (and) store data to/from the vortex data tree from a description writen in a YAML configuration file :
+https://vortex-nwp.readthedocs.io/en/latest/user-guide/cli.html
+
+An example of such a yaml configuration file to extract data from the S2M reanalysis is provided : vortex_cen/conf/S2MReanalysis.yaml
+
+However, using the `vtx` tool means that the fetched files are duplicated from the vortex data tree into the user's working directory and become "wild" files.
+This results in the loss of the benefits to use vortex in the first place.
+In addition, the duplication of potentialy large dataset can lead to very sub-optimal data management.
+
+Most snow-related simulation IOs are NetCDF files opened with xarray and its extensions provided by the snowtools package (see :ref:`xarray` for more information).
+Among those extensions, a `open_vortex_data` wrapper is provided to fetch files from the vortex data tree and read them with xarray in a single python command.
+
+The typical use of this wrapper would be to write the vortex/footprint description of the target data in a configuration file. For example:
+
+.. code::ini
+
+   # description.ini
+
+   [DEFAULT]
+   vapp=s2m
+   vconf=reanalysis
+   datebegin=2024080106
+   dateend=2025080106
+   experiment=release_2026.1
+   username=vernaym
+   duration=yearly
+   kind=PRO
+   block=pro
+   geometry=cor2_flat
+
+And call the `open_vortex_data` with the absolute or relative path to this configuration file to the "configfile" keyword argument.
+
+.. code-block:: python
+
+    from snowtools.utils.xarray_snowtools import open_vortex_data
+
+    with open_vortex_data(configfile='description.ini') as ds:
+        print(ds)
+        # `ds` is an xarray.Dataset containing the target data
+        # Do any data manipulation here :
+        # * apply native xarray methods to `ds`
+        # * apply xarray_snowtools_accessor methods to `ds`
+        # * code block
+        # * call external functions with ds as argument
+        # ...
+
+This workflow enables all file transfer and opening operations to be completed discreetly in the background, allowing you to focus on the data itself.
+
+    
+
+..
+    Parallelisation management with vortex
+    --------------------------------------
+    TODO
 
 Vortex glossary
 ---------------
@@ -272,7 +327,7 @@ Vortex glossary
 
 **Resource Handlers** consist of an association of a provider, a resource and a container. They establish a bridge between the vortex and the user worlds.
 
-**algo components** refer to the classes outlying the core algorithm to produce a given set of outputs files from a given set of inputs files.
+**algo components** refer to the classes outlying the core algorithm to produce a given set of output files from a given set of input files.
 
 
 
