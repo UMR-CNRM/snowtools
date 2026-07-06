@@ -170,11 +170,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
         self.header('Toolbox defaults')
         vortex.defaults.show()
 
-    # MF: add *args because with extractsubperiod test, preprocess return:
-    #  extractsubperiod (ExtractSubPeriod) -> running
-    # it raises an error:
-    # Exception info: _CenResearchTask.force_configuration_variables() takes 1 positional argument but 2 were given
-    def force_configuration_variables(self, *args):
+    def force_configuration_variables(self):
         """
         Implement this method to force the value of some configuration variables in specific use cases of the task.
         In particular, if an input for the task comes from the output of a previous task in the driver, the "block" of
@@ -210,7 +206,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
         :type io_duration: str
         """
         self.get_list_dates(duration=self.conf.get('io_duration', 'yearly'))
-        self.force_configuration_variables(self)
+        self.force_configuration_variables()
 
     def process(self):
         """
