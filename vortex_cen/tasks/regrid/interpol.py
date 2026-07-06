@@ -9,7 +9,6 @@ interpol.py
    :show-inheritance:
 """
 
-
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 import vortex
 
@@ -56,13 +55,12 @@ class InterpolateS2MForcing(_CenResearchTask):
         ]
         super().__init__(**kw)
 
-        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES,
-                overwrite=overwrite)
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES, overwrite=overwrite)
 
         # MF: during initialisation, self.conf is None
         # -> there is no attribute 'forcing_geometry', the check under should be done in another way
         #
-        #if self.conf.forcing_geometry == self.conf.geometry:
+        # if self.conf.forcing_geometry == self.conf.geometry:
         #    print(self.conf.forcing_geometry, self.conf.geometry)
         #    raise ValueError("The output 'geometry' can not be the same as the input one.\n"
         #                     "Please provide two different 'geometry' and 'forcing_geometry' configuration variables")
@@ -133,7 +131,7 @@ class InterpolateS2MForcing(_CenResearchTask):
 
         self.sh.title('Toolbox output interpolated forcing file')
         forcing_tbo = vortex.output(
-            local       = 'FORCING.nc',
+            local       = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
             experiment  = self.conf.xpid,
             geometry    = self.conf.geometry,
             datebegin   = self.conf.datebegin,
@@ -155,7 +153,7 @@ class InterpolateS2MForcing(_CenResearchTask):
         """
         self.sh.title("Reproductibility check : FORCING")
         diff = vortex.diff(
-            local       = 'FORCING.nc',
+            local       = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
             experiment  = self.conf.diff_xpid,
             username    = self.conf.get('diff_user', None),
             geometry    = self.conf.geometry,
@@ -171,6 +169,7 @@ class InterpolateS2MForcing(_CenResearchTask):
         ),
         print(self.ticket.prompt, 'diff =', diff)
         print()
+
 
 class InterpolateS2MRemoteForcing(InterpolateS2MForcing):
     """
@@ -217,26 +216,47 @@ class InterpolateS2MLocalForcing(InterpolateS2MForcing):
         """
         FORCING can come from local cache because just a subpart of yearly forcing is used.
         """
-        self.sh.title('Input sub-forcing file')
-        forcing_tbi = vortex.input(
+        self.get_forcing(localname="FORCING.nc")
+
+    def put_outputs(self):
+
+        self.sh.title('Toolbox output interpolated forcing file')
+        forcing_tbo = vortex.output(
             local       = 'FORCING.nc',
             experiment  = self.conf.xpid,
-            # MV : il faut forcer la géométrie de sortie à la géométrie d'entrée puisqu'il n'y a
-            # pas de changement de géométrie (--> sortir du répertoire "regrid" pour clarifier).
-            # TODO : trouver une façon plus standardisée de faire ça.
-            geometry    = self.conf.get('forcing_geometry'),
+            geometry    = self.conf.geometry,
             datebegin   = self.conf.datebegin,
             dateend     = self.conf.dateend,
             nativefmt   = 'netcdf',
             kind        = 'MeteorologicalForcing',
             model       = 's2m',
-            # MV : archivage sur cache uniquement par défaut pour ne pas dupliquer de la donnée existante
-            namespace   = self.conf.get('namespace_out', 'vortex.cache.fr'),
+            namespace   = self.namespace_out,
             namebuild   = 'flat@cen',
-            # MV : archivage dans le même block que le forcing d'origine
-            block       = 'meteo',
+            block       = self.conf.get('out_block', 'interpol'),
             member      = self.conf.get('member', None),
-            role        = 'Forcing',
         ),
-        print(self.ticket.prompt, 'Sub-forcing =', forcing_tbi)
+        print(self.ticket.prompt, 'interpolated forcing file toolbox =', forcing_tbo)
+        print()
+
+    def diff(self):
+        """
+        Test output reproductibility [OPTIONAL]
+        """
+        self.sh.title("Reproductibility check : FORCING")
+        diff = vortex.diff(
+            local       = 'FORCING.nc',
+            experiment  = self.conf.diff_xpid,
+            username    = self.conf.get('diff_user', None),
+            geometry    = self.conf.geometry,
+            datebegin   = self.conf.datebegin,
+            dateend     = self.conf.dateend,
+            nativefmt   = 'netcdf',
+            kind        = 'MeteorologicalForcing',
+            model       = 's2m',
+            namespace   = self.namespace_out,
+            namebuild   = 'flat@cen',
+            block       = self.conf.get('diff_block', 'interpol'),
+            member      = self.conf.get('member', None),
+        ),
+        print(self.ticket.prompt, 'diff =', diff)
         print()
