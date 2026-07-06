@@ -47,6 +47,7 @@ Options:
 * -p -> the path for this only MET file (required when --one_file is activated)
 
 """
+
 import sys
 import datetime
 import argparse
@@ -76,13 +77,14 @@ annee_last_MET = 2025
 # HARD CODE:
 #
 # CDP60mn starting day
-annee_last_cdp60mn = str(annee_last_MET) + '080100'
-annee_last_cdp60mn = '2023080100'
-path_safran = '/rd/cenfic3/cenmod/era40/vortex/s2m/postes/reanalysis/meteo'
-path_met = '/rd/cenfic3/cenobs/mesure_data/col_de_porte/met/'
+annee_last_cdp60mn = str(annee_last_MET) + "080100"
+annee_last_cdp60mn = "2023080100"
+path_safran = "/rd/cenfic3/cenmod/era40/vortex/s2m/postes/reanalysis/meteo"
+path_met = "/rd/cenfic3/cenobs/mesure_data/col_de_porte/met/"
 pas_par_defaut = 3600
 #
 ###########################################################################
+
 
 def recup_donnees_site(numero_site):
     """
@@ -109,14 +111,14 @@ def recup_donnees_site(numero_site):
 
 def message_accueil(option_bool, nom_site):
     if option_bool:
-        print('\nCompletion des donnees MET avec Pression et Direction du vent du site ' + str(nom_site) + '\n')
-    print('#########################################################')
-    print('# A verifier dans le code:')
-    print('# - chemin des MET: ' + path_met + '\n')
-    print('# - format des MET: MET_YYYY_YYYY+1_fmt (ex MET_2000_2001_fmt)\n')
-    print('# - chemin des reanalyses SAFRAN: ' + path_safran + '\n')
-    print('# A changer chaque année: année du dernier MET disponible')
-    print('#########################################################')
+        print("\nCompletion des donnees MET avec Pression et Direction du vent du site " + str(nom_site) + "\n")
+    print("#########################################################")
+    print("# A verifier dans le code:")
+    print("# - chemin des MET: " + path_met + "\n")
+    print("# - format des MET: MET_YYYY_YYYY+1_fmt (ex MET_2000_2001_fmt)\n")
+    print("# - chemin des reanalyses SAFRAN: " + path_safran + "\n")
+    print("# A changer chaque année: année du dernier MET disponible")
+    print("#########################################################")
 
 
 def decoupe_periode(date_entree_debut, date_entree_fin):
@@ -130,11 +132,11 @@ def decoupe_periode(date_entree_debut, date_entree_fin):
     :type date_entree_fin: Date (extension of datetime.datetime)
     :returns: un tuple of 3 lists: MET list, starting date list, ending date list
     """
-    list_date_debut = get_list_dates_files(date_entree_debut, date_entree_fin, 'yearly')[0]
-    list_date_fin = get_list_dates_files(date_entree_debut, date_entree_fin, 'yearly')[1]
+    list_date_debut = get_list_dates_files(date_entree_debut, date_entree_fin, "yearly")[0]
+    list_date_fin = get_list_dates_files(date_entree_debut, date_entree_fin, "yearly")[1]
     list_path_met = []
-    for debut,fin in zip(list_date_debut,list_date_fin):
-        list_path_met.append(path_met + 'MET_' + str(debut.year) + '_' + str(fin.year) + '_fmt')
+    for debut, fin in zip(list_date_debut, list_date_fin):
+        list_path_met.append(path_met + "MET_" + str(debut.year) + "_" + str(fin.year) + "_fmt")
 
     return list_path_met, list_date_debut, list_date_fin
 
@@ -150,7 +152,7 @@ def read_info_met(filename):
     :type filename: str
     :returns: list: [number of lines in header, starting date for MET datas; ending date for MET datas]
     """
-    metfile = open(filename, 'r')
+    metfile = open(filename, "r")
     fileLines = metfile.readlines()
     metfile.close()
     last_line = fileLines[len(fileLines) - 1]
@@ -161,15 +163,19 @@ def read_info_met(filename):
         if line[0] not in set([str(i) for i in range(10)]):
             nb_ligne_entete = nb_ligne_entete + 1
             continue
-        elif (line[2] == '/'):
+        elif line[2] == "/":
             first_date_met = line[6:10] + line[3:5] + line[0:2] + line[11:13]
             last_date_met = last_line[6:10] + last_line[3:5] + last_line[0:2] + last_line[11:13]
             break
-        elif (line[2] != '/'):
+        elif line[2] != "/":
             first_date_met = line[0:11]
             last_date_met = last_line[0:11]
             break
-    L = [int(nb_ligne_entete), check_and_convert_date(first_date_met), check_and_convert_date(last_date_met)]
+    L = [
+        int(nb_ligne_entete),
+        check_and_convert_date(first_date_met),
+        check_and_convert_date(last_date_met),
+    ]
     return L
 
 
@@ -198,39 +204,45 @@ def recup_cdp(date_time_deb, date_time_fin):
 
     # Cas "standards": date_time_fin avant le 1er aout 00h
     if (date_change_2015 >= date_time_fin) and (date_time_fin <= date_1er_aout):
-        nom_base = 'cdp' + str(date_time_fin.year - 1)[2:4] + str(date_time_fin.year)[2:4]
-        nom_var = 'baro,dvent'
+        nom_base = "cdp" + str(date_time_fin.year - 1)[2:4] + str(date_time_fin.year)[2:4]
+        nom_var = "baro,dvent"
     elif (date_change_base60mn >= date_time_fin) and (date_time_fin <= date_1er_aout):
-        nom_base = 'cdp60mn_' + str(date_time_fin.year - 1)[2:4] + str(date_time_fin.year)[2:4]
-        nom_var = 'p_ptb330_v1,dd_meca_10mn_10m'
+        nom_base = "cdp60mn_" + str(date_time_fin.year - 1)[2:4] + str(date_time_fin.year)[2:4]
+        nom_var = "p_ptb330_v1,dd_meca_10mn_10m"
     elif date_time_fin <= date_1er_aout:
-        nom_base = 'cdp60mn'
-        nom_var = 'p_ptb330_v1,dd_meca_10mn_10m'
+        nom_base = "cdp60mn"
+        nom_var = "p_ptb330_v1,dd_meca_10mn_10m"
     # Cas où YYYY080106 => d'abord récupérer les données sur l'année passée
     elif (date_time_fin > date_1er_aout) and date_time_fin.year <= date_change_2015.year:
-        nom_base = 'cdp' + str(date_time_fin.year - 1)[2:4] + str(date_time_fin.year)[2:4]
-        nom_var = 'baro,dvent'
+        nom_base = "cdp" + str(date_time_fin.year - 1)[2:4] + str(date_time_fin.year)[2:4]
+        nom_var = "baro,dvent"
     elif (date_time_fin > date_1er_aout) and date_time_fin.year <= date_change_base60mn.year:
-        nom_base = 'cdp60mn_' + str(date_time_fin.year - 1)[2:4] + str(date_time_fin.year)[2:4]
+        nom_base = "cdp60mn_" + str(date_time_fin.year - 1)[2:4] + str(date_time_fin.year)[2:4]
         if date_time_fin.year <= date_change_nomvent:
-            nom_var = 'p_ptb330_v1,dd_meca_10mn_10m'
+            nom_var = "p_ptb330_v1,dd_meca_10mn_10m"
         else:
-            nom_var = 'p_ptb330_v1,dd_us_10mn_10m'
+            nom_var = "p_ptb330_v1,dd_us_10mn_10m"
     else:
-        nom_base = 'cdp60mn'
+        nom_base = "cdp60mn"
         if date_time_fin.year <= date_change_nomvent:
-            nom_var = 'p_ptb330_v1,dd_meca_10mn_10m'
+            nom_var = "p_ptb330_v1,dd_meca_10mn_10m"
         else:
-            nom_var = 'p_ptb330_v1,dd_us_10mn_10m'
+            nom_var = "p_ptb330_v1,dd_us_10mn_10m"
 
     # command est une requete SQL (en string)
-    command = "select dat," + nom_var + " from bdniv." + nom_base + " where dat between '{0}' and '{1}' \
+    command = (
+        "select dat,"
+        + nom_var
+        + " from bdniv."
+        + nom_base
+        + " where dat between '{0}' and '{1}' \
     order by dat".format(date_time_deb, date_time_fin)
+    )
 
-    host = 'cenexp2.cen.meteo.fr'
-    database = 'bdniv'
-    user = 'consult'
-    port = '5433'
+    host = "cenexp2.cen.meteo.fr"
+    database = "bdniv"
+    user = "consult"
+    port = "5433"
     conn = psycopg2.connect(database=database, user=user, host=host, port=port)
     cursor = conn.cursor()
     cursor.execute(command)
@@ -239,21 +251,27 @@ def recup_cdp(date_time_deb, date_time_fin):
     # Cas où YYYY080106 => ensuite récupérer les données sur l'année en cours
     # a) récupérer dans la base de données d'après les 5h manquantes
     # b) concaténer les données.
-    if (date_time_fin > date_1er_aout and nom_base != 'cdp60mn' and date_time_fin.year < date_change_base60mn.year):
-        nom_var = 'p_ptb330_v1,dd_meca_10mn_10m'
+    if date_time_fin > date_1er_aout and nom_base != "cdp60mn" and date_time_fin.year < date_change_base60mn.year:
+        nom_var = "p_ptb330_v1,dd_meca_10mn_10m"
         if date_time_fin.year < date_change_base60mn.year:
-            nom_base = 'cdp60mn_' + str(date_time_fin.year)[2:4] + str(date_time_fin.year + 1)[2:4]
+            nom_base = "cdp60mn_" + str(date_time_fin.year)[2:4] + str(date_time_fin.year + 1)[2:4]
         else:
-            nom_base = 'cdp60mn'
+            nom_base = "cdp60mn"
 
         # command est une requete SQL (en string)
-        command = "select dat," + nom_var + " from bdniv." + nom_base + " where dat between '{0}' and '{1}' \
+        command = (
+            "select dat,"
+            + nom_var
+            + " from bdniv."
+            + nom_base
+            + " where dat between '{0}' and '{1}' \
         order by dat".format(date_time_deb, date_time_fin)
+        )
 
-        host = 'cenexp2.cen.meteo.fr'
-        database = 'bdniv'
-        user = 'consult'
-        port = '5433'
+        host = "cenexp2.cen.meteo.fr"
+        database = "bdniv"
+        user = "consult"
+        port = "5433"
         conn = psycopg2.connect(database=database, user=user, host=host, port=port)
         cursor = conn.cursor()
         cursor.execute(command)
@@ -269,7 +287,7 @@ def recup_cdp(date_time_deb, date_time_fin):
     # correction frustre des données pression + changement d'unité (hPa en Pa)
     if len(data[:]) != 0:
         for i in range(len(data[:, 0])):
-            if data[i, 1] != None:
+            if data[i, 1] is not None:
                 if data[i, 1] > 890:
                     data[i, 1] = 863.827
                 if data[i, 1] < 840:
@@ -278,7 +296,7 @@ def recup_cdp(date_time_deb, date_time_fin):
             else:
                 data[i, 1] = 86382.7
             # correction frustre des données de direction du vent
-            if data[i, 2] != None:
+            if data[i, 2] is not None:
                 if data[i, 2] < 0:
                     data[i, 2] = 0
                 if data[i, 2] > 360:
@@ -310,9 +328,9 @@ def open_met_file_and_create_xr(filename, option_recup, site):
     nb_ligne_entete, first_date, last_date = read_info_met(filename)
 
     try:
-        metfile = open(filename, 'r')
-    except:
-        print('input meteorological file ' + metfile + ' not found')
+        metfile = open(filename, "r")
+    except FileNotFoundError:
+        print("input meteorological file " + metfile + " not found")
         sys.exit()
 
     # Les fichiers sont générés avec possiblement pas le bon nombre d'espaces
@@ -330,7 +348,7 @@ def open_met_file_and_create_xr(filename, option_recup, site):
     fileLines = metfile.readlines()[nb_ligne_entete:]
     metfile.close()
 
-    File_entree = np.loadtxt(fileLines, dtype='str')
+    File_entree = np.loadtxt(fileLines, dtype="str")
 
     Tableau_retour_time_nbpoint = np.zeros((len(fileLines), 14))
     # Dans l'ordre: CO2air, DIR_SWdown, Flag_in_situ, Humrel, LWdown, NEB, PSurf, Qair, Rainf, SCA_SWdown, Snowf, Tair, Wind, Wind_DIR
@@ -349,7 +367,7 @@ def open_met_file_and_create_xr(filename, option_recup, site):
                 Liste_date.append(check_and_convert_date(date))
 
         # Recuperation de PSurf et Wind_DIR sur table CdP, sinon, valeurs par défaut
-        if option_recup and site == '38472401':
+        if option_recup and site == "38472401":
             data_cdp = recup_cdp(first_date, last_date)
             # traitement du cas où des valeurs sont absentes de la table CdP
             if len(data_cdp[:]) == 0:
@@ -372,13 +390,17 @@ def open_met_file_and_create_xr(filename, option_recup, site):
 
         if len(File_entree[0, :]) == 10:
             for i in range(len(File_entree[:, 0])):
-                Tableau_retour_time_nbpoint[i, 7] = Thermo(['v', 'c'], dict(P=PSurf[i], Huw=float(File_entree[i, 3]),
-                                                                            T=float(File_entree[i, 1]) + T0, rc=0)).get(
-                    'qv')
-                Tableau_retour_time_nbpoint[i, 8] = float(File_entree[i, 4]) * (
-                            1 - float(File_entree[i, 5])) / pas_par_defaut
-                Tableau_retour_time_nbpoint[i, 10] = float(File_entree[i, 4]) * float(
-                    File_entree[i, 5]) / pas_par_defaut
+                Tableau_retour_time_nbpoint[i, 7] = Thermo(
+                    ["v", "c"],
+                    dict(
+                        P=PSurf[i],
+                        Huw=float(File_entree[i, 3]),
+                        T=float(File_entree[i, 1]) + T0,
+                        rc=0,
+                    ),
+                ).get("qv")
+                Tableau_retour_time_nbpoint[i, 8] = float(File_entree[i, 4]) * (1 - float(File_entree[i, 5])) / pas_par_defaut
+                Tableau_retour_time_nbpoint[i, 10] = float(File_entree[i, 4]) * float(File_entree[i, 5]) / pas_par_defaut
 
             Tableau_retour_time_nbpoint[:, 0] = float(CO2air)
             Tableau_retour_time_nbpoint[:, 1] = File_entree[:, 7].astype(float)
@@ -394,13 +416,17 @@ def open_met_file_and_create_xr(filename, option_recup, site):
 
         elif len(File_entree[0, :]) == 11:
             for i in range(len(File_entree[:, 0])):
-                Tableau_retour_time_nbpoint[i, 7] = Thermo(['v', 'c'], dict(P=PSurf[i], Huw=float(File_entree[i, 4]),
-                                                                            T=float(File_entree[i, 2]) + T0, rc=0)).get(
-                    'qv')
-                Tableau_retour_time_nbpoint[i, 8] = float(File_entree[i, 5]) * (
-                            1 - float(File_entree[i, 6])) / pas_par_defaut
-                Tableau_retour_time_nbpoint[i, 10] = float(File_entree[i, 5]) * float(
-                    File_entree[i, 6]) / pas_par_defaut
+                Tableau_retour_time_nbpoint[i, 7] = Thermo(
+                    ["v", "c"],
+                    dict(
+                        P=PSurf[i],
+                        Huw=float(File_entree[i, 4]),
+                        T=float(File_entree[i, 2]) + T0,
+                        rc=0,
+                    ),
+                ).get("qv")
+                Tableau_retour_time_nbpoint[i, 8] = float(File_entree[i, 5]) * (1 - float(File_entree[i, 6])) / pas_par_defaut
+                Tableau_retour_time_nbpoint[i, 10] = float(File_entree[i, 5]) * float(File_entree[i, 6]) / pas_par_defaut
                 year = int(File_entree[i, 0][0:4])
                 month = int(File_entree[i, 0][4:6])
                 if year < 2010 or (year == 2010 and month <= 11):
@@ -423,13 +449,17 @@ def open_met_file_and_create_xr(filename, option_recup, site):
 
         elif len(File_entree[0, :]) == 12:
             for i in range(len(File_entree[:, 0])):
-                Tableau_retour_time_nbpoint[i, 7] = Thermo(['v', 'c'], dict(P=PSurf[i], Huw=float(File_entree[i, 5]),
-                                                                            T=float(File_entree[i, 3]) + T0, rc=0)).get(
-                    'qv')
-                Tableau_retour_time_nbpoint[i, 8] = float(File_entree[i, 6]) * (
-                            1 - float(File_entree[i, 7])) / pas_par_defaut
-                Tableau_retour_time_nbpoint[i, 10] = float(File_entree[i, 6]) * float(
-                    File_entree[i, 7]) / pas_par_defaut
+                Tableau_retour_time_nbpoint[i, 7] = Thermo(
+                    ["v", "c"],
+                    dict(
+                        P=PSurf[i],
+                        Huw=float(File_entree[i, 5]),
+                        T=float(File_entree[i, 3]) + T0,
+                        rc=0,
+                    ),
+                ).get("qv")
+                Tableau_retour_time_nbpoint[i, 8] = float(File_entree[i, 6]) * (1 - float(File_entree[i, 7])) / pas_par_defaut
+                Tableau_retour_time_nbpoint[i, 10] = float(File_entree[i, 6]) * float(File_entree[i, 7]) / pas_par_defaut
 
             Tableau_retour_time_nbpoint[:, 0] = float(CO2air)
             Tableau_retour_time_nbpoint[:, 1] = File_entree[:, 9].astype(float)
@@ -443,10 +473,27 @@ def open_met_file_and_create_xr(filename, option_recup, site):
             Tableau_retour_time_nbpoint[:, 12] = File_entree[:, 4].astype(float)
             Tableau_retour_time_nbpoint[:, 13] = Wind_DIR[:]
 
-    Liste_field = ['CO2air', 'DIR_SWdown', 'Flag_in_situ', 'Humrel', 'LWdown', 'NEB', 'PSurf',
-                   'Qair', 'Rainf', 'SCA_SWdown', 'Snowf', 'Tair', 'Wind', 'Wind_DIR']
-    data_xr = xr.DataArray(Tableau_retour_time_nbpoint,
-                           coords={'time': Liste_date, 'fields': Liste_field}, dims=['time','fields'])
+    Liste_field = [
+        "CO2air",
+        "DIR_SWdown",
+        "Flag_in_situ",
+        "Humrel",
+        "LWdown",
+        "NEB",
+        "PSurf",
+        "Qair",
+        "Rainf",
+        "SCA_SWdown",
+        "Snowf",
+        "Tair",
+        "Wind",
+        "Wind_DIR",
+    ]
+    data_xr = xr.DataArray(
+        Tableau_retour_time_nbpoint,
+        coords={"time": Liste_date, "fields": Liste_field},
+        dims=["time", "fields"],
+    )
 
     return data_xr, Liste_date[0], Liste_date[-1]
 
@@ -463,11 +510,12 @@ def recup_safran(date_1, date_2, site):
     :type date_2: datetime.datetime
     :returns: an xarray with all fields of interest
     """
-    Liste_date = [date_1 + datetime.timedelta(seconds=x) for x in range(0, int((date_2 - date_1).total_seconds()),
-                  pas_par_defaut)]
-    date_b, date_e = get_file_period('FORCING', path_safran, date_1, date_2)
+    Liste_date = [
+        date_1 + datetime.timedelta(seconds=x) for x in range(0, int((date_2 - date_1).total_seconds()), pas_par_defaut)
+    ]
+    date_b, date_e = get_file_period("FORCING", path_safran, date_1, date_2)
 
-    forcing = path_safran + '/FORCING_' + date_b.strftime('%Y%m%d%H') + '_' + date_e.strftime('%Y%m%d%H') + '.nc'
+    forcing = path_safran + "/FORCING_" + date_b.strftime("%Y%m%d%H") + "_" + date_e.strftime("%Y%m%d%H") + ".nc"
     fic = prosimu(forcing)
 
     Tableau_retour_time_nbpoint = np.zeros((len(Liste_date), 14))
@@ -476,27 +524,44 @@ def recup_safran(date_1, date_2, site):
 
     index1 = np.where(fic.readtime() == date_1)[0][0]
     index2 = np.where(fic.readtime() == date_2)[0][0]
-    point = np.where(fic.read_var('station') == int(site))[0][0]
-    Tableau_retour_time_nbpoint[:, 0] = fic.read_var('CO2air', time=slice(index1, index2), Number_of_points=point)
-    Tableau_retour_time_nbpoint[:, 1] = fic.read_var('DIR_SWdown', time=slice(index1, index2), Number_of_points=point)
+    point = np.where(fic.read_var("station") == int(site))[0][0]
+    Tableau_retour_time_nbpoint[:, 0] = fic.read_var("CO2air", time=slice(index1, index2), Number_of_points=point)
+    Tableau_retour_time_nbpoint[:, 1] = fic.read_var("DIR_SWdown", time=slice(index1, index2), Number_of_points=point)
     Tableau_retour_time_nbpoint[:, 2] = float(0)  # flag à 0 dans ce cas-là
-    Tableau_retour_time_nbpoint[:, 3] = fic.read_var('HUMREL', time=slice(index1, index2), Number_of_points=point)
-    Tableau_retour_time_nbpoint[:, 4] = fic.read_var('LWdown', time=slice(index1, index2), Number_of_points=point)
-    Tableau_retour_time_nbpoint[:, 5] = fic.read_var('NEB', time=slice(index1, index2), Number_of_points=point)
-    Tableau_retour_time_nbpoint[:, 6] = fic.read_var('PSurf', time=slice(index1, index2), Number_of_points=point)
-    Tableau_retour_time_nbpoint[:, 7] = fic.read_var('Qair', time=slice(index1, index2), Number_of_points=point)
-    Tableau_retour_time_nbpoint[:, 8] = fic.read_var('Rainf', time=slice(index1, index2), Number_of_points=point)
-    Tableau_retour_time_nbpoint[:, 9] = fic.read_var('SCA_SWdown', time=slice(index1, index2), Number_of_points=point)
-    Tableau_retour_time_nbpoint[:, 10] = fic.read_var('Snowf', time=slice(index1, index2), Number_of_points=point)
-    Tableau_retour_time_nbpoint[:, 11] = fic.read_var('Tair', time=slice(index1, index2), Number_of_points=point)
-    Tableau_retour_time_nbpoint[:, 12] = fic.read_var('Wind', time=slice(index1, index2), Number_of_points=point)
-    Tableau_retour_time_nbpoint[:, 13] = fic.read_var('Wind_DIR', time=slice(index1, index2), Number_of_points=point)
+    Tableau_retour_time_nbpoint[:, 3] = fic.read_var("HUMREL", time=slice(index1, index2), Number_of_points=point)
+    Tableau_retour_time_nbpoint[:, 4] = fic.read_var("LWdown", time=slice(index1, index2), Number_of_points=point)
+    Tableau_retour_time_nbpoint[:, 5] = fic.read_var("NEB", time=slice(index1, index2), Number_of_points=point)
+    Tableau_retour_time_nbpoint[:, 6] = fic.read_var("PSurf", time=slice(index1, index2), Number_of_points=point)
+    Tableau_retour_time_nbpoint[:, 7] = fic.read_var("Qair", time=slice(index1, index2), Number_of_points=point)
+    Tableau_retour_time_nbpoint[:, 8] = fic.read_var("Rainf", time=slice(index1, index2), Number_of_points=point)
+    Tableau_retour_time_nbpoint[:, 9] = fic.read_var("SCA_SWdown", time=slice(index1, index2), Number_of_points=point)
+    Tableau_retour_time_nbpoint[:, 10] = fic.read_var("Snowf", time=slice(index1, index2), Number_of_points=point)
+    Tableau_retour_time_nbpoint[:, 11] = fic.read_var("Tair", time=slice(index1, index2), Number_of_points=point)
+    Tableau_retour_time_nbpoint[:, 12] = fic.read_var("Wind", time=slice(index1, index2), Number_of_points=point)
+    Tableau_retour_time_nbpoint[:, 13] = fic.read_var("Wind_DIR", time=slice(index1, index2), Number_of_points=point)
     fic.close()
 
-    Liste_field = ['CO2air', 'DIR_SWdown', 'Flag_in_situ', 'Humrel', 'LWdown', 'NEB', 'PSurf',
-                   'Qair', 'Rainf', 'SCA_SWdown', 'Snowf', 'Tair', 'Wind', 'Wind_DIR']
-    xr_safran = xr.DataArray(Tableau_retour_time_nbpoint,
-                             coords={'time': Liste_date, 'fields': Liste_field}, dims=['time','fields'])
+    Liste_field = [
+        "CO2air",
+        "DIR_SWdown",
+        "Flag_in_situ",
+        "Humrel",
+        "LWdown",
+        "NEB",
+        "PSurf",
+        "Qair",
+        "Rainf",
+        "SCA_SWdown",
+        "Snowf",
+        "Tair",
+        "Wind",
+        "Wind_DIR",
+    ]
+    xr_safran = xr.DataArray(
+        Tableau_retour_time_nbpoint,
+        coords={"time": Liste_date, "fields": Liste_field},
+        dims=["time", "fields"],
+    )
 
     return xr_safran
 
@@ -523,13 +588,13 @@ def complete_obs_with_model_1period(filename, option_recup, date_entree_debut, d
 
     if date_entree_debut < first_date:
         xr_safran = recup_safran(date_entree_debut, first_date, site)
-        xr_MET = xr.concat([xr_safran,  xr_MET], dim='time')
+        xr_MET = xr.concat([xr_safran, xr_MET], dim="time")
 
     if date_entree_fin > last_date:
-        xr_safran = recup_safran(last_date + timedelta(seconds=pas_par_defaut),date_entree_fin, site)
-        xr_MET = xr.concat([xr_MET,  xr_safran], dim='time')
+        xr_safran = recup_safran(last_date + timedelta(seconds=pas_par_defaut), date_entree_fin, site)
+        xr_MET = xr.concat([xr_MET, xr_safran], dim="time")
 
-    xr_1period = xr_MET.drop_duplicates(dim='time')
+    xr_1period = xr_MET.drop_duplicates(dim="time")
     return xr_1period
 
 
@@ -550,21 +615,43 @@ def compilation_ttes_periodes(date_entree_debut, date_entree_fin, site, option_r
     date_first_met = datetime.datetime(1993, 8, 1, 6)  # EN DUR et fixe
     date_last_met = datetime.datetime(annee_last_MET, 8, 1, 6)
     list_path_met, list_date_debut, list_date_fin = decoupe_periode(date_entree_debut, date_entree_fin)
-    Liste_field = ['CO2air', 'DIR_SWdown', 'Flag_in_situ', 'Humrel', 'LWdown', 'NEB', 'PSurf',
-                   'Qair', 'Rainf', 'SCA_SWdown', 'Snowf', 'Tair', 'Wind', 'Wind_DIR']
-    xr_out = xr.DataArray(np.empty((0,14)), coords={'time': np.array([],dtype='datetime64[ns]'), 'fields': Liste_field}, dims=['time','fields'])
-
+    Liste_field = [
+        "CO2air",
+        "DIR_SWdown",
+        "Flag_in_situ",
+        "Humrel",
+        "LWdown",
+        "NEB",
+        "PSurf",
+        "Qair",
+        "Rainf",
+        "SCA_SWdown",
+        "Snowf",
+        "Tair",
+        "Wind",
+        "Wind_DIR",
+    ]
+    xr_out = xr.DataArray(
+        np.empty((0, 14)),
+        coords={"time": np.array([], dtype="datetime64[ns]"), "fields": Liste_field},
+        dims=["time", "fields"],
+    )
 
     for i in range(len(list_path_met)):
-        print(str(list_date_debut[i]) + ' - ' + str(list_date_fin[i]))
+        print(str(list_date_debut[i]) + " - " + str(list_date_fin[i]))
         if list_date_debut[i] >= date_first_met and list_date_fin[i] <= date_last_met:
-            xr_loop = complete_obs_with_model_1period(list_path_met[i], option_recup,
-                                                         list_date_debut[i], list_date_fin[i], site)
+            xr_loop = complete_obs_with_model_1period(
+                list_path_met[i],
+                option_recup,
+                list_date_debut[i],
+                list_date_fin[i],
+                site,
+            )
         else:
             xr_loop = recup_safran(list_date_debut[i], list_date_fin[i], site)
-        xr_out = xr.concat([xr_out, xr_loop], dim='time')
+        xr_out = xr.concat([xr_out, xr_loop], dim="time")
 
-    xr_out.drop_duplicates(dim='time')
+    xr_out.drop_duplicates(dim="time")
 
     return xr_out
 
@@ -575,59 +662,132 @@ def create_netcdf(output, xr, Tableau_valeurs_nbpoint):
 
     :param output: name of the output file
     :type output: str
-    :param xr: fields of interest (PSurf, Rayt, Snowf, ...) 
+    :param xr: fields of interest (PSurf, Rayt, Snowf, ...)
     :type xr: xarray
-    :param Tableau_valeurs_nbpoint: fields defining the site (LAT, LON, ZS, ...) 
+    :param Tableau_valeurs_nbpoint: fields defining the site (LAT, LON, ZS, ...)
     :type Tableau_valeurs_nbpoint: np array
 
-    :returns: in a pythonic way, nothing (write a netCDF named out_met2netcdf.nc by default) 
+    :returns: in a pythonic way, nothing (write a netCDF named out_met2netcdf.nc by default)
     """
     newname = output
-    fic_forcing = StandardCDP(newname, 'w', format='NETCDF4_CLASSIC')
-    fic_forcing.createDimension('time', None)
-    fic_forcing.createDimension('Number_of_points', 1)
+    fic_forcing = StandardCDP(newname, "w", format="NETCDF4_CLASSIC")
+    fic_forcing.createDimension("time", None)
+    fic_forcing.createDimension("Number_of_points", 1)
 
-    unit_time = 'seconds since 1970-01-01 00:00'
+    unit_time = "seconds since 1970-01-01 00:00"
     # conversion from xarray time format (np.datetime64 to datetime.datetime
     dates = [check_and_convert_date(xr.time.values[i].astype(str)[:13]) for i in range(len(xr.time.values))]
     time = netCDF4.date2num(dates, unit_time)
 
-    time_nc = fic_forcing.createVariable('time', 'd', ('time',), fill_value=-9999999)
+    time_nc = fic_forcing.createVariable("time", "d", ("time",), fill_value=-9999999)
     time_nc.units = unit_time
     time_nc[:] = time
 
-    frc_nc = fic_forcing.createVariable('FRC_TIME_STP', 'f', fill_value=-9999999)
-    frc_nc.units = 's'
+    frc_nc = fic_forcing.createVariable("FRC_TIME_STP", "f", fill_value=-9999999)
+    frc_nc.units = "s"
     frc_nc[:] = pas_par_defaut
 
-    Liste_nom_time_nbpoint = ['CO2air', 'DIR_SWdown', 'flag', 'HUMREL', 'LWdown', 'NEB', 'PSurf', 'Qair', 'Rainf',
-                              'SCA_SWdown', 'Snowf', 'Tair', 'Wind', 'Wind_DIR']
+    Liste_nom_time_nbpoint = [
+        "CO2air",
+        "DIR_SWdown",
+        "flag",
+        "HUMREL",
+        "LWdown",
+        "NEB",
+        "PSurf",
+        "Qair",
+        "Rainf",
+        "SCA_SWdown",
+        "Snowf",
+        "Tair",
+        "Wind",
+        "Wind_DIR",
+    ]
 
-    Liste_unite_time_nbpoint = ['kg/m3', 'W/m2', '0 or 1', '%', 'W/m2', 'between 0 and 1', 'Pa', 'Kg/Kg', 'kg/m2/s',
-                                'W/m2', 'kg/m2/s', 'K', 'm/s', 'deg']
+    Liste_unite_time_nbpoint = [
+        "kg/m3",
+        "W/m2",
+        "0 or 1",
+        "%",
+        "W/m2",
+        "between 0 and 1",
+        "Pa",
+        "Kg/Kg",
+        "kg/m2/s",
+        "W/m2",
+        "kg/m2/s",
+        "K",
+        "m/s",
+        "deg",
+    ]
 
-    Liste_longname_time_nbpoint = ['Near Surface CO2 Concentration', 'Surface Incident Direct Shortwave Radiation',
-                                   'in situ flag', 'Relative Humidity', 'Surface Incident Longwave Radiation',
-                                   'Nebulosity', 'Surface Pressure', 'Near Surface Specific Humidity',
-                                   'Rainfall Rate', 'Surface Incident Diffuse Shortwave Radiation', 'Snowfall Rate',
-                                   'Near Surface Air Temperature', 'Wind Speed', 'Wind Direction']
+    Liste_longname_time_nbpoint = [
+        "Near Surface CO2 Concentration",
+        "Surface Incident Direct Shortwave Radiation",
+        "in situ flag",
+        "Relative Humidity",
+        "Surface Incident Longwave Radiation",
+        "Nebulosity",
+        "Surface Pressure",
+        "Near Surface Specific Humidity",
+        "Rainfall Rate",
+        "Surface Incident Diffuse Shortwave Radiation",
+        "Snowfall Rate",
+        "Near Surface Air Temperature",
+        "Wind Speed",
+        "Wind Direction",
+    ]
 
-    Liste_nom_nbpoint = ['LAT', 'LON', 'UREF', 'ZREF', 'ZS', 'aspect', 'slope', 'station']
-    Liste_type_nbpoint = ['f', 'f', 'f', 'f', 'f', 'f', 'f', 'i4']
-    Liste_unite_nbpoint = ['degrees_north', 'degrees_east', 'm', 'm', 'm', 'degrees from north',
-                           'degrees from horizontal', '']
-    Liste_longname_nbpoint = ['latitude', 'longitude', 'Reference_Height_for_Wind', 'Reference_Height', 'altitude',
-                              'slope aspect', 'slope angle', 'OMM code of the station']
+    Liste_nom_nbpoint = [
+        "LAT",
+        "LON",
+        "UREF",
+        "ZREF",
+        "ZS",
+        "aspect",
+        "slope",
+        "station",
+    ]
+    Liste_type_nbpoint = ["f", "f", "f", "f", "f", "f", "f", "i4"]
+    Liste_unite_nbpoint = [
+        "degrees_north",
+        "degrees_east",
+        "m",
+        "m",
+        "m",
+        "degrees from north",
+        "degrees from horizontal",
+        "",
+    ]
+    Liste_longname_nbpoint = [
+        "latitude",
+        "longitude",
+        "Reference_Height_for_Wind",
+        "Reference_Height",
+        "altitude",
+        "slope aspect",
+        "slope angle",
+        "OMM code of the station",
+    ]
 
     for i in range(len(Liste_nom_time_nbpoint)):
-        fic_nc = fic_forcing.createVariable(Liste_nom_time_nbpoint[i], 'f', ('time', 'Number_of_points'),
-                                            fill_value=-9999999)
+        fic_nc = fic_forcing.createVariable(
+            Liste_nom_time_nbpoint[i],
+            "f",
+            ("time", "Number_of_points"),
+            fill_value=-9999999,
+        )
         fic_nc.units = Liste_unite_time_nbpoint[i]
         fic_nc.long_name = Liste_longname_time_nbpoint[i]
-        fic_nc[:] = xr.data[:,i]
+        fic_nc[:] = xr.data[:, i]
 
     for i in range(len(Liste_nom_nbpoint)):
-        fic_nc = fic_forcing.createVariable(Liste_nom_nbpoint[i], Liste_type_nbpoint[i], ('Number_of_points',), fill_value=-9999999)
+        fic_nc = fic_forcing.createVariable(
+            Liste_nom_nbpoint[i],
+            Liste_type_nbpoint[i],
+            ("Number_of_points",),
+            fill_value=-9999999,
+        )
         fic_nc.units = Liste_unite_nbpoint[i]
         fic_nc.long_name = Liste_longname_nbpoint[i]
         fic_nc[:] = Tableau_valeurs_nbpoint[i]
@@ -640,27 +800,45 @@ def parseArguments():
     parser = argparse.ArgumentParser()
 
     # Optional arguments
-    parser.add_argument('-o', '--output', help='Name for output file', type=str, default='out_met2netcdf.nc')
-    parser.add_argument('-c', '--constant', help='PSurf and Wind_DIR are constant', action='store_true')
-    parser.add_argument('-b', '--begin', help='Beginning date for nc file', type=str, default='1993080106')
-    parser.add_argument('-e', '--end', help='Ending date for nc file', type=str, default='2023080106')
-    parser.add_argument('-s', '--site', help='Site location', type=str, default='38472401')
-    parser.add_argument('--one_file', help='Create forcing for one MET file', action='store_true')
-    parser.add_argument('-p', '--path_MET', required='--one_file' in sys.argv, help='Path of the only MET', type=str)
+    parser.add_argument(
+        "-o",
+        "--output",
+        help="Name for output file",
+        type=str,
+        default="out_met2netcdf.nc",
+    )
+    parser.add_argument("-c", "--constant", help="PSurf and Wind_DIR are constant", action="store_true")
+    parser.add_argument(
+        "-b",
+        "--begin",
+        help="Beginning date for nc file",
+        type=str,
+        default="1993080106",
+    )
+    parser.add_argument("-e", "--end", help="Ending date for nc file", type=str, default="2023080106")
+    parser.add_argument("-s", "--site", help="Site location", type=str, default="38472401")
+    parser.add_argument("--one_file", help="Create forcing for one MET file", action="store_true")
+    parser.add_argument(
+        "-p",
+        "--path_MET",
+        required="--one_file" in sys.argv,
+        help="Path of the only MET",
+        type=str,
+    )
 
     # Print version
-    parser.add_argument('--version', action='version', version='%(prog)s - Version 1.0')
+    parser.add_argument("--version", action="version", version="%(prog)s - Version 1.0")
     # Parse arguments
     args = parser.parse_args()
 
     return args
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Recuperer les  arguments
     args = parseArguments()
     pathout = args.output
-    option_recup = not args.constant # By default, we get PSurf and Wind DIR from cdp60mn database
+    option_recup = not args.constant  # By default, we get PSurf and Wind DIR from cdp60mn database
     date_entree_debut = check_and_convert_date(str(args.begin))
     date_entree_fin = check_and_convert_date(str(args.end))
     site = args.site
@@ -669,8 +847,8 @@ if __name__ == '__main__':
     message_accueil(option_recup, name)
     if args.one_file:
         xr, date_beg, date_end = open_met_file_and_create_xr(args.path_MET, option_recup, site)
-        if pathout == 'out_met2netcdf.nc':
-            pathout = 'FORCING_'+ date_beg.ymdh + '_' + date_end.ymdh + '.nc'
+        if pathout == "out_met2netcdf.nc":
+            pathout = "FORCING_" + date_beg.ymdh + "_" + date_end.ymdh + ".nc"
         create_netcdf(pathout, xr, Tab_point)
     else:
         xr_compil = compilation_ttes_periodes(date_entree_debut, date_entree_fin, site, option_recup)
