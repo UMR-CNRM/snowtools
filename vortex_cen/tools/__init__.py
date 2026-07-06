@@ -1,5 +1,6 @@
 """
-Specific CEN tools.
+.. automodule:: vortex_cen.tools.vortex_extractor
+
 """
 
 from . import names as names

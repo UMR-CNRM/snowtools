@@ -8,6 +8,8 @@ from snowtools.tools.execute import callSystemOrDie
 import vortex
 from vortex.util.config import GenericConfigParser
 
+# TODO : Have a look at mkjob "subjobs" tool
+
 
 def parse_command_line():
 

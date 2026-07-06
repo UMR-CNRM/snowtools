@@ -24,5 +24,15 @@ These objects can be used either in an operational or a research workflow.
 
    Vortex-cen algo <vortex-cen-algo.rst>
 
+.. toctree::
+   :maxdepth: 1
+
+   Vortex-cen scripts <vortex-cen-scripts.rst>
+
+.. toctree::
+   :maxdepth: 1
+
+   Vortex-cen tools <vortex-cen-tools.rst>
+
 The 'CEN' namebuilder
 ---------------------
