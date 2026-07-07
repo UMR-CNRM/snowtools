@@ -179,7 +179,7 @@ elif os.path.exists('.git_info'):
 
 # Configure Vortex
 vortex_config = os.path.join(os.environ['HOME'], '.vortex.d', 'vortex.toml')
-if not os.path.exists(vortex_config):
+if not (os.path.isfile(vortex_config) or os.path.islink(vortex_config)):
     config_dir = os.path.join(os.environ['HOME'], '.vortex.d')
     if not os.path.exists(config_dir):
         os.makedirs(config_dir)
