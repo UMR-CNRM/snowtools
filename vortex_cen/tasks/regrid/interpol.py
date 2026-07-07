@@ -9,8 +9,9 @@ interpol.py
    :show-inheritance:
 """
 
-from vortex_cen.tasks.research_task_base import _CenResearchTask
 import vortex
+
+from vortex_cen.tasks.research_task_base import _CenResearchTask
 
 
 class InterpolateS2MForcing(_CenResearchTask):
@@ -216,7 +217,30 @@ class InterpolateS2MLocalForcing(InterpolateS2MForcing):
         """
         FORCING can come from local cache because just a subpart of yearly forcing is used.
         """
-        self.get_forcing(localname="FORCING.nc")
+        self.sh.title('Input sub-forcing file')
+        forcing_tbi = vortex.input(
+            local       = 'FORCING.nc',
+            experiment  = self.conf.xpid,
+            # MV : il faut forcer la géométrie de sortie à la géométrie d'entrée puisqu'il n'y a
+            # pas de changement de géométrie (--> sortir du répertoire "regrid" pour clarifier).
+            # TODO : trouver une façon plus standardisée de faire ça.
+            geometry    = self.conf.get('forcing_geometry'),
+            datebegin   = self.conf.datebegin,
+            dateend     = self.conf.dateend,
+            nativefmt   = 'netcdf',
+            kind        = 'MeteorologicalForcing',
+            model       = 's2m',
+            # MV : archivage sur cache uniquement par défaut pour ne pas dupliquer de la donnée existante
+            namespace   = self.conf.get('namespace_out', 'vortex.cache.fr'),
+            namebuild   = 'flat@cen',
+            # MV : archivage dans le même block que le forcing d'origine
+            block       = self.conf.forcing_block,
+            member      = self.conf.get('member', None),
+            role        = 'Forcing',
+        ),
+        print(self.ticket.prompt, 'Sub-forcing =', forcing_tbi)
+        print()
+
 
     def put_outputs(self):
 

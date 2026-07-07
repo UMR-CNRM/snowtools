@@ -3,8 +3,9 @@
 """
 
 
-from vortex_cen.tasks.research_task_base import _CenResearchTask
 import vortex
+
+from vortex_cen.tasks.research_task_base import _CenResearchTask
 
 
 class ExtractSubPeriod(_CenResearchTask):
@@ -76,7 +77,7 @@ class ExtractSubPeriod(_CenResearchTask):
             namespace   = self.conf.get('namespace_out', 'vortex.cache.fr'),
             namebuild   = 'flat@cen',
             # MV : archivage dans le même block que le forcing d'origine
-            block       = 'meteo',
+            block       = self.conf.forcing_block,
             member      = self.conf.get('member', None),
             role        = 'Forcing',
         ),
