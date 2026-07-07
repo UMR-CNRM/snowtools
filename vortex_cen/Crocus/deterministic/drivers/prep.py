@@ -5,7 +5,7 @@ This "prep" driver allows to generate a PREP.nc file (initial conditions) from a
 """
 
 from mkjob.nodes import Driver
-from vortex_cen.tasks.surfex.prep import _Prep_Construct
+from vortex_cen.tasks.surfex.prep import _PrepConstruct
 
 
 def setup(t, **kw):
@@ -19,7 +19,7 @@ def setup(t, **kw):
     )
 
 
-class MakePrep(_Prep_Construct):
+class MakePrep(_PrepConstruct):
 
     def get_init_TG(self):
         self.get_init_TG_from_uenv()

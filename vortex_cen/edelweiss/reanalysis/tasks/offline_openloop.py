@@ -29,14 +29,14 @@ class Offline_openloop(Offline_MPI_Uenv):
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
         self.get_pgd()
-        self.get_prep()
+        self.get_prep_file()
         self.get_executable_from_uenv()
 
     def get_local_inputs(self):
 
         self.get_namelist_from_cache()
 
-    def get_prep(self):
+    def get_prep_file(self):
         """
         All members are initialised by the same PREP file, not associated to any member.
         --> This method differs from the one in the main _Offline_MPI class because it is

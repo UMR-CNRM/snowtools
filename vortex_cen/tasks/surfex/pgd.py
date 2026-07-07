@@ -473,11 +473,11 @@ class GetPgd1D(_Pgd_Construct):
         :return: True if the PGD.nc file can be fetched from the uenv, cache or archive, False otherwise.
         :rtype: bool
         """
-        pgd = self.get_pgd_from_cache_or_archive(fatal=False)
+        pgd = self.get_pgd_file_from_cache_or_archive(fatal=False)
 
         # try to get PGD.nc from uenv
         if not pgd[0]:
-            self.get_pgd_from_uenv(fatal=False)
+            self.get_pgd_file_from_uenv(fatal=False)
 
         if len(self.ctx.sequence.effective_inputs(role="SurfexClim")) == 0:
             return False

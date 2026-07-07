@@ -29,13 +29,13 @@ class Offline_assim(Offline_MPI_Uenv):
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
         self.get_pgd()
-        self.get_prep()
+        self.get_prep_file()
         self.get_executable_from_uenv()
 
     def get_local_inputs(self):
         self.get_namelist_from_cache()
 
-    def get_prep(self):
+    def get_prep_file(self):
         """
         All members are initialised by a different PREP file coming from a SODA analysis
         --> Force *block* value to "prep/an" and *member" to the associated member value.

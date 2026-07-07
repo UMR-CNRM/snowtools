@@ -149,7 +149,7 @@ class GetClimGroundTemperature(InitClimGroundTemperature):
 
     def get_remote_inputs(self):
         # First try to get an init_TG file from the local cache or the archive
-        self.init_tg = self.get_init_TG_from_cache_or_archive(fatal=False)
+        self.init_tg = self.get_init_TG_from_cache_or_archive(fatal=False, cache_only=False)
         # then try to get init_TG from uenv
         if not self.init_tg[0]:
             self.get_init_TG_from_uenv(fatal=False)

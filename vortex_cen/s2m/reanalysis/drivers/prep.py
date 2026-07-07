@@ -5,7 +5,7 @@ Generation of SURFEX initial conditions file (PREP.nc)
 
 import vortex
 from mkjob.nodes import Driver
-from vortex_cen.tasks.surfex.prep import _Prep_Construct
+from vortex_cen.tasks.surfex.prep import _PrepConstruct
 
 
 def setup(t, **kw):
@@ -19,7 +19,7 @@ def setup(t, **kw):
     )
 
 
-class MakePrep(_Prep_Construct):
+class MakePrep(_PrepConstruct):
     """
     Task : MakePrep
     ===============

@@ -131,7 +131,7 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
 
     def get_remote_inputs(self):
 
-        self.get_pgd_from_cache_or_archive()
+        self.get_pgd_file_from_cache_or_archive()
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
         self.get_snow_observation()

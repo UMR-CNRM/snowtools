@@ -105,7 +105,7 @@ class Offline_reanalysis(Offline_MPI_Uenv):
         self.get_drdt_bst_fit()
         self.get_pgd()
         self.get_executable()
-        self.get_prep()
+        _ = self.get_prep_file_from_cache_or_archive(fatal=True, cache_only=False)
 
     def get_local_inputs(self):
         self.get_namelist_from_cache()

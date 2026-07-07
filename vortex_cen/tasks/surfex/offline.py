@@ -115,7 +115,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
     def get_local_inputs(self):
         self.get_namelist()
         try:
-            self.get_prep()
+            _ = self.get_prep_file_from_cache_or_archive(fatal=True, cache_only=True)
         except SectionFatalError as e:
             print('Unable to get PREP.nc.')
             # MV : la tâche 'GetPrep' est une tâche de secours, on ne doit pas

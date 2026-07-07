@@ -13,7 +13,7 @@ from mkjob.nodes import Driver
 from vortex_cen.tasks.surfex.offline import _Offline_MPI
 from vortex_cen.tasks.surfex.pre_process import _Preprocess
 from vortex_cen.tasks.surfex.pgd import GetPgd1D
-from vortex_cen.tasks.surfex.prep import GetPrep
+from vortex_cen.tasks.surfex.prep import FetchPrepFileOrMake
 from vortex_cen.tasks.surfex.init_clim_ground_temperature import GetClimGroundTemperature
 
 
@@ -25,7 +25,7 @@ def setup(t, **kw):
             PreProcess(tag='preprocess', ticket=t, **kw),
             MakeClimGroundTemperature(tag='inittg', ticket=t, **kw),
             GetPgd1D(tag='pgd', ticket=t, **kw),
-            GetPrep(tag='prep', ticket=t, **kw),
+            FetchPrepFileOrMake(tag='prep', ticket=t, **kw),
             Offline(tag='offline', ticket=t, **kw),
         ],
         options=kw,
@@ -63,7 +63,7 @@ class MakeClimGroundTemperature(GetClimGroundTemperature):
     def process(self):
         if self.conf.get('climground', False):
             # Check if a PREP file already exists
-            prep = self.get_prep(fatal=False)
+            prep = self.get_prep_file_from_cache_or_archive(fatal=False, cache_only=False)
             # If no PREP file found, launch the generation of init_TG file
             if not prep[0]:
                 super().process()
@@ -155,7 +155,7 @@ class Offline(_Offline_MPI):
     def get_local_inputs(self):
         # Get PGD and PREP locally because they have been retrieved or produced by a previous task
         self.get_pgd()
-        self.get_prep()
+        _ = self.get_prep_file_from_cache_or_archive(fatal=True, cache_only=True)
         # Get namelist from the preprocess task output
         self.get_namelist_from_cache()
         # Get FORCING locally because they have already been retrieved by the preprocess task
