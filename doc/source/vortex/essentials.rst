@@ -262,9 +262,17 @@ Getting data archived with Vortex requires to provide a valid footprint descript
 Vortex provides the `vtx` command line to fetch (and) store data to/from the vortex data tree from a description writen in a YAML configuration file :
 https://vortex-nwp.readthedocs.io/en/latest/user-guide/cli.html
 
-An example of such a yaml configuration file to extract data from the S2M reanalysis is provided : vortex_cen/conf/S2MReanalysis.yaml
+An example of such a yaml configuration file to extract a specific file from the S2M reanalysis is provided : vortex_cen/conf/S2MReanalysis.yaml
 
-However, using the `vtx` tool means that the fetched files are duplicated from the vortex data tree into the user's working directory and become "wild" files.
+Extracting this data can simply be done with :
+
+.. code::
+
+   vtx get S2MReanalysis.yaml
+
+However, the use of the `vtx` tool to extract the entire S2M dataset is not straightforward due to the annual data storage convention.
+
+More broadly, using data extractors means that the fetched files are duplicated from the vortex data tree into the user's working directory and become "wild" files.
 This results in the loss of the benefits to use vortex in the first place.
 In addition, the duplication of potentialy large dataset can lead to very sub-optimal data management.
 
