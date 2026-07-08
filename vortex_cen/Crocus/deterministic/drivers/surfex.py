@@ -14,7 +14,7 @@ from vortex_cen.tasks.surfex.offline import _Offline_MPI
 from vortex_cen.tasks.surfex.pre_process import _Preprocess
 from vortex_cen.tasks.surfex.pgd import GetPgd1D
 from vortex_cen.tasks.surfex.prep import FetchPrepFileOrMake
-from vortex_cen.tasks.surfex.init_clim_ground_temperature import GetClimGroundTemperature
+from vortex_cen.tasks.surfex.init_clim_ground_temperature import MakeClimGroundTemperatureIfNoPrep
 
 
 def setup(t, **kw):
@@ -23,52 +23,13 @@ def setup(t, **kw):
         ticket=t,
         nodes=[
             PreProcess(tag='preprocess', ticket=t, **kw),
-            MakeClimGroundTemperature(tag='inittg', ticket=t, **kw),
+            MakeClimGroundTemperatureIfNoPrep(tag='inittg', ticket=t, **kw),
             GetPgd1D(tag='pgd', ticket=t, **kw),
             FetchPrepFileOrMake(tag='prep', ticket=t, **kw),
             Offline(tag='offline', ticket=t, **kw),
         ],
         options=kw,
     )
-
-
-class MakeClimGroundTemperature(GetClimGroundTemperature):
-    """
-    Task : MakeClimGroundTemperature
-    ================================
-
-    If the "climground" is provided and set to "True", this task will look for a PREP.nc file and if none is found,
-    it will initialize Surfex ground temperature (GT) by taking the climatological mean of the input forcing air
-    temperature.
-
-    Inputs :
-    --------
-    - FORCING file(s) on simulation geometry
-
-    Outputs :
-    ---------
-    - Init_TG file (initial values of ground temperature)
-    """
-
-    def __init__(self, **kw):
-
-        super().__init__(**kw)
-        MANDATORY_CONFIGURATION_VARIABLES = [
-        ]
-        OPTIONAL_CONFIGURATION_VARIABLES = [
-            "climground:prep",
-        ]
-        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
-
-    def process(self):
-        if self.conf.get('climground', False):
-            # Check if a PREP file already exists
-            prep = self.get_prep_file_from_cache_or_archive(fatal=False, cache_only=False)
-            # If no PREP file found, launch the generation of init_TG file
-            if not prep[0]:
-                super().process()
-        else:
-            pass
 
 
 class PreProcess(_Preprocess):

@@ -99,6 +99,9 @@ class _CenResearchTask(Task, S2MTaskMixIn):
     def defaults(self, extras):
         """
         Set toolbox defaults, extended with actual arguments ``extras``.
+
+        :param extras: items to add to vortex.defaults.
+        :type extras: dict
         """
 
         t = vortex.ticket()
@@ -172,9 +175,10 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         """
         Enter 'debug' mode to preserve the working directory even after a succesfull execution.
 
-        Associated configuration variable :
-        :param debug: Enter 'debug' mode, default : False
-        :type debug: bool
+        Associated configuration variable:
+        ----------------------------------
+        * ``debug`` Enter 'debug' mode, default : False
+          type debug: bool
 
         """
         if 'debug' in self.conf:
@@ -187,12 +191,13 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         Pre-processing step to set usefull class variables.
 
         Associated (optional) configuration variables :
+        ------------------------------------------------
 
-        :param io_duration: Argument similar to the one of the `get_list_dates_files` method in
+        * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
                             snowtools/utils/dates.py. It is used to retrieve the list of *datebegin* and
                             *dateend* footprints for IO covering sub-periods.
                             Possible values : "yearly", "monthly" or "full"
-        :type io_duration: str
+          type io_duration: str
         """
         if 'io_duration' in self.conf:
             self.get_list_dates(duration=self.conf.io_duration)
@@ -316,6 +321,8 @@ class _CenResearchTask(Task, S2MTaskMixIn):
     def launch_python_algo(self, algo, **kw):
         """
         Run your task's algo component. For algo components consisting of python code.
+        :param algo: AlgoComponent object
+        :param kw: keyword arguments dict
         """
         if algo is not None:
             algo.run(**kw)
@@ -346,6 +353,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         from the actual simulation's datebegin/dateend arguments.
 
         :param duration: Time period covered by individual files.
+        :type duration: str
 
         """
         if 'datebegin' in self.conf and 'dateend' in self.conf:
@@ -369,7 +377,6 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         If no such file exists, check for files covering standard sub-periods (yearly or monthly files).
 
 
-        Arguments:
         :param localname: *local* footprint (how to name the file in the working directory).
                           This is an algo/task-specific argument.
                           Default name depends on the actual datebegin/dateend of each file.
@@ -378,60 +385,60 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         :type localname: str
         :param alternate: Allow to search for alternative files covering sub-periods.
         :type alternate: bool
+        :param namespace: namespace for fetching the forcing files. Default: vortex.multi.fr
+        :type namespace: str
 
         Mandatory configuration variables:
         ----------------------------------
 
-        :param forcing_datebegin: *datebegin* footprint, default self.conf.datebegin
-        :type forcing_datebegin: str, footprints.stdtypes.FPList
-        :param forcing_dateend: *dateend* footprint, default self.conf.dateend
-        :type forcing_dateend: str, footprints.stdtypes.FPList
-        :param forcing_xpid: Experiment identifier, default self.conf.xpid
-        :type forcing_xpid: str
-        :param forcing_geometry: *geometry* footprint, default self.conf.geometry
-        :type forcing_geometry: str, footprints.stdtypes.FPList
-        :param forcing_vapp: *vapp* footprint, default self.conf.vapp
-        :type forcing_vapp: str
-        :param forcing_vconf: *vconf* footprint, default self.conf.vconf
-        :type forcing_vconf: str
-        :param forcing_block: *block* footprint, default "meteo"
-        :type forcing_vconf: str
-        :param forcing_namespace: *namespace* footprint, default "vortex.multi.fr" (hendrix + local cache)
-        :type forcing_namespace: str
+        * ``forcing_datebegin`` *datebegin* footprint, default self.conf.datebegin
+          type forcing_datebegin: str, footprints.stdtypes.FPList
+        * ``forcing_dateend`` *dateend* footprint, default self.conf.dateend
+          type forcing_dateend: str, footprints.stdtypes.FPList
+        * ``forcing_xpid`` Experiment identifier, default self.conf.xpid
+          type forcing_xpid: str
+        * ``forcing_geometry`` *geometry* footprint, default self.conf.geometry
+          type forcing_geometry: str, footprints.stdtypes.FPList
+        * ``forcing_vapp`` *vapp* footprint, default self.conf.vapp
+          type forcing_vapp: str
+        * ``forcing_vconf`` *vconf* footprint, default self.conf.vconf
+          type forcing_vconf: str
+        * ``forcing_block`` *block* footprint, default "meteo"
+          type forcing_vconf: str
+        * ``forcing_namespace`` *namespace* footprint, default "vortex.multi.fr" (hendrix + local cache)
+          type forcing_namespace: str
 
-        :param forcing_date: *date* footprint (unsed with the research namebuilders), default to [dateend]
-        :type forcing_date: str
-        :param forcing_model: *model* footprint (to be made optional for SurfaceIO objects), default None
-        :type forcing_model: str
+        * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
+          type forcing_date: str
+        * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
+          type forcing_model: str
 
         Optionnal configuration variables:
         ----------------------------------
 
-        :param forcing_member: *member* footprint, default None (or *member* if provided)
-        :type forcing_member: int, footprints.stdtypes.FPList
-        :param forcing_namebuild: *namebuild* footprint, default "flat@cen" (will change soon)
-        :type forcing_namebuild: str
-        :param forcing_intent: *intent* footprint (local file permissions), default "in"
+        * ``forcing_member`` *member* footprint, default None (or *member* if provided)
+          type forcing_member: int, footprints.stdtypes.FPList
+        * ``forcing_namebuild`` *namebuild* footprint, default "flat@cen" (will change soon)
+          type forcing_namebuild: str
+        * ``forcing_intent`` *intent* footprint (local file permissions), default "in"
                                Possible values : "in" (read-only), "inout" (read-write)
-        :type forcing_intent: str
-        :param forcing_source_app: *source_app* footprint, default None
-        :type forcing_source_app: str, footprints.stdtypes.FPList
-        :param forcing_source_conf: *source_conf* footprint, default None
-        :type forcing_source_conf: str, footprints.stdtypes.FPList
-        :param forcing_source: Retrieve *source_app* and *source_conf* footrprints dictionnaries for S2M reanalysis
+          type forcing_intent: str
+        * ``forcing_source_app`` *source_app* footprint, default None
+          type forcing_source_app: str, footprints.stdtypes.FPList
+        * ``forcing_source_conf`` *source_conf* footprint, default None
+          type forcing_source_conf: str, footprints.stdtypes.FPList
+        * ``forcing_source`` Retrieve *source_app* and *source_conf* footrprints dictionnaries for S2M reanalysis
                                Possible values : 'era5', 'era40'
-        :type forcing_source: str
-        :param forcing_cutoff: *cutoff* footprint (to be made optional for SurfaceIO objects), default None
-        :type forcing_cutoff: str
-        :param io_duration: Argument similar to the one of the `get_list_dates_files` method in
+          type forcing_source: str
+        * ``forcing_cutoff`` *cutoff* footprint (to be made optional for SurfaceIO objects), default None
+          type forcing_cutoff: str
+        * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
                             snowtools/utils/dates.py.
                             Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
                             Possible values : "yearly", "monthly" or "full"
-        :type io_duration: str
-        :param prep_vortex1: Boolean to identify resources produced with vortex1 (filename without geometry)
-        :type prep_vortex1: bool
-        :param forcing_vortex1: Boolean to identify resources produced with vortex1 (filename without geometry)
-        :type forcing_vortex1: bool
+          type io_duration: str
+        * ``forcing_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
+          type forcing_vortex1: bool
 
 
         TODO : prévoir un mécanisme pour rendre des déclarer les arguments obligatoires / optionnels pour

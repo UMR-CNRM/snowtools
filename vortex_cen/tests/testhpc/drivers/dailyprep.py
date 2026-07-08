@@ -5,7 +5,7 @@ from vortex_cen.tasks.surfex.pre_process import Preprocess_Uenv_Namelist
 from vortex_cen.tasks.surfex.offline import OfflineMPIDailyPrep
 from vortex_cen.tasks.surfex.pgd import GetPgd1D
 from vortex_cen.tasks.surfex.prep import FetchPrepFileOrMake
-from vortex_cen.tasks.surfex.init_clim_ground_temperature import GetClimGroundTemperature
+from vortex_cen.tasks.surfex.init_clim_ground_temperature import GetClimGroundTemperatureOrMake
 
 
 def setup(t, **kw):
@@ -14,7 +14,7 @@ def setup(t, **kw):
         ticket=t,
         nodes=[
             Preprocess_Uenv_Namelist(tag='preprocess_uenv_namelist', ticket=t, **kw),
-            GetClimGroundTemperature(tag='getClimGroundTemperature', ticket=t, **kw),
+            GetClimGroundTemperatureOrMake(tag='getClimGroundTemperature', ticket=t, **kw),
             GetPgd1D(tag='getpgd1d', ticket=t, **kw),
             FetchPrepFileOrMake(tag='getprep', ticket=t, **kw),
             OfflineMPIDailyPrep(tag='offline_mpi_dailyprep', ticket=t, **kw),
