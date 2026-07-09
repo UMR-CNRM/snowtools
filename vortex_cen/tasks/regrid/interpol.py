@@ -73,29 +73,29 @@ class InterpolateS2MForcing(_CenResearchTask):
         """
         # Target grid file for interpolation
         # the path must be provided in the configuration file
-        self.sh.title('Input definition of the output grid')
+        self.sh.title("Input definition of the output grid")
         grid_tbi = vortex.input(
-            role='gridout',
-            kind='interpolgrid',
-            model='surfex',
+            role="gridout",
+            kind="interpolgrid",
+            model="surfex",
             genv=self.conf.uenv,
-            gvar=self.conf.get('gridout', 'DEM'),
-            local='GRID.nc',
+            gvar=self.conf.get("gridout", "DEM"),
+            local="GRID.nc",
         )
-        print(self.ticket.prompt, 'toolbox input grid definition file =', grid_tbi)
+        print(self.ticket.prompt, "toolbox input grid definition file =", grid_tbi)
         print()
 
         # take the interpolation binary from the uenv
         bin_interpol_tbx = vortex.executable(
-            role='Binary',
-            kind='offline',
-            local='INTERPOL',
-            model='surfex',
+            role="Binary",
+            kind="offline",
+            local="INTERPOL",
+            model="surfex",
             genv=self.conf.uenv,
-            gvar='master_interpol_mpi',
+            gvar="master_interpol_mpi",
         )
 
-        print(self.ticket.prompt, 'interpolation binary =', bin_interpol_tbx)
+        print(self.ticket.prompt, "interpolation binary =", bin_interpol_tbx)
         print()
 
     def get_local_inputs(self):
@@ -105,14 +105,14 @@ class InterpolateS2MForcing(_CenResearchTask):
         """
         Algo component for interpolation of the forcing on a regular grid
         """
-        self.sh.title('Toolbox algo interpolation')
+        self.sh.title("Toolbox algo interpolation")
         interpolation_tba = vortex.task(
-            engine='parallel',
-            binary='INTERPOL',
-            kind='deterministic',
+            engine="parallel",
+            binary="INTERPOL",
+            kind="deterministic",
             reprod_info=dict(genv=self.conf.uenv),
         )
-        print(self.ticket.prompt, 'interpolation algo component =', interpolation_tba)
+        print(self.ticket.prompt, "interpolation algo component =", interpolation_tba)
         print()
 
         return interpolation_tba
@@ -130,22 +130,24 @@ class InterpolateS2MForcing(_CenResearchTask):
 
     def put_outputs(self):
 
-        self.sh.title('Toolbox output interpolated forcing file')
-        forcing_tbo = vortex.output(
-            local       = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
-            experiment  = self.conf.xpid,
-            geometry    = self.conf.geometry,
-            datebegin   = self.conf.datebegin,
-            dateend     = self.conf.dateend,
-            nativefmt   = 'netcdf',
-            kind        = 'MeteorologicalForcing',
-            model       = 's2m',
-            namespace   = self.namespace_out,
-            namebuild   = 'flat@cen',
-            block       = self.conf.get('out_block', 'interpol'),
-            member      = self.conf.get('member', None),
-        ),
-        print(self.ticket.prompt, 'interpolated forcing file toolbox =', forcing_tbo)
+        self.sh.title("Toolbox output interpolated forcing file")
+        forcing_tbo = (
+            vortex.output(
+                local="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc",
+                experiment=self.conf.xpid,
+                geometry=self.conf.geometry,
+                datebegin=self.conf.datebegin,
+                dateend=self.conf.dateend,
+                nativefmt="netcdf",
+                kind="MeteorologicalForcing",
+                model="s2m",
+                namespace=self.namespace_out,
+                namebuild="flat@cen",
+                block=self.conf.get("out_block", "interpol"),
+                member=self.conf.get("member", None),
+            ),
+        )
+        print(self.ticket.prompt, "interpolated forcing file toolbox =", forcing_tbo)
         print()
 
     def diff(self):
@@ -153,22 +155,24 @@ class InterpolateS2MForcing(_CenResearchTask):
         Test output reproductibility [OPTIONAL]
         """
         self.sh.title("Reproductibility check : FORCING")
-        diff = vortex.diff(
-            local       = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
-            experiment  = self.conf.diff_xpid,
-            username    = self.conf.get('diff_user', None),
-            geometry    = self.conf.geometry,
-            datebegin   = self.conf.datebegin,
-            dateend     = self.conf.dateend,
-            nativefmt   = 'netcdf',
-            kind        = 'MeteorologicalForcing',
-            model       = 's2m',
-            namespace   = self.namespace_out,
-            namebuild   = 'flat@cen',
-            block       = self.conf.get('diff_block', 'interpol'),
-            member      = self.conf.get('member', None),
-        ),
-        print(self.ticket.prompt, 'diff =', diff)
+        diff = (
+            vortex.diff(
+                local="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc",
+                experiment=self.conf.diff_xpid,
+                username=self.conf.get("diff_user", None),
+                geometry=self.conf.geometry,
+                datebegin=self.conf.datebegin,
+                dateend=self.conf.dateend,
+                nativefmt="netcdf",
+                kind="MeteorologicalForcing",
+                model="s2m",
+                namespace=self.namespace_out,
+                namebuild="flat@cen",
+                block=self.conf.get("diff_block", "interpol"),
+                member=self.conf.get("member", None),
+            ),
+        )
+        print(self.ticket.prompt, "diff =", diff)
         print()
 
 
@@ -194,7 +198,7 @@ class InterpolateS2MRemoteForcing(InterpolateS2MForcing):
 
         """
         super().get_remote_inputs()
-        self.get_forcing(localname='FORCING.nc')
+        self.get_forcing(localname="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc")
 
 
 class InterpolateS2MLocalForcing(InterpolateS2MForcing):
@@ -217,70 +221,4 @@ class InterpolateS2MLocalForcing(InterpolateS2MForcing):
         """
         FORCING can come from local cache because just a subpart of yearly forcing is used.
         """
-        self.sh.title('Input sub-forcing file')
-        forcing_tbi = vortex.input(
-            local       = 'FORCING.nc',
-            experiment  = self.conf.xpid,
-            # MV : il faut forcer la géométrie de sortie à la géométrie d'entrée puisqu'il n'y a
-            # pas de changement de géométrie (--> sortir du répertoire "regrid" pour clarifier).
-            # TODO : trouver une façon plus standardisée de faire ça.
-            geometry    = self.conf.get('forcing_geometry'),
-            datebegin   = self.conf.datebegin,
-            dateend     = self.conf.dateend,
-            nativefmt   = 'netcdf',
-            kind        = 'MeteorologicalForcing',
-            model       = 's2m',
-            # MV : archivage sur cache uniquement par défaut pour ne pas dupliquer de la donnée existante
-            namespace   = self.conf.get('namespace_out', 'vortex.cache.fr'),
-            namebuild   = 'flat@cen',
-            # MV : archivage dans le même block que le forcing d'origine
-            block       = self.conf.forcing_block,
-            member      = self.conf.get('member', None),
-            role        = 'Forcing',
-        ),
-        print(self.ticket.prompt, 'Sub-forcing =', forcing_tbi)
-        print()
-
-
-    def put_outputs(self):
-
-        self.sh.title('Toolbox output interpolated forcing file')
-        forcing_tbo = vortex.output(
-            local       = 'FORCING.nc',
-            experiment  = self.conf.xpid,
-            geometry    = self.conf.geometry,
-            datebegin   = self.conf.datebegin,
-            dateend     = self.conf.dateend,
-            nativefmt   = 'netcdf',
-            kind        = 'MeteorologicalForcing',
-            model       = 's2m',
-            namespace   = self.namespace_out,
-            namebuild   = 'flat@cen',
-            block       = self.conf.get('out_block', 'interpol'),
-            member      = self.conf.get('member', None),
-        ),
-        print(self.ticket.prompt, 'interpolated forcing file toolbox =', forcing_tbo)
-        print()
-
-    def diff(self):
-        """
-        Test output reproductibility [OPTIONAL]
-        """
-        self.sh.title("Reproductibility check : FORCING")
-        diff = vortex.diff(
-            local       = 'FORCING.nc',
-            experiment  = self.conf.diff_xpid,
-            username    = self.conf.get('diff_user', None),
-            geometry    = self.conf.geometry,
-            datebegin   = self.conf.datebegin,
-            dateend     = self.conf.dateend,
-            nativefmt   = 'netcdf',
-            kind        = 'MeteorologicalForcing',
-            model       = 's2m',
-            namespace   = self.namespace_out,
-            namebuild   = 'flat@cen',
-            block       = self.conf.get('diff_block', 'interpol'),
-            member      = self.conf.get('member', None),
-        ),
-        print(self.ticket.prompt, 'diff =', diff)
-        print()
+        self.get_forcing(localname="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc")
