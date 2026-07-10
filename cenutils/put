@@ -204,7 +204,7 @@ then
         --exclude .settings \
         --exclude build \
         --exclude fail_test --exclude Manual_tests \
-        --exclude /exe \
+        --exclude /exe/* \
         --exclude "venv*" \
         --exclude "*.pyc" --exclude "*.bak" --exclude "*.sav" --exclude "*.backup" \
         --exclude ".*.swp" --exclude "*~" \
@@ -213,7 +213,7 @@ then
         --exclude "interpolation/interpol_*" \
         --exclude "src/dir_obj*" --exclude "exe_*" \
         --exclude 'profile_surfex' --exclude 'profile_surfex-LX*' \
-        --exclude "src/LIB/grib_api-*-Source" --exclude "src/LIB/eccodes*" --exclude STRATO \
+        --exclude "src/LIB/eccodes*" --exclude "src/LIB/netcdf*" --exclude "src/LIB/XIOS-GMGEC-2152-LX*" \
         --exclude "NO_TRANSFER*" \
         --exclude sphinx \
         --exclude examples \
@@ -243,7 +243,7 @@ then
       --exclude build \
       --exclude fail_test  \
       --exclude Manual_tests  \
-      --exclude exe/ \
+      --exclude exe/* \
       --exclude-glob venv* \
       --exclude-glob *.pyc \
       --exclude-glob *.bak \
@@ -261,11 +261,11 @@ then
       --exclude-glob exe_*/ \
       --exclude 'profile_surfex' \
       --exclude-glob 'profile_surfex-LX*' \
-      --exclude-glob src/LIB/grib_api-*-Source/ \
       --exclude-glob src/LIB/eccodes* \
+      --exclude-glob src/LIB/netcdf* \
+      --exclude-glob src/LIB/XIOS-GMGEC-2152-LX* \
       --exclude-glob examples/ \
       --exclude-glob sphinx/ \
-      --exclude STRATO \
       --exclude-glob NO_TRANSFER*/ \
       $folder_orig $folder_dest"
     retcode=$?
