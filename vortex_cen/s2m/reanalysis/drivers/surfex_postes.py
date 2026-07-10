@@ -68,7 +68,7 @@ class Offline_reanalysis_postes(Offline_MPI_Uenv):
 
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
-        self.get_pgd_file_from_uenv()
+        _ = self.get_pgd_file_from_uenv()
         self.get_executable()
         _ = self.get_prep_file_from_cache_or_archive(fatal=True, cache_only=False)
 

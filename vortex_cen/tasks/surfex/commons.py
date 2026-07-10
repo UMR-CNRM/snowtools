@@ -185,6 +185,7 @@ class SurfexCommonsMixin:
         :param fatal: If *True*, the method raises a fatal error if the file could not be fetched. Default: *True*.
             Should be False only in tasks that implement a second option for fetching a pgd file, for example one
             archived from a previous experiment.
+        :return: pgd toolbox
 
         Configuration Variables used:
         -----------------------------
@@ -209,6 +210,7 @@ class SurfexCommonsMixin:
         )
         print(self.ticket.prompt, 'PGD =', pgd)
         print()
+        return pgd
 
     def get_namelist_from_cache(self):
         """

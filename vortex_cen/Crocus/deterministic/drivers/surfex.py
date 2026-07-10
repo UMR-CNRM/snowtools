@@ -12,7 +12,7 @@ enventually be generated if necessary and possible.
 from mkjob.nodes import Driver
 from vortex_cen.tasks.surfex.offline import _Offline_MPI
 from vortex_cen.tasks.surfex.pre_process import _Preprocess
-from vortex_cen.tasks.surfex.pgd import GetPgd1D
+from vortex_cen.tasks.surfex.pgd import FetchPgdOrMake
 from vortex_cen.tasks.surfex.prep import FetchPrepFileOrMake
 from vortex_cen.tasks.surfex.init_clim_ground_temperature import MakeClimGroundTemperatureIfNoPrep
 
@@ -24,7 +24,7 @@ def setup(t, **kw):
         nodes=[
             PreProcess(tag='preprocess', ticket=t, **kw),
             MakeClimGroundTemperatureIfNoPrep(tag='inittg', ticket=t, **kw),
-            GetPgd1D(tag='pgd', ticket=t, **kw),
+            FetchPgdOrMake(tag='pgd', ticket=t, **kw),
             FetchPrepFileOrMake(tag='prep', ticket=t, **kw),
             Offline(tag='offline', ticket=t, **kw),
         ],
