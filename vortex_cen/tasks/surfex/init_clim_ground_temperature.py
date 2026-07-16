@@ -75,8 +75,10 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
       type io_duration: str
     * ``forcing_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
       type forcing_vortex1: bool
-    * ``out_block``: *block* part of the vortex output path. Default: "init_tg/prep"
+    * ``out_block``: *block* part of the vortex output path. Default: "prep"
       type out_block: str
+    * ``namespace_out`` Force specific namespace for output files (default: 'vortex.multi.fr')
+      type: str
 
     Configuration variables for reproducibility test
     ------------------------------------------------
@@ -100,7 +102,8 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
 
         OPTIONAL_CONFIGURATION_VARIABLES = [
             "forcing",
-            "out_block+default=init_tg/prep",
+            "out_block+default=prep",
+            "namespace_out+default=vortex.multi.fr",
             "diff_xpid",
             "diff_user",
             "diff_block+default=init_tg/prep",
@@ -162,9 +165,9 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
             experiment = self.conf.xpid,
             geometry   = self.conf.geometry,
             model      = "surfex",
-            namespace  = "vortex.multi.fr",
+            namespace  = self.conf.get("namespace_out", "vortex.multi.fr"),
             namebuild  = "flat@cen",
-            block      = self.conf.get("out_block", "init_tg/prep"),
+            block      = self.conf.get("out_block", "prep"),
         )
         print(self.ticket.prompt, "Output init ground temperature =", init_ground_temperature_out)
         print()
@@ -192,7 +195,7 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
         print()
 
 
-class GetClimGroundTemperatureOrMake(InitClimGroundTemperature):
+class FetchClimGroundTemperatureOrMake(InitClimGroundTemperature):
     """
     Task : GetClimGroundTemperature
     ===============================
@@ -279,6 +282,8 @@ class GetClimGroundTemperatureOrMake(InitClimGroundTemperature):
       type forcing_vortex1: bool
     * ``out_block``: *block* part of the vortex output path. Default: "init_tg/prep"
       type out_block: str
+    * ``namespace_out`` Force specific namespace for output files (default: 'vortex.multi.fr')
+      type: str
 
     Configuration variables for reproducibility test
     ************************************************
@@ -336,7 +341,7 @@ class GetClimGroundTemperatureOrMake(InitClimGroundTemperature):
             pass
 
 
-class MakeClimGroundTemperatureIfNoPrep(GetClimGroundTemperatureOrMake):
+class MakeClimGroundTemperatureIfNoPrep(FetchClimGroundTemperatureOrMake):
     """
     Task : MakeClimGroundTemperatureIfNoPrep
     ========================================
@@ -449,6 +454,8 @@ class MakeClimGroundTemperatureIfNoPrep(GetClimGroundTemperatureOrMake):
       type forcing_vortex1: bool
     * ``out_block``: *block* part of the vortex output path. Default: "init_tg/prep"
       type out_block: str
+    * ``namespace_out`` Force specific namespace for output files (default: 'vortex.multi.fr')
+      type: str
     """
 
     def __init__(self, **kw):
@@ -470,3 +477,67 @@ class MakeClimGroundTemperatureIfNoPrep(GetClimGroundTemperatureOrMake):
                 super().process()
         else:
             pass
+
+
+class FetchClimGroundTemperatureOrCrash(InitClimGroundTemperature, _CenResearchTask):
+    """
+    Try to get the ground temperature climatology file from an uenv or potentially from the archive and put it to the
+    cache.
+    Crash if the file is not available.
+
+    Mandatory configuration variables:
+    ----------------------------------
+    * ``surfex_uenv`` or if not present ``uenv`` User Environment from which the PGD.nc file should be fetched.
+                 Format : uenv:{uenv_name}@{user}
+    * ``tg_gvar`` key to look up the init_TG.nc file in the uenv the file should come from.
+    * ``geometry`` *geometry* of the forcing file(s)
+      type: str, footprints.stdtypes.FPList
+    * ``xpid`` Experiment identifier
+
+    Mandatory configuration variables unless ``force_uenv`` is *True*:
+    ------------------------------------------------------------------
+    * ``tg_xpid`` or ``xpid`` experiment id the init_TG.nc file should be fetched from.
+    * ``tg_user`` name of the user that produced the target the init_TG.nc file. Default: *None*
+    * ``tg_geometry`` or ``geometry`` geometry of the init_TG. Logically the same as for the rest of the simulation
+    * ``tg_vapp`` or ``vapp`` Application name to search the init_TG.nc file.
+    * ``tg_vconf`` or ``vconf`` Configuration name to search the init_TG.nc file.
+    * ``tg_block`` Block name to search the init_TG.nc file. Default: *prep*
+
+    Optional configuration variables:
+    ---------------------------------
+    * ``force_uenv`` If *True* the Init_TG.nc file must come from an uenv. Default: *False*
+    * ``namespace_out`` Force specific namespace for output files (default: 'vortex.multi.fr') For this
+      task you would probably not want to archive the Init_TG.nc file.
+      In this case set ``namespace_out`` to "vortex.cache.fr".
+      type: str
+
+    """
+    def __init__(self, **kw):
+
+        MANDATORY_CONFIGURATION_VARIABLES = [
+            "surfex_uenv|uenv",
+            "geometry",
+            "xpid",
+            "tg_gvar",
+        ]
+        OPTIONAL_CONFIGURATION_VARIABLES = [
+            "force_uenv",
+            "tg_cache",
+        ]
+        super().__init__(**kw)
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
+
+    def get_remote_inputs(self):
+        force_uenv = self.conf.get("force_uenv", False)
+        initg = self.get_init_TG_from_uenv(fatal=force_uenv)
+        if not initg[0]:
+            _ = self.get_init_TG_from_cache_or_archive(fatal=True, cache_only=False)
+
+    def get_local_inputs(self):
+        pass
+
+    def algo(self):
+        pass
+
+    def launch_algo(self, algo, **kwargs):
+        pass

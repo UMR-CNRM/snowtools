@@ -2,7 +2,7 @@
 
 from mkjob.nodes import Driver
 import vortex
-from vortex_cen.tasks.surfex.pre_process import Preprocess_Uenv_Namelist
+from vortex_cen.tasks.surfex.pre_process import PreprocessUenvNamelist
 from vortex_cen.tasks.surfex.offline import Offline_MPI_Uenv
 
 
@@ -11,7 +11,7 @@ def setup(t, **kw):
         tag='offline_openloop',
         ticket=t,
         nodes=[
-            Preprocess_Uenv_Namelist(tag='preprocess', ticket=t, **kw),
+            PreprocessUenvNamelist(tag='preprocess', ticket=t, **kw),
             Offline_openloop(tag='offline_openloop', ticket=t, **kw),
         ],
         options=kw,

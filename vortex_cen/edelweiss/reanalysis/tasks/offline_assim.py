@@ -2,7 +2,7 @@
 
 import vortex
 from mkjob.nodes import Driver
-from vortex_cen.tasks.surfex.pre_process import Preprocess_Uenv_Namelist
+from vortex_cen.tasks.surfex.pre_process import PreprocessUenvNamelist
 from vortex_cen.tasks.surfex.offline import Offline_MPI_Uenv
 
 
@@ -11,7 +11,7 @@ def setup(t, **kw):
         tag='offline_assim',
         ticket=t,
         nodes=[
-            Preprocess_Uenv_Namelist(tag='preprocess', ticket=t, **kw),
+            PreprocessUenvNamelist(tag='preprocess', ticket=t, **kw),
             Offline_assim(tag='offline_assim', ticket=t, **kw),
         ],
         options=kw,

@@ -4,9 +4,9 @@ Test the "MakePrepFile" unittask. The driver also includes the "Preprocess_Uenv_
 """
 
 from mkjob.nodes import Driver
-from vortex_cen.tasks.surfex.pre_process import Preprocess_Uenv_Namelist
+from vortex_cen.tasks.surfex.pre_process import PreprocessUenvNamelist
 from vortex_cen.tasks.surfex.prep import MakePrepFile
-from vortex_cen.tasks.surfex.init_clim_ground_temperature import GetClimGroundTemperatureOrMake
+from vortex_cen.tasks.surfex.init_clim_ground_temperature import FetchClimGroundTemperatureOrMake
 
 
 def setup(t, **kw):
@@ -14,8 +14,8 @@ def setup(t, **kw):
         tag='prep',
         ticket=t,
         nodes=[
-            Preprocess_Uenv_Namelist(tag='preprocess_uenv_namelist', ticket=t, **kw),
-            GetClimGroundTemperatureOrMake(tag='getClimGroundTemperature', ticket=t, **kw),
+            PreprocessUenvNamelist(tag='preprocess_uenv_namelist', ticket=t, **kw),
+            FetchClimGroundTemperatureOrMake(tag='getClimGroundTemperature', ticket=t, **kw),
             MakePrepFile(tag='make_prep', ticket=t, **kw),
         ],
         options=kw,

@@ -3,6 +3,8 @@
 """
 
 import vortex
+
+from snowtools.scripts.extract.vortex.vortexIO import get_init_TG
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
 
@@ -25,6 +27,13 @@ class PrepCommonsMixin(SurfexCommonsMixin):
         :param mpi: True if an executable with MPI support should be fetched, False otherwise. Default is True.
         :param fatal: True if failing to fetch the executable should cause a fatal error, False otherwise.
             Default is True.
+
+        Configuration variables used:
+        -----------------------------
+        * ``surfex_uenv`` If the executable should come from an uenv. Default is ``uenv``
+        * ``prep_gvar`` specify the name of the PREP executable in the uenv. Default is ``master_prep_mpi``
+          if the mpi parameter is True and ``master_prep_nompi`` otherwise.
+
         """
 
         if mpi:
@@ -48,6 +57,10 @@ class PrepCommonsMixin(SurfexCommonsMixin):
     def get_prep_exe_from_path(self):
         """
         Fetch a PREP executable from a local path.
+
+        Configuration variables used:
+        -----------------------------
+        * ``exesurfex`` Path to the executable if it should come from a local path.
         """
 
         self.sh.title('Toolbox input PREP executable from local path')
@@ -104,7 +117,7 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
       type: int
 
     Optionnal configuration variables:
-    ---------------------------------------------------------------------
+    ----------------------------------
     * ``pgd_xpid`` Experiment Identifier of the PGD file, if different from the task's XPID
       type: str
     * ``pgd_user`` Name of the user who produced the PGD file
@@ -117,6 +130,11 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
       type: bool
     * ``namespace_out`` Force specific namespace for output files (default: 'vortex.multi.fr')
       type: str
+    * ``diff_xpid`` Experiment id of the reference file used for reproducibility test.
+      type diff_xpid: str
+    * ``diff_user`` *user name* associated with the reference file used for reproducibility test
+      (only if different from current user). Default: *None*
+      type diff_user: str
     """
 
     def __init__(self, **kw):
@@ -240,8 +258,8 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
 
 class FetchPrepFileOrMake(_PrepConstruct):
     """
-    Task : GetPrep
-    ==============
+    Task : FetchPrepFileOrMake
+    ==========================
 
     Generation of initial conditions (PREP.nc file)
     Look if the requested PREP.nc file is available in the cache or archive. If not,
@@ -263,6 +281,38 @@ class FetchPrepFileOrMake(_PrepConstruct):
     --------
     - PREP.nc (initial conditions)
 
+    Mandatory configuration variables:
+    ----------------------------------
+    * ``geometry`` *geometry* of the forcing file(s)
+      type: str, footprints.stdtypes.FPList
+    * ``xpid`` Experiment identifier
+      type: str
+    * ``surfex_uenv`` or if not present ``uenv`` User Environment in which the following resources are to be retrieved :
+                 - ecoclimapI_covers_param.bin
+                 - ecoclimapII_eu_covers_param.bin
+                 - drdt_bst_fit_60.nc
+                 - PREP executable
+                 Format : uenv:{uenv_name}@{user}
+
+
+    Optional configuration variables:
+    ---------------------------------
+    * ``exesurfex`` Path to the executable if it should come from a local path.
+    * ``prep_gvar`` specify the name of the PREP executable in the uenv.
+    * ``prep_xpid`` or ``xpid`` Experiment id the prep file should be searched for or put in cache.
+    * ``prep_user`` name of the user who produced the PREP file. Default: None.
+    * ``prep_date`` or ``datebegin`` Validity date of the prep file. Default is ``datebegin`` but can be any date.
+    * ``prep_vapp`` or ``vapp`` Application name to search the PREP.nc file.
+    * ``prep_vconf`` or ``vconf`` Configuration name to search the PREP.nc file.
+    * ``prep_vortex1`` type: bool. *True* if the requested PREP.nc file was produced with vortex 1 and thus uses
+      vortex 1 naming conventions. Default is *False*.
+    * ``prep_geometry`` or ``geometry`` *geometry* of the PREP file.
+    * ``prep_namebuild`` Default: *flat@cen*
+    * ``prep_block`` block part of the data tree to search for the PREP.nc file. Default is ``prep``.
+    * ``prep_member`` or ``member`` If the PREP.nc file comes from an ensemble, a member can be chosen.
+       Default is ``None``.
+    * ``prep_cutoff`` Can be used to select a PREP file coming from an operational forecast (*forecast*) or
+       analysis (*assimilation*). Default is *None*. Might be useful for reforecasts.
     """
 
     def __init__(self, **kw):
@@ -278,7 +328,6 @@ class FetchPrepFileOrMake(_PrepConstruct):
             "member",
             "exesurfex",
             "tg_cache",
-            "tg_gvar",
             "prep",
             "pgd_cache",
             "prep_block"
@@ -289,41 +338,30 @@ class FetchPrepFileOrMake(_PrepConstruct):
     def get_prep_executable(self):
         """
         get PREP executable either from local path or from a UEnv
+
+        Configuration variables used:
+        -----------------------------
+        * ``exesurfex`` Path to the executable if it should come from a local path. Otherwise,
+        * ``surfex_uenv`` If the executable should come from an uenv. Default is ``uenv``
+        * ``prep_gvar`` specify the name of the PREP executable in the uenv. Default is ``master_prep_mpi``
+          if the mpi parameter is True and ``master_prep_nompi`` otherwise.
         """
         if hasattr(self.conf, 'exesurfex'):
             self.get_prep_exe_from_path()
         else:
             self.get_prep_exe_from_uenv()
 
-    def get_namelist(self):
-        # This task must be launched after a namelist pre-process task
-        self.get_namelist_from_cache()
-
-    def get_init_TG(self):
-        # Try to get an existing init_TG file but do not crash if there is none because
-        # it will be produced by the "MakeClimGroundTemperature" task
-        self.init_tg = self.get_init_TG_from_cache_or_archive(fatal=False, cache_only=False)
-        if not self.init_tg[0]:
-            self.init_tg = self.get_init_TG_from_uenv(fatal=False)
-
-    def get_pgd(self):
-        self.get_pgd_file_from_cache_or_archive(fatal=False)
-
     def get_remote_inputs(self):
 
         prep_tbi = self.get_prep_file_from_cache_or_archive(fatal=False)
         if not prep_tbi[0]:
             super().get_remote_inputs()
-            self.get_prep_executable()
 
     def get_local_inputs(self):
         if len(self.ctx.sequence.effective_inputs(role="SnowpackInit")) > 0:
             pass
         else:
             super().get_local_inputs()
-            # Last chance to find an init_tg file in case it has been produced by a previous task
-            if not self.init_tg[0]:
-                self.get_init_TG_from_cache_or_archive(fatal=True, cache_only=True)
 
     def algo(self):
         if len(self.ctx.sequence.effective_inputs(role="SnowpackInit")) > 0:
@@ -360,17 +398,159 @@ class FetchPrepFileOrMake(_PrepConstruct):
         print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
         print()
 
-# TODO: class FetchPrepFileOrCrash and class MakePrepFile
-class FetchPrepFileOrCrash(SurfexCommonsMixin, _CenResearchTask):
+
+class FetchPrepFileOrCrash(FetchPrepFileOrMake):
+    """
+    Fetch a prep file from the archive (or vortex cache) and put it in
+    the cache of the current experiment.
+
+    Mandatory configuration variables:
+    ----------------------------------
+
+    * ``geometry`` *geometry* of the forcing file(s)
+      type: str, footprints.stdtypes.FPList
+    * ``xpid`` Experiment identifier
+      type: str
+
+    * ``prep_xpid`` or ``xpid`` Experiment id the prep file should be searched for or put in cache.
+    * ``prep_user`` name of the user who produced the PREP file. Default: None.
+    * ``prep_date`` or ``datebegin`` Validity date of the prep file. Default is ``datebegin`` but can be any date.
+    * ``prep_vapp`` or ``vapp`` Application name to search the PREP.nc file.
+    * ``prep_vconf`` or ``vconf`` Configuration name to search the PREP.nc file.
+    * ``prep_vortex1`` type: bool. *True* if the requested PREP.nc file was produced with vortex 1 and thus uses
+      vortex 1 naming conventions. Default is *False*.
+    * ``prep_geometry`` or ``geometry`` *geometry* of the PREP file.
+    * ``prep_namebuild`` Default: *flat@cen*
+    * ``prep_block`` block part of the data tree to search for the PREP.nc file. Default is ``prep``.
+    * ``prep_member`` or ``member`` If the PREP.nc file comes from an ensemble, a member can be chosen.
+       Default is ``None``.
+    * ``prep_cutoff`` Can be used to select a PREP file coming from an operational forecast (*forecast*) or
+       analysis (*assimilation*). Default is *None*. Might be useful for reforecasts.
+    """
+    def __init__(self, **kw):
+        MANDATORY_CONFIGURATION_VARIABLES = [
+            "xpid",
+            "geometry",
+            "date",
+            "member",
+            "prep",
+        ]
+        OPTIONAL_CONFIGURATION_VARIABLES = [
+            'prep_xpid',
+            'prep_user',
+        ]
+        overwrite = [
+            "prep",
+            "exesurfex",
+            "tg_cache",
+            "tg_gvar",
+            "uenv",
+            "date",
+            "pgd_cache",
+        ]
+        super().__init__(**kw)
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES, overwrite=overwrite)
+
+    def get_remote_inputs(self):
+
+        prep_tbi = self.get_prep_file_from_cache_or_archive(fatal=True)
+
+    def get_local_inputs(self):
+        pass
+
+    def algo(self):
+        pass
+
+    def launch_algo(self, algo, **kwargs):
+        pass
+
+
+class MakePrepFile(_PrepConstruct):
+    """
+    Task : MakePrepFile
+    ===================
+
+    Task for the generation of initial conditions (PREP.nc file)
+
+    Inputs:
+    -------
+
+    * ``OPTIONS.nam`` ready-to-use SURFEX namelist (coming from an execution of a "Preprocess_Task")
+    * ``ecoclimapI_covers_param.bin`` and ``ecoclimapII_eu_covers_param.bin`` (binaries for vegetation generation)
+    * ``drdt_bst_fit_60.nc`` (Crocus metamorphism parameters)
+    * ``Init_TG.nc`` Initial values of ground temperature coming from the cache
+      (put there by an execution of an InitClimGroundTemperature or GetClimGroundTemperature task)
+    * ``PGD.nc`` Ground physiography coming from the cache (put there by an execution of a Pgd* task or GetPgd1D task
+
+    Outputs:
+    --------
+    - PREP.nc (initial conditions)
+
+    Mandatory configuration variables:
+    ----------------------------------
+
+    * ``date`` Date of validity of the PREP.nc file to generate. Default is ``datebegin``
+      type: str, Date
+    * ``geometry`` *geometry* of the forcing file(s)
+      type: str, footprints.stdtypes.FPList
+    * ``xpid`` Experiment identifier
+      type: str
+    * ``surfex_uenv`` or if not present ``uenv`` User Environment in which the following resources are to be retrieved :
+                 - ecoclimapI_covers_param.bin
+                 - ecoclimapII_eu_covers_param.bin
+                 - drdt_bst_fit_60.nc
+                 - PREP executable
+                 Format : uenv:{uenv_name}@{user}
+    * ``nprocs`` Number of process to allocate to the execution of the MPI binary
+      type: int
+    * ``ntasks`` Number of tasks to allocate to the execution of the MPI binary
+      type: int
+
+    Optionnal configuration variables:
+    ----------------------------------
+    * ``pgd_xpid`` Experiment Identifier of the PGD file, if different from the task's XPID
+      type: str
+    * ``pgd_user`` Name of the user who produced the PGD file
+      type: str
+    * ``pgd_vapp`` *vapp* of the PGD file, if different from the task's *vapp*
+      type: str
+    * ``pgd_vconf`` *vconf* of the PGD file, if different from the task's *vconf*
+      type: str
+    * ``dailyprep`` TODO :comprendre avec Matthieu L les cas d'usages avec "dailyprep" (reforecast ?)
+      type: bool
+    * ``namespace_out`` Force specific namespace for output files (default: 'vortex.multi.fr')
+      type: str
+    * ``diff_xpid`` Experiment id of the reference file used for reproducibility test.
+      type diff_xpid: str
+    * ``diff_user`` *user name* associated with the reference file used for reproducibility test
+      (only if different from current user). Default: *None*
+      type diff_user: str
+    * ``exesurfex`` Path to the executable if it should come from a local path. Otherwise,
+    * ``surfex_uenv`` If the executable should come from an uenv. Default is ``uenv``
+    * ``prep_gvar`` specify the name of the PREP executable in the uenv. Default is ``master_prep_mpi``
+          if the mpi parameter is True and ``master_prep_nompi`` otherwise.
+    """
     def __init__(self, **kw):
         MANDATORY_CONFIGURATION_VARIABLES = []
         OPTIONAL_CONFIGURATION_VARIABLES = [
-            'prep_xpid',
-            'prep_user'
+            "exesurfex",
+            "prep_gvar",
         ]
         super().__init__(**kw)
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
 
-class MakePrepFile(_PrepConstruct):
-    def __init__(self, **kw):
-        MANDATORY_CONFIGURATION_VARIABLES = []
+    def get_prep_executable(self):
+        """
+        get PREP executable either from local path or from a UEnv
+
+        Configuration variables used:
+        -----------------------------
+        * ``exesurfex`` Path to the executable if it should come from a local path. Otherwise,
+        * ``surfex_uenv`` If the executable should come from an uenv. Default is ``uenv``
+        * ``prep_gvar`` specify the name of the PREP executable in the uenv. Default is ``master_prep_mpi``
+          if the mpi parameter is True and ``master_prep_nompi`` otherwise.
+        """
+        if hasattr(self.conf, 'exesurfex'):
+            self.get_prep_exe_from_path()
+        else:
+            self.get_prep_exe_from_uenv()

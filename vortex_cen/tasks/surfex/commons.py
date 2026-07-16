@@ -449,6 +449,7 @@ class SurfexCommonsMixin:
         * ``surfex_uenv`` or if not present ``uenv`` User Environment from which the init_TG.nc file should be fetched.
                  Format : uenv:{uenv_name}@{user}
         * ``tg_gvar`` key to look up the init_TG.nc file in the uenv the file should come from.
+          Default: *climtg_[geometry::area]*
 
         """
         self.sh.title('Input init_TG from uenv')

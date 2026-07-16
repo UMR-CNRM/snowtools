@@ -24,6 +24,57 @@ class _Preprocess(SurfexCommonsMixin, _CenResearchTask):
     --------
     - Modified and ready-to-use SURFEX namelist
 
+    Mandatory configuration variables:
+    ----------------------------------
+
+    * ``forcing_datebegin`` *datebegin* footprint, default self.conf.datebegin
+      type forcing_datebegin: str, footprints.stdtypes.FPList
+    * ``forcing_dateend`` *dateend* footprint, default self.conf.dateend
+      type forcing_dateend: str, footprints.stdtypes.FPList
+    * ``forcing_xpid`` Experiment identifier, default self.conf.xpid
+      type forcing_xpid: str
+    * ``forcing_geometry`` *geometry* footprint, default self.conf.geometry
+      type forcing_geometry: str, footprints.stdtypes.FPList
+    * ``forcing_vapp`` *vapp* footprint, default self.conf.vapp
+      type forcing_vapp: str
+    * ``forcing_vconf`` *vconf* footprint, default self.conf.vconf
+      type forcing_vconf: str
+    * ``forcing_block`` *block* footprint, default "meteo"
+      type forcing_vconf: str
+    * ``forcing_namespace`` *namespace* footprint, default "vortex.multi.fr" (hendrix + local cache)
+      type forcing_namespace: str
+
+    * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
+      type forcing_date: str
+    * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
+      type forcing_model: str
+
+    Optionnal configuration variables:
+    ----------------------------------
+
+    * ``forcing_member`` *member* footprint, default None (or *member* if provided)
+      type forcing_member: int, footprints.stdtypes.FPList
+    * ``forcing_namebuild`` *namebuild* footprint, default "flat@cen" (will change soon)
+      type forcing_namebuild: str
+    * ``forcing_intent`` *intent* footprint (local file permissions), default "in"
+                           Possible values : "in" (read-only), "inout" (read-write)
+      type forcing_intent: str
+    * ``forcing_source_app`` *source_app* footprint, default None
+      type forcing_source_app: str, footprints.stdtypes.FPList
+    * ``forcing_source_conf`` *source_conf* footprint, default None
+      type forcing_source_conf: str, footprints.stdtypes.FPList
+    * ``forcing_source`` Retrieve *source_app* and *source_conf* footrprints dictionnaries for S2M reanalysis
+                           Possible values : 'era5', 'era40'
+      type forcing_source: str
+    * ``forcing_cutoff`` *cutoff* footprint (to be made optional for SurfaceIO objects), default None
+      type forcing_cutoff: str
+    * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
+                        snowtools/utils/dates.py.
+                        Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
+                        Possible values : "yearly", "monthly" or "full"
+      type io_duration: str
+    * ``forcing_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
+      type forcing_vortex1: bool
     """
     def __init__(self, **kw):
 
@@ -73,10 +124,11 @@ class _Preprocess(SurfexCommonsMixin, _CenResearchTask):
         print()
         return preprocess_tba
 
-    def launch_algo(self, algo):
+    def launch_algo(self, algo, **kwargs):
         """
         Launch an algo component.
         :param algo: algo component
+        :param kwargs: additional arguments not used
         """
         self.launch_python_algo(algo=algo)
 
@@ -119,12 +171,69 @@ class _Preprocess(SurfexCommonsMixin, _CenResearchTask):
 #        print()
 
 
-class Preprocess_Uenv_Namelist(_Preprocess):
+class PreprocessUenvNamelist(_Preprocess):
     """
     Task: Preprocess_Uenv_Namelist
     ==============================
     Task for pre-processing a namelist coming from a User Environment.
     NB : This is the task to use to guarantee the simulation's reproductibility
+
+    Mandatory configuration variables:
+    ----------------------------------
+
+    * ``surfex_uenv`` or if not present ``uenv`` User Environment from which the namelist file should be fetched.
+                 Format : uenv:{uenv_name}@{user}
+    * ``namelist_source`` In an UEnv, several namelistes can be present in an *.tar* archive,
+      the *source*  footprint allows to define the exact name of the nameliste to fetch.
+      For example, *OPTIONS_default.nam*.
+    * ``forcing_datebegin`` *datebegin* footprint, default self.conf.datebegin
+      type forcing_datebegin: str, footprints.stdtypes.FPList
+    * ``forcing_dateend`` *dateend* footprint, default self.conf.dateend
+      type forcing_dateend: str, footprints.stdtypes.FPList
+    * ``forcing_xpid`` Experiment identifier, default self.conf.xpid
+      type forcing_xpid: str
+    * ``forcing_geometry`` *geometry* footprint, default self.conf.geometry
+      type forcing_geometry: str, footprints.stdtypes.FPList
+    * ``forcing_vapp`` *vapp* footprint, default self.conf.vapp
+      type forcing_vapp: str
+    * ``forcing_vconf`` *vconf* footprint, default self.conf.vconf
+      type forcing_vconf: str
+    * ``forcing_block`` *block* footprint, default "meteo"
+      type forcing_vconf: str
+    * ``forcing_namespace`` *namespace* footprint, default "vortex.multi.fr" (hendrix + local cache)
+      type forcing_namespace: str
+
+    * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
+      type forcing_date: str
+    * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
+      type forcing_model: str
+
+    Optionnal configuration variables:
+    ----------------------------------
+
+    * ``forcing_member`` *member* footprint, default None (or *member* if provided)
+      type forcing_member: int, footprints.stdtypes.FPList
+    * ``forcing_namebuild`` *namebuild* footprint, default "flat@cen" (will change soon)
+      type forcing_namebuild: str
+    * ``forcing_intent`` *intent* footprint (local file permissions), default "in"
+                           Possible values : "in" (read-only), "inout" (read-write)
+      type forcing_intent: str
+    * ``forcing_source_app`` *source_app* footprint, default None
+      type forcing_source_app: str, footprints.stdtypes.FPList
+    * ``forcing_source_conf`` *source_conf* footprint, default None
+      type forcing_source_conf: str, footprints.stdtypes.FPList
+    * ``forcing_source`` Retrieve *source_app* and *source_conf* footrprints dictionnaries for S2M reanalysis
+                           Possible values : 'era5', 'era40'
+      type forcing_source: str
+    * ``forcing_cutoff`` *cutoff* footprint (to be made optional for SurfaceIO objects), default None
+      type forcing_cutoff: str
+    * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
+                        snowtools/utils/dates.py.
+                        Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
+                        Possible values : "yearly", "monthly" or "full"
+      type io_duration: str
+    * ``forcing_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
+      type forcing_vortex1: bool
     """
 
     def __init__(self, **kw):
@@ -146,13 +255,65 @@ class Preprocess_Uenv_Namelist(_Preprocess):
         self.get_namelist_from_uenv()
 
 
-class Preprocess_Local_Namelist(_Preprocess):
+class PreprocessLocalNamelist(_Preprocess):
     """
-    Task: Preprocess_Local_Namelist
+    Task: PreprocessLocalNamelist
     ===============================
 
     Task for pre-processing a namelist coming from any user-defined absolute path.
     WARNING : The simulation's reproductibility can not be guaranteed with this task !
+
+    Mandatory configuration variables:
+    ----------------------------------
+    * ``namelist_path`` absolute path to the namelist file
+    * ``forcing_datebegin`` *datebegin* footprint, default self.conf.datebegin
+      type forcing_datebegin: str, footprints.stdtypes.FPList
+    * ``forcing_dateend`` *dateend* footprint, default self.conf.dateend
+      type forcing_dateend: str, footprints.stdtypes.FPList
+    * ``forcing_xpid`` Experiment identifier, default self.conf.xpid
+      type forcing_xpid: str
+    * ``forcing_geometry`` *geometry* footprint, default self.conf.geometry
+      type forcing_geometry: str, footprints.stdtypes.FPList
+    * ``forcing_vapp`` *vapp* footprint, default self.conf.vapp
+      type forcing_vapp: str
+    * ``forcing_vconf`` *vconf* footprint, default self.conf.vconf
+      type forcing_vconf: str
+    * ``forcing_block`` *block* footprint, default "meteo"
+      type forcing_vconf: str
+    * ``forcing_namespace`` *namespace* footprint, default "vortex.multi.fr" (hendrix + local cache)
+      type forcing_namespace: str
+
+    * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
+      type forcing_date: str
+    * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
+      type forcing_model: str
+
+    Optionnal configuration variables:
+    ----------------------------------
+
+    * ``forcing_member`` *member* footprint, default None (or *member* if provided)
+      type forcing_member: int, footprints.stdtypes.FPList
+    * ``forcing_namebuild`` *namebuild* footprint, default "flat@cen" (will change soon)
+      type forcing_namebuild: str
+    * ``forcing_intent`` *intent* footprint (local file permissions), default "in"
+                           Possible values : "in" (read-only), "inout" (read-write)
+      type forcing_intent: str
+    * ``forcing_source_app`` *source_app* footprint, default None
+      type forcing_source_app: str, footprints.stdtypes.FPList
+    * ``forcing_source_conf`` *source_conf* footprint, default None
+      type forcing_source_conf: str, footprints.stdtypes.FPList
+    * ``forcing_source`` Retrieve *source_app* and *source_conf* footrprints dictionnaries for S2M reanalysis
+                           Possible values : 'era5', 'era40'
+      type forcing_source: str
+    * ``forcing_cutoff`` *cutoff* footprint (to be made optional for SurfaceIO objects), default None
+      type forcing_cutoff: str
+    * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
+                        snowtools/utils/dates.py.
+                        Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
+                        Possible values : "yearly", "monthly" or "full"
+      type io_duration: str
+    * ``forcing_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
+      type forcing_vortex1: bool
     """
 
     def __init__(self, **kw):
@@ -176,7 +337,7 @@ class Preprocess_Local_Namelist(_Preprocess):
         self.get_namelist_from_path()
 
 
-class Soda_Namelist_Preprocess(SurfexCommonsMixin, _CenResearchTask):
+class SodaNamelistPreprocess(SurfexCommonsMixin, _CenResearchTask):
     """
     Task: Soda_Namelist_Preprocess
     ==============================
@@ -236,10 +397,11 @@ class Soda_Namelist_Preprocess(SurfexCommonsMixin, _CenResearchTask):
 
         return algo
 
-    def launch_algo(self, algo):
+    def launch_algo(self, algo, **kwargs):
         """
         Launch a soda namelist preprocess algorithm.
         :param algo: algorithm to launch
+        :param kwargs: keyword arguments not used
         """
         self.launch_python_algo(algo=algo)
 

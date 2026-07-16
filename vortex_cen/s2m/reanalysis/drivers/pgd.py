@@ -4,7 +4,7 @@ Generation of ground physiography (PGD.nc file)
 """
 
 from mkjob.nodes import Driver
-from vortex_cen.tasks.surfex.pre_process import Preprocess_Uenv_Namelist
+from vortex_cen.tasks.surfex.pre_process import PreprocessUenvNamelist
 from vortex_cen.tasks.surfex.pgd import MakePgd
 
 
@@ -13,7 +13,7 @@ def setup(t, **kw):
         tag='pgd',
         ticket=t,
         nodes=[
-            Preprocess_Uenv_Namelist(tag='preprocess', ticket=t, **kw),
+            PreprocessUenvNamelist(tag='preprocess', ticket=t, **kw),
             MakePgd(tag='makepgd', ticket=t, **kw),
         ],
         options=kw,
