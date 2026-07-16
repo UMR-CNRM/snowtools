@@ -14,7 +14,45 @@ import vortex
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 
 
-class InterpolateS2MForcing(_CenResearchTask):
+class InterpolMixIn:
+    """
+    Methods for interpolation task
+    """
+
+    def get_remote_inputs(self):
+        """
+        get forcing files in the "massif" geometry, output grid file and interpolation binary.
+
+        """
+        # Target grid file for interpolation
+        # the path must be provided in the configuration file
+        self.sh.title("Input definition of the output grid")
+        grid_tbi = vortex.input(
+            role="gridout",
+            kind="interpolgrid",
+            model="surfex",
+            genv=self.conf.uenv,
+            gvar=self.conf.get("gridout", "DEM"),
+            local="GRID.nc",
+        )
+        print(self.ticket.prompt, "toolbox input grid definition file =", grid_tbi)
+        print()
+
+        # take the interpolation binary from the uenv
+        bin_interpol_tbx = vortex.executable(
+            role="Binary",
+            kind="offline",
+            local="INTERPOL",
+            model="surfex",
+            genv=self.conf.uenv,
+            gvar="master_interpol_mpi",
+        )
+
+        print(self.ticket.prompt, "interpolation binary =", bin_interpol_tbx)
+        print()
+
+
+class InterpolateS2MForcing(_CenResearchTask, InterpolMixIn):
     """
     Interpolate a forcing file in "massif" geometry onto a 2D grid, or 1D grid, that is a list of points.
 
@@ -71,32 +109,8 @@ class InterpolateS2MForcing(_CenResearchTask):
         get forcing files in the "massif" geometry, output grid file and interpolation binary.
 
         """
-        # Target grid file for interpolation
-        # the path must be provided in the configuration file
-        self.sh.title("Input definition of the output grid")
-        grid_tbi = vortex.input(
-            role="gridout",
-            kind="interpolgrid",
-            model="surfex",
-            genv=self.conf.uenv,
-            gvar=self.conf.get("gridout", "DEM"),
-            local="GRID.nc",
-        )
-        print(self.ticket.prompt, "toolbox input grid definition file =", grid_tbi)
-        print()
-
-        # take the interpolation binary from the uenv
-        bin_interpol_tbx = vortex.executable(
-            role="Binary",
-            kind="offline",
-            local="INTERPOL",
-            model="surfex",
-            genv=self.conf.uenv,
-            gvar="master_interpol_mpi",
-        )
-
-        print(self.ticket.prompt, "interpolation binary =", bin_interpol_tbx)
-        print()
+        super().get_remote_inputs()
+        self.get_forcing(localname="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc")
 
     def get_local_inputs(self):
         pass
@@ -176,43 +190,18 @@ class InterpolateS2MForcing(_CenResearchTask):
         print()
 
 
-class InterpolateS2MRemoteForcing(InterpolateS2MForcing):
-    """
-    Interpolate a forcing file in "massif" geometry onto a 2D grid, or 1D grid, that is a list of points.
-
-    Inputs:
-    --------
-    - remote FORCING file in the "massif" geometry
-    - GRID file containing the desired output grid.
-    - interpolation binary
-
-    Outputs:
-    ---------
-    - FORCING file on the new grid.
-
-    """
-
-    def get_remote_inputs(self):
-        """
-        get forcing files in the "massif" geometry, output grid file and interpolation binary.
-
-        """
-        super().get_remote_inputs()
-        self.get_forcing(localname="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc")
-
-
 class InterpolateS2MLocalForcing(InterpolateS2MForcing):
     """
     Interpolate a forcing file in "massif" geometry onto a 2D grid, or 1D grid, that is a list of points.
 
     Inputs:
-    --------
+    -------
     - Local FORCING file in the "massif" geometry.
     - GRID file containing the desired output grid.
     - interpolation binary
 
     Outputs:
-    ---------
+    --------
     - FORCING file on the new grid.
 
     """

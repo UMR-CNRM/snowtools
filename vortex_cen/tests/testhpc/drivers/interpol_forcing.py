@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Test the "InterpolateS2MRemoteForcing" unit task.
+Test the "InterpolateS2MForcing" unit task.
 """
 
 from mkjob.nodes import Driver
 
-from vortex_cen.tasks.regrid.interpol import InterpolateS2MRemoteForcing
+from vortex_cen.tasks.regrid.interpol import InterpolateS2MForcing
 
 
 def setup(t, **kw):
@@ -13,7 +13,7 @@ def setup(t, **kw):
         tag="interpolforcing",
         ticket=t,
         nodes=[
-            InterpolateS2MRemoteForcing(tag="interpolates2mforcing", ticket=t, **kw),
+            InterpolateS2MForcing(tag="interpolates2mforcing", ticket=t, **kw),
         ],
         options=kw,
     )

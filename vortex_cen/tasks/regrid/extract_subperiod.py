@@ -11,19 +11,35 @@ class ExtractSubPeriod(_CenResearchTask):
     Extract a sub period in a Forcing file
 
     Inputs:
-    --------
+    -------
     - FORCING file
 
     Outputs:
-    ---------
+    --------
     - FORCING file on a shorter period
 
     Configuration variables:
+    ------------------------
 
-    :param datebegin: begin date(s) of files
-    :param dateend: end date(s) of files
+    * ``datebegin`` begin date(s) of files
+    * ``dateend`` end date(s) of files
+    * ``forcing_geometry`` geometry of the forcing file which is going to be time cut
 
     """
+
+    def __init__(self, **kw):
+
+        MANDATORY_CONFIGURATION_VARIABLES = [
+            "datebegin+help=Time cut forcing file will start at this date included",
+            "dateend+help=Time cut forcing file will end at this date included",
+            "forcing_geometry+help=Geometry of the forcing file which is going to be time cut",
+        ]
+        OPTIONAL_CONFIGURATION_VARIABLES = [
+            "namespace_out+help=Path to keep the time cut forcing. Othewise, the file is put on cache"
+        ]
+        super().__init__(**kw)
+
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
 
     def get_remote_inputs(self):
         """
@@ -41,7 +57,7 @@ class ExtractSubPeriod(_CenResearchTask):
         """
         import xarray as xr
 
-        ds = xr.open_dataset("FORCING_before_time_cut.nc")
+        ds = xr.open_dataset("FORCING_before_time_cut.nc", engine="snowtools")
         shorter_forcing = ds.sel(time=slice(self.conf.datebegin, self.conf.dateend))
         shorter_forcing.to_netcdf("FORCING.nc", format="NETCDF4_CLASSIC")
         return None
