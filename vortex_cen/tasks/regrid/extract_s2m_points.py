@@ -19,6 +19,21 @@ class ExtractS2MForcing(_CenResearchTask):
     ---------
     - FORCING file(s) with extracted points
 
+     Configuration variables:
+    ------------------------
+
+    * ``massifs`` Massif number(s) to be extracted
+      type: int, list
+    * ``slopes`` Slope(s) to be extracted
+      type: int, list
+    * ``elevations`` Elevations(s) to be extracted
+      type: int, list
+    * ``aspects`` Aspects(s) to be extracted
+      type: int, list
+    *``geometry`` Geometry of the output file(s)
+      type: str
+    * ``xpid`` Experiment identifier
+      type: str
     """
 
     def __init__(self, **kw):

@@ -49,8 +49,8 @@ class _Preprocess(SurfexCommonsMixin, _CenResearchTask):
     * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
       type forcing_model: str
 
-    Optionnal configuration variables:
-    ----------------------------------
+    Optional configuration variables:
+    ---------------------------------
 
     * ``forcing_member`` *member* footprint, default None (or *member* if provided)
       type forcing_member: int, footprints.stdtypes.FPList

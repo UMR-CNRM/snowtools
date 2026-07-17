@@ -21,6 +21,19 @@ class Shadows(_CenResearchTask):
     ---------
     - FORCING file with extracted solar masks added.
 
+    Mandatory configuration variables:
+    ----------------------------------
+    * `datebegin` *datebegin* of the forcing file(s)
+        type: str, footprints.stdtypes.FPList
+    * `dateend` *dateend* of the forcing files(s)
+        type: str, footprints.stdtypes.FPList
+    * `forcing_geometry` *geometry* of the input forcing file(s)
+        type: str, footprints.stdtypes.FPList
+    * `geometry` *geometry* of the output forcing file(s)
+        type: str, footprints.stdtypes.FPList
+    * `xpid` Experiment identifier
+        type: str
+
     """
     def __init__(self, **kw):
 
@@ -100,11 +113,12 @@ class Shadows(_CenResearchTask):
         Save the output FORCING file(s) in the new geometry.
         WARNING : the output geometry must be in a valid "geometries.ini" file.
 
-        Arguments:
-        :param geometry: Geometry of the output file(s)
-        :type geometry: str
-        :param xpid: Experiment identifier
-        :type xpid: str
+        Configuration variables:
+        ------------------------
+        * ``geometry`` Geometry of the output file(s)
+          type: str
+        * ``xpid`` Experiment identifier
+          type: str
         """
 
         self.sh.title('Output FORCING')

@@ -22,9 +22,10 @@ class ExtractSubPeriod(_CenResearchTask):
     - FORCING file on a shorter period
 
     Configuration variables:
+    ------------------------
 
-    :param datebegin: begin date(s) of files
-    :param dateend: end date(s) of files
+    * ``datebegin`` begin date(s) of files
+    * ``dateend`` end date(s) of files
 
     """
 
@@ -50,12 +51,13 @@ class ExtractSubPeriod(_CenResearchTask):
 
         return None
 
-    def launch_algo(self, algo):
+    def launch_algo(self, algo, **kwargs):
         """
         launch the algo component.
 
         :param algo: Algorithm to be launched.
         :type algo: AlgoComponent
+        :param kwargs: Additional arguments to be passed to the algo component. Not used.
         """
         self.launch_python_algo(algo=algo)
 

@@ -23,6 +23,21 @@ class InterpolateS2MForcing(_CenResearchTask):
     ---------
     - FORCING file on the new grid.
 
+    Configuration variables:
+    ------------------------
+
+    * ``forcing_geometry`` geometry of input file
+      type: str, footprints.stdtypes.FPList
+    * ``gridout`` path to output grid file
+      type: str, pathlike
+    * ``uenv`` environment containing the interpolation executable
+    * ``xpid`` Experiment identifier
+      type: str
+    * ``geometry`` Geometry of the output file(s)
+      type: str
+    * ``datebegin`` begin date(s) of files
+    * ``dateend`` end date(s) of files
+    * ``namespace_out`` namespace of output files
     """
 
     def __init__(self, **kw):

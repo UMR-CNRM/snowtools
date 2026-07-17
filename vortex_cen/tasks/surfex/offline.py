@@ -14,6 +14,20 @@ class OfflineCommonsMixin(SurfexCommonsMixin):
     def get_executable_from_uenv(self, mpi=True, fatal=True):
         """
         Get OFFLINE executable from Uenv
+
+        :param mpi: If True, fetch offline executable with MPI support named *master_offline_mpi*,
+          if False, fetch offline executable without MPI support named *master_offline_nompi*.
+          The names can be overwritten using the ``offline_gvar`` configuration variable. Default: True
+        :type mpi: bool
+        :param fatal: If True, fails if the executable was not found. Default: True
+        :type fatal: bool
+
+        Configuration variables used:
+        -----------------------------
+
+        * ``surfex_uenv`` or ``uenv``
+        * ``offline_gvar`` or one of *master_offline_mpi* or *master_offline_nompi* depending on the value of the
+          mpi parameter.
         """
         if mpi:
             default_gvar = 'master_offline_mpi'
@@ -36,6 +50,15 @@ class OfflineCommonsMixin(SurfexCommonsMixin):
     def get_executable_from_path(self, fatal=True):
         """
         Get OFFLINE executable locally
+
+        :param fatal: If True, fails if the executable was not found. Default: True
+        :type fatal: bool
+
+        Configuration variables used:
+        -----------------------------
+
+        * ``exesurfex`` absolute path to the OFFLINE executable
+         type: str
         """
         self.sh.title('Input OFFLINE executable from local')
         OFFLINE_tbx = vortex.executable(
@@ -74,6 +97,143 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
     - PREP.nc SURFEX/Crocus model state variables at the end of the simulation
     - CUMUL.nc TODO   Compléter et CHECKER la doc
     - DIAG.nc TODO    Compléter et CHECKER la doc
+
+    Mandatory configuration variables:
+    ----------------------------------
+    * ``datebegin`` *datebegin* of the forcing file(s)
+      type: str, footprints.stdtypes.FPList
+    * ``dateend` *dateend* of the forcing files(s)
+      type: str, footprints.stdtypes.FPList
+    * ``geometry` *geometry* of the forcing file(s)
+      type: str, footprints.stdtypes.FPList
+    * ``xpid`` User-defined Experiment identifier (WARNING : 4-digit strings prohibited)
+      type: str
+    * ``surfex_uenv`` or ``uenv`` User Environment in which the following resources are to be retrieved:
+                 - ecoclimapI_covers_param.bin
+                 - ecoclimapII_eu_covers_param.bin
+                 - drdt_bst_fit_60.nc
+                 - OFFLINE executable
+                 Format : uenv:{uenv_name}@{user}
+      type: str
+    * ``nprocs`` Number of process to allocate to the execution of the MPI binary
+      type: int
+    * ``ntasks`` Number of tasks to allocate to the execution of the MPI binary
+      type: int
+
+    Optional configuration variables (other than forcing-specific ones):
+    --------------------------------------------------------------------
+    * ``exesurfex`` Path to the executable if it should come from a local path.
+    * ``offline_gvar`` specify the name of the offline executable in the uenv. Default is ``master_offline_mpi``
+          if the mpi parameter is True and ``master_offline_nompi`` otherwise.
+    * ``member`` Simulation member.
+                   NB : This is a deterministic task, only one single member value can be provided
+     type: int
+    * ``pgd_xpid`` Experiment Identifier of the PGD file, if different from the task's XPID
+     type: str
+    * ``pgd_user`` User who produced the target PGD file.
+     type: str
+    * ``pgd_vapp`` *vapp* of the PGD file, if different from the task's *vapp*
+     type: str
+    * ``pgd_vconf`` *vconf* of the PGD file, if different from the task's *vconf*
+     type: str
+    * ``prep_xpid`` Experiment Identifier of the PREP file, if different from the task's XPID
+     type: str
+    * ``prep_user`` User who produced the target PREP file.
+     type: str
+    * ``prep_member`` Member associated to the PREP file if it comes from an ensemble (after a SODA run)
+                        NB : This is a deterministic task, only one single member value can be provided
+     type: int
+    * ``prep_vapp`` *vapp* of the PREP file, if different from the task's *vapp*
+     type: str
+    * ``prep_vconf`` *vconf* of the PREP file, if different from the task's *vconf*
+     type: str
+    * ``prep_date`` Validity date of the PREP file (if different from *datebegin*)
+     type: str
+    * ``prep_block`` *block* of the PREP file (default 'prep', but can be different after an assimilation step)
+     type: str
+    * ``prep_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
+     type: bool
+    * ``august_threshold`` Threshold to apply to the snow water equivalent (in kg/m2) each 1st August (default: -999)
+     type: int
+    * ``dailyprep`` TODO :comprendre avec Matthieu L les cas d'usages avec "dailyprep" (reforecast ?)
+     type: bool
+    * ``drhook`` Activate / deactivate the profiling with DRHOOK (default: False)
+     type: bool
+    * ``namespace_out`` Force specific namespace for output files (default: 'vortex.multi.fr')
+     type: str
+    * ``nnodes`` Number of available nodes for MPI parallelisation
+     type: int
+    * ``nprocs`` Number of available processors for MPI parallelisation
+     type: int
+    * ``ntasks`` Number of MPI tasks
+     type: int
+    * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
+                        snowtools/utils/dates.py.
+                        Used to retrieve the list of *datebegin* and *dateend* for IO covering sub-periods.
+                        Possible values : "yearly", "monthly" or "full"
+     type: str
+    * ``diff_xpid`` Experiment id of the reference file used for reproducibility test.
+      type diff_xpid: str
+    * ``diff_user`` *user name* associated with the reference file used for reproducibility test
+      (only if different from current user). Default: *None*
+      type diff_user: str
+    * ``diff_block`` *block* of the reference file used for reproducibility test
+
+    Forcing related configuration variables:
+    ----------------------------------------
+
+    Mandatory
+    *********
+
+    * ``forcing_datebegin`` *datebegin* footprint, default self.conf.datebegin
+      type forcing_datebegin: str, footprints.stdtypes.FPList
+    * ``forcing_dateend`` *dateend* footprint, default self.conf.dateend
+      type forcing_dateend: str, footprints.stdtypes.FPList
+    * ``forcing_xpid`` Experiment identifier, default self.conf.xpid
+      type forcing_xpid: str
+    * ``forcing_geometry`` *geometry* footprint, default self.conf.geometry
+      type forcing_geometry: str, footprints.stdtypes.FPList
+    * ``forcing_vapp`` *vapp* footprint, default self.conf.vapp
+      type forcing_vapp: str
+    * ``forcing_vconf`` *vconf* footprint, default self.conf.vconf
+      type forcing_vconf: str
+    * ``forcing_block`` *block* footprint, default "meteo"
+      type forcing_vconf: str
+    * ``forcing_namespace`` *namespace* footprint, default "vortex.multi.fr" (hendrix + local cache)
+      type forcing_namespace: str
+
+    * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
+      type forcing_date: str
+    * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
+      type forcing_model: str
+
+    Optional
+    ********
+
+    * ``forcing_member`` *member* footprint, default None (or *member* if provided)
+      type forcing_member: int, footprints.stdtypes.FPList
+    * ``forcing_namebuild`` *namebuild* footprint, default "flat@cen" (will change soon)
+      type forcing_namebuild: str
+    * ``forcing_intent`` *intent* footprint (local file permissions), default "in"
+                           Possible values : "in" (read-only), "inout" (read-write)
+      type forcing_intent: str
+    * ``forcing_source_app`` *source_app* footprint, default None
+      type forcing_source_app: str, footprints.stdtypes.FPList
+    * ``forcing_source_conf`` *source_conf* footprint, default None
+      type forcing_source_conf: str, footprints.stdtypes.FPList
+    * ``forcing_source`` Retrieve *source_app* and *source_conf* footrprints dictionnaries for S2M reanalysis
+                           Possible values : 'era5', 'era40'
+      type forcing_source: str
+    * ``forcing_cutoff`` *cutoff* footprint (to be made optional for SurfaceIO objects), default None
+      type forcing_cutoff: str
+    * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
+                        snowtools/utils/dates.py.
+                        Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
+                        Possible values : "yearly", "monthly" or "full"
+      type io_duration: str
+    * ``forcing_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
+      type forcing_vortex1: bool
+
     """
 
     def __init__(self, **kw):
@@ -95,7 +255,8 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
             "namespace_out",
             "august_threshold",
             "offline_gvar",
-            "out_block+default=offline/[pro,prep] ",
+            "exesurfex",
+            "out_block+default=[pro,prep] ",
             "diff_xpid",
             "diff_user",
             "diff_block+default=offline/prep",
@@ -113,38 +274,35 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
 
 
     def get_local_inputs(self):
-        self.get_namelist()
+        self.get_namelist_from_cache()
         try:
             _ = self.get_prep_file_from_cache_or_archive(fatal=True, cache_only=True)
         except SectionFatalError as e:
-            print('Unable to get PREP.nc.')
-            # MV : la tâche 'GetPrep' est une tâche de secours, on ne doit pas
-            # compter dessus par defaut mais plutot chercher un PREP existant
-            #      'Make sure that your driver '
-            #      'has a node corresponding to the GetPrep task '
-            #      'before executing the offline task and that the prep_xpid values in the '
-            #      'corresponding configuration sections match. '
-            #      'Or that the PrepUenvPrep or PrepLocalPrep task '
-            #      'has been run recently for the given experiment (prep_xpid).')
+            print("Unable to get PREP.nc."
+                  "Check your configuration (prep_xpid for example)."
+                  "Check your driver: does it have a node that fetches or computes a prep file? "
+                  "(e.g.: MakePrepFile, FetchPrepFileOrMake, FetchPrepFileOrCrash)")
             raise e
-        self.get_pgd()
-
-    def get_namelist(self):
-        self.get_namelist_from_cache()
+        self.get_pgd_from_cache()
 
     def get_executable(self):
         """
-        Get OFFLINE executable, either from a UEnv/GEnv or from a path depending on the task
-        Either call get_executable_from_uenv or get_executable_from_path methods
-        """
-        raise NotImplementedError("An OFFLINE executable is exepected")
+        get offline executable either from local path or from a UEnv
 
-    def get_pgd(self):
+        Configuration variables used:
+        -----------------------------
+        * ``exesurfex`` Path to the executable if it should come from a local path. Otherwise,
+        * ``surfex_uenv`` If the executable should come from an uenv. Default is ``uenv``
+        * ``offline_gvar`` specify the name of the offline executable in the uenv. Default is ``master_offline_mpi``
+          if the mpi parameter is True and ``master_offline_nompi`` otherwise.
+        * ``mpi`` If True, *mpi* executable is fetched, if False *nompi* executable. Default: True
         """
-        The PGD.nc file can come from the output of a "PGD" Task in standard cases.
-        It comes from a User Environment in reanalysis tasks.
-        """
-        self.get_pgd_from_cache()
+        if hasattr(self.conf, 'exesurfex'):
+            self.get_executable_from_path()
+        else:
+            mpi = self.conf.get("mpi", True)
+            self.get_executable_from_uenv(mpi=mpi)
+
 
     def put_outputs(self):
         """
@@ -170,9 +328,9 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
             nativefmt      = 'netcdf',
             kind           = 'PREP',
             model          = 'surfex',
-            namespace      = self.namespace_out,
+            namespace      = self.conf.get("namespace_out", "vortex.multi.fr"),
             namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
-            block          = self.conf.get('out_block', 'offline/prep'),
+            block          = self.conf.get('out_block', 'prep'),
             member         = self.conf.get('member', None),
         ),
         print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
@@ -190,9 +348,9 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
             nativefmt      = 'netcdf',
             kind           = 'SnowpackSimulation',
             model          = 'surfex',
-            namespace      = self.namespace_out,
+            namespace      = self.conf.get("namespace_out", "vortex.multi.fr"),
             namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
-            block          = self.conf.get('out_block', 'offline/pro'),
+            block          = self.conf.get('out_block', 'pro'),
             member         = self.conf.get('member', None),
         ),
         print(self.ticket.prompt, 'pro_tbo =', pro_tbo)
@@ -210,9 +368,9 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
             nativefmt      = 'netcdf',
             kind           = 'SnowpackSimulation',
             model          = 'surfex',
-            namespace      = self.namespace_out,
+            namespace      = self.conf.get("namespace_out", "vortex.multi.fr"),
             namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
-            block          = self.conf.get('out_block', 'offline/cumul'),
+            block          = self.conf.get('out_block', 'cumul'),
             member         = self.conf.get('member', None),
             fatal          = False,
         ),
@@ -231,9 +389,9 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
             nativefmt      = 'netcdf',
             kind           = 'SnowpackSimulation',
             model          = 'surfex',
-            namespace      = self.namespace_out,
+            namespace      = self.conf.get("namespace_out", "vortex.multi.fr"),
             namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
-            block          = self.conf.get('out_block', 'offline/diag'),
+            block          = self.conf.get('out_block', 'diag'),
             member         = self.conf.get('member', None),
             fatal          = False,
         ),
@@ -257,7 +415,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
             nativefmt      = 'netcdf',
             kind           = 'PREP',
             model          = 'surfex',
-            namespace      = self.namespace_out,
+            namespace      = self.conf.get("namespace_out", "vortex.multi.fr"),
             namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
             block          = self.conf.get('diff_block', 'offline/prep'),
             member         = self.conf.get('member', None),
@@ -266,10 +424,10 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
         print()
 
 
-class _Offline_MPI(_Offline):
+class OfflineMpi(_Offline):
     """
-    Task : _Offline_MPI
-    ===================
+    Task : OfflineMpi
+    =================
 
     Abstract task for the execution of OFFLINE binary with MPI parallelisation.
 
@@ -340,7 +498,7 @@ class _Offline_MPI(_Offline):
         )
 
 
-class Offline_MPI_Uenv(_Offline_MPI):
+class Offline_Mpi_Uenv(OfflineMpi):
     """
     Task : Offline_MPI_Uenv
     =======================
@@ -371,33 +529,7 @@ class Offline_MPI_Uenv(_Offline_MPI):
         self.get_executable_from_uenv(mpi=True)
 
 
-class Offline_MPI_Local(_Offline_MPI):
-    """
-    Task : Offline_MPI_Local
-    ========================
-
-    Get an OFFLINE executable from any user-defined absolute path locally.
-
-    WARNING : The simulation's reproductibility can not be guaranteed with this task !
-    """
-
-    def __init__(self, **kw):
-
-        MANDATORY_CONFIGURATION_VARIABLES = []
-        OPTIONAL_CONFIGURATION_VARIABLES = [
-            "exesurfex",
-        ]
-        super().__init__(**kw)
-
-        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
-
-    # MV : dans ce cas le binaire doit être présent localement sur HPC,
-    # pas besoin de le récupérer sur un noeud de transfert
-    def get_executable(self):
-        self.get_executable_from_path()
-
-
-class OfflineMPIDailyPrep(_Offline_MPI):
+class OfflineMpiDailyPrep(OfflineMpi):
     """
     Do a surfex simulation with daily prep file output
     """
@@ -447,7 +579,7 @@ class OfflineMPIDailyPrep(_Offline_MPI):
             nativefmt='netcdf',
             kind='SnowpackSimulation',
             model='surfex',
-            namespace=self.namespace_out,
+            namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
             namebuild='flat@cen',  # TODO : passer en variable de configuration
             block='cumul',
             member=self.conf.get('member', None),
@@ -467,7 +599,7 @@ class OfflineMPIDailyPrep(_Offline_MPI):
             nativefmt='netcdf',
             kind='SnowpackSimulation',
             model='surfex',
-            namespace=self.namespace_out,
+            namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
             namebuild='flat@cen',  # TODO : passer en variable de configuration
             block='diag',
             member=self.conf.get('member', None),
@@ -487,7 +619,7 @@ class OfflineMPIDailyPrep(_Offline_MPI):
             nativefmt='netcdf',
             kind='PREP',
             model='surfex',
-            namespace=self.namespace_out,
+            namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
             namebuild='flat@cen',  # TODO : passer en variable de configuration
             block='prep',
             member=self.conf.get('member', None),
@@ -506,10 +638,152 @@ class OfflineMPIDailyPrep(_Offline_MPI):
             nativefmt='netcdf',
             kind='SnowpackSimulation',
             model='surfex',
-            namespace=self.namespace_out,
+            namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
             namebuild='flat@cen',  # TODO : passer en variable de configuration
             block='pro',
             member=self.conf.get('member', None),
         ),
         print(self.ticket.prompt, 'pro_tbo =', pro_tbo)
+        print()
+
+
+class OfflineAssim(OfflineMpi):
+    """
+    This is the task for an OFFLINE-MPI execution after a snow data assimilation step.
+    Each simulaiton member is initialised by a different PREP file identified by its *member* value.
+    """
+
+    def __init__(self, **kw):
+
+        super().__init__(**kw)
+
+        MANDATORY_CONFIGURATION_VARIABLES = [
+        ]
+
+        OPTIONAL_CONFIGURATION_VARIABLES = [
+        ]
+
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
+
+    def get_remote_inputs(self):
+
+        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
+        self.get_ecoclimap()
+        self.get_drdt_bst_fit()
+        self.get_prep_file()  # TODO: check if this could be replaced by a suitable configuration
+                              #  of the FetchPrepFileOrCrash and OfflineMpi classes? In this case the
+                              #  corresponding drivers could simply use the OfflineMpi class.
+        self.get_executable_from_uenv()
+
+    def get_local_inputs(self):
+        self.get_namelist_from_cache()
+        self.get_pgd_from_cache()
+
+    def get_prep_file(self):
+        """
+        All members are initialised by a different PREP file coming from a SODA analysis
+        --> Force *block* value to "prep/an" and *member" to the associated member value.
+        SR: Must *block* really be hard coded here? Can't this be configured?
+
+        """
+
+        self.sh.title('Input PREP')
+        prep_tbi = vortex.input(
+            local          = 'PREP.nc',
+            role           = 'SnowpackInit',
+            experiment     = self.conf.get('prep_xpid', self.conf.xpid),
+            username       = self.conf.get('prep_user', None),
+            date           = self.conf.get('prep_date', self.conf.datebegin),
+            vapp           = self.conf.get('prep_vapp', self.conf.vapp),
+            vconf          = self.conf.get('prep_vconf', self.conf.vconf),
+            geometry       = self.conf.geometry,
+            nativefmt      = 'netcdf',
+            kind           = 'PREP',
+            model          = 'surfex',
+            namespace      = 'vortex.multi.fr',
+            vortex1        = self.conf.get('prep_vortex1', False),
+            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration ?
+            block          = self.conf.get("prep_block", "soda/analysis"),
+            member         = self.conf.member, # TODO: where does the "member" configuration come from?
+            intent         = 'inout',
+        ),
+        print(self.ticket.prompt, 'prep_tbi =', prep_tbi)
+        print()
+
+
+class OfflineOpenloop(OfflineMpi):
+    """
+    This is the task for an OFFLINE-MPI execution before any data assimilation.
+    All members are initialised by the same PREP file, not associated to any member.
+    """
+    def get_remote_inputs(self):
+
+        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
+        self.get_ecoclimap()
+        self.get_drdt_bst_fit()
+        self.get_prep_file() # TODO: check if this could be replaced by a suitable configuration
+                             #  of the FetchPrepFileOrCrash and OfflineMpi classes? In this case the
+                             #  corresponding drivers could simply use the OfflineMpi class.
+        self.get_executable_from_uenv()
+
+    def get_local_inputs(self):
+
+        self.get_namelist_from_cache()
+        self.get_pgd_from_cache()
+
+    def get_prep_file(self):
+        """
+        All members are initialised by the same PREP file, not associated to any member.
+        --> This method differs from the one in the main _Offline_MPI class because it is
+        explicitly NOT associated to any member.
+
+        """
+
+        self.sh.title('Input PREP')
+        prep_tbi = vortex.input(
+            local          = 'PREP.nc',
+            role           = 'SnowpackInit',
+            experiment     = self.conf.get('prep_xpid', self.conf.xpid),
+            username       = self.conf.get('prep_user', None),
+            date           = self.conf.get('prep_date', self.conf.datebegin),
+            vapp           = self.conf.get('prep_vapp', self.conf.vapp),
+            vconf          = self.conf.get('prep_vconf', self.conf.vconf),
+            geometry       = self.conf.geometry,
+            nativefmt      = 'netcdf',
+            kind           = 'PREP',
+            model          = 'surfex',
+            namespace      = 'vortex.multi.fr',
+            vortex1        = self.conf.get('prep_vortex1', False),
+            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration ?
+            block          = self.conf.get('prep_block', 'prep'),
+            intent         = 'inout',
+        ),
+        print(self.ticket.prompt, 'prep_tbi =', prep_tbi)
+        print()
+
+    def put_prep(self):
+        """
+        Archive PREP files as "background" state --> force block value to "prep/bg"
+        """
+
+        self.sh.title('Output PREP')
+        prep_tbo = vortex.output(
+            local          = 'PREP_[date:ymdh].nc',
+            role           = 'SnowpackInit',
+            experiment     = self.conf.xpid,
+            geometry       = self.conf.geometry,
+            # MV : comprendre avec Matthieu L les cas d'usages avec "dailyprep" (reforecast ?)
+            # et faire une tâche spécifique à ces cas là.
+#            date           = list_dates_end_pro if not self.conf.dailyprep else
+#                                list(daterange(tomorrow(base=datebegin), dateend)),
+            date           = self.list_dates_end_pro,
+            nativefmt      = 'netcdf',
+            kind           = 'PREP',
+            model          = 'surfex',
+            namespace      = self.namespace_out,
+            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
+            block          = 'prep/background',
+            member         = self.conf.get('member', None),
+        ),
+        print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
         print()

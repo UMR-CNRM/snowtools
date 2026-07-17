@@ -263,9 +263,10 @@ class FetchPrepFileOrMake(_PrepConstruct):
 
     Generation of initial conditions (PREP.nc file)
     Look if the requested PREP.nc file is available in the cache or archive. If not,
-    calculate it.
+    calculate it. The output is put to the cache but not archived!
+    Use the *MakePrepFile* class to generate and archive a PREP.nc file
 
-    WARNING : The simulation's reproductibility can not be guaranteed with this task !
+    WARNING : The simulation's reproducibility can not be guaranteed with this task!
 
     Inputs:
     -------
@@ -470,7 +471,9 @@ class MakePrepFile(_PrepConstruct):
     Task : MakePrepFile
     ===================
 
-    Task for the generation of initial conditions (PREP.nc file)
+    Task for the generation of initial conditions (PREP.nc file).
+    By default the resulting file is archived. Use the ``namespace_out`` configuration variable to change
+    this behavior.
 
     Inputs:
     -------
@@ -549,8 +552,10 @@ class MakePrepFile(_PrepConstruct):
         * ``surfex_uenv`` If the executable should come from an uenv. Default is ``uenv``
         * ``prep_gvar`` specify the name of the PREP executable in the uenv. Default is ``master_prep_mpi``
           if the mpi parameter is True and ``master_prep_nompi`` otherwise.
+        * ``mpi`` If True, *mpi* executable is fetched, if False *nompi* executable. Default: True
         """
         if hasattr(self.conf, 'exesurfex'):
             self.get_prep_exe_from_path()
         else:
-            self.get_prep_exe_from_uenv()
+            mpi = self.conf.get("mpi", True)
+            self.get_prep_exe_from_uenv(mpi=mpi)

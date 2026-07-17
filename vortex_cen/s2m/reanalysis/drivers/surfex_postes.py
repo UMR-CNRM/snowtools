@@ -6,7 +6,7 @@ Launch the OFFLINE executable with forcing files produced by the "concatenation_
 
 from mkjob.nodes import Driver
 import vortex
-from vortex_cen.tasks.surfex.offline import Offline_MPI_Uenv
+from vortex_cen.tasks.surfex.offline import Offline_Mpi_Uenv
 from vortex_cen.tasks.surfex.pre_process import PreprocessUenvNamelist
 
 
@@ -22,7 +22,7 @@ def setup(t, **kw):
     )
 
 
-class Offline_reanalysis_postes(Offline_MPI_Uenv):
+class Offline_reanalysis_postes(Offline_Mpi_Uenv):
     """
     Task : Offline_reanalysis_postes
     ================================

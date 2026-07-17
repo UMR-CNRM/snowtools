@@ -10,7 +10,7 @@ enventually be generated if necessary and possible.
 """
 
 from mkjob.nodes import Driver
-from vortex_cen.tasks.surfex.offline import _Offline_MPI
+from vortex_cen.tasks.surfex.offline import OfflineMpi
 from vortex_cen.tasks.surfex.pre_process import _Preprocess
 from vortex_cen.tasks.surfex.pgd import FetchPgdOrMake
 from vortex_cen.tasks.surfex.prep import FetchPrepFileOrMake
@@ -71,7 +71,7 @@ class PreProcess(_Preprocess):
         self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
 
 
-class Offline(_Offline_MPI):
+class Offline(OfflineMpi):
     """
     Task : Offline
     ==============
