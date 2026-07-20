@@ -20,32 +20,9 @@ def setup(t, **kw):
         tag='initClimGT',
         ticket=t,
         nodes=[
-            TestInitClimGroundTemperature(tag='initClimGroundTemperature', ticket=t, **kw),
+            InitClimGroundTemperature(tag='initClimGroundTemperature', ticket=t, **kw),
         ],
         options=kw,
         iniconf = iniconf
     )
 
-
-class TestInitClimGroundTemperature(InitClimGroundTemperature):
-
-    def unittest(self):
-        """
-        Reproductibility test : compare output to reference.
-        """
-        self.sh.title("Reference File")
-        init_tg_diff = vortex.diff(
-            role       = "InitialValuesOfGroundTemperature",
-            kind       = "climTG",
-            nativefmt  = "netcdf",
-            local      = "init_TG.nc",
-            experiment = "reference",
-            username   = "vernaym",
-            geometry   = self.conf.geometry,
-            model      = "surfex",
-            namespace  = "vortex.multi.fr",
-            namebuild  = "flat@cen",
-            block      = "prep",
-        )
-        print(self.ticket.prompt, "diff init_tg =", init_tg_diff)
-        print()

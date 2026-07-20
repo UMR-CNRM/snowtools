@@ -4,7 +4,7 @@ oper_research_mixin.py
 ----------------------
 
 This modules defines specific CEN common addons for research and operational tasks.
-Multiple inheritence together with the standard Task class is required to use this module.
+Multiple inheritance together with the standard Task class is required to use this module.
 """
 
 from bronx.stdtypes.date import yesterday, Date, Period, Time
@@ -24,7 +24,7 @@ logger = loggers.getLogger(__name__)
 
 class CENTaskMixIn:
     """
-    Usefull methods for any CEN (oper or research) task
+    Useful methods for any CEN (oper or research) task
     """
 
     nightruntime = Time(hour=3, minute=0)
@@ -338,7 +338,7 @@ class CENTaskMixIn:
     @property
     def get_reprod_info(self):
         """
-        Provide informations that should be stored in output files for reproductibility purposes
+        Provide information that should be stored in output files for reproducibility purposes
         """
         reprod_info = dict()
         for info_from_conf in ['snowtools_command', 'forcingid', 'prep_xpid']:

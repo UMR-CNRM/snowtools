@@ -12,6 +12,8 @@ reanalysis.py
 __all__ = []
 
 import vortex
+from vortex.syntax.stdattrs import nativefmt
+
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 
 
@@ -160,6 +162,7 @@ class SafranReanalysis(_CenResearchTask):
             gdomain         = '[geometry:domain]',
             geometry        = self.conf.geometry,
             kind            = 'listem',
+            nativefmt = "ascii",
             model           = 'safran',
             local           = 'listem',
         )
@@ -173,6 +176,7 @@ class SafranReanalysis(_CenResearchTask):
             gdomain         = '[geometry:domain]',
             geometry        = self.conf.geometry,
             kind            = 'listeml',
+            nativefmt="ascii",
             model           = 'safran',
             local           = 'listeml',
         )
@@ -186,6 +190,7 @@ class SafranReanalysis(_CenResearchTask):
             gdomain         = '[geometry:domain]',
             geometry        = self.conf.geometry,
             kind            = 'listeo',
+            nativefmt="ascii",
             model           = 'safran',
             local           = 'listeo',
         )
@@ -199,6 +204,7 @@ class SafranReanalysis(_CenResearchTask):
             gdomain         = '[geometry:domain]',
             geometry        = self.conf.geometry,
             kind            = 'NORELot',
+            nativefmt="ascii",
             model           = 'safran',
             local           = 'NORELot',
             fatal           = False,
@@ -228,6 +234,7 @@ class SafranReanalysis(_CenResearchTask):
             geometry        = self.conf.geometry,
             kind            = 'carpost',
             model           = 'safran',
+            nativefmt='ascii',
             local           = 'carpost.tar',
         )
         print(t.prompt, 'tb09 =', tb09)
@@ -242,6 +249,7 @@ class SafranReanalysis(_CenResearchTask):
             kind            = 'blacklist',
             model           = 'safran',
             local           = 'BLACK',
+            nativefmt='ascii',
             fatal           = False,
         )
         print(t.prompt, 'tb12 =', tb12)
@@ -255,6 +263,7 @@ class SafranReanalysis(_CenResearchTask):
             geometry        = self.conf.geometry,
             kind            = 'NORELmt',
             model           = 'safran',
+            nativefmt='ascii',
             local           = 'NORELmt',
             fatal           = False,
         )
@@ -269,6 +278,7 @@ class SafranReanalysis(_CenResearchTask):
             geometry        = self.conf.geometry,
             kind            = 'rsclim',
             model           = 'safran',
+            nativefmt='ascii',
             local           = 'rsclim.don',
             fatal           = False,
         )
@@ -283,6 +293,7 @@ class SafranReanalysis(_CenResearchTask):
             geometry        = self.conf.geometry,
             kind            = 'icrccm',
             model           = 'safran',
+            nativefmt='ascii',
             local           = 'icrccm.don',
             fatal           = False,
         )
