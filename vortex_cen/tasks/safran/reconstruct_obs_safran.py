@@ -1,27 +1,32 @@
 # -*- coding: utf-8 -*-
-'''
-'''
+"""
+reconstruct_obs_safran.py
+-------------------------
 
+.. autoclass:: Reconstruct_SAFRAN_Obs
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+"""
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 import vortex
 
 
 class Reconstruct_SAFRAN_Obs(_CenResearchTask):
     """
-    Task : Reconstruct_SAFRAN_Obs
-    =============================
+    **Task : Reconstruct_SAFRAN_Obs**
 
     Task to build SAFRAN-compatible hourly observations files from reconstructed
     observation series.
 
-    Inputs
-    ------
+    **Input:**
+
     - NEW_OBSERVATIONS.nc : file containing reconstructed hourly temperature "observations"
     - OBSERVATIONS.tar : archive containing real Safran-compatible surface observation files (R, S and T files)
     - listeo file : providing the metadata of all observation sites
 
-    Outputs
-    -------
+    **Output:**
+
     - OBSERVATIONS.tar : archive containing Safran-compatible files with both real and reconstructed observations
     """
 

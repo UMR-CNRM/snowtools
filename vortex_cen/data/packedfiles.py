@@ -1,5 +1,21 @@
+# -*- coding: utf-8 -*-
 """
-Packed resources including several small files.
+packedfiles.py
+--------------
+
+Packed resources (tar files) including several small files.
+
+.. inheritance-diagram:: vortex_cen.data.packedfiles
+   :top-classes: vortex.data.flow.GeoFlowResource
+   :private-bases:
+   :parts: 4
+
+.. autoclass:: CenPackedFiles
+   :show-inheritance:
+
+.. autoclass:: SurfexPackedFiles
+   :show-inheritance:
+
 """
 
 from vortex_cen.syntax.stdattrs import cendateperiod_deco

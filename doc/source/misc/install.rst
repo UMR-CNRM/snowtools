@@ -180,14 +180,6 @@ Install
 [Optional] Configure Vortex and install UEnv tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Vortex Configuration :
-
-.. code-block:: bash
-
-    mkdir ~/.vortex.d/
-    cd ~/.vortex.d/
-    ln -s $SNOWTOOLS_CEN/vortex_cen/configs/vortex_pc.toml vortex.toml
-
 Start from the default geometries file (update it with your own geometries if you already had one):
 
 .. code-block:: bash
@@ -196,7 +188,7 @@ Start from the default geometries file (update it with your own geometries if yo
     cd ~/.vortexrc
     cp $SNOWTOOLS_CEN/snowtools/conf/geometries_vortex2.ini geometries.ini
 
-Install UEnv tools :
+Install UEnv tools (already installed by default on Belenos):
 
 .. code-block:: bash
 
@@ -263,23 +255,6 @@ Source the ``~/.bashrc`` file and start installation
     module load python/3.10.12 gcc/15.2.0
 
 **NB** The installation should also work with python/3.12.12, but the installation fails in some cases.
-
-**FOR BELENOS ONLY [Temporary step]**
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Configure gitlab for HPC via SSH using the documentation (in french):
-
-http://confluence.meteo.fr/display/~thomas.carrel-billiard@meteo.fr/Configurer+GitLab
-
-Then clone the following repositories in a "Projects" on your $HOME :
-
-.. code-block:: bash
-
-    mkdir $HOME/Projects
-    cd $HOME/Projects
-    git clone git@gitlab.meteo.fr:cnrm-gmap/mkjob.git
-    git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-gco.git
-    git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-olive.git
 
 
 **FOR SXCEN ONLY:** Environment and start installation
@@ -352,14 +327,6 @@ Vortex Configuration
     # For PC
     ln -s $SNOWTOOLS_CEN/vortex_cen/configs/vortex_pc.toml vortex.toml
     mkdir -p $HOME/NO_SAVE/cache/vortex
-
-Start from the default geometries file (update it with your own geometries if you already had one):
-
-.. code-block:: bash
-
-    mkdir ~/.vortexrc
-    cd ~/.vortexrc
-    cp $SNOWTOOLS_CEN/snowtools/conf/geometries_vortex2.ini geometries.ini
 
 That's it, now snowtools is installed on Meteo France HPC belenos or on Meteo France server SXCEN.
 
@@ -500,5 +467,5 @@ CRPS scores
 ^^^^^^^^^^^
 CRPS score is now as an independent package available at https://github.com/UMR-CNRM/snowtools-crps
 
-To install it along with snowtools, just install the optional dependency ``snowtools[scores]`` (by running ``pip install .[all,scores]`` instead of ``pip install .[all]``).
+To install it along with snowtools, just install the optional dependency ``snowtools[scores]`` or ``pip install .[all]``.
 Note that you may need to upgrade pip to version above 23.0 to install scores dependency due to a bug in previous pip versions.

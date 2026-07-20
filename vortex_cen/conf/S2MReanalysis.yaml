@@ -1,0 +1,12 @@
+args:
+  vapp: "s2m"
+  vconf: "reanalysis"
+  datebegin: "2024080106"
+  dateend: "2025080106"
+  experiment: "release_2026.1"
+  username: "vernaym"
+  kind: "FORCING"
+  block: "meteo"
+  geometry: "cor2_allslopes"
+  local: "FORCING_s2m_reanalysis_2024080106_2025080106_cor2_allslopes.nc"
+

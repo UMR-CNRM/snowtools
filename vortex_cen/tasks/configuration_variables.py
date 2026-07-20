@@ -1,4 +1,12 @@
 # -*- coding: utf-8 -*-
+"""
+configuration_variables.py
+--------------------------
+
+Documentation of most frequently used configuration variables.
+See :ref:`dynamic_documentation` for more information on the documentation syntax conventions.
+
+"""
 
 # Standard attributes
 member_type = "int, footprints.stdtypes.FPList (ex : 'first-last-step')"
@@ -20,10 +28,17 @@ standard_variables = dict(
         help = "End date of the simulation",
         type  = "str or Date",
     ),
+    datevalidity = dict(
+        help = "The validity date of the PREP file",
+        type = "Date",
+    ),
+    rundate = dict(
+        help = "Run date",
+        type = "str or Date",
+    ),
     date = dict(
         help = "Run date",
         type = "str or Date",
-        singular = True,
     ),
     xpid   = dict(
         help = "Experiment identifier of the simulation",
@@ -44,6 +59,10 @@ standard_variables = dict(
         type = member_type,
         default = "None",
     ),
+    nmembers = dict(
+        help = "Number of ensemble members",
+        type = "int",
+    ),
     uenv     = dict(
         help = "Name of the User Environment containing constant files",
         type = "str",
@@ -51,6 +70,12 @@ standard_variables = dict(
         # TODO : définir un uenv par défaut
     ),
     surfex_uenv     = dict(
+        help = "Name of the User Environment containing SURFEX executables and namelists",
+        type = "str",
+        format = uenv_format,
+        default = "*uenv*",
+    ),
+    consts_surfex_uenv     = dict(
         help = "Name of the User Environment containing all SURFEX constant files",
         type = "str",
         format = uenv_format,
@@ -156,7 +181,7 @@ standard_variables = dict(
         type = "bool",
         default = "False",
     ),
-    pgd_cache = dict(
+    pgd = dict(
         metavar = True,
         help = "Footprint description of a PGD.nc file stored in a Vortex cache",
         values = ["pgd_xpid", "pgd_user", "pgd_vapp", "pgd_vconf", "pgd_geometry", "pgd_2d", "pgd_vortex1"],
@@ -387,10 +412,6 @@ standard_variables = dict(
         type = "bool",
         default = "False",
         singular = True,
-    ),
-    nmembers = dict(
-        help = "Number of ensemble members",
-        type = "int",
     ),
     concat_dim = dict(
         help = "Dimensions along which to concatenate variables, as used by xarray.concat()",

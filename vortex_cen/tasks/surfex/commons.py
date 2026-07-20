@@ -1,4 +1,15 @@
 # -*- coding: utf-8 -*-
+"""
+commons.py
+----------
+
+MixIn input common to all SURFEX tasks.
+
+.. autoclass:: SurfexCommonsMixin
+   :members:
+   :show-inheritance:
+
+"""
 
 import vortex
 from vortex.layout.dataflow import SectionFatalError
@@ -34,7 +45,7 @@ class SurfexCommonsMixin:
             nativefmt      = 'bin',
             local          = 'ecoclimapI_covers_param.bin',
             geometry       = self.conf.geometry,
-            genv           = self.conf.get('surfex_uenv', self.conf.uenv),
+            genv           = self.conf.get('consts_surfex_uenv', self.conf.uenv),
             source         = 'ecoclimap1',
             model          = 'surfex',
         ),
@@ -49,7 +60,7 @@ class SurfexCommonsMixin:
             nativefmt      = 'bin',
             local          = 'ecoclimapII_eu_covers_param.bin',
             geometry       = self.conf.geometry,
-            genv           = self.conf.get('surfex_uenv', self.conf.uenv),
+            genv           = self.conf.get('consts_surfex_uenv', self.conf.uenv),
             source         = 'ecoclimap2',
             model          = 'surfex',
         ),
@@ -73,7 +84,7 @@ class SurfexCommonsMixin:
         drdt_bst_fit_tbi = vortex.input(
             role            = 'Parameters for F06 metamorphism',
             kind            = 'ssa_params',
-            genv           = self.conf.get('surfex_uenv', self.conf.uenv),
+            genv           = self.conf.get('consts_surfex_uenv', self.conf.uenv),
             nativefmt       = 'netcdf',
             local           = 'drdt_bst_fit_60.nc',
             model           = 'surfex',
@@ -107,6 +118,7 @@ class SurfexCommonsMixin:
                 local         = 'PGD.nc',
                 role          = 'SurfexClim',
                 experiment    = self.conf.get('pgd_xpid', self.conf.xpid),
+                username      = self.conf.get('pgd_user', None),
                 vapp          = self.conf.get('pgd_vapp', self.conf.vapp),
                 vconf         = self.conf.get('pgd_vconf', self.conf.vconf),
                 geometry      = self.conf.geometry,
@@ -199,8 +211,8 @@ class SurfexCommonsMixin:
         self.sh.title('Input PGD File from UEnv')
         pgd = vortex.input(
             role      = 'SurfexClim',
-            genv      = self.conf.get('surfex_uenv', self.conf.uenv),
-            gvar      = self.conf.get('pgdnc_gvar', 'pgd_[geometry::tag]'),
+            genv      = self.conf.get('consts_surfex_uenv', self.conf.uenv),
+            gvar      = self.conf.get('pgdnc_gvar', 'pgd_[geometry:area]'),
             kind      = 'pgdnc',
             model     = 'surfex',
             geometry  = self.conf.get('pgd_geometry', self.conf.geometry),
@@ -291,7 +303,7 @@ class SurfexCommonsMixin:
         print(self.ticket.prompt, 'namelist_tbi =', namelist_tbi)
         print()
 
-    def get_prep_file_from_cache_or_archive(self, fatal=True, cache_only=False):
+    def get_prep_file_from_cache_or_archive(self, fatal=True, cache_only=False, local="PREP.nc"):
         """
         Standard method to get a PREP file from the cache or archive. The PREP.nc file contains the initial conditions
         of the snowpack at the beginning of the simulation.
@@ -335,7 +347,7 @@ class SurfexCommonsMixin:
 
         self.sh.title('Input PREP file')
         prep_tbi = vortex.input(
-            local          = 'PREP.nc',
+            local          = local,
             role           = 'SnowpackInit',
             # MV : pour permettre de récupérer le PREP depuis une expérience indépendante
             # --> possibilité de renseigner 'prep_xpid' dans le fichier de conf
@@ -343,7 +355,7 @@ class SurfexCommonsMixin:
             username       = self.conf.get('prep_user', None),
             # MV : il faut définir la date de validité du fichier PREP qui par défaut
             # est la *datebegin* de simulation mais peut être arbitraire si 'date_prep' est renseigné
-            date           = self.conf.get('prep_date', self.conf.datebegin),
+            datevalidity   = self.conf.get('prep_date', self.conf.datebegin),
             # MV : Pour prévoir les cas où le PREP vient d'un vapp / vconf différent
             # de ceux de la tâche
             vapp           = self.conf.get('prep_vapp', self.conf.vapp),
@@ -431,7 +443,7 @@ class SurfexCommonsMixin:
                   'corresponding configuration sections match. ')
             raise e
 
-        return init_tg
+
 
     def get_init_TG_from_uenv(self, fatal=True):
         """
@@ -459,7 +471,7 @@ class SurfexCommonsMixin:
             nativefmt    = 'netcdf',
             local        = 'init_TG.nc',
             geometry     = self.conf.get('tg_geometry', self.conf.geometry),
-            genv         = self.conf.get('surfex_uenv', self.conf.uenv),
+            genv         = self.conf.get('consts_surfex_uenv', self.conf.uenv),
             gvar         = self.conf.get('tg_gvar', 'climtg_[geometry::area]'),
             model        = 'surfex',
             fatal        = fatal,

@@ -3,7 +3,7 @@
 """
 The "surfex" driver allows to launch deterministic SURFEX/Crocus simulations in a research context
 based on any meteorological forcing file.
-It does not guarantee the reproductibility of the simulations due to a loose user control
+WARNING : It does not guarantee the reproductibility of the simulations due to a loose user control
 on the input files : missing inputs files will be looked for on alternate locations and will
 enventually be generated if necessary and possible.
 
@@ -54,7 +54,7 @@ class PreProcess(_Preprocess):
 
         super().__init__(**kw)
         MANDATORY_CONFIGURATION_VARIABLES = [
-            "uenv|surfex_uenv",
+            "surfex_uenv|uenv",
         ]
 
         OPTIONAL_CONFIGURATION_VARIABLES = [
@@ -98,7 +98,7 @@ class Offline(OfflineMpi):
         super().__init__(**kw)
 
         MANDATORY_CONFIGURATION_VARIABLES = [
-            "uenv|surfex_uenv",
+            "surfex_uenv|uenv",
         ]
 
         OPTIONAL_CONFIGURATION_VARIABLES = [

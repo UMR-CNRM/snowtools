@@ -1,8 +1,38 @@
 # -*- coding: utf-8 -*-
 """
+pre_process.py
+--------------
+
+Tasks designed to launch the pre-process the OPTIONS.nam namelist before any SURFEX binary execution.
+
+.. inheritance-diagram:: vortex_cen.tasks.surfex.pre_process
+   :top-classes: vortex_cen.tasks.research_task_base._CenResearchTask
+   :private-bases:
+   :parts: 2
+
+.. autoclass:: _Preprocess
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: Preprocess_Uenv_Namelist
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: Preprocess_Local_Namelist
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: Soda_Namelist_Preprocess
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
 """
+
 import vortex
-# from vortex import toolbox
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 from vortex.util.helpers import InputCheckerError
 from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
@@ -173,8 +203,8 @@ class _Preprocess(SurfexCommonsMixin, _CenResearchTask):
 
 class PreprocessUenvNamelist(_Preprocess):
     """
-    Task: Preprocess_Uenv_Namelist
-    ==============================
+    Task: PreprocessUenvNamelist
+    ============================
     Task for pre-processing a namelist coming from a User Environment.
     NB : This is the task to use to guarantee the simulation's reproductibility
 
@@ -240,7 +270,7 @@ class PreprocessUenvNamelist(_Preprocess):
 
         super().__init__(**kw)
         MANDATORY_CONFIGURATION_VARIABLES = [
-            "uenv|surfex_uenv",
+            "surfex_uenv|uenv",
             "namelist_source",
         ]
         OPTIONAL_CONFIGURATION_VARIABLES = [
@@ -258,7 +288,7 @@ class PreprocessUenvNamelist(_Preprocess):
 class PreprocessLocalNamelist(_Preprocess):
     """
     Task: PreprocessLocalNamelist
-    ===============================
+    =============================
 
     Task for pre-processing a namelist coming from any user-defined absolute path.
     WARNING : The simulation's reproductibility can not be guaranteed with this task !
@@ -339,8 +369,8 @@ class PreprocessLocalNamelist(_Preprocess):
 
 class SodaNamelistPreprocess(SurfexCommonsMixin, _CenResearchTask):
     """
-    Task: Soda_Namelist_Preprocess
-    ==============================
+    Task: SodaNamelistPreprocess
+    ============================
     Pre-process SURFEX namelist for SODA executable
 
     Inputs:
@@ -367,7 +397,7 @@ class SodaNamelistPreprocess(SurfexCommonsMixin, _CenResearchTask):
 
         super().__init__(**kw)
         MANDATORY_CONFIGURATION_VARIABLES = [
-            "uenv|surfex_uenv",
+            "surfex_uenv|uenv",
             "namelist_source",
             "nmembers",
 

@@ -1,0 +1,43 @@
+# Generation of SAFRAN guess files
+# ================================
+#
+# Réseau de 3h
+#
+10 3  * * * . ~/.bash_profile ; . $HOME/venv/oper/bin/activate ; s2m_oper -j prepsafran_ana -d $( date '+\%Y\%m\%d03')
+10 5  * * * . ~/.bash_profile ; . $HOME/venv/oper/bin/activate ; s2m_oper -j prepsafran_prv -d $( date '+\%Y\%m\%d03')
+#
+# Réseau de 9h
+30 9  * * * . ~/.bash_profile ; . $HOME/venv/oper/bin/activate ; s2m_oper -j prepsafran_ana -d $( date '+\%Y\%m\%d09')
+#
+# SAFRAN
+# ======
+#
+# Analyse 3H
+45 3 * * * . ~/.bash_profile ; . $HOME/venv/oper/bin/activate ; s2m_oper -j safran_ana -d $( date '+\%Y\%m\%d03')
+# Analyse 6H
+30 6 * * * . ~/.bash_profile ; . $HOME/venv/oper/bin/activate ; s2m_oper -j safran_ana -d $( date '+\%Y\%m\%d06')
+# Analyse 9H
+45 9 * * * . ~/.bash_profile ; . $HOME/venv/oper/bin/activate ; s2m_oper -j safran_ana -d $( date '+\%Y\%m\%d09')
+# Prévision 3H
+20 5 * * * . ~/.bash_profile ; . $HOME/venv/oper/bin/activate ; s2m_oper -j safran_prv -d $( date '+\%Y\%m\%d03')
+#
+# SURFEX
+# ======
+#
+# Analyse 3H
+15 04 * * * . ~/.bash_profile ; . $HOME/venv/oper/bin/activate ; s2m_oper -j surfex_ana -d $( date '+\%Y\%m\%d03')
+#
+# Prevision 3H
+40 05 * * * . ~/.bash_profile ; . $HOME/venv/oper/bin/activate ; s2m_oper -j surfex_prv -d $( date '+\%Y\%m\%d03')
+#
+# Analyse 6H
+00 07 * * * . ~/.bash_profile ; . $HOME/venv/oper/bin/activate ; s2m_oper -j surfex_ana -d $( date '+\%Y\%m\%d06')
+#
+# Prevision 6H
+20 07 * * * . ~/.bash_profile ; . $HOME/venv/oper/bin/activate ; s2m_oper -j surfex_prv -d $( date '+\%Y\%m\%d06')
+#
+# Analyse 9H
+00 10 * * * . ~/.bash_profile ; . $HOME/venv/oper/bin/activate ; s2m_oper -j surfex_ana -d $( date '+\%Y\%m\%d09')
+#
+# Prevision 9H
+20 10 * * * . ~/.bash_profile ; . $HOME/venv/oper/bin/activate ; s2m_oper -j surfex_prv -d $( date '+\%Y\%m\%d09')

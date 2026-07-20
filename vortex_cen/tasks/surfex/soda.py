@@ -1,14 +1,34 @@
 # -*- coding: utf-8 -*-
-'''
-'''
+"""
+soda.py
+-------
+
+Tasks designed to launch the SODA executable.
+
+.. inheritance-diagram:: vortex_cen.tasks.surfex.soda
+   :top-classes: vortex_cen.tasks.research_task_base._CenResearchTask
+   :private-bases:
+   :parts: 2
+
+.. autoclass:: SodaCommonsMixin
+   :members:
+   :show-inheritance:
+
+.. autoclass:: Soda
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+"""
 
 import vortex
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
-import footprints
 
 
 class SodaCommonsMixin(SurfexCommonsMixin):
+    """
+    Mixin methods for SODA binary IOs.
+    """
 
     def get_snow_observation(self):
 
@@ -20,7 +40,7 @@ class SodaCommonsMixin(SurfexCommonsMixin):
             nativefmt       = 'netcdf',
             vapp            = self.conf.get('observation_vapp', self.conf.vapp),
             vconf           = self.conf.get('observation_vconf', self.conf.vconf),
-            datevalidity    = self.conf.date,  # TODO : autoriser une date =/= ? de la date de run ?
+            date            = self.conf.date,  # TODO : autoriser une date =/= ? de la date de run ?
             block           = self.conf.get('sensor', None),
             scope           = self.conf.get('scope', None),
             namespace       = 'vortex.multi.fr',
@@ -58,14 +78,14 @@ class SodaCommonsMixin(SurfexCommonsMixin):
         self.sh.title('Input SODA background PREPs')
         prep = vortex.input(
             role           = 'SnowpackInit',
-            member         = footprints.util.rangex(self.conf.members),
+            member         = self.get_list_members(),
             vapp           = self.conf.get('prep_vapp', self.conf.vapp),
             vconf          = self.conf.get('prep_vconf', self.conf.vconf),
-            local          = 'mb[member]/PREP_[date:ymdh].nc',
+            local          = 'mb[member]/PREP_[datevalidity:ymdh].nc',
             experiment     = self.conf.get('prep_xpid', self.conf.xpid),
             username       = self.conf.get('prep_user', None),
             geometry       = self.conf.geometry,
-            date           = self.conf.date,
+            datevalidity   = self.conf.get('datevalidity', self.conf.date),
             nativefmt      = 'netcdf',
             kind           = 'PREP',
             model          = 'surfex',
@@ -81,11 +101,13 @@ class SodaCommonsMixin(SurfexCommonsMixin):
 
 class Soda(SodaCommonsMixin, _CenResearchTask):
     """
+    **Task: Soda**
+
     SODA Particle Filter assimilation task.
     Reference : Cluzet et al. (2021): https://gmd.copernicus.org/articles/14/1595/2021/
 
-    Inputs:
-    -------
+    **Input:**
+
     - SODA namelist (OPTIONS.nam)
     - Ensemble of snowpack initial conditions ("PREP.nc") refered to as "background"
     - ecoclimapI_covers_param.bin and ecoclimapII_eu_covers_param.bin (binaries for vegetation generation)
@@ -95,7 +117,7 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
     Outputs:
     --------
     - Modified ensemble of snowpack initial conditions ("PREP.nc") referred to as "analysis"
-    
+
     Mandatory configuration variables
     ---------------------------------
     * ``date`` *date* of the analysis
@@ -154,8 +176,9 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
             "dateend",
             "xpid",
             "geometry",
-            "uenv|surfex_uenv",
+            "surfex_uenv|uenv",
             "members",
+            "date",
         ]
 
         OPTIONAL_CONFIGURATION_VARIABLES = [
@@ -164,16 +187,17 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
             "observation_xpid+help=Experiment identifier of the snow observation to assimilate;type=str;default=*xpid*",
             "observation_user+help=Name of the user who owns the snow observation file to assimilate;" +
             "type=str;default=$USER",
-            "sensor+help=Sensor used for the snow observation to assimilate (ex: MODIS, PLEIADES, VIIRS);type=str",
-            "scope+help=Scope of the snow observation to assimilate observation (ex: MODIS, PLEIADES, VIIRS);type=str",
+            "sensor+help=Sensor used for the snow observation to assimilate (ex MODIS, PLEIADES, VIIRS,...);type=str",
+            "scope+help=Type of the snow observation to assimilate;type=str",
             "soda_gvar",
             "prep",
-            "prep_namespace+help=Where to look for the PREP files ('vortex.cache.fr' if part of the 'assim' task');" +
+            "prep_namespace+help=Where to look for the PREP files ('vortex.cache.fr' if part of the 'assim' task);" +
             "type=str;choices=vortex.cache.fr (local cache), vortex.archive.fr (Hendrix), " +
-            "vortex.multi.fr (Hendrix + local cache)",
+            "vortex.multi.fr (Hendrix and local cache)",
             "pgd",
             "diff_xpid",
             "diff_user",
+            "datevalidity",
         ]
 
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
@@ -222,12 +246,12 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
 
         self.sh.title('Output PREP (analysis)')
         prep = vortex.output(
-            local          = 'mb[member]/PREP_[date:ymdh].nc',
+            local          = 'mb[member]/PREP_[datevalidity:ymdh].nc',
             role           = 'SnowpackInit',
             experiment     = self.conf.xpid,
             geometry       = self.conf.geometry,
-            date           = self.conf.date,
-            member         = footprints.util.rangex(self.conf.members),
+            datevalidity   = self.conf.date,
+            member         = self.get_list_members(),
             nativefmt      = 'netcdf',
             kind           = 'PREP',
             model          = 'surfex',
@@ -261,13 +285,13 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
         """
         self.sh.title("Reproductibility check : PREP")
         diff = vortex.diff(
-            local          = 'mb[member]/PREP_[date:ymdh].nc',
+            local          = 'mb[member]/PREP_[datevalidity:ymdh].nc',
             role           = 'SnowpackInit',
             experiment     = self.conf.diff_xpid,
             username       = self.conf.get('diff_user', None),
             geometry       = self.conf.geometry,
-            date           = self.conf.date,
-            member         = footprints.util.rangex(self.conf.members),
+            datevalidity   = self.conf.date,
+            member         = self.get_list_members(),
             nativefmt      = 'netcdf',
             kind           = 'PREP',
             model          = 'surfex',

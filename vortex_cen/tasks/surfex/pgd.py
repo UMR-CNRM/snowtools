@@ -1,5 +1,54 @@
 # -*- coding: utf-8 -*-
 """
+pdg.py
+------
+
+Tasks designed to launch the PGD executable.
+
+.. inheritance-diagram:: vortex_cen.tasks.surfex.pgd
+   :top-classes: vortex_cen.tasks.research_task_base._CenResearchTask
+   :private-bases:
+   :parts: 2
+
+.. autoclass:: PgdCommonsMixin
+   :members:
+   :show-inheritance:
+
+.. autoclass:: _Pgd_Construct
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: Pgd_Uenv_Pgd
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: Pgd_Local_Pgd
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: Pgd2D_Uenv_Pgd
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: Pgd2D_Local_Pgd
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: GetPgd1D
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: GetPgd2D
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
 """
 
 import vortex
@@ -130,12 +179,12 @@ class PgdCommonsMixin(SurfexCommonsMixin):
 
 class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
     """
-    Task : _PgdConstruct
-    =====================
+    Task: _PgdConstruct
+    ===================
 
     Abstract task for the generation of ground physiography (PGD.nc file).
 
-   Inputs:
+    Inputs:
     -------
     - FORCING file
     - OPTIONS.nam ready-to-use SURFEX namelist (coming from an execution of a "Preprocess_Task")
@@ -241,7 +290,8 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
         MANDATORY_CONFIGURATION_VARIABLES = [
             "geometry",
             "xpid",
-            "uenv|surfex_uenv",
+            "consts_surfex_uenv|uenv",
+            "surfex_uenv|uenv",
         ]
         OPTIONAL_CONFIGURATION_VARIABLES = [
             "forcing",
@@ -380,8 +430,8 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
 
 class MakePgd(_PgdConstruct):
     """
-    Task : MakePgd
-    ==============
+    Task: MakePgd
+    =============
 
     Generation of ground physiography (PGD.nc file).
     Get PGD executable from Uenv
@@ -491,7 +541,7 @@ class MakePgd(_PgdConstruct):
     def __init__(self, **kw):
 
         MANDATORY_CONFIGURATION_VARIABLES = [
-            "uenv|surfex_uenv",
+            "surfex_uenv|uenv",
         ]
         OPTIONAL_CONFIGURATION_VARIABLES = [
             "exesurfex"
@@ -511,8 +561,8 @@ class MakePgd(_PgdConstruct):
 
 class FetchPgdOrMake(_PgdConstruct):
     """
-    Task : GetPgdOrMake
-    ===================
+    Task: FetchPgdOrMake
+    ====================
 
     Generation of ground physiography (PGD.nc file).
     If PGD.nc is available in cache or archive for the current experiment fetch it.
@@ -646,7 +696,7 @@ class FetchPgdOrMake(_PgdConstruct):
         OPTIONAL_CONFIGURATION_VARIABLES = [
             "exesurfex",
             "pgdnc_gvar",
-            "pgd_cache",
+            "pgd",
             "pgd_2d",
         ]
         super().__init__(**kw)

@@ -24,7 +24,7 @@ dependencies = [
     'bottleneck',
     'epygram>=2.0',
     'scikit-learn',  # For SAFRAN guess generation
-    'vortex-nwp',
+    'vortex-nwp@git+https://github.com/UMR-CNRM/vortex.git',  # A remplacer par 'vortex-nwp' dès que possible
 ]
 requires-python = ">=3.6"
 readme = "README.md"
@@ -71,6 +71,11 @@ scores = [
     'snowtools-crps@git+https://github.com/UMR-CNRM/snowtools-crps.git',
 ]
 
+hpc = [
+    'mkjob@file:///home/cnrm_other/cen/mrns/vernaym/Projects/mkjob',
+    'vortex-gco@file:///home/cnrm_other/cen/mrns/vernaym/Projects/vortex-gco',
+    'vortex-olive@file:///home/cnrm_other/cen/mrns/vernaym/Projects/vortex-olive',
+]
 
 # For a full installation
 all = [
@@ -91,6 +96,8 @@ proplotter = 'snowtools.plots.stratiprofile.proplotter:main'
 mapplotter = 'snowtools.plots.maps.mapplotter:main'
 procompare = 'snowtools.plots.stratiprofile.procompare:main'
 mkjob-help = 'vortex_cen.scripts.mkjob_help:main'
+s2m_oper = 'vortex_cen.scripts.s2m_oper:main'
+get_simulation_output = 'vortex_cen.scripts.get_simulation_output:main'
 
 [project.entry-points."xarray.backends"]
 snowtools = "snowtools.utils.xarray_snowtools_backend:SnowtoolsBackendEntrypoint"
@@ -103,6 +110,7 @@ vortex_cen = "vortex_cen"
 
 [tool.setuptools.package-data]
 "vortex_cen.data.cen_stores_configs" = ["cen-map-resources.ini"]
+"vortex_cen" = ["**/*.job", "**/*.jobs", "**/*.ini"]
 
 [tool.setuptools.packages.find]
 # Explicitely exclude the "cenutils" repository from the setuptool automatic package discovery

@@ -1,4 +1,27 @@
-# from vortex import toolbox
+# -*- coding: utf-8 -*-
+"""
+init_clim_ground_temperature.py
+-------------------------------
+
+Tasks designed to generate an init_TG.nc file.
+
+.. inheritance-diagram:: vortex_cen.tasks.surfex.init_clim_ground_temperature
+   :top-classes: vortex_cen.tasks.research_task_base._CenResearchTask
+   :private-bases:
+   :parts: 2
+
+.. autoclass:: InitClimGroundTemperature
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: GetClimGroundTemperature
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+"""
+
 import vortex
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
@@ -6,17 +29,17 @@ from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
 
 class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
     """
-    Task : InitClimGroundTemperature
-    ================================
+    Task: InitClimGroundTemperature
+    ===============================
 
     Initialize Surfex ground temperature (GT) by taking the climatological mean of the input forcing air temperature.
 
-    Inputs :
-    --------
+    Inputs:
+    -------
     - FORCING file(s) on simulation geometry
 
-    Outputs :
-    ---------
+    Outputs:
+    --------
     - Init_TG file (initial values of ground temperature)
 
     Mandatory configuration variables:
@@ -135,7 +158,7 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
 
         self.sh.title("Toolbox algo calculate ground temperature climatology")
         algo = vortex.task(
-            engine="s2m",
+            engine="algo",
             kind="clim",
         )
         print(self.ticket.prompt, "algo =", algo)
@@ -197,8 +220,8 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
 
 class FetchClimGroundTemperatureOrMake(InitClimGroundTemperature):
     """
-    Task : GetClimGroundTemperature
-    ===============================
+    Task : FetchClimGroundTemperatureOrMake
+    =======================================
 
     If InitTG is available in cache or archive for the current experiment fetch it.
     If not, try to get it from an uenv.

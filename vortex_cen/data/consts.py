@@ -1,5 +1,32 @@
+# -*- coding: utf-8 -*-
 """
+consts.py
+---------
+
 Specific CEN "genv" resources.
+
+.. inheritance-diagram:: vortex_cen.data.consts
+   :top-classes: vortex.nwp.data.consts.GenvModelGeoResource, vortex.nwp.data.consts.GenvModelResource
+   :private-bases:
+   :parts: 4
+
+.. autoclass:: SAFRANList
+   :show-inheritance:
+
+.. autoclass:: Params
+   :show-inheritance:
+
+.. autoclass:: climTG
+   :show-inheritance:
+
+.. autoclass:: GridTarget
+   :show-inheritance:
+
+.. autoclass:: Prosnow_SetUp_Global
+   :show-inheritance:
+
+.. autoclass:: Prosnow_SetUp_Resort
+   :show-inheritance:
 """
 
 from bronx.fancies import loggers

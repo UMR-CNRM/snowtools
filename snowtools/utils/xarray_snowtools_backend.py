@@ -186,7 +186,7 @@ class SnowtoolsBackendEntrypoint(BackendEntrypoint):
         WARNING : the direct use of *open_mfdataset* is recomended whenever you are sure to deal with more
         than one file.
 
-        :param filename_or_obj: Pathi or list of paths of the file(s) to read
+        :param filename_or_obj: Path or list of paths of the file(s) to read
         :type filename_or_obj: str, Path, file_like, DataStore or nested sequence of paths
         :mapping: User-defined dictionnary to map variable or dimension names. It can be used as a complement to
                   the default mapping dictionnary in case of a code based on variable / dimension names different than

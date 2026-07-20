@@ -91,8 +91,8 @@ This example illustrates the creation of a "task" with :
           datebegin   = self.conf.datebegin,
           dateend     = self.conf.dateend,
           geometry    = self.conf.get('forcing_geometry', self.conf.geometry),  # Must be the same as the input geometry in this example
-          block       = self.conf.get('out_block', 'extract_subperiod'),  # Allow for a user-defined block, by set default as task "tag"
-          nativefmt   = 'netcdf'
+          block       = 'meteo',  # Force output block at "meteo" (arbitrary choice)
+          nativefmt   = 'netcdf',
           namespace   = 'vortex.cache.fr',  # Do not archive the output file on Hendrix in this exemple (duplicated data)
           namebuild   = 'flat@cen',
       ),
@@ -187,7 +187,6 @@ The documentation of the example task of section :ref:`minimal_example` would lo
            "forcing_xpid+help=Experiment identifier of the input forcing;type=str;default=The current experiment identifier",
            "forcing_user+help=Name of the producer of the input forcing;type=str;default=$USER",
            "forcing_block+help=*block* level of the input forcing;type=str;default=meteo",
-           "out_block+help=*block* of the output file(s);type=str;default=extract_subperiod",
        ]
 
 For more information on the documentation of configuration variables, see section :ref:`dynamic_documentation`.

@@ -1,10 +1,31 @@
 # -*- coding: utf-8 -*-
 """
+prep.py
+-------
+
+Tasks designed to launch the PREP executable.
+
+.. inheritance-diagram:: vortex_cen.tasks.surfex.prep
+   :top-classes: vortex_cen.tasks.research_task_base._CenResearchTask
+   :private-bases:
+   :parts: 2
+
+.. autoclass:: PrepCommonsMixin
+   :members:
+   :show-inheritance:
+
+.. autoclass:: Prep_Construct
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: GetPrep
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
 """
 
 import vortex
-
-from snowtools.scripts.extract.vortex.vortexIO import get_init_TG
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
 
@@ -77,8 +98,8 @@ class PrepCommonsMixin(SurfexCommonsMixin):
 
 class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
     """
-    Task : _PrepConstruct
-    ======================
+    Task: _PrepConstruct
+    ====================
 
     Abstract task for the generation of initial conditions (PREP.nc file)
 
@@ -142,13 +163,16 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
         MANDATORY_CONFIGURATION_VARIABLES = [
             "geometry",
             "xpid",
-            "uenv|surfex_uenv",
+            "consts_surfex_uenv|uenv",
+            "surfex_uenv|uenv",
         ]
         OPTIONAL_CONFIGURATION_VARIABLES = [
-            "pgd_cache",
+            "pgd",
             "ntasks",
             "nnodes",
             "nprocs",
+            "date",
+            "tg_gvar",
             "diff_xpid",
             "diff_user",
         ]
@@ -184,9 +208,6 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
         """
         Algo component to produce the PREP file if not found in the inputs
         """
-        #######################################################################
-        #                            Compute step                             #
-        #######################################################################
         self.sh.title('Toolbox algo PREP')
         PREP_tba = vortex.task(
             kind       = 'make_prep',
@@ -207,25 +228,22 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
         """
         Save the PREP file
         """
-        #######################################################################
-        #                               Backup                                #
-        #######################################################################
-        self.sh.title('Toolbox Output PREP')
+        self.sh.title('Output PREP')
         prep_tbo = vortex.output(
-            local       = 'PREP.nc',
-            role        = 'SnowpackInit',
-            experiment  = self.conf.xpid,
-            date        = self.conf.get('date', self.conf.get('datebegin', None)),
-            vapp        = self.conf.vapp,
-            vconf       = self.conf.vconf,
-            geometry    = self.conf.geometry,
-            nativefmt   = 'netcdf',
-            kind        = 'PREP',
-            model       = 'surfex',
-            namespace   = self.conf.get('namespace_out', 'vortex.multi.fr'),
-            namebuild   = 'flat@cen',  # TODO : passer en variable de configuration
-            block       = 'prep',
-            member      = self.conf.get('member', None),
+            local        = 'PREP.nc',
+            role         = 'SnowpackInit',
+            experiment   = self.conf.xpid,
+            datevalidity = self.conf.get('date', self.conf.get('dateend', None)),
+            vapp         = self.conf.vapp,
+            vconf        = self.conf.vconf,
+            geometry     = self.conf.geometry,
+            nativefmt    = 'netcdf',
+            kind         = 'PREP',
+            model        = 'surfex',
+            namespace    = self.conf.get('namespace_out', 'vortex.multi.fr'),
+            namebuild    = 'flat@cen',  # TODO : passer en variable de configuration
+            block        = 'prep',
+            member       = self.conf.get('member', None),
         ),
         print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
         print()
@@ -236,21 +254,21 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
         """
         self.sh.title("Reproductibility check : PREP")
         diff = vortex.diff(
-            local       = 'PREP.nc',
-            role        = 'SnowpackInit',
-            experiment  = self.conf.diff_xpid,
-            username   = self.conf.get('diff_user', None),
-            date        = self.conf.get('date', self.conf.get('datebegin', None)),
-            vapp        = self.conf.vapp,
-            vconf       = self.conf.vconf,
-            geometry    = self.conf.geometry,
-            nativefmt   = 'netcdf',
-            kind        = 'PREP',
-            model       = 'surfex',
-            namespace   = 'vortex.multi.fr',
-            namebuild   = 'flat@cen',  # TODO : passer en variable de configuration
-            block       = 'prep',
-            member      = self.conf.get('member', None),
+            local        = 'PREP.nc',
+            role         = 'SnowpackInit',
+            experiment   = self.conf.diff_xpid,
+            username     = self.conf.get('diff_user', None),
+            datevalidity = self.conf.get('date', self.conf.get('dateend', None)),
+            vapp         = self.conf.vapp,
+            vconf        = self.conf.vconf,
+            geometry     = self.conf.geometry,
+            nativefmt    = 'netcdf',
+            kind         = 'PREP',
+            model        = 'surfex',
+            namespace    = 'vortex.multi.fr',
+            namebuild    = 'flat@cen',  # TODO : passer en variable de configuration
+            block        = 'prep',
+            member       = self.conf.get('member', None),
         ),
         print(self.ticket.prompt, 'diff =', diff)
         print()
@@ -258,8 +276,8 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
 
 class FetchPrepFileOrMake(_PrepConstruct):
     """
-    Task : FetchPrepFileOrMake
-    ==========================
+    Task: FetchPrepFileOrMake
+    =========================
 
     Generation of initial conditions (PREP.nc file)
     Look if the requested PREP.nc file is available in the cache or archive. If not,
@@ -330,7 +348,7 @@ class FetchPrepFileOrMake(_PrepConstruct):
             "exesurfex",
             "tg_cache",
             "prep",
-            "pgd_cache",
+            "pgd",
             "prep_block"
         ]
         super().__init__(**kw)
