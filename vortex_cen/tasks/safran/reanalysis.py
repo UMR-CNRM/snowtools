@@ -47,6 +47,32 @@ class SafranReanalysis(_CenResearchTask):
     - FORCING_postes.nc : Ensemble of forcing files on the "postes" geometry
     - listings_safran : output safran execution listings
     - liste_obs : List of assimilated observations
+
+    Mandatory Configuration Variables:
+    ----------------------------------
+
+    * ``datebegin`` First rundate of the guess (hour must be '00')
+    * ``dateend`` Last run date of the guess (hour must be '00')
+    * ``xpid`` Experiment id. Do not use experiment ids with 4 letters.
+    * ``geometry`` Geometry of the simulation. This must be a valid geometry in your
+      '$HOME/.vortexrc/geometries.ini' file.
+    * ``guess_geometry`` Geometry of SAFRAN guess files. type: dict
+    * ``obs_geometry`` geometry of the observation files. type: dict
+    * ``uenv`` Name of the UEnv containing all SAFRAN constant input files and executables
+    * ``ntasks`` Number of parallel tasks to allocate to the execution.  type: int or dict[geometry]
+    * ``nnodes`` Number of nodes to allocate to the execution. type: int or dict[geometry]
+    * ``execution`` Type of SAFRAN execution. type: str, choices: analysis, forecast, reanalysis, reforecast
+    * ``assim`` Allow assimilation of observations. type: bool
+
+    Optional Configuration Variables:
+    ---------------------------------
+
+    * ``obs_xpid`` Experiment identifier of the observation files. type: str, default: *xpid*
+    * ``obs_vapp`` *vapp* level of the observation files. type: str, default: *vapp*
+    * ``obs_vconf`` *vconf* level of the observation files. type: str, default: *vconf*
+    * ``obs_user`` Name of the producer of the observation files. type: str
+    * ``diff_xpid`` Experiment identifier of the reference files for reproducibility check. type: str
+    * ``diff_user`` Name of the producer of the reference files for reproducibility check. type: str
     """
 
     def __init__(self, **kw):
@@ -69,8 +95,8 @@ class SafranReanalysis(_CenResearchTask):
             "obs_vapp+help=*vapp* level of the observation files;type=str;default=*vapp*",
             "obs_vconf+help=*vconf* level of the observation files;type=str;default=*vconf*",
             "obs_user+help=Name of the producer of the observation files;type=str",
-            "diff_xpid+help=Experiment identifier of the reference files for reproductibility check;type=str",
-            "diff_user+help=Name of the producer of the reference files for reproductibility check;type=str",
+            "diff_xpid+help=Experiment identifier of the reference files for reproducibility check;type=str",
+            "diff_user+help=Name of the producer of the reference files for reproducibility check;type=str",
         ]
         super().__init__(**kw)
 

@@ -41,6 +41,24 @@ class PrepSafran(_CenResearchTask):
 
     - PYYMMDDHH : Safran guess files, grouped in tar archives containing all 'P' files from all members and lead times
                   of a given model run
+
+    Mandatory configuration variables:
+    ----------------------------------
+    * ``datebegin`` First rundate of the guess (hour must be '00')
+    * ``dateend`` Last run date of the guess (hour must be '00')
+    * ``xpid`` Experiment id. Do not use experiment ids with 4 letters.
+    * ``geometries`` List of output geometries of the simulation (these must be valid geometry tags in your
+        '$HOME/.vortexrc/geometries.ini' file.
+    * ``uenv`` Name of the UEnv containing constant files (METADATA, massifs_safran.shp and makeP.py script)
+    * ``arpege_geometry`` Geometry of ARPEGE analyses / forecasts files used to generate Safran guess
+        type: str
+    * ``pearp_geometry`` Geometry of PEARP forecast files used to generate Safran guess
+        type: str
+    * ``prv_terms`` Lead times of the Safran guess files. type: footprints.stdtypes.FPList, format = first-last-step
+    * ``nwp_xpid`` Experiment identifier of the NWP models used to generate Safran guess files
+    * ``members`` The list of ensemble members. Default: None
+    * ``ntasks`` Number of parallel tasks to allocate to the execution.  type: int or dict[geometry]
+    * ``nnodes`` Number of nodes to allocate to the execution. type: int or dict[geometry]
     """
 
     def __init__(self, **kw):
