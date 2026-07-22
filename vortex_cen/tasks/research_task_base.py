@@ -158,11 +158,12 @@ class _CenResearchTask(Task, CENTaskMixIn):
         # Format uenv properly : "uenv:{uenv_name}@user" in cas only {uenv_name} is provided
         for key, value in self.conf.items():
             if "uenv" in key:
+                if isinstance(value, bool):
+                    continue
                 if ':' not in value:
                     value = f"uenv:{value}"
                 if '@' not in value:
                     value = f'{value}@{t.env()["USER"]}'
-
                 self.conf[key] = value
 
         # Define a namespace_out variable to apply to all outputs set as the *namespace_out*
