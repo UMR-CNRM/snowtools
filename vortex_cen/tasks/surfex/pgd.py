@@ -14,37 +14,22 @@ Tasks designed to launch the PGD executable.
    :members:
    :show-inheritance:
 
-.. autoclass:: _Pgd_Construct
+.. autoclass:: _PgdConstruct
    :no-members:
    :class-doc-from: class
    :show-inheritance:
 
-.. autoclass:: Pgd_Uenv_Pgd
+.. autoclass:: MakePgd
    :no-members:
    :class-doc-from: class
    :show-inheritance:
 
-.. autoclass:: Pgd_Local_Pgd
+.. autoclass:: FetchPgdOrMake
    :no-members:
    :class-doc-from: class
    :show-inheritance:
 
-.. autoclass:: Pgd2D_Uenv_Pgd
-   :no-members:
-   :class-doc-from: class
-   :show-inheritance:
-
-.. autoclass:: Pgd2D_Local_Pgd
-   :no-members:
-   :class-doc-from: class
-   :show-inheritance:
-
-.. autoclass:: GetPgd1D
-   :no-members:
-   :class-doc-from: class
-   :show-inheritance:
-
-.. autoclass:: GetPgd2D
+.. autoclass:: FetchPgdOrCrash
    :no-members:
    :class-doc-from: class
    :show-inheritance:

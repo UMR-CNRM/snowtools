@@ -5,6 +5,11 @@ oper_research_mixin.py
 
 This modules defines specific CEN common addons for research and operational tasks.
 Multiple inheritance together with the standard Task class is required to use this module.
+
+.. autoclass:: CENTaskMixIn
+   :members:
+   :show-inheritance:
+
 """
 
 from bronx.stdtypes.date import yesterday, Date, Period, Time

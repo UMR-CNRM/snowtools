@@ -1,6 +1,12 @@
 # -*- coding:Utf-8 -*-
 """
 SAFRAN input mixin
+------------------
+
+.. autoclass:: SafranMixIn
+   :members:
+   :show-inheritance:
+
 """
 
 import vortex

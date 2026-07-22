@@ -1,7 +1,6 @@
 # -*- coding:Utf-8 -*-
 
 from mkjob.nodes import Driver
-import vortex
 from vortex_cen.tasks.surfex.pre_process import PreprocessNamelist
 from vortex_cen.tasks.surfex.pgd import FetchPgdOrCrash
 from vortex_cen.tasks.surfex.prep import FetchPrepFileOrCrash

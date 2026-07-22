@@ -15,7 +15,17 @@ Tasks designed to generate an init_TG.nc file.
    :class-doc-from: class
    :show-inheritance:
 
-.. autoclass:: GetClimGroundTemperature
+.. autoclass:: FetchClimGroundTemperatureOrMake
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: MakeClimGroundTemperatureIfNoPrep
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: FetchClimGroundTemperatureOrCrash
    :no-members:
    :class-doc-from: class
    :show-inheritance:

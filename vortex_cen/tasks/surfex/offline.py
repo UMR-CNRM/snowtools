@@ -19,7 +19,7 @@ Tasks designed to launch the OFFLINE executable with MPI parallelisation.
    :class-doc-from: class
    :show-inheritance:
 
-.. autoclass:: _Offline_MPI
+.. autoclass:: _OfflineMpi
    :no-members:
    :class-doc-from: class
    :show-inheritance:
@@ -34,11 +34,25 @@ Tasks designed to launch the OFFLINE executable with MPI parallelisation.
    :class-doc-from: class
    :show-inheritance:
 
-.. autoclass:: Offline_MPI_Local
+.. autoclass:: OfflineMpiDailyPrep
    :no-members:
    :class-doc-from: class
    :show-inheritance:
 
+.. autoclass:: OfflineAssim
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: OfflineOpenloop
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: OfflineLocalForcing
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
 """
 
 import vortex
@@ -865,3 +879,55 @@ class OfflineOpenloop(OfflineMpi):
         ),
         print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
         print()
+
+
+class OfflineLocalForcing(OfflineMpi):
+    """
+    Task : Offline
+    ==============
+
+    SURFEX/OFFLINE documentation : https://umr-cnrm.github.io/snowtools-doc/misc/surfex.html
+
+    Inputs:
+    -------
+    - FORCING.nc files(s) (near-surface meteorological conditions during the simulation period)
+    - OPTIONS.nam ready-to-use SURFEX namelist (coming from the execution of the "PreProcess")
+    - ecoclimapI_covers_param.bin and ecoclimapII_eu_covers_param.bin (binaries for vegetation generation)
+    - drdt_bst_fit_60.nc (Crocus metamorphism parameters)
+    - PGD.nc (Ground physiography) retrieved or produced by the GetPgd1D task
+    - PREP.nc (initial conditions) retrieved or produced by the GetPrep task
+
+    Outputs:
+    --------
+    - PRO.nc Snowpack simulations covering the entire simulation period
+    - PREP.nc SURFEX/Crocus model state variables at the end of the simulation
+    """
+
+    def __init__(self, **kw):
+
+        super().__init__(**kw)
+
+        MANDATORY_CONFIGURATION_VARIABLES = [
+            "surfex_uenv|uenv",
+        ]
+
+        OPTIONAL_CONFIGURATION_VARIABLES = [
+            "exesurfex",
+        ]
+
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
+
+    def get_remote_inputs(self):
+
+        self.get_ecoclimap()
+        self.get_drdt_bst_fit()
+        self.get_executable()
+
+    def get_local_inputs(self):
+        # Get PGD and PREP locally because they have been retrieved or produced by a previous task
+        self.get_pgd_from_cache()
+        _ = self.get_prep_file_from_cache_or_archive(fatal=True, cache_only=True)
+        # Get namelist from the preprocess task output
+        self.get_namelist_from_cache()
+        # Get FORCING locally because they have already been retrieved by the preprocess task
+        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')

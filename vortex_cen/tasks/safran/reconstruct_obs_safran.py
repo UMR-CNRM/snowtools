@@ -3,7 +3,7 @@
 reconstruct_obs_safran.py
 -------------------------
 
-.. autoclass:: Reconstruct_SAFRAN_Obs
+.. autoclass:: ReconstructSafranObs
    :no-members:
    :class-doc-from: class
    :show-inheritance:
@@ -12,7 +12,7 @@ from vortex_cen.tasks.research_task_base import _CenResearchTask
 import vortex
 
 
-class Reconstruct_SAFRAN_Obs(_CenResearchTask):
+class ReconstructSafranObs(_CenResearchTask):
     """
     **Task : Reconstruct_SAFRAN_Obs**
 

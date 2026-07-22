@@ -8,7 +8,7 @@ interpol.py
    :class-doc-from: class
    :show-inheritance:
 
-.. autoclass:: InterpolMixin
+.. autoclass:: InterpolMixIn
    :members:
    :show-inheritance:
 

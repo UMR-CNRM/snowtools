@@ -14,18 +14,34 @@ Tasks designed to launch the PREP executable.
    :members:
    :show-inheritance:
 
-.. autoclass:: Prep_Construct
+.. autoclass:: PrepConstruct
    :no-members:
    :class-doc-from: class
    :show-inheritance:
 
-.. autoclass:: GetPrep
+.. autoclass:: FetchPrepFileOrMake
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: FetchPrepFileOrCrash
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: PrepRefill
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: MakePrepFile
    :no-members:
    :class-doc-from: class
    :show-inheritance:
 """
 
 import vortex
+import footprints
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
 
@@ -482,6 +498,71 @@ class FetchPrepFileOrCrash(FetchPrepFileOrMake):
 
     def launch_algo(self, algo, **kwargs):
         pass
+
+class PrepRefill(FetchPrepFileOrCrash):
+    """
+    **Task : PrepRefill**
+
+
+    **Input:**
+
+    - A single PREP.nc
+
+    **Output:**
+
+    - A copy of the input PREP.nc file into the cache of all members of the real-time chain
+
+    """
+
+    def __init__(self, **kw):
+
+        MANDATORY_CONFIGURATION_VARIABLES = [
+            "prep_date",
+            "prep_xpid",
+            "geometry",
+            "xpid",
+            "rundate+help=Date of run;choices=YYYYMMDD[03 06 09 12];type=str or Date",
+            "members",
+            "datevalidity",
+        ]
+        OPTIONAL_CONFIGURATION_VARIABLES = [
+            "prep_user",
+            "prep_vapp",
+            "prep_vconf",
+            "prep_vortex1",
+            "prep_block",
+            "cutoff+help=Target *cutoff* (refill an analysis or a forecast output);type=str;"
+            "choices='assimilation', 'production';default='assimilation'",
+        ]
+        overwrite = [
+            "datebegin",
+            "dateend",
+        ]
+        super().__init__(**kw)
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES, overwrite=overwrite)
+
+    def put_outputs(self):
+
+        self.sh.title('Output PREP(s)')
+        prep = vortex.output(
+            role           = 'SnowpackInit',
+            local          = 'PREP.nc',
+            block          = 'prep',
+            experiment     = self.conf.xpid,
+            geometry       = self.conf.geometry,
+            datevalidity   = self.conf.datevalidity,
+            date           = self.conf.rundate,
+            member         = footprints.util.rangex(self.conf.members),
+            nativefmt      = 'netcdf',
+            kind           = 'PREP',
+            model          = 'surfex',
+            namespace      = 'vortex.multi.fr',
+            vortex1        = self.conf.get('prep_vortex1', False),
+            cutoff         = self.conf.get('cutoff', 'assimilation'),
+        ),
+        print(self.ticket.prompt, 'Prep =', prep)
+        print()
+
 
 
 class MakePrepFile(_PrepConstruct):

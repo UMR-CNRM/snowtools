@@ -7,6 +7,11 @@ shadows.py
    :no-members:
    :class-doc-from: class
    :show-inheritance:
+
+.. autoclass:: ShadowsPostes
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
 """
 
 import vortex
@@ -159,3 +164,15 @@ class Shadows(_CenResearchTask):
         ),
         print(self.ticket.prompt, 'diff =', diff)
         print()
+
+class ShadowsPostes(Shadows):
+    """
+    In the reanalysis case, the FORCING files come from the output of the "concatenation" task and are
+    not available at the execution of the transfer node.
+    """
+
+    def get_remote_inputs(self):
+        pass
+
+    def get_local_inputs(self):
+        self.get_forcing(localname='[datebegin:ymdh]_[dateend:ymdh]/FORCING.nc')

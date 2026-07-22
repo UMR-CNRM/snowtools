@@ -1,5 +1,13 @@
 # -*- coding: utf-8 -*-
-""" """
+"""
+extract_s2m_points.py
+---------------------
+
+.. autoclass:: ExtractSubPeriod
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+"""
 
 
 from vortex_cen.tasks.research_task_base import _CenResearchTask

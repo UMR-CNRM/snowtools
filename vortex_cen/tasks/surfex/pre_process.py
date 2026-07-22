@@ -15,17 +15,12 @@ Tasks designed to launch the pre-process the OPTIONS.nam namelist before any SUR
    :class-doc-from: class
    :show-inheritance:
 
-.. autoclass:: Preprocess_Uenv_Namelist
+.. autoclass:: PreprocessNamelist
    :no-members:
    :class-doc-from: class
    :show-inheritance:
 
-.. autoclass:: Preprocess_Local_Namelist
-   :no-members:
-   :class-doc-from: class
-   :show-inheritance:
-
-.. autoclass:: Soda_Namelist_Preprocess
+.. autoclass:: SodaNamelistPreprocess
    :no-members:
    :class-doc-from: class
    :show-inheritance:
