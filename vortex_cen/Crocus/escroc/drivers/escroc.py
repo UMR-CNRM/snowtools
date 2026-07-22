@@ -11,10 +11,10 @@ enventually be generated if necessary and possible.
 
 from mkjob.nodes import Driver
 from vortex_cen.tasks.surfex.offline_ensemble import Escroc
-from vortex_cen.tasks.surfex.pre_process import _Preprocess
-from vortex_cen.tasks.surfex.pgd import GetPgd1D
-from vortex_cen.tasks.surfex.prep import GetPrep
-from vortex_cen.tasks.surfex.init_clim_ground_temperature import GetClimGroundTemperature
+from vortex_cen.tasks.surfex.pre_process import PreprocessNamelist
+from vortex_cen.tasks.surfex.pgd import FetchPgdOrMake
+from vortex_cen.tasks.surfex.prep import FetchPrepFileOrMake
+from vortex_cen.tasks.surfex.init_clim_ground_temperature import MakeClimGroundTemperatureIfNoPrep
 
 
 def setup(t, **kw):
@@ -22,92 +22,15 @@ def setup(t, **kw):
         tag='surfex',
         ticket=t,
         nodes=[
-            PreProcess(tag='preprocess', ticket=t, **kw),
-            MakeClimGroundTemperature(tag='inittg', ticket=t, **kw),
-            GetPgd1D(tag='pgd', ticket=t, **kw),
-            GetPrep(tag='prep', ticket=t, **kw),
+            PreprocessNamelist(tag='preprocess', ticket=t, **kw),
+            MakeClimGroundTemperatureIfNoPrep(tag='inittg', ticket=t, **kw),
+            FetchPgdOrMake(tag='pgd', ticket=t, **kw),
+            FetchPrepFileOrMake(tag='prep', ticket=t, **kw),
             EscrocResearch(tag='escroc_task', ticket=t, **kw),
         ],
         options=kw,
     )
 
-
-class MakeClimGroundTemperature(GetClimGroundTemperature):
-    """
-    Task : MakeClimGroundTemperature
-    ================================
-
-    If the "climground" is provided and set to "True", this task will look for a PREP.nc file and if none is found,
-    it will initialize Surfex ground temperature (GT) by taking the climatological mean of the input forcing air
-    temperature.
-
-    Inputs :
-    --------
-    - FORCING file(s) on simulation geometry
-
-    Outputs :
-    ---------
-    - Init_TG file (initial values of ground temperature)
-    """
-
-    def __init__(self, **kw):
-
-        super().__init__(**kw)
-        MANDATORY_CONFIGURATION_VARIABLES = [
-        ]
-        OPTIONAL_CONFIGURATION_VARIABLES = [
-            "climground:prep",
-        ]
-        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
-
-    def process(self):
-        if self.conf.get('climground', False):
-            # Check if a PREP file already exists
-            prep = self.get_prep(fatal=False)
-            # If no PREP file found, launch the generation of init_TG file
-            if not prep[0]:
-                super().process()
-        else:
-            pass
-
-
-class PreProcess(_Preprocess):
-    """
-    Task : PreProcess
-    =================
-
-    SURFEX namelist preprocessing : add infos like points and dates from forcing to namelist.
-
-    Inputs:
-    -------
-    - SURFEX namelist (OPTIONS.nam) from path or UEnv
-    - FORCING file(s)
-
-    Outputs:
-    --------
-    - Modified and ready-to-use SURFEX namelist
-
-    """
-
-    def __init__(self, **kw):
-
-        super().__init__(**kw)
-        MANDATORY_CONFIGURATION_VARIABLES = [
-            "surfex_uenv|uenv",
-        ]
-
-        OPTIONAL_CONFIGURATION_VARIABLES = [
-            "namelist_path",
-        ]
-
-        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
-
-    def get_remote_inputs(self):
-        if 'namelist_path' in self.conf:
-            self.get_namelist_from_path()
-        else:
-            self.get_namelist_from_uenv()
-        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
 
 
 class EscrocResearch(Escroc):

@@ -9,7 +9,7 @@ The driver also includes the following tasks :
 """
 
 from mkjob.nodes import Driver
-from vortex_cen.tasks.surfex.pre_process import PreprocessUenvNamelist
+from vortex_cen.tasks.surfex.pre_process import PreprocessNamelist
 from vortex_cen.tasks.surfex.offline import Offline_Mpi_Uenv
 from vortex_cen.tasks.surfex.pgd import FetchPgdOrMake
 from vortex_cen.tasks.surfex.prep import FetchPrepFileOrMake
@@ -21,10 +21,10 @@ def setup(t, **kw):
         tag='offline',
         ticket=t,
         nodes=[
-            PreprocessUenvNamelist(tag='preprocess_uenv_namelist', ticket=t, **kw),
-            FetchClimGroundTemperatureOrMake(tag='getClimGroundTemperature', ticket=t, **kw),
+            PreprocessNamelist(tag='preprocess_uenv_namelist_offline', ticket=t, **kw),
+            FetchClimGroundTemperatureOrMake(tag='fetchclimgroundtemperature_offline', ticket=t, **kw),
             FetchPgdOrMake(tag='getpgd1d', ticket=t, **kw),
-            FetchPrepFileOrMake(tag='getprep', ticket=t, **kw),
+            FetchPrepFileOrMake(tag='offline_getprep', ticket=t, **kw),
             Offline_Mpi_Uenv(tag='offline_mpi_uenv', ticket=t, **kw),
         ],
         options=kw,

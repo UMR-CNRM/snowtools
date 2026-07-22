@@ -6,7 +6,7 @@ The ensemble members can combine an ensemble of meteorological forcings and diff
 """
 
 from mkjob.nodes import Driver, WorkshareFamily, LoopFamily
-from vortex_cen.tasks.surfex.pre_process import Soda_Namelist_Preprocess, Preprocess_Uenv_Namelist
+from vortex_cen.tasks.surfex.pre_process import SodaNamelistPreprocess, PreprocessNamelist
 from vortex_cen.tasks.surfex.offline_ensemble import CrocO
 from vortex_cen.tasks.surfex.soda import Soda
 
@@ -17,8 +17,8 @@ def setup(t, **kw):
         ticket = t,
         nodes = [
             # Common namelist pre-processing
-            Soda_Namelist_Preprocess(tag='soda_preprocess', ticket=t, **kw),
-            Preprocess_Uenv_Namelist(tag='offline_preprocess', ticket=t, **kw),
+            SodaNamelistPreprocess(tag='soda_preprocess', ticket=t, **kw),
+            PreprocessNamelist(tag='offline_preprocess', ticket=t, **kw),
             # assim sequence
             LoopFamily(
                 tag='dates',

@@ -245,6 +245,7 @@ class SurfexCommonsMixin:
             namespace    = 'vortex.cache.fr',
             block        = 'namelist',
             nativefmt    = 'nam',
+            intent = 'inout', # needed for dailyprep
         ),
         print(self.ticket.prompt, 'namelist =', namelist_tbi)
         print()
@@ -442,6 +443,7 @@ class SurfexCommonsMixin:
                   'Make sure that the tg_xpid values in the '
                   'corresponding configuration sections match. ')
             raise e
+        return init_tg
 
 
 

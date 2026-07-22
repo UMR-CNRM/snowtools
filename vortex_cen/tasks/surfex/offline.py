@@ -313,8 +313,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
 
     def get_remote_inputs(self):
 
-        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
-                         alternate=self.conf.get("forcing_alternate", True))
+        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
         self.get_executable()
@@ -405,7 +404,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
             model          = 'surfex',
             namespace      = self.conf.get("namespace_out", "vortex.multi.fr"),
             namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
-            block          = self.conf.get('out_block', 'offline/prep'),
+            block          = self.conf.get('out_block', 'prep'),
             member         = self.conf.get('member', None),
         ),
         print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
@@ -475,11 +474,11 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
 
     def diff(self):
         """
-        Test output reproductibility [OPTIONAL]
+        Test output reproducibility [OPTIONAL]
         """
         # Diff of PRO files always fails because netcdf can not properly read them.
         # --> check reproductibility on PREP file
-        self.sh.title("Reproductibility check : PREP")
+        self.sh.title("Reproducibility check: PREP")
         diff = vortex.diff(
             local          = 'PREP_[datevalidity:ymdh].nc',
             role           = 'SnowpackInit',
@@ -621,8 +620,8 @@ class OfflineMpiDailyPrep(OfflineMpi):
             engine         = 'parallel',
             binary         = 'OFFLINE',
             kind           = 'deterministic',
-            datebegin      = self.conf.forcing_datebegin,
-            dateend        = self.conf.forcing_dateend,
+            datebegin      = self.conf.get("forcing_datebegin", self.conf.datebegin),
+            dateend        = self.conf.get("forcing_dateend", self.conf.dateend),
             # MV : *dateinit* correspond à la date de validité du fichier PREP
             dateinit       = self.ticket.context.sequence.effective_inputs(role='SnowpackInit')[0].rh.resource.date,
             # MV : la valeur par défaut de "threshold" dans la commande s2m est -999
@@ -684,11 +683,11 @@ class OfflineMpiDailyPrep(OfflineMpi):
     def put_prep(self):
         self.sh.title('Output PREP')
         prep_tbo = vortex.output(
-            local='PREP_[date:ymdh].nc',
+            local='PREP_[datevalidity:ymdh].nc',
             role='SnowpackInit',
             experiment=self.conf.xpid,
             geometry=self.conf.geometry,
-            date = list(daterange(tomorrow(base=self.conf.datebegin), self.conf.dateend)),
+            datevalidity = list(daterange(tomorrow(base=self.conf.datebegin), self.conf.dateend)),
             nativefmt='netcdf',
             kind='PREP',
             model='surfex',
@@ -718,6 +717,12 @@ class OfflineMpiDailyPrep(OfflineMpi):
         ),
         print(self.ticket.prompt, 'pro_tbo =', pro_tbo)
         print()
+
+    def diff(self):
+        """
+        TODO: can be removed as soon as reference data for dailyprep test were created.
+        """
+        pass
 
 
 class OfflineAssim(OfflineMpi):

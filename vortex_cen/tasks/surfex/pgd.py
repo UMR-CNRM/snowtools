@@ -311,8 +311,7 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
         drdt_bst_fit_60.nc
         """
         simulation2d = self.conf.get("pgd_2d", False)
-        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
-                         alternate=self.conf.get("forcing_alternate", True))
+        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
         if simulation2d:
@@ -824,7 +823,7 @@ class FetchPgdOrCrash(FetchPgdOrMake):
     def get_remote_inputs(self):
         force_uenv = self.conf.get("force_uenv", False)
         pgd = self.get_pgd_file_from_uenv(fatal=force_uenv)
-        if not pgd[0]:
+        if len(self.ctx.sequence.effective_inputs(role="SurfexClim")) == 0:
             _ = self.get_pgd_file_from_cache_or_archive(fatal=True)
 
     def get_local_inputs(self):

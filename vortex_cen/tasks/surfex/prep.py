@@ -233,7 +233,7 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
             local        = 'PREP.nc',
             role         = 'SnowpackInit',
             experiment   = self.conf.xpid,
-            datevalidity = self.conf.get('date', self.conf.get('dateend', None)),
+            datevalidity = self.conf.get('date', self.conf.get('datebegin', None)),
             vapp         = self.conf.vapp,
             vconf        = self.conf.vconf,
             geometry     = self.conf.geometry,
@@ -258,7 +258,7 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
             role         = 'SnowpackInit',
             experiment   = self.conf.diff_xpid,
             username     = self.conf.get('diff_user', None),
-            datevalidity = self.conf.get('date', self.conf.get('dateend', None)),
+            datevalidity = self.conf.get('date', self.conf.get('datebegin', None)),
             vapp         = self.conf.vapp,
             vconf        = self.conf.vconf,
             geometry     = self.conf.geometry,
@@ -373,7 +373,7 @@ class FetchPrepFileOrMake(_PrepConstruct):
     def get_remote_inputs(self):
 
         prep_tbi = self.get_prep_file_from_cache_or_archive(fatal=False)
-        if not prep_tbi[0]:
+        if len(self.ctx.sequence.effective_inputs(role="SnowpackInit")) == 0:
             super().get_remote_inputs()
 
     def get_local_inputs(self):
@@ -402,7 +402,7 @@ class FetchPrepFileOrMake(_PrepConstruct):
             local       = 'PREP.nc',
             role        = 'SnowpackInit',
             experiment  = self.conf.xpid,
-            date        = self.conf.get('prep_date', self.conf.datebegin),
+            datevalidity = self.conf.get('prep_date', self.conf.datebegin),
             vapp        = self.conf.get('prep_vapp', self.conf.vapp),
             vconf       = self.conf.get('prep_vconf', self.conf.vconf),
             geometry    = self.conf.geometry,

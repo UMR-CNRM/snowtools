@@ -3,7 +3,7 @@
 """
 The "surfex" driver allows to launch deterministic SURFEX/Crocus simulations in a research context
 based on any meteorological forcing file.
-WARNING : It does not guarantee the reproductibility of the simulations due to a loose user control
+WARNING : It does not guarantee the reproducibility of the simulations due to a loose user control
 on the input files : missing inputs files will be looked for on alternate locations and will
 enventually be generated if necessary and possible.
 
@@ -11,7 +11,7 @@ enventually be generated if necessary and possible.
 
 from mkjob.nodes import Driver
 from vortex_cen.tasks.surfex.offline import OfflineMpi
-from vortex_cen.tasks.surfex.pre_process import _Preprocess
+from vortex_cen.tasks.surfex.pre_process import PreprocessNamelist
 from vortex_cen.tasks.surfex.pgd import FetchPgdOrMake
 from vortex_cen.tasks.surfex.prep import FetchPrepFileOrMake
 from vortex_cen.tasks.surfex.init_clim_ground_temperature import MakeClimGroundTemperatureIfNoPrep
@@ -22,7 +22,7 @@ def setup(t, **kw):
         tag='surfex',
         ticket=t,
         nodes=[
-            PreProcess(tag='preprocess', ticket=t, **kw),
+            PreprocessNamelist(tag='preprocess', ticket=t, **kw),
             MakeClimGroundTemperatureIfNoPrep(tag='inittg', ticket=t, **kw),
             FetchPgdOrMake(tag='pgd', ticket=t, **kw),
             FetchPrepFileOrMake(tag='prep', ticket=t, **kw),
@@ -30,45 +30,6 @@ def setup(t, **kw):
         ],
         options=kw,
     )
-
-
-class PreProcess(_Preprocess):
-    """
-    Task : PreProcess
-    =================
-
-    SURFEX namelist preprocessing : add infos like points and dates from forcing to namelist.
-
-    Inputs:
-    -------
-    - SURFEX namelist (OPTIONS.nam) from path or UEnv
-    - FORCING file(s)
-
-    Outputs:
-    --------
-    - Modified and ready-to-use SURFEX namelist
-
-    """
-
-    def __init__(self, **kw):
-
-        super().__init__(**kw)
-        MANDATORY_CONFIGURATION_VARIABLES = [
-            "surfex_uenv|uenv",
-        ]
-
-        OPTIONAL_CONFIGURATION_VARIABLES = [
-            "namelist_path",
-        ]
-
-        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
-
-    def get_remote_inputs(self):
-        if 'namelist_path' in self.conf:
-            self.get_namelist_from_path()
-        else:
-            self.get_namelist_from_uenv()
-        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
 
 
 class Offline(OfflineMpi):
@@ -115,16 +76,9 @@ class Offline(OfflineMpi):
 
     def get_local_inputs(self):
         # Get PGD and PREP locally because they have been retrieved or produced by a previous task
-        self.get_pgd()
+        self.get_pgd_from_cache()
         _ = self.get_prep_file_from_cache_or_archive(fatal=True, cache_only=True)
         # Get namelist from the preprocess task output
         self.get_namelist_from_cache()
         # Get FORCING locally because they have already been retrieved by the preprocess task
         self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
-
-    def get_executable(self):
-
-        if "exesurfex" in self.conf:
-            self.get_executable_from_path()
-        else:
-            self.get_executable_from_uenv()

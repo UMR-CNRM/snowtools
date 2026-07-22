@@ -96,4 +96,4 @@ class TestReportContext(_ReportContext):
             t.sh.header('Test informations: the test failed')
             with open(t.sh.path.join(outdir, 'FailTests.txt'), 'a') as f:
                 time = Date.now().strftime('%Y-%m-%d %H:%M')
-                f.write(f'{time} Test informations: task "{self._task._tag}" failed reproductibility check\n')
+                f.write(f'{time} Test informations: task "{self._task._tag}" failed reproducibility check\n')

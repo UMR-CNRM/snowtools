@@ -109,12 +109,13 @@ class ForcingSpatialConcatenation(_CenResearchTask):
 
         return algo
 
-    def launch_algo(self, algo):
+    def launch_algo(self, algo, **kwargs):
         """
         launch the algo component.
 
         :param algo: Algorithm to be launched.
         :type algo: AlgoComponent
+        :param kwargs: Additional configuration variables. Not used
         """
         self.launch_python_algo(algo)
 

@@ -4,7 +4,7 @@ Test the "Preprocess_Uenv_Namelist" unittask.
 """
 
 from mkjob.nodes import Driver
-from vortex_cen.tasks.surfex.pre_process import PreprocessUenvNamelist
+from vortex_cen.tasks.surfex.pre_process import PreprocessNamelist
 
 
 def setup(t, **kw):
@@ -12,7 +12,7 @@ def setup(t, **kw):
         tag='preprocess_namelist',
         ticket=t,
         nodes=[
-            PreprocessUenvNamelist(tag='preprocess_uenv_namelist', ticket=t, **kw),
+            PreprocessNamelist(tag='preprocess_uenv_namelist', ticket=t, **kw),
         ],
         options=kw,
     )
