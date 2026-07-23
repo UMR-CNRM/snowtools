@@ -48,8 +48,7 @@ class SafranReanalysis(_CenResearchTask):
     - listings_safran : output safran execution listings
     - liste_obs : List of assimilated observations
 
-    Mandatory Configuration Variables:
-    ----------------------------------
+    **Mandatory Configuration Variables:**
 
     * ``datebegin`` First rundate of the guess (hour must be '00')
     * ``dateend`` Last run date of the guess (hour must be '00')
@@ -64,8 +63,7 @@ class SafranReanalysis(_CenResearchTask):
     * ``execution`` Type of SAFRAN execution. type: str, choices: analysis, forecast, reanalysis, reforecast
     * ``assim`` Allow assimilation of observations. type: bool
 
-    Optional Configuration Variables:
-    ---------------------------------
+    **Optional Configuration Variables:**
 
     * ``obs_xpid`` Experiment identifier of the observation files. type: str, default: *xpid*
     * ``obs_vapp`` *vapp* level of the observation files. type: str, default: *vapp*

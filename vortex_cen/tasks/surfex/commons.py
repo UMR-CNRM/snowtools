@@ -26,16 +26,16 @@ class SurfexCommonsMixin:
         Binary ECOCLIMAP I files are mandatory to run OFFLINE and taken from the uenv
         Binary ECOCLIMAP II files are mandatory to run OFFLINE and taken from the uenv
 
-        Configuration Variables used:
-        -----------------------------
+        **Configuration Variables used:**
 
         * ``surfex_uenv`` or if not present ``uenv`` User Environment in which the following resources are to be retrieved :
-                 - ecoclimapI_covers_param.bin
-                 - ecoclimapII_eu_covers_param.bin
-                 Format : uenv:{uenv_name}@{user}
+          - ecoclimapI_covers_param.bin
+          - ecoclimapII_eu_covers_param.bin
 
+          Format : uenv:{uenv_name}@{user}
         * ``geometry`` *geometry* of the forcing file(s)
           type: str, footprints.stdtypes.FPList
+
         """
         # Binary ECOCLIMAP I files are mandatory to run OFFLINE and taken from the uenv
         self.sh.title('Input ecoclimap1')
@@ -72,13 +72,14 @@ class SurfexCommonsMixin:
         Get drdt_bst_fit_60.nc from uenv
         Crocus metamorphism parameters mandatory to run OFFLINE, PREP or PGD
 
-        Configuration Variables used:
-        -----------------------------
+        **Configuration Variables used:**
 
         * ``surfex_uenv`` or if not present ``uenv`` User Environment in which the following resources are to be retrieved :
-                 - ecoclimapI_covers_param.bin
-                 - ecoclimapII_eu_covers_param.bin
-                 Format : uenv:{uenv_name}@{user}
+          - ecoclimapI_covers_param.bin
+          - ecoclimapII_eu_covers_param.bin
+
+          Format : uenv:{uenv_name}@{user}
+
         """
         self.sh.title('Input drdt_bst_fit_60')
         drdt_bst_fit_tbi = vortex.input(
@@ -97,8 +98,7 @@ class SurfexCommonsMixin:
         In the general research case, the PGD comes from the vortex cache.
         For "stable" configurations such as the reanalysis, it comes from a UEnv/GEnv.
 
-        Configuration Variables used:
-        -----------------------------
+        **Configuration Variables used:**
 
         * ``pgd_xpid`` Experiment Identifier of the PGD file, if different from the task's XPID. defaults to ``xpid``.
           type: str
@@ -151,8 +151,7 @@ class SurfexCommonsMixin:
         :type fatal: bool
         :return: pgd toolbox
 
-        Configuration Variables used:
-        -----------------------------
+        **Configuration Variables used:**
 
         * ``pgd_xpid`` Experiment Identifier of the PGD file, if different from the task's XPID. defaults to ``xpid``.
           type: str
@@ -199,8 +198,7 @@ class SurfexCommonsMixin:
             archived from a previous experiment.
         :return: pgd toolbox
 
-        Configuration Variables used:
-        -----------------------------
+        **Configuration Variables used:**
 
         * ``surfex_uenv`` or if not present ``uenv`` User Environment from which the PGD.nc file should be fetched.
                  Format : uenv:{uenv_name}@{user}
@@ -229,8 +227,7 @@ class SurfexCommonsMixin:
         get OPTIONS.nam from the local cache usually produced by
         a previous execution of a "pre_process" task.
 
-        Configuration Variables used:
-        -----------------------------
+        **Configuration Variables used:**
 
         * ``xpid`` experiment identifier
         """
@@ -254,8 +251,7 @@ class SurfexCommonsMixin:
         """
         Get namelist from UEnv. To be used typically by the preprocess_namelist task.
 
-        Configuration Variables used:
-        -----------------------------
+        **Configuration Variables used:**
 
         * ``surfex_uenv`` or if not present ``uenv`` User Environment from which the namelist file should be fetched.
                  Format : uenv:{uenv_name}@{user}
@@ -286,8 +282,7 @@ class SurfexCommonsMixin:
         with namelist parameters without properly archiving the experiments.
         Be aware that using uenvs with versioning is considered a better practice leading to more reproducible results.
 
-        Configuration Variables used:
-        -----------------------------
+        **Configuration Variables used:**
 
         * ``namelist_path`` absolute path to the namelist file
         """
@@ -322,8 +317,7 @@ class SurfexCommonsMixin:
 
         :return: a toolbox input with the PREP file.
 
-        Configuration Variables used:
-        -----------------------------
+        **Configuration Variables used:**
 
         * ``prep_xpid`` or ``xpid`` Experiment id the prep file should be searched for or put in cache.
         * ``prep_user`` name of the user who produced the PREP file. Default: None.
@@ -401,8 +395,7 @@ class SurfexCommonsMixin:
         :type cache_only: bool
         :return: init_tg toolbox
 
-        Configuration Variables used:
-        -----------------------------
+        **Configuration Variables used:**
 
     * ``tg_xpid`` or ``xpid`` experiment id the init_TG.nc file should be fetched from.
     * ``tg_user`` name of the user that produced the target the init_TG.nc file. Default: *None*
@@ -456,8 +449,7 @@ class SurfexCommonsMixin:
             for example from the cache or archive.
         :return: init_tg toolbox
 
-        Configuration Variables used:
-        -----------------------------
+        **Configuration Variables used:**
 
         * ``tg_geometry`` or ``geometry`` geometry of the init_TG. Logically the same as for the rest of the simulation
         * ``surfex_uenv`` or if not present ``uenv`` User Environment from which the init_TG.nc file should be fetched.

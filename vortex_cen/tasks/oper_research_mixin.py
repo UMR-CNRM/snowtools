@@ -9,6 +9,7 @@ Multiple inheritance together with the standard Task class is required to use th
 .. autoclass:: CENTaskMixIn
    :members:
    :show-inheritance:
+   :noindex:
 
 """
 

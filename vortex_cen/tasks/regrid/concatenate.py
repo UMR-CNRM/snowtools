@@ -28,8 +28,7 @@ class ForcingSpatialConcatenation(_CenResearchTask):
 
     - Single FORCING file
 
-    Mandatory Configuration variables:
-    ----------------------------------
+    **Mandatory Configuration variables:**
 
     * ``forcing_geometry`` List of geometries of the FORCING files to concatenate
       type: footprints.stdtypes.FPList
@@ -41,8 +40,8 @@ class ForcingSpatialConcatenation(_CenResearchTask):
     * ``dateend`` end date(s) of files
     * ``namespace_out`` namespace of output files
 
-    Optional configuration variables:
-    ---------------------------------
+    **Optional configuration variables:**
+
     * ``max_ntasks`` The maximum number of parallel tasks (in case of huge memory usage)
       type: int
     * ``block`` Output block of the concatenated FORCING files

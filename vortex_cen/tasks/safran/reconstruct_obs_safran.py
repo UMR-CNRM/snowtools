@@ -29,8 +29,7 @@ class ReconstructSafranObs(_CenResearchTask):
 
     - OBSERVATIONS.tar : archive containing Safran-compatible files with both real and reconstructed observations
 
-     Mandatory Configuration Variables:
-    ----------------------------------
+    **Mandatory Configuration Variables:**
 
     * ``datebegin`` First rundate of the guess (hour must be '00')
     * ``dateend`` Last run date of the guess (hour must be '00')
@@ -39,8 +38,8 @@ class ReconstructSafranObs(_CenResearchTask):
       '$HOME/.vortexrc/geometries.ini' file.
     * ``uenv`` Name of the UEnv containing all SAFRAN constant input files and executables.
 
-    Optional Configuration Variables:
-    ----------------------------------
+    **Optional Configuration Variables:**
+
     * ``newobs_xpid`` Experiment identifier of the reconstructed hourly temperature observation dataset.
       type: str, default: *xpid*
     * ``newobs_user`` Username of the producer of the reconstructed hourly temperature observation dataset.

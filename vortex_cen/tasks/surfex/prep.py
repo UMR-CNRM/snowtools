@@ -14,7 +14,7 @@ Tasks designed to launch the PREP executable.
    :members:
    :show-inheritance:
 
-.. autoclass:: PrepConstruct
+.. autoclass:: _PrepConstruct
    :no-members:
    :class-doc-from: class
    :show-inheritance:
@@ -50,23 +50,25 @@ class PrepCommonsMixin(SurfexCommonsMixin):
     """
     Mixin class prviding methods for fetching a PREP executable.
 
-    Optional configuration variables:
-    ---------------------------------
+    **Optional configuration variables:**
+
     * ``surfex_uenv`` If the executable should come from an uenv. Default is ``uenv``
     * ``prep_gvar`` specify the name of the PREP executable in the uenv. Default is ``master_prep_mpi``
       if the mpi parameter is True and ``master_prep_nompi`` otherwise.
     * ``exesurfex`` Path to the executable if it should come from a local path.
+
     """
 
     def get_prep_exe_from_uenv(self, mpi=True, fatal=True):
         """
         method to get a PREP executable from uenv.
+
         :param mpi: True if an executable with MPI support should be fetched, False otherwise. Default is True.
         :param fatal: True if failing to fetch the executable should cause a fatal error, False otherwise.
-            Default is True.
+         Default is True.
 
-        Configuration variables used:
-        -----------------------------
+        **Configuration variables used:**
+
         * ``surfex_uenv`` If the executable should come from an uenv. Default is ``uenv``
         * ``prep_gvar`` specify the name of the PREP executable in the uenv. Default is ``master_prep_mpi``
           if the mpi parameter is True and ``master_prep_nompi`` otherwise.
@@ -95,8 +97,8 @@ class PrepCommonsMixin(SurfexCommonsMixin):
         """
         Fetch a PREP executable from a local path.
 
-        Configuration variables used:
-        -----------------------------
+        **Configuration variables used:**
+
         * ``exesurfex`` Path to the executable if it should come from a local path.
         """
 
@@ -114,13 +116,11 @@ class PrepCommonsMixin(SurfexCommonsMixin):
 
 class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
     """
-    Task: _PrepConstruct
-    ====================
+    **Task: _PrepConstruct**
 
     Abstract task for the generation of initial conditions (PREP.nc file)
 
-    Inputs:
-    -------
+    **Inputs:**
 
     * ``OPTIONS.nam`` ready-to-use SURFEX namelist (coming from an execution of a "Preprocess_Task")
     * ``ecoclimapI_covers_param.bin`` and ``ecoclimapII_eu_covers_param.bin`` (binaries for vegetation generation)
@@ -129,12 +129,11 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
       (put there by an execution of an InitClimGroundTemperature or GetClimGroundTemperature task)
     * ``PGD.nc`` Ground physiography coming from the cache (put there by an execution of a Pgd* task or GetPgd1D task
 
-    Outputs:
-    --------
+    **Outputs:**
+
     - PREP.nc (initial conditions)
 
-    Mandatory configuration variables:
-    ----------------------------------
+    **Mandatory configuration variables:**
 
     * ``date`` Date of validity of the PREP.nc file to generate. Default is ``datebegin``
       type: str, Date
@@ -143,18 +142,19 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
     * ``xpid`` Experiment identifier
       type: str
     * ``surfex_uenv`` or if not present ``uenv`` User Environment in which the following resources are to be retrieved :
-                 - ecoclimapI_covers_param.bin
-                 - ecoclimapII_eu_covers_param.bin
-                 - drdt_bst_fit_60.nc
-                 - PREP executable
-                 Format : uenv:{uenv_name}@{user}
+      - ecoclimapI_covers_param.bin
+      - ecoclimapII_eu_covers_param.bin
+      - drdt_bst_fit_60.nc
+      - PREP executable
+
+      Format : uenv:{uenv_name}@{user}
     * ``nprocs`` Number of process to allocate to the execution of the MPI binary
       type: int
     * ``ntasks`` Number of tasks to allocate to the execution of the MPI binary
       type: int
 
-    Optionnal configuration variables:
-    ----------------------------------
+    **Optional configuration variables:**
+
     * ``pgd_xpid`` Experiment Identifier of the PGD file, if different from the task's XPID
       type: str
     * ``pgd_user`` Name of the user who produced the PGD file
@@ -172,6 +172,7 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
     * ``diff_user`` *user name* associated with the reference file used for reproducibility test
       (only if different from current user). Default: *None*
       type diff_user: str
+
     """
 
     def __init__(self, **kw):
@@ -258,7 +259,7 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
             model        = 'surfex',
             namespace    = self.conf.get('namespace_out', 'vortex.multi.fr'),
             namebuild    = 'flat@cen',  # TODO : passer en variable de configuration
-            block        = 'prep',
+            block        = self.conf.get('prep_block', 'prep'),
             member       = self.conf.get('member', None),
         ),
         print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
@@ -292,8 +293,7 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
 
 class FetchPrepFileOrMake(_PrepConstruct):
     """
-    Task: FetchPrepFileOrMake
-    =========================
+    **Task: FetchPrepFileOrMake**
 
     Generation of initial conditions (PREP.nc file)
     Look if the requested PREP.nc file is available in the cache or archive. If not,
@@ -302,8 +302,7 @@ class FetchPrepFileOrMake(_PrepConstruct):
 
     WARNING : The simulation's reproducibility can not be guaranteed with this task!
 
-    Inputs:
-    -------
+    **Inputs:**
 
     * ``OPTIONS.nam`` ready-to-use SURFEX namelist (coming from an execution of a "Preprocess_Task")
     * ``ecoclimapI_covers_param.bin`` and ``ecoclimapII_eu_covers_param.bin`` (binaries for vegetation generation)
@@ -312,26 +311,27 @@ class FetchPrepFileOrMake(_PrepConstruct):
       (put there by an execution of an InitClimGroundTemperature or GetClimGroundTemperature task)
     * ``PGD.nc`` Ground physiography
 
-    Outputs:
-    --------
+    **Outputs:**
+
     - PREP.nc (initial conditions)
 
-    Mandatory configuration variables:
-    ----------------------------------
+    **Mandatory configuration variables:**
+
     * ``geometry`` *geometry* of the forcing file(s)
       type: str, footprints.stdtypes.FPList
     * ``xpid`` Experiment identifier
       type: str
     * ``surfex_uenv`` or if not present ``uenv`` User Environment in which the following resources are to be retrieved :
-                 - ecoclimapI_covers_param.bin
-                 - ecoclimapII_eu_covers_param.bin
-                 - drdt_bst_fit_60.nc
-                 - PREP executable
-                 Format : uenv:{uenv_name}@{user}
+      - ecoclimapI_covers_param.bin
+      - ecoclimapII_eu_covers_param.bin
+      - drdt_bst_fit_60.nc
+      - PREP executable
+
+      Format : uenv:{uenv_name}@{user}
 
 
-    Optional configuration variables:
-    ---------------------------------
+    **Optional configuration variables:**
+
     * ``exesurfex`` Path to the executable if it should come from a local path.
     * ``prep_gvar`` specify the name of the PREP executable in the uenv.
     * ``prep_xpid`` or ``xpid`` Experiment id the prep file should be searched for or put in cache.
@@ -374,8 +374,8 @@ class FetchPrepFileOrMake(_PrepConstruct):
         """
         get PREP executable either from local path or from a UEnv
 
-        Configuration variables used:
-        -----------------------------
+        **Configuration variables used:**
+
         * ``exesurfex`` Path to the executable if it should come from a local path. Otherwise,
         * ``surfex_uenv`` If the executable should come from an uenv. Default is ``uenv``
         * ``prep_gvar`` specify the name of the PREP executable in the uenv. Default is ``master_prep_mpi``
@@ -439,14 +439,12 @@ class FetchPrepFileOrCrash(FetchPrepFileOrMake):
     Fetch a prep file from the archive (or vortex cache) and put it in
     the cache of the current experiment.
 
-    Mandatory configuration variables:
-    ----------------------------------
+    **Mandatory configuration variables:**
 
     * ``geometry`` *geometry* of the forcing file(s)
       type: str, footprints.stdtypes.FPList
     * ``xpid`` Experiment identifier
       type: str
-
     * ``prep_xpid`` or ``xpid`` Experiment id the prep file should be searched for or put in cache.
     * ``prep_user`` name of the user who produced the PREP file. Default: None.
     * ``prep_date`` or ``datebegin`` Validity date of the prep file. Default is ``datebegin`` but can be any date.
@@ -461,6 +459,7 @@ class FetchPrepFileOrCrash(FetchPrepFileOrMake):
        Default is ``None``.
     * ``prep_cutoff`` Can be used to select a PREP file coming from an operational forecast (*forecast*) or
        analysis (*assimilation*). Default is *None*. Might be useful for reforecasts.
+
     """
     def __init__(self, **kw):
         MANDATORY_CONFIGURATION_VARIABLES = [
@@ -567,15 +566,13 @@ class PrepRefill(FetchPrepFileOrCrash):
 
 class MakePrepFile(_PrepConstruct):
     """
-    Task : MakePrepFile
-    ===================
+    **Task : MakePrepFile**
 
     Task for the generation of initial conditions (PREP.nc file).
     By default the resulting file is archived. Use the ``namespace_out`` configuration variable to change
     this behavior.
 
-    Inputs:
-    -------
+    **Inputs:**
 
     * ``OPTIONS.nam`` ready-to-use SURFEX namelist (coming from an execution of a "Preprocess_Task")
     * ``ecoclimapI_covers_param.bin`` and ``ecoclimapII_eu_covers_param.bin`` (binaries for vegetation generation)
@@ -584,12 +581,11 @@ class MakePrepFile(_PrepConstruct):
       (put there by an execution of an InitClimGroundTemperature or GetClimGroundTemperature task)
     * ``PGD.nc`` Ground physiography coming from the cache (put there by an execution of a Pgd* task or GetPgd1D task
 
-    Outputs:
-    --------
+    **Outputs:**
+
     - PREP.nc (initial conditions)
 
-    Mandatory configuration variables:
-    ----------------------------------
+    **Mandatory configuration variables:**
 
     * ``date`` Date of validity of the PREP.nc file to generate. Default is ``datebegin``
       type: str, Date
@@ -598,18 +594,19 @@ class MakePrepFile(_PrepConstruct):
     * ``xpid`` Experiment identifier
       type: str
     * ``surfex_uenv`` or if not present ``uenv`` User Environment in which the following resources are to be retrieved :
-                 - ecoclimapI_covers_param.bin
-                 - ecoclimapII_eu_covers_param.bin
-                 - drdt_bst_fit_60.nc
-                 - PREP executable
-                 Format : uenv:{uenv_name}@{user}
+      - ecoclimapI_covers_param.bin
+      - ecoclimapII_eu_covers_param.bin
+      - drdt_bst_fit_60.nc
+      - PREP executable
+
+      Format : uenv:{uenv_name}@{user}
     * ``nprocs`` Number of process to allocate to the execution of the MPI binary
       type: int
     * ``ntasks`` Number of tasks to allocate to the execution of the MPI binary
       type: int
 
-    Optionnal configuration variables:
-    ----------------------------------
+    **Optionnal configuration variables:**
+
     * ``pgd_xpid`` Experiment Identifier of the PGD file, if different from the task's XPID
       type: str
     * ``pgd_user`` Name of the user who produced the PGD file
@@ -630,7 +627,8 @@ class MakePrepFile(_PrepConstruct):
     * ``exesurfex`` Path to the executable if it should come from a local path. Otherwise,
     * ``surfex_uenv`` If the executable should come from an uenv. Default is ``uenv``
     * ``prep_gvar`` specify the name of the PREP executable in the uenv. Default is ``master_prep_mpi``
-          if the mpi parameter is True and ``master_prep_nompi`` otherwise.
+      if the mpi parameter is True and ``master_prep_nompi`` otherwise.
+
     """
     def __init__(self, **kw):
         MANDATORY_CONFIGURATION_VARIABLES = []
@@ -645,8 +643,8 @@ class MakePrepFile(_PrepConstruct):
         """
         get PREP executable either from local path or from a UEnv
 
-        Configuration variables used:
-        -----------------------------
+        **Configuration variables used:**
+
         * ``exesurfex`` Path to the executable if it should come from a local path. Otherwise,
         * ``surfex_uenv`` If the executable should come from an uenv. Default is ``uenv``
         * ``prep_gvar`` specify the name of the PREP executable in the uenv. Default is ``master_prep_mpi``

@@ -114,12 +114,12 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
     - drdt_bst_fit_60.nc (Crocus metamorphism parameters)
     - PGD.nc (Ground physiography)
 
-    Outputs:
-    --------
+    **Outputs:**
+
     - Modified ensemble of snowpack initial conditions ("PREP.nc") referred to as "analysis"
 
-    Mandatory configuration variables
-    ---------------------------------
+    **Mandatory configuration variables**
+
     * ``date`` *date* of the analysis
       type: str, Date
     * ``geometry`` *geometry* of the PREP files
@@ -127,15 +127,15 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
     * ``xpid`` Experiment identifier
       type: str
     * ``uenv`` User Environment in which the following resources are to be retrieved:
-                 Format : uenv:{uenv_name}@{user}
+      Format : uenv:{uenv_name}@{user}
       type: str
     * ``sensor`` Sensor used for the observation (ex: MODIS, PLEIADES, VIIRS)
       type: str
     * ``members`` Ensemble members
       type: footprints.stdtypes.FPList
 
-    Optional configuration variables
-    --------------------------------
+    **Optional configuration variables**
+
     * ``scope`` Scope of the observation
       type: str
     * ``observation_xpid`` Experiment identifier of the observation file

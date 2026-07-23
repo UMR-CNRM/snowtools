@@ -19,7 +19,7 @@ Tasks designed to launch the OFFLINE executable with MPI parallelisation.
    :class-doc-from: class
    :show-inheritance:
 
-.. autoclass:: _OfflineMpi
+.. autoclass:: OfflineMpi
    :no-members:
    :class-doc-from: class
    :show-inheritance:
@@ -29,7 +29,7 @@ Tasks designed to launch the OFFLINE executable with MPI parallelisation.
    :class-doc-from: class
    :show-inheritance:
 
-.. autoclass:: Offline_MPI_Uenv
+.. autoclass:: Offline_Mpi_Uenv
    :no-members:
    :class-doc-from: class
    :show-inheritance:
@@ -79,8 +79,7 @@ class OfflineCommonsMixin(SurfexCommonsMixin):
         :param fatal: If True, fails if the executable was not found. Default: True
         :type fatal: bool
 
-        Configuration variables used:
-        -----------------------------
+        **Configuration variables used:**
 
         * ``surfex_uenv`` or ``uenv``
         * ``offline_gvar`` or one of *master_offline_mpi* or *master_offline_nompi* depending on the value of the
@@ -111,11 +110,11 @@ class OfflineCommonsMixin(SurfexCommonsMixin):
         :param fatal: If True, fails if the executable was not found. Default: True
         :type fatal: bool
 
-        Configuration variables used:
-        -----------------------------
+        **Configuration variables used:**
 
         * ``exesurfex`` absolute path to the OFFLINE executable
-         type: str
+          type: str
+
         """
         self.sh.title('Input OFFLINE executable from local')
         OFFLINE_tbx = vortex.executable(
@@ -132,15 +131,14 @@ class OfflineCommonsMixin(SurfexCommonsMixin):
 
 class _Offline(OfflineCommonsMixin, _CenResearchTask):
     """
-    Task: _Offline
-    ==============
+    **Task: _Offline**
 
     Abstract task for OFFLINE binary execution.
 
     SURFEX/OFFLINE documentation : https://umr-cnrm.github.io/snowtools-doc/misc/surfex.html
 
-    Inputs:
-    -------
+    **Inputs:**
+
     - FORCING.nc files(s) (near-surface meteorological conditions during the simulation period)
     - OPTIONS.nam ready-to-use SURFEX namelist (coming from an execution of a "Preprocess_Task")
     - ecoclimapI_covers_param.bin and ecoclimapII_eu_covers_param.bin (binaries for vegetation generation)
@@ -148,87 +146,88 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
     - PGD.nc (Ground physiography)
     - PREP.nc (initial conditions)
 
-    Outputs:
-    --------
+    **Outputs:**
+
     - PRO.nc Snowpack simulations covering the entire simulation period
     - PREP.nc SURFEX/Crocus model state variables at the end of the simulation
     - CUMUL.nc TODO   Compléter et CHECKER la doc
     - DIAG.nc TODO    Compléter et CHECKER la doc
 
-    Mandatory configuration variables:
-    ----------------------------------
+    **Mandatory configuration variables:**
+
     * ``datebegin`` *datebegin* of the forcing file(s)
       type: str, footprints.stdtypes.FPList
-    * ``dateend` *dateend* of the forcing files(s)
+    * ``dateend`` *dateend* of the forcing files(s)
       type: str, footprints.stdtypes.FPList
-    * ``geometry` *geometry* of the forcing file(s)
+    * ``geometry`` *geometry* of the forcing file(s)
       type: str, footprints.stdtypes.FPList
     * ``xpid`` User-defined Experiment identifier (WARNING : 4-digit strings prohibited)
       type: str
     * ``surfex_uenv`` or ``uenv`` User Environment in which the following resources are to be retrieved:
-                 - ecoclimapI_covers_param.bin
-                 - ecoclimapII_eu_covers_param.bin
-                 - drdt_bst_fit_60.nc
-                 - OFFLINE executable
-                 Format : uenv:{uenv_name}@{user}
+      - ecoclimapI_covers_param.bin
+      - ecoclimapII_eu_covers_param.bin
+      - drdt_bst_fit_60.nc
+      - OFFLINE executable
+
+      Format : uenv:{uenv_name}@{user}
       type: str
     * ``nprocs`` Number of process to allocate to the execution of the MPI binary
       type: int
     * ``ntasks`` Number of tasks to allocate to the execution of the MPI binary
       type: int
 
-    Optional configuration variables (other than forcing-specific ones):
-    --------------------------------------------------------------------
+    **Optional configuration variables (other than forcing-specific ones):**
+
     * ``exesurfex`` Path to the executable if it should come from a local path.
     * ``offline_gvar`` specify the name of the offline executable in the uenv. Default is ``master_offline_mpi``
           if the mpi parameter is True and ``master_offline_nompi`` otherwise.
     * ``member`` Simulation member.
-                   NB : This is a deterministic task, only one single member value can be provided
-     type: int
+      NB : This is a deterministic task, only one single member value can be provided
+      type: int
     * ``pgd_xpid`` Experiment Identifier of the PGD file, if different from the task's XPID
-     type: str
+      type: str
     * ``pgd_user`` User who produced the target PGD file.
-     type: str
+      type: str
     * ``pgd_vapp`` *vapp* of the PGD file, if different from the task's *vapp*
-     type: str
+      type: str
     * ``pgd_vconf`` *vconf* of the PGD file, if different from the task's *vconf*
-     type: str
+      type: str
     * ``prep_xpid`` Experiment Identifier of the PREP file, if different from the task's XPID
-     type: str
+      type: str
     * ``prep_user`` User who produced the target PREP file.
-     type: str
+      type: str
     * ``prep_member`` Member associated to the PREP file if it comes from an ensemble (after a SODA run)
-                        NB : This is a deterministic task, only one single member value can be provided
-     type: int
+      NB : This is a deterministic task, only one single member value can be provided
+      type: int
     * ``prep_vapp`` *vapp* of the PREP file, if different from the task's *vapp*
-     type: str
+      type: str
     * ``prep_vconf`` *vconf* of the PREP file, if different from the task's *vconf*
-     type: str
+      type: str
     * ``prep_date`` Validity date of the PREP file (if different from *datebegin*)
-     type: str
+      type: str
     * ``prep_block`` *block* of the PREP file (default 'prep', but can be different after an assimilation step)
-     type: str
+      type: str
     * ``prep_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
-     type: bool
+      type: bool
     * ``august_threshold`` Threshold to apply to the snow water equivalent (in kg/m2) each 1st August (default: -999)
-     type: int
+      type: int
     * ``dailyprep`` TODO :comprendre avec Matthieu L les cas d'usages avec "dailyprep" (reforecast ?)
-     type: bool
+      type: bool
     * ``drhook`` Activate / deactivate the profiling with DRHOOK (default: False)
-     type: bool
+      type: bool
     * ``namespace_out`` Force specific namespace for output files (default: 'vortex.multi.fr')
-     type: str
+      type: str
     * ``nnodes`` Number of available nodes for MPI parallelisation
-     type: int
+      type: int
     * ``nprocs`` Number of available processors for MPI parallelisation
-     type: int
+      type: int
     * ``ntasks`` Number of MPI tasks
-     type: int
+      type: int
     * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
-                        snowtools/utils/dates.py.
-                        Used to retrieve the list of *datebegin* and *dateend* for IO covering sub-periods.
-                        Possible values : "yearly", "monthly" or "full"
-     type: str
+      snowtools/utils/dates.py.
+      Used to retrieve the list of *datebegin* and *dateend* for IO covering sub-periods.
+      Possible values : "yearly", "monthly" or "full"
+      type: str
     * ``diff_xpid`` Experiment id of the reference file used for reproducibility test.
       type diff_xpid: str
     * ``diff_user`` *user name* associated with the reference file used for reproducibility test
@@ -236,11 +235,9 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
       type diff_user: str
     * ``diff_block`` *block* of the reference file used for reproducibility test
 
-    Forcing related configuration variables:
-    ----------------------------------------
+    **Forcing related configuration variables:**
 
-    Mandatory
-    *********
+    **Mandatory**
 
     * ``forcing_datebegin`` *datebegin* footprint, default self.conf.datebegin
       type forcing_datebegin: str, footprints.stdtypes.FPList
@@ -258,35 +255,33 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
       type forcing_vconf: str
     * ``forcing_namespace`` *namespace* footprint, default "vortex.multi.fr" (hendrix + local cache)
       type forcing_namespace: str
-
     * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
       type forcing_date: str
     * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
       type forcing_model: str
 
-    Optional
-    ********
+    **Optional**
 
     * ``forcing_member`` *member* footprint, default None (or *member* if provided)
       type forcing_member: int, footprints.stdtypes.FPList
     * ``forcing_namebuild`` *namebuild* footprint, default "flat@cen" (will change soon)
       type forcing_namebuild: str
     * ``forcing_intent`` *intent* footprint (local file permissions), default "in"
-                           Possible values : "in" (read-only), "inout" (read-write)
+      Possible values : "in" (read-only), "inout" (read-write)
       type forcing_intent: str
     * ``forcing_source_app`` *source_app* footprint, default None
       type forcing_source_app: str, footprints.stdtypes.FPList
     * ``forcing_source_conf`` *source_conf* footprint, default None
       type forcing_source_conf: str, footprints.stdtypes.FPList
     * ``forcing_source`` Retrieve *source_app* and *source_conf* footrprints dictionnaries for S2M reanalysis
-                           Possible values : 'era5', 'era40'
+      Possible values : 'era5', 'era40'
       type forcing_source: str
     * ``forcing_cutoff`` *cutoff* footprint (to be made optional for SurfaceIO objects), default None
       type forcing_cutoff: str
     * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
-                        snowtools/utils/dates.py.
-                        Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
-                        Possible values : "yearly", "monthly" or "full"
+      snowtools/utils/dates.py.
+      Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
+      Possible values : "yearly", "monthly" or "full"
       type io_duration: str
     * ``forcing_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
       type forcing_vortex1: bool
@@ -349,8 +344,8 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
         """
         get offline executable either from local path or from a UEnv
 
-        Configuration variables used:
-        -----------------------------
+        **Configuration variables used:**
+
         * ``exesurfex`` Path to the executable if it should come from a local path. Otherwise,
         * ``surfex_uenv`` If the executable should come from an uenv. Default is ``uenv``
         * ``offline_gvar`` specify the name of the offline executable in the uenv. Default is ``master_offline_mpi``
@@ -514,8 +509,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
 
 class OfflineMpi(_Offline):
     """
-    Task: OfflineMpi
-    ================
+    **Task: OfflineMpi**
 
     Abstract task for the execution of OFFLINE binary with MPI parallelisation.
 
@@ -586,8 +580,7 @@ class _Offline_NOMPI(_Offline):
 
 class Offline_Mpi_Uenv(OfflineMpi):
     """
-    Task: Offline_MPI_Uenv
-    ======================
+    **Task: Offline_MPI_Uenv**
 
     Get OFFLINE executable from a User Environment.
 
@@ -883,13 +876,12 @@ class OfflineOpenloop(OfflineMpi):
 
 class OfflineLocalForcing(OfflineMpi):
     """
-    Task : Offline
-    ==============
+    **Task : OfflineLocalForcing**
 
     SURFEX/OFFLINE documentation : https://umr-cnrm.github.io/snowtools-doc/misc/surfex.html
 
-    Inputs:
-    -------
+    **Inputs:**
+
     - FORCING.nc files(s) (near-surface meteorological conditions during the simulation period)
     - OPTIONS.nam ready-to-use SURFEX namelist (coming from the execution of the "PreProcess")
     - ecoclimapI_covers_param.bin and ecoclimapII_eu_covers_param.bin (binaries for vegetation generation)
@@ -897,8 +889,8 @@ class OfflineLocalForcing(OfflineMpi):
     - PGD.nc (Ground physiography) retrieved or produced by the GetPgd1D task
     - PREP.nc (initial conditions) retrieved or produced by the GetPrep task
 
-    Outputs:
-    --------
+    **Outputs:**
+
     - PRO.nc Snowpack simulations covering the entire simulation period
     - PREP.nc SURFEX/Crocus model state variables at the end of the simulation
     """

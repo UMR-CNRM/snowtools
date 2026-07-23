@@ -39,21 +39,19 @@ from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
 
 class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
     """
-    Task: InitClimGroundTemperature
-    ===============================
+    **Task: InitClimGroundTemperature**
 
     Initialize Surfex ground temperature (GT) by taking the climatological mean of the input forcing air temperature.
 
-    Inputs:
-    -------
+    **Inputs:**
+
     - FORCING file(s) on simulation geometry
 
-    Outputs:
-    --------
+    **Outputs:**
+
     - Init_TG file (initial values of ground temperature)
 
-    Mandatory configuration variables:
-    ----------------------------------
+    **Mandatory configuration variables:**
 
     * ``forcing_datebegin`` *datebegin* footprint, default self.conf.datebegin
       type forcing_datebegin: str, footprints.stdtypes.FPList
@@ -74,7 +72,6 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
       type forcing_vconf: str
     * ``forcing_namespace`` *namespace* footprint, default "vortex.multi.fr" (hendrix + local cache)
       type forcing_namespace: str
-
     * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
       type forcing_date: str
     * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
@@ -82,29 +79,28 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
     * ``xpid`` experiment id of the current experiment. Used to store the output.
     * ``geometry`` *geometry* of the current experiment.
 
-    Optionnal configuration variables:
-    ----------------------------------
+    **Optionnal configuration variables:**
 
     * ``forcing_member`` *member* footprint, default None (or *member* if provided)
       type forcing_member: int, footprints.stdtypes.FPList
     * ``forcing_namebuild`` *namebuild* footprint, default "flat@cen" (will change soon)
       type forcing_namebuild: str
     * ``forcing_intent`` *intent* footprint (local file permissions), default "in"
-                           Possible values : "in" (read-only), "inout" (read-write)
+      Possible values : "in" (read-only), "inout" (read-write)
       type forcing_intent: str
     * ``forcing_source_app`` *source_app* footprint, default None
       type forcing_source_app: str, footprints.stdtypes.FPList
     * ``forcing_source_conf`` *source_conf* footprint, default None
       type forcing_source_conf: str, footprints.stdtypes.FPList
     * ``forcing_source`` Retrieve *source_app* and *source_conf* footrprints dictionnaries for S2M reanalysis
-                           Possible values : 'era5', 'era40'
+      Possible values : 'era5', 'era40'
       type forcing_source: str
     * ``forcing_cutoff`` *cutoff* footprint (to be made optional for SurfaceIO objects), default None
       type forcing_cutoff: str
     * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
-                        snowtools/utils/dates.py.
-                        Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
-                        Possible values : "yearly", "monthly" or "full"
+      snowtools/utils/dates.py.
+      Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
+      Possible values : "yearly", "monthly" or "full"
       type io_duration: str
     * ``forcing_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
       type forcing_vortex1: bool
@@ -113,8 +109,7 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
     * ``namespace_out`` Force specific namespace for output files (default: 'vortex.multi.fr')
       type: str
 
-    Configuration variables for reproducibility test
-    ------------------------------------------------
+    **Configuration variables for reproducibility test**
 
     In general, the following variables will be used only for test cases.
 
@@ -178,6 +173,7 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
     def launch_algo(self, algo, **kw):
         """
         Launch an algo component.
+
         :param algo: algo component
         :param kw: optional keyword arguments (not used)
         """
@@ -230,15 +226,13 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
 
 class FetchClimGroundTemperatureOrMake(InitClimGroundTemperature):
     """
-    Task : FetchClimGroundTemperatureOrMake
-    =======================================
+    **Task: FetchClimGroundTemperatureOrMake**
 
     If InitTG is available in cache or archive for the current experiment fetch it.
     If not, try to get it from an uenv.
     If not either, generate it by calling the methods from the mother class.
 
-    Configuration variables used for fetching from cache or archive
-    -------------------------------------------------------------------
+    **Configuration variables used for fetching from cache or archive**
 
     * ``tg_xpid`` or ``xpid`` experiment id the init_TG.nc file should be fetched from.
     * ``tg_user`` name of the user that produced the target the init_TG.nc file. Default: *None*
@@ -247,18 +241,16 @@ class FetchClimGroundTemperatureOrMake(InitClimGroundTemperature):
     * ``tg_vconf`` or ``vconf`` Configuration name to search the init_TG.nc file.
     * ``tg_block`` Block name to search the init_TG.nc file. Default: *prep*
 
-    Configuration variables used for fetching from uenv:
-    ----------------------------------------------------
+    **Configuration variables used for fetching from uenv:**
+
     * ``tg_geometry`` or ``geometry`` geometry of the init_TG. Logically the same as for the rest of the simulation
     * ``surfex_uenv`` or if not present ``uenv`` User Environment from which the init_TG.nc file should be fetched.
                  Format : uenv:{uenv_name}@{user}
     * ``tg_gvar`` key to look up the init_TG.nc file in the uenv the file should come from.
 
-    Configuration variables used for calculating initial ground temperature:
-    ------------------------------------------------------------------------
+    **Configuration variables used for calculating initial ground temperature:**
 
-    Mandatory
-    *********
+    **Mandatory**
 
     * ``forcing_datebegin`` *datebegin* footprint, default self.conf.datebegin
       type forcing_datebegin: str, footprints.stdtypes.FPList
@@ -279,7 +271,6 @@ class FetchClimGroundTemperatureOrMake(InitClimGroundTemperature):
       type forcing_vconf: str
     * ``forcing_namespace`` *namespace* footprint, default "vortex.multi.fr" (hendrix + local cache)
       type forcing_namespace: str
-
     * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
       type forcing_date: str
     * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
@@ -287,39 +278,37 @@ class FetchClimGroundTemperatureOrMake(InitClimGroundTemperature):
     * ``xpid`` experiment id of the current experiment. Used to store the output.
     * ``geometry`` *geometry* of the current experiment.
 
-    Optional
-    ********
+    **Optional**
 
     * ``forcing_member`` *member* footprint, default None (or *member* if provided)
       type forcing_member: int, footprints.stdtypes.FPList
     * ``forcing_namebuild`` *namebuild* footprint, default "flat@cen" (will change soon)
       type forcing_namebuild: str
     * ``forcing_intent`` *intent* footprint (local file permissions), default "in"
-                           Possible values : "in" (read-only), "inout" (read-write)
+      Possible values : "in" (read-only), "inout" (read-write)
       type forcing_intent: str
     * ``forcing_source_app`` *source_app* footprint, default None
       type forcing_source_app: str, footprints.stdtypes.FPList
     * ``forcing_source_conf`` *source_conf* footprint, default None
       type forcing_source_conf: str, footprints.stdtypes.FPList
     * ``forcing_source`` Retrieve *source_app* and *source_conf* footrprints dictionnaries for S2M reanalysis
-                           Possible values : 'era5', 'era40'
+      Possible values : 'era5', 'era40'
       type forcing_source: str
     * ``forcing_cutoff`` *cutoff* footprint (to be made optional for SurfaceIO objects), default None
       type forcing_cutoff: str
     * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
-                        snowtools/utils/dates.py.
-                        Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
-                        Possible values : "yearly", "monthly" or "full"
+      snowtools/utils/dates.py.
+      Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
+      Possible values : "yearly", "monthly" or "full"
       type io_duration: str
     * ``forcing_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
       type forcing_vortex1: bool
-    * ``out_block``: *block* part of the vortex output path. Default: "init_tg/prep"
+    * ``out_block``: *block* part of the vortex output path. Default: "prep"
       type out_block: str
     * ``namespace_out`` Force specific namespace for output files (default: 'vortex.multi.fr')
       type: str
 
-    Configuration variables for reproducibility test
-    ************************************************
+    **Configuration variables for reproducibility test**
 
     In general, the following variables will be used only for test cases.
 
@@ -329,6 +318,7 @@ class FetchClimGroundTemperatureOrMake(InitClimGroundTemperature):
       type diff_user: str
     * ``diff_block`` *block* part of the vortex path of the reference file. Default: "init_tg/prep"
       type diff_block: str
+
     """
 
     def __init__(self, **kw):
@@ -376,32 +366,29 @@ class FetchClimGroundTemperatureOrMake(InitClimGroundTemperature):
 
 class MakeClimGroundTemperatureIfNoPrep(FetchClimGroundTemperatureOrMake):
     """
-    Task : MakeClimGroundTemperatureIfNoPrep
-    ========================================
+    **Task: MakeClimGroundTemperatureIfNoPrep**
 
     If the "climground" is provided and set to "True", this task will look for a PREP.nc file and if none is found,
     it will initialize Surfex ground temperature (GT) by taking the climatological mean of the input forcing air
     temperature.
 
-    Inputs :
-    --------
+    **Inputs:**
+
     - FORCING file(s) on simulation geometry
 
-    Outputs :
-    ---------
+    **Outputs:**
+
     - Init_TG file (initial values of ground temperature)
 
-    Optional configuration variables
-    --------------------------------
+    **Optional configuration variables**
+
     * ``climground`` Allow the generation of a ground initialization file by computing a climatological
-        average of air temperature on the provided period. Default: False
+      average of air temperature on the provided period. Default: False
       type climground: bool
 
-    Configuration variables if ``climground`` is ``True``:
-    ------------------------------------------------------
+    **Configuration variables if ``climground`` is ``True``:**
 
-    Search for PREP file
-    ********************
+    **Search for PREP file**
 
     * ``prep_xpid`` or ``xpid`` Experiment id the prep file should be searched for or put in cache.
     * ``prep_user`` name of the user who produced the PREP file. Default: None.
@@ -414,12 +401,12 @@ class MakeClimGroundTemperatureIfNoPrep(FetchClimGroundTemperatureOrMake):
     * ``prep_namebuild`` Default: *flat@cen*
     * ``prep_block`` block part of the data tree to search for the PREP.nc file. Default is ``prep``.
     * ``prep_member`` or ``member`` If the PREP.nc file comes from an ensemble, a member can be chosen.
-       Default is ``None``.
+      Default is ``None``.
     * ``prep_cutoff`` Can be used to select a PREP file coming from an operational forecast (*forecast*) or
-       analysis (*assimilation*). Default is *None*. Might be useful for reforecasts.
+      analysis (*assimilation*). Default is *None*. Might be useful for reforecasts.
 
-    Search for initTG file in archive:
-    **********************************
+    **Search for initTG file in archive:**
+
     * ``tg_xpid`` or ``xpid`` experiment id the init_TG.nc file should be fetched from.
     * ``tg_user`` name of the user that produced the target the init_TG.nc file. Default: *None*
     * ``tg_geometry`` or ``geometry`` geometry of the init_TG. Logically the same as for the rest of the simulation
@@ -427,15 +414,15 @@ class MakeClimGroundTemperatureIfNoPrep(FetchClimGroundTemperatureOrMake):
     * ``tg_vconf`` or ``vconf`` Configuration name to search the init_TG.nc file.
     * ``tg_block`` Block name to search the init_TG.nc file. Default: *prep*
 
-    Search for initTG file in unev:
-    *******************************
+    **Search for initTG file in unev:**
+
     * ``tg_geometry`` or ``geometry`` geometry of the init_TG. Logically the same as for the rest of the simulation
     * ``surfex_uenv`` or if not present ``uenv`` User Environment from which the init_TG.nc file should be fetched.
-                 Format : uenv:{uenv_name}@{user}
+      Format : uenv:{uenv_name}@{user}
     * ``tg_gvar`` key to look up the init_TG.nc file in the uenv the file should come from.
 
-    Calculate initial ground temperature:
-    *************************************
+    **Calculate initial ground temperature:**
+
     * ``forcing_datebegin`` *datebegin* footprint, default self.conf.datebegin
       type forcing_datebegin: str, footprints.stdtypes.FPList
     * ``forcing_dateend`` *dateend* footprint, default self.conf.dateend
@@ -455,7 +442,6 @@ class MakeClimGroundTemperatureIfNoPrep(FetchClimGroundTemperatureOrMake):
       type forcing_vconf: str
     * ``forcing_namespace`` *namespace* footprint, default "vortex.multi.fr" (hendrix + local cache)
       type forcing_namespace: str
-
     * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
       type forcing_date: str
     * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
@@ -467,28 +453,29 @@ class MakeClimGroundTemperatureIfNoPrep(FetchClimGroundTemperatureOrMake):
     * ``forcing_namebuild`` *namebuild* footprint, default "flat@cen" (will change soon)
       type forcing_namebuild: str
     * ``forcing_intent`` *intent* footprint (local file permissions), default "in"
-                           Possible values : "in" (read-only), "inout" (read-write)
+      Possible values : "in" (read-only), "inout" (read-write)
       type forcing_intent: str
     * ``forcing_source_app`` *source_app* footprint, default None
       type forcing_source_app: str, footprints.stdtypes.FPList
     * ``forcing_source_conf`` *source_conf* footprint, default None
       type forcing_source_conf: str, footprints.stdtypes.FPList
     * ``forcing_source`` Retrieve *source_app* and *source_conf* footrprints dictionnaries for S2M reanalysis
-                           Possible values : 'era5', 'era40'
+      Possible values : 'era5', 'era40'
       type forcing_source: str
     * ``forcing_cutoff`` *cutoff* footprint (to be made optional for SurfaceIO objects), default None
       type forcing_cutoff: str
     * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
-                        snowtools/utils/dates.py.
-                        Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
-                        Possible values : "yearly", "monthly" or "full"
+      snowtools/utils/dates.py.
+      Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
+       Possible values : "yearly", "monthly" or "full"
       type io_duration: str
     * ``forcing_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
       type forcing_vortex1: bool
-    * ``out_block``: *block* part of the vortex output path. Default: "init_tg/prep"
+    * ``out_block``: *block* part of the vortex output path. Default: "prep"
       type out_block: str
     * ``namespace_out`` Force specific namespace for output files (default: 'vortex.multi.fr')
       type: str
+
     """
 
     def __init__(self, **kw):
@@ -518,8 +505,8 @@ class FetchClimGroundTemperatureOrCrash(InitClimGroundTemperature, _CenResearchT
     cache.
     Crash if the file is not available.
 
-    Mandatory configuration variables:
-    ----------------------------------
+    **Mandatory configuration variables:**
+
     * ``surfex_uenv`` or if not present ``uenv`` User Environment from which the PGD.nc file should be fetched.
                  Format : uenv:{uenv_name}@{user}
     * ``tg_gvar`` key to look up the init_TG.nc file in the uenv the file should come from.
@@ -527,8 +514,8 @@ class FetchClimGroundTemperatureOrCrash(InitClimGroundTemperature, _CenResearchT
       type: str, footprints.stdtypes.FPList
     * ``xpid`` Experiment identifier
 
-    Mandatory configuration variables unless ``force_uenv`` is *True*:
-    ------------------------------------------------------------------
+    **Mandatory configuration variables unless ``force_uenv`` is *True*:**
+
     * ``tg_xpid`` or ``xpid`` experiment id the init_TG.nc file should be fetched from.
     * ``tg_user`` name of the user that produced the target the init_TG.nc file. Default: *None*
     * ``tg_geometry`` or ``geometry`` geometry of the init_TG. Logically the same as for the rest of the simulation
@@ -536,8 +523,8 @@ class FetchClimGroundTemperatureOrCrash(InitClimGroundTemperature, _CenResearchT
     * ``tg_vconf`` or ``vconf`` Configuration name to search the init_TG.nc file.
     * ``tg_block`` Block name to search the init_TG.nc file. Default: *prep*
 
-    Optional configuration variables:
-    ---------------------------------
+    **Optional configuration variables:**
+
     * ``force_uenv`` If *True* the Init_TG.nc file must come from an uenv. Default: *False*
     * ``namespace_out`` Force specific namespace for output files (default: 'vortex.multi.fr') For this
       task you would probably not want to archive the Init_TG.nc file.

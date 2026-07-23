@@ -42,8 +42,8 @@ class PrepSafran(_CenResearchTask):
     - PYYMMDDHH : Safran guess files, grouped in tar archives containing all 'P' files from all members and lead times
                   of a given model run
 
-    Mandatory configuration variables:
-    ----------------------------------
+    **Mandatory configuration variables:**
+
     * ``datebegin`` First rundate of the guess (hour must be '00')
     * ``dateend`` Last run date of the guess (hour must be '00')
     * ``xpid`` Experiment id. Do not use experiment ids with 4 letters.

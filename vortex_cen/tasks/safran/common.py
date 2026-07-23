@@ -18,8 +18,7 @@ class SafranMixIn:
         """
         Get Safran constant files.
 
-        Configuration variables used:
-        -----------------------------
+        **Configuration variables used:**
 
         * ``cycle`` genv with safran constant files.
         * ``geometry`` dict with possible geometries. type: dict

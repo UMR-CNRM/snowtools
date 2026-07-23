@@ -46,22 +46,22 @@ class PgdCommonsMixin(SurfexCommonsMixin):
     """
     Mixin methods for PGD binary IOs.
 
-    Configuration variables used by mixin methods:
-    ----------------------------------------------
+    **Configuration variables used by mixin methods:**
 
     * ``surfex_uenv`` or ``uenv`` The uenv that holds the soil databases for 2D simulations and the PGD executable.
     * ``pgd_gvar`` optional variable to specify the name of the PGD executable in the uenv.
-          Default is ``master_pgd_mpi`` if mpi=*True*
-           and `master_pgd_nompi`` if mpi=*False*
+      Default is ``master_pgd_mpi`` if mpi=*True*
+      and `master_pgd_nompi`` if mpi=*False*
     * ``exesurfex`` path to the folder with surfex executables.
+
     """
     def get_2D_databases(self):
         """
         Get Sand_DB.bin and Sand_DB.hdr, Clay_DB.bin and Clay_DB.hdr,
         ECOCLIMAP_II_EUROP.dir and ECOCLIMAP_II_EUROP.hdr from Uenv
 
-        Configuration variables used:
-        -----------------------------
+        **Configuration variables used:**
+
         * ``surfex_uenv`` or ``uenv`` The uenv that holds the soil databases for 2D simulations.
         """
         # Binary Sand files are mandatory to run SURFEX for PGD construction in simu2D
@@ -111,17 +111,19 @@ class PgdCommonsMixin(SurfexCommonsMixin):
 
     def get_pgd_exe_from_uenv(self, mpi=True, fatal=True):
         """
-         Method to get a PGD executable from uenv.
+        Method to get a PGD executable from uenv.
+
         :param mpi: True if an executable with MPI support should be fetched, False otherwise. Default is True.
         :param fatal: True if failing to fetch the executable should cause a fatal error, False otherwise.
-            Default is True.
+         Default is True.
 
-        Configuration variables used:
-        -----------------------------
+        **Configuration variables used:**
+
         * ``surfex_uenv`` or ``uenv`` The uenv that holds the PGD executable.
         * ``pgd_gvar`` optional variable to specify the name of the PGD executable in the uenv.
           Default is ``master_pgd_mpi`` if mpi=*True*
-           and `master_pgd_nompi`` if mpi=*False*
+          and `master_pgd_nompi`` if mpi=*False*
+
         """
 
         if mpi:
@@ -146,8 +148,8 @@ class PgdCommonsMixin(SurfexCommonsMixin):
         """
         Fetch the PGD executable from a local path.
 
-        Configuration variables used:
-        -----------------------------
+        **Configuration variables used:**
+
         * ``exesurfex`` path to the folder with surfex executables.
         """
         self.sh.title('Toolbox input PGD executable from local path')
@@ -164,40 +166,39 @@ class PgdCommonsMixin(SurfexCommonsMixin):
 
 class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
     """
-    Task: _PgdConstruct
-    ===================
+    **Task: _PgdConstruct**
 
     Abstract task for the generation of ground physiography (PGD.nc file).
 
-    Inputs:
-    -------
+    **Inputs:**
+
     - FORCING file
     - OPTIONS.nam ready-to-use SURFEX namelist (coming from an execution of a "Preprocess_Task")
     - ecoclimapI_covers_param.bin and ecoclimapII_eu_covers_param.bin (binaries for vegetation generation)
     - drdt_bst_fit_60.nc (Crocus metamorphism parameters)
     - PGD executable
 
-    Outputs:
-    --------
+    **Outputs:**
+
     - PGD.nc (Ground physiography)
 
-    Mandatory configuration variables:
-    ----------------------------------
+    **Mandatory configuration variables:**
 
     * ``geometry`` *geometry* of the forcing file(s)
       type: str, footprints.stdtypes.FPList
     * ``xpid`` Experiment identifier
       type: str
     * ``surfex_unev`` or ``uenv`` User Environment in which the following resources are to be retrieved :
-                 - ecoclimapI_covers_param.bin
-                 - ecoclimapII_eu_covers_param.bin
-                 - drdt_bst_fit_60.nc
-                 - PGD executable (unless supplied locally using the ``exesurfex`` variable).
-                 Format : uenv:{uenv_name}@{user}
+      - ecoclimapI_covers_param.bin
+      - ecoclimapII_eu_covers_param.bin
+      - drdt_bst_fit_60.nc
+      - PGD executable (unless supplied locally using the ``exesurfex`` variable).
+
+      Format : uenv:{uenv_name}@{user}
       type: str
 
-    Optionnal configuration variables (other than forcing-specific ones):
-    ---------------------------------------------------------------------
+    **Optionnal configuration variables (other than forcing-specific ones):**
+
     * ``pgd_2d`` *True* if the PGD.nc should be calculated for a 2D domain. Default: *False*
       type: bool
     * ``nprocs`` Number of process to allocate to the execution of the MPI binary. Default: 1
@@ -208,17 +209,15 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
       type: int
     * ``namespace_out`` Force specific namespace for output files (default: 'vortex.multi.fr')
       type: str
-     * ``diff_xpid`` Experiment id of the reference file used for reproducibility test.
+    * ``diff_xpid`` Experiment id of the reference file used for reproducibility test.
       type diff_xpid: str
     * ``diff_user`` *user name* associated with the reference file used for reproducibility test
       (only if different from current user). Default: *None*
       type diff_user: str
 
-    Forcing related configuration variables:
-    ----------------------------------------
+    **Forcing related configuration variables:**
 
-     Mandatory:
-     **********
+    **Mandatory:**
 
     * ``forcing_datebegin`` *datebegin* footprint, default self.conf.datebegin
       type forcing_datebegin: str, footprints.stdtypes.FPList
@@ -236,35 +235,33 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
       type forcing_vconf: str
     * ``forcing_namespace`` *namespace* footprint, default "vortex.multi.fr" (hendrix + local cache)
       type forcing_namespace: str
-
     * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
       type forcing_date: str
     * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
       type forcing_model: str
 
-    Optional:
-    *********
+    **Optional:**
 
     * ``forcing_member`` *member* footprint, default None (or *member* if provided)
       type forcing_member: int, footprints.stdtypes.FPList
     * ``forcing_namebuild`` *namebuild* footprint, default "flat@cen" (will change soon)
       type forcing_namebuild: str
     * ``forcing_intent`` *intent* footprint (local file permissions), default "in"
-                           Possible values : "in" (read-only), "inout" (read-write)
+      Possible values : "in" (read-only), "inout" (read-write)
       type forcing_intent: str
     * ``forcing_source_app`` *source_app* footprint, default None
       type forcing_source_app: str, footprints.stdtypes.FPList
     * ``forcing_source_conf`` *source_conf* footprint, default None
       type forcing_source_conf: str, footprints.stdtypes.FPList
     * ``forcing_source`` Retrieve *source_app* and *source_conf* footrprints dictionnaries for S2M reanalysis
-                           Possible values : 'era5', 'era40'
+      Possible values : 'era5', 'era40'
       type forcing_source: str
     * ``forcing_cutoff`` *cutoff* footprint (to be made optional for SurfaceIO objects), default None
       type forcing_cutoff: str
     * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
-                        snowtools/utils/dates.py.
-                        Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
-                        Possible values : "yearly", "monthly" or "full"
+      snowtools/utils/dates.py.
+      Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
+      Possible values : "yearly", "monthly" or "full"
       type io_duration: str
     * ``forcing_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
       type forcing_vortex1: bool
@@ -414,41 +411,40 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
 
 class MakePgd(_PgdConstruct):
     """
-    Task: MakePgd
-    =============
+    **Task: MakePgd**
 
     Generation of ground physiography (PGD.nc file).
     Get PGD executable from Uenv
 
-    Inputs:
-    -------
+    **Inputs:**
+
     - FORCING file
     - OPTIONS.nam ready-to-use SURFEX namelist (coming from an execution of a "Preprocess_Task")
     - ecoclimapI_covers_param.bin and ecoclimapII_eu_covers_param.bin (binaries for vegetation generation)
     - drdt_bst_fit_60.nc (Crocus metamorphism parameters)
     - PGD executable
 
-    Outputs:
-    --------
+    **Outputs:**
+
     - PGD.nc (Ground physiography)
 
-    Mandatory configuration variables:
-    ----------------------------------
+    **Mandatory configuration variables:**
 
     * ``geometry`` *geometry* of the forcing file(s)
       type: str, footprints.stdtypes.FPList
     * ``xpid`` Experiment identifier
       type: str
     * ``surfex_unev`` or ``uenv`` User Environment in which the following resources are to be retrieved :
-                 - ecoclimapI_covers_param.bin
-                 - ecoclimapII_eu_covers_param.bin
-                 - drdt_bst_fit_60.nc
-                 - PGD executable (unless supplied locally using the ``exesurfex`` variable).
-                 Format : uenv:{uenv_name}@{user}
+      - ecoclimapI_covers_param.bin
+      - ecoclimapII_eu_covers_param.bin
+      - drdt_bst_fit_60.nc
+      - PGD executable (unless supplied locally using the ``exesurfex`` variable).
+
+      Format : uenv:{uenv_name}@{user}
       type: str
 
-    Optionnal configuration variables (other than forcing-specific ones):
-    ---------------------------------------------------------------------
+    **Optionnal configuration variables (other than forcing-specific ones):**
+
     * ``pgd_2d`` *True* if the PGD.nc should be calculated for a 2D domain. Default: *False*
       type: bool
     * ``exesurfex`` path to the folder with surfex executables (if supplied locally and not via the uenv).
@@ -460,17 +456,15 @@ class MakePgd(_PgdConstruct):
       type: int
     * ``namespace_out`` Force specific namespace for output files (default: 'vortex.multi.fr')
       type: str
-     * ``diff_xpid`` Experiment id of the reference file used for reproducibility test.
+    * ``diff_xpid`` Experiment id of the reference file used for reproducibility test.
       type diff_xpid: str
     * ``diff_user`` *user name* associated with the reference file used for reproducibility test
       (only if different from current user). Default: *None*
       type diff_user: str
 
-    Forcing related configuration variables:
-    ----------------------------------------
+    **Forcing related configuration variables:**
 
-     Mandatory:
-     **********
+    **Mandatory:**
 
     * ``forcing_datebegin`` *datebegin* footprint, default self.conf.datebegin
       type forcing_datebegin: str, footprints.stdtypes.FPList
@@ -488,35 +482,33 @@ class MakePgd(_PgdConstruct):
       type forcing_vconf: str
     * ``forcing_namespace`` *namespace* footprint, default "vortex.multi.fr" (hendrix + local cache)
       type forcing_namespace: str
-
     * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
       type forcing_date: str
     * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
       type forcing_model: str
 
-    Optional:
-    *********
+    **Optional**
 
     * ``forcing_member`` *member* footprint, default None (or *member* if provided)
       type forcing_member: int, footprints.stdtypes.FPList
     * ``forcing_namebuild`` *namebuild* footprint, default "flat@cen" (will change soon)
       type forcing_namebuild: str
     * ``forcing_intent`` *intent* footprint (local file permissions), default "in"
-                           Possible values : "in" (read-only), "inout" (read-write)
+      Possible values : "in" (read-only), "inout" (read-write)
       type forcing_intent: str
     * ``forcing_source_app`` *source_app* footprint, default None
       type forcing_source_app: str, footprints.stdtypes.FPList
     * ``forcing_source_conf`` *source_conf* footprint, default None
       type forcing_source_conf: str, footprints.stdtypes.FPList
     * ``forcing_source`` Retrieve *source_app* and *source_conf* footrprints dictionnaries for S2M reanalysis
-                           Possible values : 'era5', 'era40'
+      Possible values : 'era5', 'era40'
       type forcing_source: str
     * ``forcing_cutoff`` *cutoff* footprint (to be made optional for SurfaceIO objects), default None
       type forcing_cutoff: str
     * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
-                        snowtools/utils/dates.py.
-                        Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
-                        Possible values : "yearly", "monthly" or "full"
+      snowtools/utils/dates.py.
+      Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
+      Possible values : "yearly", "monthly" or "full"
       type io_duration: str
     * ``forcing_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
       type forcing_vortex1: bool
@@ -545,8 +537,7 @@ class MakePgd(_PgdConstruct):
 
 class FetchPgdOrMake(_PgdConstruct):
     """
-    Task: FetchPgdOrMake
-    ====================
+    **Task: FetchPgdOrMake**
 
     Generation of ground physiography (PGD.nc file).
     If PGD.nc is available in cache or archive for the current experiment fetch it.
@@ -554,51 +545,50 @@ class FetchPgdOrMake(_PgdConstruct):
     If not either, generate it by calling the methods from the mother class.
 
     WARNING : The simulation's reproducibility can not be guaranteed with this task !
-            The PGD.nc file is only put to the vortex cache and not archived!
+    The PGD.nc file is only put to the vortex cache and not archived!
 
-    Inputs:
-    -------
+    **Inputs:**
+
     - FORCING file
     - OPTIONS.nam ready-to-use SURFEX namelist (coming from an execution of a "Preprocess_Task")
     - ecoclimapI_covers_param.bin and ecoclimapII_eu_covers_param.bin (binaries for vegetation generation)
     - drdt_bst_fit_60.nc (Crocus metamorphism parameters)
     - PGD executable
 
-    Outputs:
-    --------
+    **Outputs:**
+
     - PGD.nc (Ground physiography)
 
-    Mandatory configuration variables:
-    ----------------------------------
+    **Mandatory configuration variables:**
 
     * ``geometry`` *geometry* of the forcing file(s)
       type: str, footprints.stdtypes.FPList
     * ``xpid`` Experiment identifier
       type: str
     * ``surfex_unev`` or ``uenv`` User Environment in which the following resources are to be retrieved :
-                 - ecoclimapI_covers_param.bin
-                 - ecoclimapII_eu_covers_param.bin
-                 - drdt_bst_fit_60.nc
-                 - PGD executable (unless supplied locally using the ``exesurfex`` variable).
-                 Format : uenv:{uenv_name}@{user}
+      - ecoclimapI_covers_param.bin
+      - ecoclimapII_eu_covers_param.bin
+      - drdt_bst_fit_60.nc
+      - PGD executable (unless supplied locally using the ``exesurfex`` variable).
+
+      Format : uenv:{uenv_name}@{user}
       type: str
 
+    **Optional configuration variables (other than forcing-specific ones):**
 
-    Optional configuration variables (other than forcing-specific ones):
-    ---------------------------------------------------------------------
     * ``pgd_xpid`` Experiment Identifier of the PGD file, if different from the task's XPID. defaults to ``xpid``.
-          type: str
+      type: str
     * ``pgd_vapp`` *vapp* of the PGD file, if different from the task's *vapp*. defaults to ``vapp``.
-          type: str
+      type: str
     * ``pgd_vconf`` *vconf* of the PGD file, if different from the task's *vconf*. defaults to ``vconf``.
-          type: str
+      type: str
     * ``pgd_vortex1`` True if the pgd file was produced with vortex1 and uses vortex1 naming conventions.
-          default: False
-          type: bool
+      default: False
+      type: bool
     * ``pgd_user`` Name of the user who produced the PGD file. Default: ``None``.
-          type: str
+      type: str
     * ``pgd_geometry`` *geometry* of the pgd file. Default: ``geometry``.
-          type: str, footprints.stdtypes.FPList
+      type: str, footprints.stdtypes.FPList
     * ``pgdnc_gvar`` variable name of the pgd file in the uenv. Default: *pgd_[geometry::tag]*.
     * ``pgd_2d`` *True* if the PGD.nc should be calculated for a 2D domain. Default: *False*
       type: bool
@@ -611,17 +601,15 @@ class FetchPgdOrMake(_PgdConstruct):
       type: int
     * ``namespace_out`` Force specific namespace for output files (default: 'vortex.multi.fr')
       type: str
-     * ``diff_xpid`` Experiment id of the reference file used for reproducibility test.
+    * ``diff_xpid`` Experiment id of the reference file used for reproducibility test.
       type diff_xpid: str
     * ``diff_user`` *user name* associated with the reference file used for reproducibility test
       (only if different from current user). Default: *None*
       type diff_user: str
 
-    Forcing related configuration variables:
-    ----------------------------------------
+    **Forcing related configuration variables:**
 
-     Mandatory:
-     **********
+    **Mandatory:**
 
     * ``forcing_datebegin`` *datebegin* footprint, default self.conf.datebegin
       type forcing_datebegin: str, footprints.stdtypes.FPList
@@ -639,38 +627,37 @@ class FetchPgdOrMake(_PgdConstruct):
       type forcing_vconf: str
     * ``forcing_namespace`` *namespace* footprint, default "vortex.multi.fr" (hendrix + local cache)
       type forcing_namespace: str
-
     * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
       type forcing_date: str
     * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
       type forcing_model: str
 
-    Optional:
-    *********
+    **Optional**
 
     * ``forcing_member`` *member* footprint, default None (or *member* if provided)
       type forcing_member: int, footprints.stdtypes.FPList
     * ``forcing_namebuild`` *namebuild* footprint, default "flat@cen" (will change soon)
       type forcing_namebuild: str
     * ``forcing_intent`` *intent* footprint (local file permissions), default "in"
-                           Possible values : "in" (read-only), "inout" (read-write)
+      Possible values : "in" (read-only), "inout" (read-write)
       type forcing_intent: str
     * ``forcing_source_app`` *source_app* footprint, default None
       type forcing_source_app: str, footprints.stdtypes.FPList
     * ``forcing_source_conf`` *source_conf* footprint, default None
       type forcing_source_conf: str, footprints.stdtypes.FPList
     * ``forcing_source`` Retrieve *source_app* and *source_conf* footrprints dictionnaries for S2M reanalysis
-                           Possible values : 'era5', 'era40'
+      Possible values : 'era5', 'era40'
       type forcing_source: str
     * ``forcing_cutoff`` *cutoff* footprint (to be made optional for SurfaceIO objects), default None
       type forcing_cutoff: str
     * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
-                        snowtools/utils/dates.py.
-                        Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
-                        Possible values : "yearly", "monthly" or "full"
+      snowtools/utils/dates.py.
+      Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
+      Possible values : "yearly", "monthly" or "full"
       type io_duration: str
     * ``forcing_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
       type forcing_vortex1: bool
+
     """
 
     def __init__(self, **kw):
@@ -762,38 +749,39 @@ class FetchPgdOrCrash(FetchPgdOrMake):
     Crash if the file does not exist. The ``force_uenv`` configuration variable allows to look for the
     PGD.nc file exclusively in the uenv.
 
-    Outputs:
-    --------
+    **Outputs:**
+
     - PGD.nc (Ground physiography)
 
-    Mandatory configuration variables:
-    ----------------------------------
+    **Mandatory configuration variables:**
+
     * ``surfex_uenv`` or if not present ``uenv`` User Environment from which the PGD.nc file should be fetched.
-                 Format : uenv:{uenv_name}@{user}
+      Format : uenv:{uenv_name}@{user}
     * ``geometry`` *geometry* of the forcing file(s)
       type: str, footprints.stdtypes.FPList
     * ``xpid`` Experiment identifier
 
-    Mandatory configuration variables unless ``force_uenv`` is *True*:
-    ------------------------------------------------------------------
-    * ``pgd_xpid`` Experiment Identifier of the PGD file, if different from the task's XPID. defaults to ``xpid``.
-          type: str
-    * ``pgd_vapp`` *vapp* of the PGD file, if different from the task's *vapp*. defaults to ``vapp``.
-          type: str
-    * ``pgd_vconf`` *vconf* of the PGD file, if different from the task's *vconf*. defaults to ``vconf``.
-          type: str
-    * ``pgd_vortex1`` True if the pgd file was produced with vortex1 and uses vortex1 naming conventions.
-          default: False
-          type: bool
-    * ``pgd_user`` Name of the user who produced the PGD file. Default: ``None``.
-          type: str
+    **Mandatory configuration variables unless ``force_uenv`` is *True*:**
 
-    Optional configuration variables:
-    ---------------------------------
+    * ``pgd_xpid`` Experiment Identifier of the PGD file, if different from the task's XPID. defaults to ``xpid``.
+      type: str
+    * ``pgd_vapp`` *vapp* of the PGD file, if different from the task's *vapp*. defaults to ``vapp``.
+      type: str
+    * ``pgd_vconf`` *vconf* of the PGD file, if different from the task's *vconf*. defaults to ``vconf``.
+      type: str
+    * ``pgd_vortex1`` True if the pgd file was produced with vortex1 and uses vortex1 naming conventions.
+      default: False
+      type: bool
+    * ``pgd_user`` Name of the user who produced the PGD file. Default: ``None``.
+      type: str
+
+    **Optional configuration variables:**
+
     * ``force_uenv`` If *True* the PGD.nc file must come from an uenv. Default: *False*
     * ``pgdnc_gvar`` variable name of the pgd file in the uenv. Default: *pgd_[geometry::tag]*.
     * ``pgd_geometry`` *geometry* of the pgd file. Default: ``geometry``.
-          type: str, footprints.stdtypes.FPList
+      type: str, footprints.stdtypes.FPList
+
     """
     def __init__(self, **kw):
 

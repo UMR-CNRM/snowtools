@@ -18,16 +18,15 @@ class ExtractSubPeriod(_CenResearchTask):
     """
     Extract a sub period in a Forcing file
 
-    Inputs:
-    -------
+    **Inputs:**
+
     - FORCING file
 
-    Outputs:
-    --------
+    **Outputs:**
+
     - FORCING file on a shorter period
 
-    Configuration variables:
-    ------------------------
+    **Configuration variables:**
 
     * ``datebegin`` begin date(s) of files
     * ``dateend`` end date(s) of files

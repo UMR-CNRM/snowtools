@@ -32,8 +32,8 @@ class InterpolMixIn:
         """
         get output grid file.
 
-        Configuration variables used:
-        -----------------------------
+        **Configuration variables used:**
+
         * ``uenv``
         * ``gridout`` The variable name of the output grid file in the uenv (gvar). Default is *DEM*.
         """
@@ -55,8 +55,8 @@ class InterpolMixIn:
         """
         Get the interpolation binary from the uenv
 
-        Configuration variables used:
-        -----------------------------
+        **Configuration variables used:**
+
         * ``uenv``
         """
         #
@@ -77,18 +77,18 @@ class InterpolateS2MForcing(_CenResearchTask, InterpolMixIn):
     """
     Interpolate a forcing file in "massif" geometry onto a 2D grid, or 1D grid, that is a list of points.
 
-    Inputs:
-    -------
+    **Inputs:**
+
     - FORCING file in the "massif" geometry.
     - GRID file containing the desired output grid.
     - interpolation binary
 
-    Outputs:
-    --------
+    **Outputs:**
+
     - FORCING file on the new grid.
 
-    Configuration variables:
-    ------------------------
+    **Configuration variables:**
+
     **Mandatory**
 
     * ``forcing_datebegin`` *datebegin* footprint, default self.conf.datebegin
@@ -113,6 +113,7 @@ class InterpolateS2MForcing(_CenResearchTask, InterpolMixIn):
     * ``namespace_out`` namespace of output files
 
     **Optional**
+
     * ``forcing_vapp`` *vapp* footprint, default self.conf.vapp
       type forcing_vapp: str
     * ``forcing_vconf`` *vconf* footprint, default self.conf.vconf
@@ -122,21 +123,21 @@ class InterpolateS2MForcing(_CenResearchTask, InterpolMixIn):
     * ``forcing_namebuild`` *namebuild* footprint, default "flat@cen" (will change soon)
       type forcing_namebuild: str
     * ``forcing_intent`` *intent* footprint (local file permissions), default "in"
-                           Possible values : "in" (read-only), "inout" (read-write)
+      Possible values : "in" (read-only), "inout" (read-write)
       type forcing_intent: str
     * ``forcing_source_app`` *source_app* footprint, default None
       type forcing_source_app: str, footprints.stdtypes.FPList
     * ``forcing_source_conf`` *source_conf* footprint, default None
       type forcing_source_conf: str, footprints.stdtypes.FPList
     * ``forcing_source`` Retrieve *source_app* and *source_conf* footrprints dictionnaries for S2M reanalysis
-                           Possible values : 'era5', 'era40'
+      Possible values : 'era5', 'era40'
       type forcing_source: str
     * ``forcing_cutoff`` *cutoff* footprint (to be made optional for SurfaceIO objects), default None
       type forcing_cutoff: str
     * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
-                        snowtools/utils/dates.py.
-                        Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
-                        Possible values : "yearly", "monthly" or "full"
+      snowtools/utils/dates.py.
+      Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
+      Possible values : "yearly", "monthly" or "full"
       type io_duration: str
     * ``forcing_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
       type forcing_vortex1: bool
@@ -144,6 +145,7 @@ class InterpolateS2MForcing(_CenResearchTask, InterpolMixIn):
     * ``diff_xpid`` Experiment identifier of the reference experiment in case of reproducibility check
     * ``diff_user`` vortex user of the reference experiment
     * ``diff_block`` block part of the reference file directory. Default: *interpol*
+
     """
 
     def __init__(self, **kw):
@@ -278,18 +280,18 @@ class InterpolateS2MLocalForcing(InterpolateS2MForcing):
     """
     Interpolate a forcing file in "massif" geometry onto a 2D grid, or 1D grid, that is a list of points.
 
-    Inputs:
-    -------
+    **Inputs:**
+
     - Local FORCING file in the "massif" geometry.
     - GRID file containing the desired output grid.
     - interpolation binary
 
-    Outputs:
-    --------
+    **Outputs:**
+
     - FORCING file on the new grid.
 
-    Configuration variables:
-    ------------------------
+    **Configuration variables:**
+
     **Mandatory**
 
     * ``forcing_datebegin`` *datebegin* footprint, default self.conf.datebegin
@@ -314,6 +316,7 @@ class InterpolateS2MLocalForcing(InterpolateS2MForcing):
     * ``namespace_out`` namespace of output files
 
     **Optional**
+
     * ``forcing_vapp`` *vapp* footprint, default self.conf.vapp
       type forcing_vapp: str
     * ``forcing_vconf`` *vconf* footprint, default self.conf.vconf
@@ -323,21 +326,21 @@ class InterpolateS2MLocalForcing(InterpolateS2MForcing):
     * ``forcing_namebuild`` *namebuild* footprint, default "flat@cen" (will change soon)
       type forcing_namebuild: str
     * ``forcing_intent`` *intent* footprint (local file permissions), default "in"
-                           Possible values : "in" (read-only), "inout" (read-write)
+      Possible values : "in" (read-only), "inout" (read-write)
       type forcing_intent: str
     * ``forcing_source_app`` *source_app* footprint, default None
       type forcing_source_app: str, footprints.stdtypes.FPList
     * ``forcing_source_conf`` *source_conf* footprint, default None
       type forcing_source_conf: str, footprints.stdtypes.FPList
     * ``forcing_source`` Retrieve *source_app* and *source_conf* footrprints dictionnaries for S2M reanalysis
-                           Possible values : 'era5', 'era40'
+      Possible values : 'era5', 'era40'
       type forcing_source: str
     * ``forcing_cutoff`` *cutoff* footprint (to be made optional for SurfaceIO objects), default None
       type forcing_cutoff: str
     * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
-                        snowtools/utils/dates.py.
-                        Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
-                        Possible values : "yearly", "monthly" or "full"
+      snowtools/utils/dates.py.
+      Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
+      Possible values : "yearly", "monthly" or "full"
       type io_duration: str
     * ``forcing_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
       type forcing_vortex1: bool
@@ -345,6 +348,7 @@ class InterpolateS2MLocalForcing(InterpolateS2MForcing):
     * ``diff_xpid`` Experiment identifier of the reference experiment in case of reproducibility check
     * ``diff_user`` vortex user of the reference experiment
     * ``diff_block`` block part of the reference file directory. Default: *interpol*
+
     """
     def get_remote_inputs(self):
         """

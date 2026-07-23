@@ -34,7 +34,7 @@ on your computer in order to define the key location on your computer.
 
 Virtual environment:
 ^^^^^^^^^^^^^^^^^^^^
-Virtual environments allow a better reproductibility of your code.
+Virtual environments allow a better reproducibility of your code.
 You don't need to know how to use these environments,
 we will give you the commands for creation and activation of snowtools environment in this documentation.
 
@@ -114,7 +114,7 @@ You can check the deletion with the following commands, which should now return 
 USER environment (PC, team server)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To ensure a reproductible installation, you must **not** have any package installed locally (under your ``~/.local``).
+To ensure a reproducible installation, you must **not** have any package installed locally (under your ``~/.local``).
 
 In order to check this, you can see if the folder ``~/.local/lib`` is not empty.
 

@@ -28,8 +28,8 @@ class AddSlopes(_CenResearchTask):
 
     - FORCING file wih slopes and aspects.
 
-    Mandatory configuration variables:
-    ----------------------------------
+    **Mandatory configuration variables:**
+
     * ``datebegin`` *datebegin* of the forcing file(s)
       type: str, footprints.stdtypes.FPList
     * ``dateend`` *dateend* of the forcing files(s)
@@ -41,8 +41,8 @@ class AddSlopes(_CenResearchTask):
     * ``xpid`` Experiment identifier
       type: str
 
-    Optional configuration variables:
-    ---------------------------------
+    **Optional configuration variables:**
+
     * ``max_ntasks`` The maximum number of parallel tasks (in case of huge memory usage)
       type: int
    """
@@ -153,8 +153,8 @@ class AddSlopes(_CenResearchTask):
         Save the output FORCING file(s) in the new geometry.
         WARNING : the output geometry must be in a valid "geometries.ini" file.
 
-        Configuration variables used:
-        -----------------------------
+        **Configuration variables used:**
+
         * ``geometry`` Geometry of the output file(s)
           type: str
         * ``xpid`` Experiment identifier

@@ -195,13 +195,12 @@ class CrocO(Escroc):
 
 class EscrocResearch(Escroc):
     """
-    Task : EscrocResearch
-    =====================
+    **Task: EscrocResearch**
 
     SURFEX/OFFLINE documentation : https://umr-cnrm.github.io/snowtools-doc/misc/surfex.html
 
-    Inputs:
-    -------
+    **Inputs:**
+
     - FORCING.nc files(s) (near-surface meteorological conditions during the simulation period)
     - OPTIONS.nam ready-to-use SURFEX namelist (coming from the execution of the "PreProcess")
     - ecoclimapI_covers_param.bin and ecoclimapII_eu_covers_param.bin (binaries for vegetation generation)
@@ -209,8 +208,8 @@ class EscrocResearch(Escroc):
     - PGD.nc (Ground physiography) retrieved or produced by the GetPgd1D task
     - PREP.nc (initial conditions) retrieved or produced by the GetPrep task
 
-    Outputs:
-    --------
+    **Outputs:**
+
     - PRO.nc Snowpack simulations covering the entire simulation period
     - PREP.nc SURFEX/Crocus model state variables at the end of the simulation
     """

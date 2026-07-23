@@ -41,8 +41,7 @@ class SafranReforecast(_CenResearchTask):
     - FORCING_massifs.nc : Ensemble of forcing files on the "flat" massif geometry
     - FORCING_postes.nc : Ensemble of forcing files on the "postes" geometry
 
-     Mandatory Configuration Variables:
-    ----------------------------------
+    **Mandatory Configuration Variables:**
 
     * ``datebegin`` First rundate of the guess (hour must be '00')
     * ``dateend`` Last run date of the guess (hour must be '00')
@@ -57,8 +56,7 @@ class SafranReforecast(_CenResearchTask):
     * ``execution`` Type of SAFRAN execution. type: str, choices: analysis, forecast, reanalysis, reforecast
     * ``assim`` Allow assimilation of observations. type: bool
 
-    Optional Configuration Variables:
-    ---------------------------------
+    **Optional Configuration Variables:**
 
     * ``guess_xpid`` Experiment identifier of the SAFRAN guess files. type: str Default: *xpid*
     * ``guess_user`` Username of the producer of the SAFRAN guess files. type: str, default: $USER
