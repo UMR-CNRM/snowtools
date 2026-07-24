@@ -34,16 +34,11 @@ class Shadows(_CenResearchTask):
 
     **Mandatory configuration variables:**
 
-    * `datebegin` *datebegin* of the forcing file(s)
-        type: str, footprints.stdtypes.FPList
-    * `dateend` *dateend* of the forcing files(s)
-        type: str, footprints.stdtypes.FPList
-    * `forcing_geometry` *geometry* of the input forcing file(s)
-        type: str, footprints.stdtypes.FPList
-    * `geometry` *geometry* of the output forcing file(s)
-        type: str, footprints.stdtypes.FPList
-    * `xpid` Experiment identifier
-        type: str
+    * `datebegin` *datebegin* of the forcing file(s). type: str, footprints.stdtypes.FPList
+    * `dateend` *dateend* of the forcing files(s). type: str, footprints.stdtypes.FPList
+    * `forcing_geometry` *geometry* of the input forcing file(s). type: str, footprints.stdtypes.FPList
+    * `geometry` *geometry* of the output forcing file(s). type: str, footprints.stdtypes.FPList
+    * `xpid` Experiment identifier. type: str
 
     """
     def __init__(self, **kw):
@@ -169,6 +164,15 @@ class ShadowsPostes(Shadows):
     """
     In the reanalysis case, the FORCING files come from the output of the "concatenation" task and are
     not available at the execution of the transfer node.
+
+    **Mandatory configuration variables:**
+
+    * `datebegin` *datebegin* of the forcing file(s). type: str, footprints.stdtypes.FPList
+    * `dateend` *dateend* of the forcing files(s). type: str, footprints.stdtypes.FPList
+    * `forcing_geometry` *geometry* of the input forcing file(s). type: str, footprints.stdtypes.FPList
+    * `geometry` *geometry* of the output forcing file(s). type: str, footprints.stdtypes.FPList
+    * `xpid` Experiment identifier. type: str
+
     """
 
     def get_remote_inputs(self):

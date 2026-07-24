@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-extract_s2m_points.py
----------------------
+extract_subperiod.py
+--------------------
 
 .. autoclass:: ExtractSubPeriod
    :no-members:

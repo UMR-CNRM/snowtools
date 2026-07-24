@@ -330,7 +330,7 @@ class SurfexCommonsMixin:
         * ``prep_namebuild`` Default: *flat@cen*
         * ``prep_block`` block part of the data tree to search for the PREP.nc file. Default is ``prep``.
         * ``prep_member`` or ``member`` If the PREP.nc file comes from an ensemble, a member can be chosen.
-           Default is ``None``.
+          Default is ``None``.
         * ``prep_cutoff`` Can be used to select a PREP file coming from an operational forecast (*forecast*) or
            analysis (*assimilation*). Default is *None*. Might be useful for reforecasts.
 

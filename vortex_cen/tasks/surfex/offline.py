@@ -155,19 +155,17 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
 
     **Mandatory configuration variables:**
 
-    * ``datebegin`` *datebegin* of the forcing file(s)
-      type: str, footprints.stdtypes.FPList
-    * ``dateend`` *dateend* of the forcing files(s)
-      type: str, footprints.stdtypes.FPList
+    * ``datebegin`` *datebegin* of the forcing file(s). type: str, footprints.stdtypes.FPList
+    * ``dateend`` *dateend* of the forcing files(s). type: str, footprints.stdtypes.FPList
     * ``geometry`` *geometry* of the forcing file(s)
       type: str, footprints.stdtypes.FPList
     * ``xpid`` User-defined Experiment identifier (WARNING : 4-digit strings prohibited)
       type: str
     * ``surfex_uenv`` or ``uenv`` User Environment in which the following resources are to be retrieved:
-      - ecoclimapI_covers_param.bin
-      - ecoclimapII_eu_covers_param.bin
-      - drdt_bst_fit_60.nc
-      - OFFLINE executable
+        - ecoclimapI_covers_param.bin
+        - ecoclimapII_eu_covers_param.bin
+        - drdt_bst_fit_60.nc
+        - OFFLINE executable
 
       Format : uenv:{uenv_name}@{user}
       type: str
@@ -180,7 +178,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
 
     * ``exesurfex`` Path to the executable if it should come from a local path.
     * ``offline_gvar`` specify the name of the offline executable in the uenv. Default is ``master_offline_mpi``
-          if the mpi parameter is True and ``master_offline_nompi`` otherwise.
+      if the mpi parameter is True and ``master_offline_nompi`` otherwise.
     * ``member`` Simulation member.
       NB : This is a deterministic task, only one single member value can be provided
       type: int
@@ -267,21 +265,21 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
     * ``forcing_namebuild`` *namebuild* footprint, default "flat@cen" (will change soon)
       type forcing_namebuild: str
     * ``forcing_intent`` *intent* footprint (local file permissions), default "in"
-      Possible values : "in" (read-only), "inout" (read-write)
+      Possible values: "in" (read-only), "inout" (read-write)
       type forcing_intent: str
     * ``forcing_source_app`` *source_app* footprint, default None
       type forcing_source_app: str, footprints.stdtypes.FPList
     * ``forcing_source_conf`` *source_conf* footprint, default None
       type forcing_source_conf: str, footprints.stdtypes.FPList
     * ``forcing_source`` Retrieve *source_app* and *source_conf* footrprints dictionnaries for S2M reanalysis
-      Possible values : 'era5', 'era40'
+      Possible values: 'era5', 'era40'
       type forcing_source: str
     * ``forcing_cutoff`` *cutoff* footprint (to be made optional for SurfaceIO objects), default None
       type forcing_cutoff: str
     * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
       snowtools/utils/dates.py.
       Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
-      Possible values : "yearly", "monthly" or "full"
+      Possible values: "yearly", "monthly" or "full"
       type io_duration: str
     * ``forcing_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
       type forcing_vortex1: bool
@@ -511,7 +509,154 @@ class OfflineMpi(_Offline):
     """
     **Task: OfflineMpi**
 
-    Abstract task for the execution of OFFLINE binary with MPI parallelisation.
+    Task for the execution of OFFLINE binary with MPI parallelisation.
+
+    **Inputs:**
+
+    - FORCING.nc files(s) (near-surface meteorological conditions during the simulation period)
+    - OPTIONS.nam ready-to-use SURFEX namelist (coming from an execution of a "Preprocess_Task")
+    - ecoclimapI_covers_param.bin and ecoclimapII_eu_covers_param.bin (binaries for vegetation generation)
+    - drdt_bst_fit_60.nc (Crocus metamorphism parameters)
+    - PGD.nc (Ground physiography)
+    - PREP.nc (initial conditions)
+
+    **Outputs:**
+
+    - PRO.nc Snowpack simulations covering the entire simulation period
+    - PREP.nc SURFEX/Crocus model state variables at the end of the simulation
+    - CUMUL.nc TODO   Compléter et CHECKER la doc
+    - DIAG.nc TODO    Compléter et CHECKER la doc
+
+    **Mandatory configuration variables:**
+
+    * ``datebegin`` *datebegin* of the forcing file(s). type: str, footprints.stdtypes.FPList
+    * ``dateend`` *dateend* of the forcing files(s). type: str, footprints.stdtypes.FPList
+    * ``geometry`` *geometry* of the forcing file(s)
+      type: str, footprints.stdtypes.FPList
+    * ``xpid`` User-defined Experiment identifier (WARNING : 4-digit strings prohibited)
+      type: str
+    * ``surfex_uenv`` or ``uenv`` User Environment in which the following resources are to be retrieved:
+        - ecoclimapI_covers_param.bin
+        - ecoclimapII_eu_covers_param.bin
+        - drdt_bst_fit_60.nc
+        - OFFLINE executable
+
+      Format : uenv:{uenv_name}@{user}
+      type: str
+    * ``nprocs`` Number of process to allocate to the execution of the MPI binary
+      type: int
+    * ``ntasks`` Number of tasks to allocate to the execution of the MPI binary
+      type: int
+
+    **Optional configuration variables (other than forcing-specific ones):**
+
+    * ``exesurfex`` Path to the executable if it should come from a local path.
+    * ``offline_gvar`` specify the name of the offline executable in the uenv. Default is ``master_offline_mpi``
+      if the mpi parameter is True and ``master_offline_nompi`` otherwise.
+    * ``member`` Simulation member.
+      NB : This is a deterministic task, only one single member value can be provided
+      type: int
+    * ``pgd_xpid`` Experiment Identifier of the PGD file, if different from the task's XPID
+      type: str
+    * ``pgd_user`` User who produced the target PGD file.
+      type: str
+    * ``pgd_vapp`` *vapp* of the PGD file, if different from the task's *vapp*
+      type: str
+    * ``pgd_vconf`` *vconf* of the PGD file, if different from the task's *vconf*
+      type: str
+    * ``prep_xpid`` Experiment Identifier of the PREP file, if different from the task's XPID
+      type: str
+    * ``prep_user`` User who produced the target PREP file.
+      type: str
+    * ``prep_member`` Member associated to the PREP file if it comes from an ensemble (after a SODA run)
+      NB : This is a deterministic task, only one single member value can be provided
+      type: int
+    * ``prep_vapp`` *vapp* of the PREP file, if different from the task's *vapp*
+      type: str
+    * ``prep_vconf`` *vconf* of the PREP file, if different from the task's *vconf*
+      type: str
+    * ``prep_date`` Validity date of the PREP file (if different from *datebegin*)
+      type: str
+    * ``prep_block`` *block* of the PREP file (default 'prep', but can be different after an assimilation step)
+      type: str
+    * ``prep_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
+      type: bool
+    * ``august_threshold`` Threshold to apply to the snow water equivalent (in kg/m2) each 1st August (default: -999)
+      type: int
+    * ``dailyprep`` TODO :comprendre avec Matthieu L les cas d'usages avec "dailyprep" (reforecast ?)
+      type: bool
+    * ``drhook`` Activate / deactivate the profiling with DRHOOK (default: False)
+      type: bool
+    * ``namespace_out`` Force specific namespace for output files (default: 'vortex.multi.fr')
+      type: str
+    * ``nnodes`` Number of available nodes for MPI parallelisation
+      type: int
+    * ``nprocs`` Number of available processors for MPI parallelisation
+      type: int
+    * ``ntasks`` Number of MPI tasks
+      type: int
+    * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
+      snowtools/utils/dates.py.
+      Used to retrieve the list of *datebegin* and *dateend* for IO covering sub-periods.
+      Possible values : "yearly", "monthly" or "full"
+      type: str
+    * ``diff_xpid`` Experiment id of the reference file used for reproducibility test.
+      type diff_xpid: str
+    * ``diff_user`` *user name* associated with the reference file used for reproducibility test
+      (only if different from current user). Default: *None*
+      type diff_user: str
+    * ``diff_block`` *block* of the reference file used for reproducibility test
+
+    **Forcing related configuration variables:**
+
+    **Mandatory**
+
+    * ``forcing_datebegin`` *datebegin* footprint, default self.conf.datebegin
+      type forcing_datebegin: str, footprints.stdtypes.FPList
+    * ``forcing_dateend`` *dateend* footprint, default self.conf.dateend
+      type forcing_dateend: str, footprints.stdtypes.FPList
+    * ``forcing_xpid`` Experiment identifier, default self.conf.xpid
+      type forcing_xpid: str
+    * ``forcing_geometry`` *geometry* footprint, default self.conf.geometry
+      type forcing_geometry: str, footprints.stdtypes.FPList
+    * ``forcing_vapp`` *vapp* footprint, default self.conf.vapp
+      type forcing_vapp: str
+    * ``forcing_vconf`` *vconf* footprint, default self.conf.vconf
+      type forcing_vconf: str
+    * ``forcing_block`` *block* footprint, default "meteo"
+      type forcing_vconf: str
+    * ``forcing_namespace`` *namespace* footprint, default "vortex.multi.fr" (hendrix + local cache)
+      type forcing_namespace: str
+    * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
+      type forcing_date: str
+    * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
+      type forcing_model: str
+
+    **Optional**
+
+    * ``forcing_member`` *member* footprint, default None (or *member* if provided)
+      type forcing_member: int, footprints.stdtypes.FPList
+    * ``forcing_namebuild`` *namebuild* footprint, default "flat@cen" (will change soon)
+      type forcing_namebuild: str
+    * ``forcing_intent`` *intent* footprint (local file permissions), default "in"
+      Possible values: "in" (read-only), "inout" (read-write)
+      type forcing_intent: str
+    * ``forcing_source_app`` *source_app* footprint, default None
+      type forcing_source_app: str, footprints.stdtypes.FPList
+    * ``forcing_source_conf`` *source_conf* footprint, default None
+      type forcing_source_conf: str, footprints.stdtypes.FPList
+    * ``forcing_source`` Retrieve *source_app* and *source_conf* footrprints dictionnaries for S2M reanalysis
+      Possible values: 'era5', 'era40'
+      type forcing_source: str
+    * ``forcing_cutoff`` *cutoff* footprint (to be made optional for SurfaceIO objects), default None
+      type forcing_cutoff: str
+    * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
+      snowtools/utils/dates.py.
+      Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
+      Possible values: "yearly", "monthly" or "full"
+      type io_duration: str
+    * ``forcing_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
+      type forcing_vortex1: bool
 
     """
 
@@ -555,6 +700,147 @@ class _Offline_NOMPI(_Offline):
     **Task : _Offline_NOMPI**
 
     Abstract task for the execution of OFFLINE binary without MPI parallelisation.
+
+    **Inputs:**
+
+    - FORCING.nc files(s) (near-surface meteorological conditions during the simulation period)
+    - OPTIONS.nam ready-to-use SURFEX namelist (coming from an execution of a "Preprocess_Task")
+    - ecoclimapI_covers_param.bin and ecoclimapII_eu_covers_param.bin (binaries for vegetation generation)
+    - drdt_bst_fit_60.nc (Crocus metamorphism parameters)
+    - PGD.nc (Ground physiography)
+    - PREP.nc (initial conditions)
+
+    **Outputs:**
+
+    - PRO.nc Snowpack simulations covering the entire simulation period
+    - PREP.nc SURFEX/Crocus model state variables at the end of the simulation
+    - CUMUL.nc TODO   Compléter et CHECKER la doc
+    - DIAG.nc TODO    Compléter et CHECKER la doc
+
+    **Mandatory configuration variables:**
+
+    * ``datebegin`` *datebegin* of the forcing file(s). type: str, footprints.stdtypes.FPList
+    * ``dateend`` *dateend* of the forcing files(s). type: str, footprints.stdtypes.FPList
+    * ``geometry`` *geometry* of the forcing file(s)
+      type: str, footprints.stdtypes.FPList
+    * ``xpid`` User-defined Experiment identifier (WARNING : 4-digit strings prohibited)
+      type: str
+    * ``surfex_uenv`` or ``uenv`` User Environment in which the following resources are to be retrieved:
+        - ecoclimapI_covers_param.bin
+        - ecoclimapII_eu_covers_param.bin
+        - drdt_bst_fit_60.nc
+        - OFFLINE executable
+
+      Format : uenv:{uenv_name}@{user}
+      type: str
+    * ``nprocs`` Number of process to allocate to the execution of the MPI binary
+      type: int
+    * ``ntasks`` Number of tasks to allocate to the execution of the MPI binary
+      type: int
+
+    **Optional configuration variables (other than forcing-specific ones):**
+
+    * ``exesurfex`` Path to the executable if it should come from a local path.
+    * ``offline_gvar`` specify the name of the offline executable in the uenv. Default is ``master_offline_mpi``
+      if the mpi parameter is True and ``master_offline_nompi`` otherwise.
+    * ``member`` Simulation member.
+      NB : This is a deterministic task, only one single member value can be provided
+      type: int
+    * ``pgd_xpid`` Experiment Identifier of the PGD file, if different from the task's XPID
+      type: str
+    * ``pgd_user`` User who produced the target PGD file.
+      type: str
+    * ``pgd_vapp`` *vapp* of the PGD file, if different from the task's *vapp*
+      type: str
+    * ``pgd_vconf`` *vconf* of the PGD file, if different from the task's *vconf*
+      type: str
+    * ``prep_xpid`` Experiment Identifier of the PREP file, if different from the task's XPID
+      type: str
+    * ``prep_user`` User who produced the target PREP file.
+      type: str
+    * ``prep_member`` Member associated to the PREP file if it comes from an ensemble (after a SODA run)
+      NB : This is a deterministic task, only one single member value can be provided
+      type: int
+    * ``prep_vapp`` *vapp* of the PREP file, if different from the task's *vapp*
+      type: str
+    * ``prep_vconf`` *vconf* of the PREP file, if different from the task's *vconf*
+      type: str
+    * ``prep_date`` Validity date of the PREP file (if different from *datebegin*)
+      type: str
+    * ``prep_block`` *block* of the PREP file (default 'prep', but can be different after an assimilation step)
+      type: str
+    * ``prep_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
+      type: bool
+    * ``august_threshold`` Threshold to apply to the snow water equivalent (in kg/m2) each 1st August (default: -999)
+      type: int
+    * ``dailyprep`` TODO :comprendre avec Matthieu L les cas d'usages avec "dailyprep" (reforecast ?)
+      type: bool
+    * ``drhook`` Activate / deactivate the profiling with DRHOOK (default: False)
+      type: bool
+    * ``namespace_out`` Force specific namespace for output files (default: 'vortex.multi.fr')
+      type: str
+    * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
+      snowtools/utils/dates.py.
+      Used to retrieve the list of *datebegin* and *dateend* for IO covering sub-periods.
+      Possible values : "yearly", "monthly" or "full"
+      type: str
+    * ``diff_xpid`` Experiment id of the reference file used for reproducibility test.
+      type diff_xpid: str
+    * ``diff_user`` *user name* associated with the reference file used for reproducibility test
+      (only if different from current user). Default: *None*
+      type diff_user: str
+    * ``diff_block`` *block* of the reference file used for reproducibility test
+
+    **Forcing related configuration variables:**
+
+    **Mandatory**
+
+    * ``forcing_datebegin`` *datebegin* footprint, default self.conf.datebegin
+      type forcing_datebegin: str, footprints.stdtypes.FPList
+    * ``forcing_dateend`` *dateend* footprint, default self.conf.dateend
+      type forcing_dateend: str, footprints.stdtypes.FPList
+    * ``forcing_xpid`` Experiment identifier, default self.conf.xpid
+      type forcing_xpid: str
+    * ``forcing_geometry`` *geometry* footprint, default self.conf.geometry
+      type forcing_geometry: str, footprints.stdtypes.FPList
+    * ``forcing_vapp`` *vapp* footprint, default self.conf.vapp
+      type forcing_vapp: str
+    * ``forcing_vconf`` *vconf* footprint, default self.conf.vconf
+      type forcing_vconf: str
+    * ``forcing_block`` *block* footprint, default "meteo"
+      type forcing_vconf: str
+    * ``forcing_namespace`` *namespace* footprint, default "vortex.multi.fr" (hendrix + local cache)
+      type forcing_namespace: str
+    * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
+      type forcing_date: str
+    * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
+      type forcing_model: str
+
+    **Optional**
+
+    * ``forcing_member`` *member* footprint, default None (or *member* if provided)
+      type forcing_member: int, footprints.stdtypes.FPList
+    * ``forcing_namebuild`` *namebuild* footprint, default "flat@cen" (will change soon)
+      type forcing_namebuild: str
+    * ``forcing_intent`` *intent* footprint (local file permissions), default "in"
+      Possible values: "in" (read-only), "inout" (read-write)
+      type forcing_intent: str
+    * ``forcing_source_app`` *source_app* footprint, default None
+      type forcing_source_app: str, footprints.stdtypes.FPList
+    * ``forcing_source_conf`` *source_conf* footprint, default None
+      type forcing_source_conf: str, footprints.stdtypes.FPList
+    * ``forcing_source`` Retrieve *source_app* and *source_conf* footrprints dictionnaries for S2M reanalysis
+      Possible values: 'era5', 'era40'
+      type forcing_source: str
+    * ``forcing_cutoff`` *cutoff* footprint (to be made optional for SurfaceIO objects), default None
+      type forcing_cutoff: str
+    * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
+      snowtools/utils/dates.py.
+      Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
+      Possible values: "yearly", "monthly" or "full"
+      type io_duration: str
+    * ``forcing_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
+      type forcing_vortex1: bool
 
     """
 
@@ -611,6 +897,153 @@ class Offline_Mpi_Uenv(OfflineMpi):
 class OfflineMpiDailyPrep(OfflineMpi):
     """
     Do a surfex simulation with daily prep file output
+
+    **Inputs:**
+
+    - FORCING.nc files(s) (near-surface meteorological conditions during the simulation period)
+    - OPTIONS.nam ready-to-use SURFEX namelist (coming from an execution of a "Preprocess_Task")
+    - ecoclimapI_covers_param.bin and ecoclimapII_eu_covers_param.bin (binaries for vegetation generation)
+    - drdt_bst_fit_60.nc (Crocus metamorphism parameters)
+    - PGD.nc (Ground physiography)
+    - PREP.nc (initial conditions)
+
+    **Outputs:**
+
+    - PRO.nc Snowpack simulations covering the entire simulation period
+    - PREP.nc SURFEX/Crocus model state variables at the end of the simulation
+    - CUMUL.nc TODO   Compléter et CHECKER la doc
+    - DIAG.nc TODO    Compléter et CHECKER la doc
+
+    **Mandatory configuration variables:**
+
+    * ``datebegin`` *datebegin* of the forcing file(s). type: str, footprints.stdtypes.FPList
+    * ``dateend`` *dateend* of the forcing files(s). type: str, footprints.stdtypes.FPList
+    * ``geometry`` *geometry* of the forcing file(s)
+      type: str, footprints.stdtypes.FPList
+    * ``xpid`` User-defined Experiment identifier (WARNING : 4-digit strings prohibited)
+      type: str
+    * ``surfex_uenv`` or ``uenv`` User Environment in which the following resources are to be retrieved:
+        - ecoclimapI_covers_param.bin
+        - ecoclimapII_eu_covers_param.bin
+        - drdt_bst_fit_60.nc
+        - OFFLINE executable
+
+      Format : uenv:{uenv_name}@{user}
+      type: str
+    * ``nprocs`` Number of process to allocate to the execution of the MPI binary
+      type: int
+    * ``ntasks`` Number of tasks to allocate to the execution of the MPI binary
+      type: int
+
+    **Optional configuration variables (other than forcing-specific ones):**
+
+    * ``offline_gvar`` specify the name of the offline executable in the uenv. Default is ``master_offline_mpi``
+      if the mpi parameter is True and ``master_offline_nompi`` otherwise.
+    * ``member`` Simulation member.
+      NB : This is a deterministic task, only one single member value can be provided
+      type: int
+    * ``pgd_xpid`` Experiment Identifier of the PGD file, if different from the task's XPID
+      type: str
+    * ``pgd_user`` User who produced the target PGD file.
+      type: str
+    * ``pgd_vapp`` *vapp* of the PGD file, if different from the task's *vapp*
+      type: str
+    * ``pgd_vconf`` *vconf* of the PGD file, if different from the task's *vconf*
+      type: str
+    * ``prep_xpid`` Experiment Identifier of the PREP file, if different from the task's XPID
+      type: str
+    * ``prep_user`` User who produced the target PREP file.
+      type: str
+    * ``prep_member`` Member associated to the PREP file if it comes from an ensemble (after a SODA run)
+      NB : This is a deterministic task, only one single member value can be provided
+      type: int
+    * ``prep_vapp`` *vapp* of the PREP file, if different from the task's *vapp*
+      type: str
+    * ``prep_vconf`` *vconf* of the PREP file, if different from the task's *vconf*
+      type: str
+    * ``prep_date`` Validity date of the PREP file (if different from *datebegin*)
+      type: str
+    * ``prep_block`` *block* of the PREP file (default 'prep', but can be different after an assimilation step)
+      type: str
+    * ``prep_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
+      type: bool
+    * ``august_threshold`` Threshold to apply to the snow water equivalent (in kg/m2) each 1st August (default: -999)
+      type: int
+    * ``dailyprep`` TODO :comprendre avec Matthieu L les cas d'usages avec "dailyprep" (reforecast ?)
+      type: bool
+    * ``drhook`` Activate / deactivate the profiling with DRHOOK (default: False)
+      type: bool
+    * ``namespace_out`` Force specific namespace for output files (default: 'vortex.multi.fr')
+      type: str
+    * ``nnodes`` Number of available nodes for MPI parallelisation
+      type: int
+    * ``nprocs`` Number of available processors for MPI parallelisation
+      type: int
+    * ``ntasks`` Number of MPI tasks
+      type: int
+    * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
+      snowtools/utils/dates.py.
+      Used to retrieve the list of *datebegin* and *dateend* for IO covering sub-periods.
+      Possible values : "yearly", "monthly" or "full"
+      type: str
+    * ``diff_xpid`` Experiment id of the reference file used for reproducibility test.
+      type diff_xpid: str
+    * ``diff_user`` *user name* associated with the reference file used for reproducibility test
+      (only if different from current user). Default: *None*
+      type diff_user: str
+    * ``diff_block`` *block* of the reference file used for reproducibility test
+
+    **Forcing related configuration variables:**
+
+    **Mandatory**
+
+    * ``forcing_datebegin`` *datebegin* footprint, default self.conf.datebegin
+      type forcing_datebegin: str, footprints.stdtypes.FPList
+    * ``forcing_dateend`` *dateend* footprint, default self.conf.dateend
+      type forcing_dateend: str, footprints.stdtypes.FPList
+    * ``forcing_xpid`` Experiment identifier, default self.conf.xpid
+      type forcing_xpid: str
+    * ``forcing_geometry`` *geometry* footprint, default self.conf.geometry
+      type forcing_geometry: str, footprints.stdtypes.FPList
+    * ``forcing_vapp`` *vapp* footprint, default self.conf.vapp
+      type forcing_vapp: str
+    * ``forcing_vconf`` *vconf* footprint, default self.conf.vconf
+      type forcing_vconf: str
+    * ``forcing_block`` *block* footprint, default "meteo"
+      type forcing_vconf: str
+    * ``forcing_namespace`` *namespace* footprint, default "vortex.multi.fr" (hendrix + local cache)
+      type forcing_namespace: str
+    * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
+      type forcing_date: str
+    * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
+      type forcing_model: str
+
+    **Optional**
+
+    * ``forcing_member`` *member* footprint, default None (or *member* if provided)
+      type forcing_member: int, footprints.stdtypes.FPList
+    * ``forcing_namebuild`` *namebuild* footprint, default "flat@cen" (will change soon)
+      type forcing_namebuild: str
+    * ``forcing_intent`` *intent* footprint (local file permissions), default "in"
+      Possible values: "in" (read-only), "inout" (read-write)
+      type forcing_intent: str
+    * ``forcing_source_app`` *source_app* footprint, default None
+      type forcing_source_app: str, footprints.stdtypes.FPList
+    * ``forcing_source_conf`` *source_conf* footprint, default None
+      type forcing_source_conf: str, footprints.stdtypes.FPList
+    * ``forcing_source`` Retrieve *source_app* and *source_conf* footrprints dictionnaries for S2M reanalysis
+      Possible values: 'era5', 'era40'
+      type forcing_source: str
+    * ``forcing_cutoff`` *cutoff* footprint (to be made optional for SurfaceIO objects), default None
+      type forcing_cutoff: str
+    * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
+      snowtools/utils/dates.py.
+      Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
+      Possible values: "yearly", "monthly" or "full"
+      type io_duration: str
+    * ``forcing_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
+      type forcing_vortex1: bool
+
     """
     def get_executable(self):
         self.get_executable_from_uenv()

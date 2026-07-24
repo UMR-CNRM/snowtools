@@ -86,21 +86,21 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
     * ``forcing_namebuild`` *namebuild* footprint, default "flat@cen" (will change soon)
       type forcing_namebuild: str
     * ``forcing_intent`` *intent* footprint (local file permissions), default "in"
-      Possible values : "in" (read-only), "inout" (read-write)
+      Possible values: "in" (read-only), "inout" (read-write)
       type forcing_intent: str
     * ``forcing_source_app`` *source_app* footprint, default None
       type forcing_source_app: str, footprints.stdtypes.FPList
     * ``forcing_source_conf`` *source_conf* footprint, default None
       type forcing_source_conf: str, footprints.stdtypes.FPList
     * ``forcing_source`` Retrieve *source_app* and *source_conf* footrprints dictionnaries for S2M reanalysis
-      Possible values : 'era5', 'era40'
+      Possible values: 'era5', 'era40'
       type forcing_source: str
     * ``forcing_cutoff`` *cutoff* footprint (to be made optional for SurfaceIO objects), default None
       type forcing_cutoff: str
     * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
       snowtools/utils/dates.py.
       Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
-      Possible values : "yearly", "monthly" or "full"
+      Possible values: "yearly", "monthly" or "full"
       type io_duration: str
     * ``forcing_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
       type forcing_vortex1: bool
@@ -245,7 +245,7 @@ class FetchClimGroundTemperatureOrMake(InitClimGroundTemperature):
 
     * ``tg_geometry`` or ``geometry`` geometry of the init_TG. Logically the same as for the rest of the simulation
     * ``surfex_uenv`` or if not present ``uenv`` User Environment from which the init_TG.nc file should be fetched.
-                 Format : uenv:{uenv_name}@{user}
+      Format : uenv:{uenv_name}@{user}
     * ``tg_gvar`` key to look up the init_TG.nc file in the uenv the file should come from.
 
     **Configuration variables used for calculating initial ground temperature:**
@@ -285,21 +285,21 @@ class FetchClimGroundTemperatureOrMake(InitClimGroundTemperature):
     * ``forcing_namebuild`` *namebuild* footprint, default "flat@cen" (will change soon)
       type forcing_namebuild: str
     * ``forcing_intent`` *intent* footprint (local file permissions), default "in"
-      Possible values : "in" (read-only), "inout" (read-write)
+      Possible values: "in" (read-only), "inout" (read-write)
       type forcing_intent: str
     * ``forcing_source_app`` *source_app* footprint, default None
       type forcing_source_app: str, footprints.stdtypes.FPList
     * ``forcing_source_conf`` *source_conf* footprint, default None
       type forcing_source_conf: str, footprints.stdtypes.FPList
     * ``forcing_source`` Retrieve *source_app* and *source_conf* footrprints dictionnaries for S2M reanalysis
-      Possible values : 'era5', 'era40'
+      Possible values: 'era5', 'era40'
       type forcing_source: str
     * ``forcing_cutoff`` *cutoff* footprint (to be made optional for SurfaceIO objects), default None
       type forcing_cutoff: str
     * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
       snowtools/utils/dates.py.
       Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
-      Possible values : "yearly", "monthly" or "full"
+      Possible values: "yearly", "monthly" or "full"
       type io_duration: str
     * ``forcing_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
       type forcing_vortex1: bool
@@ -453,21 +453,21 @@ class MakeClimGroundTemperatureIfNoPrep(FetchClimGroundTemperatureOrMake):
     * ``forcing_namebuild`` *namebuild* footprint, default "flat@cen" (will change soon)
       type forcing_namebuild: str
     * ``forcing_intent`` *intent* footprint (local file permissions), default "in"
-      Possible values : "in" (read-only), "inout" (read-write)
+      Possible values: "in" (read-only), "inout" (read-write)
       type forcing_intent: str
     * ``forcing_source_app`` *source_app* footprint, default None
       type forcing_source_app: str, footprints.stdtypes.FPList
     * ``forcing_source_conf`` *source_conf* footprint, default None
       type forcing_source_conf: str, footprints.stdtypes.FPList
     * ``forcing_source`` Retrieve *source_app* and *source_conf* footrprints dictionnaries for S2M reanalysis
-      Possible values : 'era5', 'era40'
+      Possible values: 'era5', 'era40'
       type forcing_source: str
     * ``forcing_cutoff`` *cutoff* footprint (to be made optional for SurfaceIO objects), default None
       type forcing_cutoff: str
     * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
       snowtools/utils/dates.py.
       Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
-       Possible values : "yearly", "monthly" or "full"
+      Possible values: "yearly", "monthly" or "full"
       type io_duration: str
     * ``forcing_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
       type forcing_vortex1: bool
@@ -508,7 +508,7 @@ class FetchClimGroundTemperatureOrCrash(InitClimGroundTemperature, _CenResearchT
     **Mandatory configuration variables:**
 
     * ``surfex_uenv`` or if not present ``uenv`` User Environment from which the PGD.nc file should be fetched.
-                 Format : uenv:{uenv_name}@{user}
+      Format : uenv:{uenv_name}@{user}
     * ``tg_gvar`` key to look up the init_TG.nc file in the uenv the file should come from.
     * ``geometry`` *geometry* of the forcing file(s)
       type: str, footprints.stdtypes.FPList

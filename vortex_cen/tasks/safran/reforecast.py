@@ -24,22 +24,22 @@ class SafranReforecast(_CenResearchTask):
 
     **Input:**
 
-    - Guess : daily packed files containing all lead time of a given 0H run of ARPEGE / PERAP
-    - listem : List of SAFRAN massifs
-    - listeml : List of coordinates of the SAFRAN massifs
-    - Listeo : list of potential observation sites to assimilate (mandatory but unused)
-    - NORELmt : Monthly mean precipitation value
-    - rsclim / icrccm : Climatological values
-    - ADAPT/ANALYSE/EBAUCHE/IMPRESS/MELANGE/SORTIES : Safran namelists
-    - carpost.tar : Files describing the output "postes"
-    - safrane : Safran executable for synoptic interpolation of the guess on the Safran geometry
-    - syrpluie / syrmRR : Safran executables for precipitation spatio-temporal precipitation interpolation
-    - sytist : Safran executable for hourly interpolation and the creation of FORCING files
+    - Guess: daily packed files containing all lead time of a given 0H run of ARPEGE / PERAP
+    - listem: List of SAFRAN massifs
+    - listeml: List of coordinates of the SAFRAN massifs
+    - Listeo: list of potential observation sites to assimilate (mandatory but unused)
+    - NORELmt: Monthly mean precipitation value
+    - rsclim / icrccm: Climatological values
+    - ADAPT/ANALYSE/EBAUCHE/IMPRESS/MELANGE/SORTIES: Safran namelists
+    - carpost.tar: Files describing the output "postes"
+    - safrane: Safran executable for synoptic interpolation of the guess on the Safran geometry
+    - syrpluie / syrmRR: Safran executables for precipitation spatio-temporal precipitation interpolation
+    - sytist: Safran executable for hourly interpolation and the creation of FORCING files
 
     **Output:**
 
-    - FORCING_massifs.nc : Ensemble of forcing files on the "flat" massif geometry
-    - FORCING_postes.nc : Ensemble of forcing files on the "postes" geometry
+    - FORCING_massifs.nc: Ensemble of forcing files on the "flat" massif geometry
+    - FORCING_postes.nc: Ensemble of forcing files on the "postes" geometry
 
     **Mandatory Configuration Variables:**
 

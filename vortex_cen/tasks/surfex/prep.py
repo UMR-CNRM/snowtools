@@ -345,9 +345,9 @@ class FetchPrepFileOrMake(_PrepConstruct):
     * ``prep_namebuild`` Default: *flat@cen*
     * ``prep_block`` block part of the data tree to search for the PREP.nc file. Default is ``prep``.
     * ``prep_member`` or ``member`` If the PREP.nc file comes from an ensemble, a member can be chosen.
-       Default is ``None``.
+      Default is ``None``.
     * ``prep_cutoff`` Can be used to select a PREP file coming from an operational forecast (*forecast*) or
-       analysis (*assimilation*). Default is *None*. Might be useful for reforecasts.
+      analysis (*assimilation*). Default is *None*. Might be useful for reforecasts.
     """
 
     def __init__(self, **kw):
@@ -456,9 +456,9 @@ class FetchPrepFileOrCrash(FetchPrepFileOrMake):
     * ``prep_namebuild`` Default: *flat@cen*
     * ``prep_block`` block part of the data tree to search for the PREP.nc file. Default is ``prep``.
     * ``prep_member`` or ``member`` If the PREP.nc file comes from an ensemble, a member can be chosen.
-       Default is ``None``.
+      Default is ``None``.
     * ``prep_cutoff`` Can be used to select a PREP file coming from an operational forecast (*forecast*) or
-       analysis (*assimilation*). Default is *None*. Might be useful for reforecasts.
+      analysis (*assimilation*). Default is *None*. Might be useful for reforecasts.
 
     """
     def __init__(self, **kw):
@@ -511,6 +511,27 @@ class PrepRefill(FetchPrepFileOrCrash):
 
     - A copy of the input PREP.nc file into the cache of all members of the real-time chain
 
+    **Mandatory configuration variables:**
+
+    * ``geometry`` *geometry* of the forcing file(s)
+    * ``xpid`` Experiment identifier. type: str
+    * ``prep_date`` or ``datebegin`` Validity date of the prep file. Default is ``datebegin`` but can be any date.
+    * ``prep_xpid`` Experiment id the prep file should be searched for.
+    * ``rundate`` Date of run. choices: YYYYMMDD[03 06 09 12], type: str or Date
+    * ``datevalidity`` Date of validity of the PREP.nc file to generate. Default is ``datebegin``
+      type: str, Date
+    * ``members``
+
+    **Optional configuration variables:**
+
+    * ``prep_user`` name of the user who produced the PREP file. Default: None.
+    * ``prep_vapp`` or ``vapp`` Application name to search the PREP.nc file.
+    * ``prep_vconf`` or ``vconf`` Configuration name to search the PREP.nc file.
+    * ``prep_vortex1`` type: bool. *True* if the requested PREP.nc file was produced with vortex 1 and thus uses
+      vortex 1 naming conventions. Default is *False*.
+    * ``prep_block`` block part of the data tree to search for the PREP.nc file. Default is ``prep``.
+    * ``cutoff`` Target *cutoff* (refill an analysis or a forecast output). type: str, choices:
+      'assimilation', 'production', default: 'assimilation'
     """
 
     def __init__(self, **kw):
@@ -587,7 +608,7 @@ class MakePrepFile(_PrepConstruct):
 
     **Mandatory configuration variables:**
 
-    * ``date`` Date of validity of the PREP.nc file to generate. Default is ``datebegin``
+    * ``datevalidity`` Date of validity of the PREP.nc file to generate. Default is ``datebegin``
       type: str, Date
     * ``geometry`` *geometry* of the forcing file(s)
       type: str, footprints.stdtypes.FPList
