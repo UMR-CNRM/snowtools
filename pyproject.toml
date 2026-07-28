@@ -72,9 +72,9 @@ scores = [
 ]
 
 hpc = [
-    'mkjob@file:///home/cnrm_other/cen/mrns/vernaym/Projects/mkjob',
-    'vortex-gco@file:///home/cnrm_other/cen/mrns/vernaym/Projects/vortex-gco',
-    'vortex-olive@file:///home/cnrm_other/cen/mrns/vernaym/Projects/vortex-olive',
+#    'mkjob@file:///home/cnrm_other/cen/mrns/vernaym/Projects/mkjob',
+#    'vortex-gco@file:///home/cnrm_other/cen/mrns/vernaym/Projects/vortex-gco',
+#    'vortex-olive@file:///home/cnrm_other/cen/mrns/vernaym/Projects/vortex-olive',
 ]
 
 # For a full installation
