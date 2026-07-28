@@ -166,10 +166,9 @@ class SodaPreProcess(AlgoComponent):
 
 
 @echecker.disabled_if_unavailable
-class PerturbForcingWorker(PrepareForcingWorker):
+class PerturbForcingWorker(_CenTaylorVortexWorker):
     """
-    Worker that applies stochastic perturbations to a time series of forcing files
-    (worker for 1 member).
+    Worker that applies stochastic perturbations to a FORCING file.
     """
 
     _footprint = dict(
@@ -178,51 +177,40 @@ class PerturbForcingWorker(PrepareForcingWorker):
             kind = dict(
                 values = ['perturbforcing']
             ),
-            geometry_out = dict(
-                info="The resource's massif geometry.",
-                type=str,
-                optional = True,
-                default = None
-            )
         )
     )
 
     def _prepare_forcing_task(self, rundir, thisdir, rdict):
 
-        need_other_forcing = True
-        datebegin_this_run = self.datebegin
+        forcingdir = self.forcingdir(rundir, thisdir)
 
-        while need_other_forcing:
+        # TODO (WORK IN PROGRESS)
 
-            forcingdir = self.forcingdir(rundir, thisdir)
+        # Get the first file covering part of the whole simulation period
+        dateforcbegin, dateforcend = get_file_period("FORCING", forcingdir,
+                                                     datebegin_this_run, self.dateend)
 
-            # Get the first file covering part of the whole simulation period
-            dateforcbegin, dateforcend = get_file_period("FORCING", forcingdir,
-                                                         datebegin_this_run, self.dateend)
+        self.system.mv("FORCING.nc", "FORCING_OLD.nc")
+        forcinput_perturb("FORCING_OLD.nc", "FORCING.nc", **self.reprod_info)
 
-            self.system.mv("FORCING.nc", "FORCING_OLD.nc")
-            forcinput_perturb("FORCING_OLD.nc", "FORCING.nc", **self.reprod_info)
+        dateend_this_run = min(self.dateend, dateforcend)
 
-            dateend_this_run = min(self.dateend, dateforcend)
+        # Prepare next iteration if needed
+        datebegin_this_run = dateend_this_run
+        need_other_forcing = dateend_this_run < self.dateend
 
-            # Prepare next iteration if needed
-            datebegin_this_run = dateend_this_run
-            need_other_forcing = dateend_this_run < self.dateend
-
-            save_file_period(thisdir, "FORCING", dateforcbegin, dateforcend)
+        save_file_period(thisdir, "FORCING", dateforcbegin, dateforcend)
 
         return rdict
 
 
 @echecker.disabled_if_unavailable
-class PerturbForcingComponent(TaylorRun):
+class PerturbForcingComponent(_CenTaylorRun):
     """
     Algo compent that creates an ensemble of forcing files by stochastic perturbations
-    of a time series of deterministic input forcing files
-    (worker for 1 member).
-    Can not inherit from ensemble.PrepareForcingComponent because datebegin and dateend are dates, not lists.
-    Can not inherit from ensemble.SurfexComponent because there is not any binary to run
-    (inheritance from TaylorRun, not ParaBlindRun)
+    of a time series of deterministic input forcing files. Each worker deals with one single FORCING file
+    as input (parallelisation over the different sub-periods) and one single FORCING file as output
+    (parallelisation over the ensemble members).
     """
     _footprint = dict(
         info = 'AlgoComponent that build an ensemble of perturbed forcings from deterministic forcing files',
@@ -230,11 +218,6 @@ class PerturbForcingComponent(TaylorRun):
             kind = dict(
                 values = ['perturbforcing']
             ),
-            engine=dict(
-                values=['s2m']
-            ),
-            datebegin = a_date,
-            dateend   = a_date,
             members = dict(
                 info = "The list of members for output",
                 type = footprints.stdtypes.FPList,
@@ -248,34 +231,45 @@ class PerturbForcingComponent(TaylorRun):
         )
     )
 
-    def prepare(self, rh, opts):
-        """Set some variables according to target definition."""
-        super().prepare(rh, opts)
-        self.env.DR_HOOK_NOT_MPI = 1
-
-    def _default_common_instructions(self, rh, opts):
-        """Create a common instruction dictionary that will be used by the workers."""
-        ddict = super()._default_common_instructions(rh, opts)
-        for attribute in self.footprint_attributes:
-            ddict[attribute] = getattr(self, attribute)
-        return ddict
-
-    def execute(self, rh, opts):
-        """Loop on the output members requested to apply stochastic perturbations."""
-        self._default_pre_execute(rh, opts)
-        # Update the common instructions
-        common_i = self._default_common_instructions(rh, opts)
-        # Contrary to mother class, datebegin and dateend are not used for parallelization.
-        subdirs = self.get_subdirs(rh, opts)
-        self._add_instructions(common_i, dict(subdir=subdirs))
-        self._default_post_execute(rh, opts)
-
     def get_subdirs(self, rh, opts):
         """
-        In this algo component, the number of members is defined by the user,
-        as there is only 1 single deterministic input
+        In this algo component, the members/workers are a combination of the input FORCING file
+        and output ensemble members.
+
+        Input tree:
+        -----------
+        workdir
+        |-- datebegin_subperiod1]/FORCING.nc
+        |-- subperiod1_subperiod2]/FORCING.nc
+        ...
+        |-- subperiodK_dateend]/FORCING.nc
+
+        Output tree
+        -----------
+        workdir
+        |--[datebegin_subperiod1]
+            |-- FORCING.nc          (unperturbed input FORCING)
+            |-- mb0001/FORCING.nc   (perturbed FORCING)
+            |-- mb0002/FORCING.nc   (perturbed FORCING)
+            ...
+            |-- mb000N/FORCING.nc   perturbed FORCING)
+        |--[subperiod1_subperiod2]
+            |-- FORCING.nc          (unperturbed input FORCING)
+            |-- mb0001/FORCING.nc   (perturbed FORCING)
+            |-- mb0002/FORCING.nc   (perturbed FORCING)
+            ...
+            |-- mb000N/FORCING.nc   perturbed FORCING)
+        ...
+        |--[subperiodK_dateend]
+            |-- FORCING.nc          (unperturbed input FORCING)
+            |-- mb0001/FORCING.nc   (perturbed FORCING)
+            |-- mb0002/FORCING.nc   (perturbed FORCING)
+            ...
+            |-- mb000N/FORCING.nc   perturbed FORCING)
         """
-        return ['mb{:04d}'.format(member) for member in self.members]
+
+        subdirs = super().get_subdirs(rh, opts)
+        subdirs = ['{subdir}/mb{member:04d}' for member in self.members for subdir in subdirs]
 
 
 @echecker.disabled_if_unavailable
