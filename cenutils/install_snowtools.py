@@ -77,6 +77,7 @@ if sys.base_prefix == sys.prefix:
             from venv import create
             if 'hpc' in HOSTNAME:
                 # Do not create a virtual environment with system site packages on HPC
+                # because installed with conda
                 create(venv, with_pip=True)
             else:
                 create(venv, with_pip=True, system_site_packages=True)
@@ -176,6 +177,14 @@ if os.path.isdir('.git'):
         f.write(commit)
 elif os.path.exists('.git_info'):
     shutil.copyfile('.git_info', os.path.join(venv, '.snowtools_info'))
+
+# TEMPORARY step to install dev versions of mkjob, vortex-gco and vortex-olive on HPC while the access to nexus in
+# blocked
+if 'hpc' in HOSTNAME:
+    install_dir = "/home/cnrm_other/cen/mrns/vernaym/Projects"
+    for package in ["mkjob", "vortex-gco", " vortex-olive"]:
+        target = os.path.join(install_dir, package)
+        subprocess.run([pip, 'install --no-build-isolation -e', target])
 
 # Configure Vortex
 vortex_config = os.path.join(os.environ['HOME'], '.vortex.d', 'vortex.toml')
