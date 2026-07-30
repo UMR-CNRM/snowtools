@@ -38,6 +38,7 @@ Tasks designed to launch the PGD executable.
 
 import vortex
 from vortex.util.helpers import InputCheckerError
+
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
 
@@ -55,6 +56,7 @@ class PgdCommonsMixin(SurfexCommonsMixin):
     * ``exesurfex`` path to the folder with surfex executables.
 
     """
+
     def get_2D_databases(self):
         """
         Get Sand_DB.bin and Sand_DB.hdr, Clay_DB.bin and Clay_DB.hdr,
@@ -65,48 +67,84 @@ class PgdCommonsMixin(SurfexCommonsMixin):
         * ``surfex_uenv`` or ``uenv`` The uenv that holds the soil databases for 2D simulations.
         """
         # Binary Sand files are mandatory to run SURFEX for PGD construction in simu2D
-        self.sh.title('Toolbox input sand')
+        self.sh.title("Toolbox input sand")
         sand_tbi = vortex.input(
-            role           = 'SandDB',
-            format         = 'dir/hdr',
-            genv           = self.conf.get('surfex_uenv', self.conf.uenv),
-            model          = 'surfex',
-            kind           = 'sand',  # 'database'
-            local          = 'sand_DB.tgz',
-            source         = 'sand_DB',
-            gvar           = 'sand_DB',
+            role="SandDB",
+            format="dir/hdr",
+            genv=self.conf.get("surfex_uenv", self.conf.uenv),
+            model="surfex",
+            kind="sand",  # 'database'
+            local="sand_DB.tgz",
+            source="sand_DB",
+            gvar="sand_DB",
         )
-        print(self.ticket.prompt, 'sand_tbi =', sand_tbi)
+        print(self.ticket.prompt, "sand_tbi =", sand_tbi)
         print()
 
         # Binary Clay files are mandatory to run SURFEX for PGD construction in simu2D
-        self.sh.title('Toolbox input clay')
+        self.sh.title("Toolbox input clay")
         clay_tbi = vortex.input(
-            role           = 'ClayDB',
-            format         = 'dir/hdr',
-            genv           = self.conf.get('surfex_uenv', self.conf.uenv),
-            model          = 'surfex',
-            kind           = 'clay',
-            local          = 'clay_DB.tgz',
-            source         = 'clay_DB',
-            gvar           = 'clay_DB',
+            role="ClayDB",
+            format="dir/hdr",
+            genv=self.conf.get("surfex_uenv", self.conf.uenv),
+            model="surfex",
+            kind="clay",
+            local="clay_DB.tgz",
+            source="clay_DB",
+            gvar="clay_DB",
         )
-        print(self.ticket.prompt, 'clay_tbi =', clay_tbi)
+        print(self.ticket.prompt, "clay_tbi =", clay_tbi)
         print()
 
         # EcoclimapII_europ files are mandatory to run SURFEX for PGD construction in simu2D
-        self.sh.title('Toolbox input ecoclimap2_europ')
+        self.sh.title("Toolbox input ecoclimap2_europ")
         ecoclimap2_europ_tbi = vortex.input(
-            role           = 'EcoclimapIIEurop',
-            format         = 'dir/hdr',
-            genv           = self.conf.get('surfex_uenv', self.conf.uenv),
-            model          = 'surfex',
-            kind           = 'coverparams',
-            local          = 'ECOCLIMAP_II_EUROP.tgz',
-            source         = 'ecoclimap2',
-            gvar           = 'ECOCLIMAP_II_EUROP',
+            role="EcoclimapIIEurop",
+            format="dir/hdr",
+            genv=self.conf.get("surfex_uenv", self.conf.uenv),
+            model="surfex",
+            kind="coverparams",
+            local="ECOCLIMAP_II_EUROP.tgz",
+            source="ecoclimap2",
+            gvar="ECOCLIMAP_II_EUROP",
         )
-        print(self.ticket.prompt, 'ecoclimap2_europ_tbi =', ecoclimap2_europ_tbi)
+        print(self.ticket.prompt, "ecoclimap2_europ_tbi =", ecoclimap2_europ_tbi)
+        print()
+
+    def get_mask_files(self):
+        """
+        Get water_mask and land_mask from Uenv
+
+        **Configuration variables used:**
+
+        * ``surfex_uenv`` or ``uenv`` The uenv that holds the soil databases for 2D simulations.
+        """
+        # huge water mask
+        self.sh.title("Toolbox input water mask")
+        watermask_tbi = vortex.input(
+            format="ascii",
+            genv=self.conf.get("consts_surfex_uenv", self.conf.uenv),
+            model="surfex",
+            kind="coverparams",
+            local="water_mask.txt",
+            gvar="WATER_MASK_[geometry:area]",
+            geometry=self.conf.geometry,
+        )
+        print(self.ticket.prompt, "watermask_tbi =", watermask_tbi)
+        print()
+
+        # huge land mask
+        self.sh.title("Toolbox input land mask")
+        landmask_tbi = vortex.input(
+            format="ascii",
+            genv=self.conf.get("consts_surfex_uenv", self.conf.uenv),
+            model="surfex",
+            kind="coverparams",
+            local="land_mask.txt",
+            gvar="LAND_MASK_[geometry:area]",
+            geometry=self.conf.geometry,
+        )
+        print(self.ticket.prompt, "landmask_tbi =", landmask_tbi)
         print()
 
     def get_pgd_exe_from_uenv(self, mpi=True, fatal=True):
@@ -127,21 +165,21 @@ class PgdCommonsMixin(SurfexCommonsMixin):
         """
 
         if mpi:
-            default_gvar = 'master_pgd_mpi'
+            default_gvar = "master_pgd_mpi"
         else:
-            default_gvar = 'master_pgd_nompi'
+            default_gvar = "master_pgd_nompi"
 
-        self.sh.title('Toolbox input PGD executable from uenv')
+        self.sh.title("Toolbox input PGD executable from uenv")
         pgd_tbx = vortex.executable(
-            role           = 'Binary',
-            kind           = 'buildpgd',
-            local          = 'PGD',
-            model          = 'surfex',
-            genv           = self.conf.get('surfex_uenv', self.conf.uenv),
-            gvar           = self.conf.get('pgd_gvar', default_gvar),
-            fatal          = fatal,
+            role="Binary",
+            kind="buildpgd",
+            local="PGD",
+            model="surfex",
+            genv=self.conf.get("surfex_uenv", self.conf.uenv),
+            gvar=self.conf.get("pgd_gvar", default_gvar),
+            fatal=fatal,
         )
-        print(self.ticket.prompt, 'PGD_tbx =', pgd_tbx)
+        print(self.ticket.prompt, "PGD_tbx =", pgd_tbx)
         print()
 
     def get_pgd_exe_from_local_path(self):
@@ -152,15 +190,11 @@ class PgdCommonsMixin(SurfexCommonsMixin):
 
         * ``exesurfex`` path to the folder with surfex executables.
         """
-        self.sh.title('Toolbox input PGD executable from local path')
+        self.sh.title("Toolbox input PGD executable from local path")
         pgd_tbx = vortex.executable(
-            role           = 'Binary',
-            kind           = 'buildpgd',
-            local          = 'PGD',
-            model          = 'surfex',
-            remote         = self.conf.exesurfex + "/PGD"
+            role="Binary", kind="buildpgd", local="PGD", model="surfex", remote=self.conf.exesurfex + "/PGD"
         )
-        print(self.ticket.prompt, 'PGD_tbx =', pgd_tbx)
+        print(self.ticket.prompt, "PGD_tbx =", pgd_tbx)
         print()
 
 
@@ -200,6 +234,8 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
     **Optionnal configuration variables (other than forcing-specific ones):**
 
     * ``pgd_2d`` *True* if the PGD.nc should be calculated for a 2D domain. Default: *False*
+      type: bool
+    * ``mask_2d`` *True* if you want to use land and water mask for a 2D domain. Default: *False*
       type: bool
     * ``nprocs`` Number of process to allocate to the execution of the MPI binary. Default: 1
       type: int
@@ -278,6 +314,7 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
         OPTIONAL_CONFIGURATION_VARIABLES = [
             "forcing",
             "pgd_2d",
+            "mask_2d",
             "ntasks",
             "nnodes",
             "nprocs",
@@ -293,19 +330,25 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
         drdt_bst_fit_60.nc
         """
         simulation2d = self.conf.get("pgd_2d", False)
-        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
+        self.get_forcing(localname="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc")
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
+        # In 2d case, get plenty of 2d-physio files: ClayDB, SandDB, EcoclimapII_Europ
         if simulation2d:
             self.get_2D_databases()
+            # In 2d case, get 2d mask for land and water in order to reduce the simulation domain
+            if self.conf.get("mask_2d", False):
+                self.get_mask_files()
         self.get_pgd_executable()
 
     def get_pgd_executable(self):
         """
         Call either "get_pgd_exe_from_local_path" or "get_pgd_exe_from_uenv" method.
         """
-        raise NotImplementedError("A get_prep_executable method should be implemented, it should call either the "
-                                  "get_prep_exe_from_path or the get_prep_exe_from_uenv method.")
+        raise NotImplementedError(
+            "A get_prep_executable method should be implemented, it should call either the "
+            "get_prep_exe_from_path or the get_prep_exe_from_uenv method."
+        )
 
     def get_local_inputs(self):
         """
@@ -318,19 +361,19 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
         """
         Algo component to produce the PGD file
         """
-        avail_forcings = self.ticket.context.sequence.effective_inputs(role='Forcing')
+        avail_forcings = self.ticket.context.sequence.effective_inputs(role="Forcing")
         if len(avail_forcings) > 0:
             firstforcing = avail_forcings[0]
         else:
-            raise InputCheckerError('No FORCING file present, the task can not run properly')
+            raise InputCheckerError("No FORCING file present, the task can not run properly")
 
-        self.sh.title('Toolbox algo PGD')
+        self.sh.title("Toolbox algo PGD")
         pgd_tba = vortex.task(
-            kind         = 'pgd_from_forcing',
+            kind="pgd_from_forcing",
             # Le nom local de la ressource est fourni par le "container"
-            forcingname  = firstforcing.rh.container.basename,
+            forcingname=firstforcing.rh.container.basename,
         )
-        print(self.ticket.prompt, 'Toolbox algo pgd=', pgd_tba)
+        print(self.ticket.prompt, "Toolbox algo pgd=", pgd_tba)
         print()
         return pgd_tba
 
@@ -353,33 +396,35 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
         self.component_runner(
             algo,
             executable,
-            mpiopts=dict(
-                nnodes=self.conf.get('nnodes', 1),
-                nprocs=self.conf.get('nprocs', 1),
-                ntasks=self.conf.get('ntasks', 1),
-            )
+            mpiopts={
+                "nnodes": self.conf.get("nnodes", 1),
+                "nprocs": self.conf.get("nprocs", 1),
+                "ntasks": self.conf.get("ntasks", 1),
+            },
         )
 
     def put_outputs(self):
         """
         Save the PGD file
         """
-        self.sh.title('Toolbox Output PGD')
-        pgd_tbo = vortex.output(
-            local      = 'PGD.nc',
-            role       = 'SurfexClim',
-            experiment = self.conf.xpid,
-            geometry   = self.conf.geometry,
-            nativefmt  = 'netcdf',
-            kind       = 'pgdnc',
-            model      = 'surfex',
-            namespace  = 'vortex.multi.fr',
-            namebuild  = 'flat@cen',  # TODO : passer en variable de configuration
-            block      = 'pgd',
-        ),
+        self.sh.title("Toolbox Output PGD")
+        pgd_tbo = (
+            vortex.output(
+                local="PGD.nc",
+                role="SurfexClim",
+                experiment=self.conf.xpid,
+                geometry=self.conf.geometry,
+                nativefmt="netcdf",
+                kind="pgdnc",
+                model="surfex",
+                namespace="vortex.multi.fr",
+                namebuild="flat@cen",  # TODO : passer en variable de configuration
+                block="pgd",
+            ),
+        )
         # MF: in surfex_task.py:       member = self.conf.member if hasattr(self.conf, 'member') else None,
         # MV : c'était un bug introduit par mon commit #21915d5748ec0f80095edced4fc7ee6790a8faa4
-        print(self.ticket.prompt, 'pgd_tbo =', pgd_tbo)
+        print(self.ticket.prompt, "pgd_tbo =", pgd_tbo)
         print()
 
     def diff(self):
@@ -388,24 +433,26 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
         """
         simulation2d = self.conf.get("pgd_2d", False)
         if simulation2d:
-            block = 'pgd2d/pgd'
+            block = "pgd2d/pgd"
         else:
-            block = 'pgd'
+            block = "pgd"
         self.sh.title("Reproductibility check : PGD")
-        diff = vortex.diff(
-            local      = 'PGD.nc',
-            role       = 'SurfexClim',
-            experiment = self.conf.diff_xpid,
-            username   = self.conf.get('diff_user', None),
-            geometry   = self.conf.geometry,
-            nativefmt  = 'netcdf',
-            kind       = 'pgdnc',
-            model      = 'surfex',
-            namespace  = 'vortex.multi.fr',
-            namebuild  = 'flat@cen',
-            block      = block,
-        ),
-        print(self.ticket.prompt, 'diff =', diff)
+        diff = (
+            vortex.diff(
+                local="PGD.nc",
+                role="SurfexClim",
+                experiment=self.conf.diff_xpid,
+                username=self.conf.get("diff_user", None),
+                geometry=self.conf.geometry,
+                nativefmt="netcdf",
+                kind="pgdnc",
+                model="surfex",
+                namespace="vortex.multi.fr",
+                namebuild="flat@cen",
+                block=block,
+            ),
+        )
+        print(self.ticket.prompt, "diff =", diff)
         print()
 
 
@@ -446,6 +493,8 @@ class MakePgd(_PgdConstruct):
     **Optionnal configuration variables (other than forcing-specific ones):**
 
     * ``pgd_2d`` *True* if the PGD.nc should be calculated for a 2D domain. Default: *False*
+      type: bool
+    * ``mask_2d`` *True* if you want to use land and water mask for a 2D domain. Default: *False*
       type: bool
     * ``exesurfex`` path to the folder with surfex executables (if supplied locally and not via the uenv).
     * ``nprocs`` Number of process to allocate to the execution of the MPI binary. Default: 1
@@ -519,9 +568,7 @@ class MakePgd(_PgdConstruct):
         MANDATORY_CONFIGURATION_VARIABLES = [
             "surfex_uenv|uenv",
         ]
-        OPTIONAL_CONFIGURATION_VARIABLES = [
-            "exesurfex"
-        ]
+        OPTIONAL_CONFIGURATION_VARIABLES = ["exesurfex"]
         super().__init__(**kw)
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
 
@@ -529,7 +576,7 @@ class MakePgd(_PgdConstruct):
         """
         get PREP executable either from local path or from a UEnv
         """
-        if hasattr(self.conf, 'exesurfex'):
+        if hasattr(self.conf, "exesurfex"):
             self.get_pgd_exe_from_local_path()
         else:
             self.get_pgd_exe_from_uenv()
@@ -591,6 +638,8 @@ class FetchPgdOrMake(_PgdConstruct):
       type: str, footprints.stdtypes.FPList
     * ``pgdnc_gvar`` variable name of the pgd file in the uenv. Default: *pgd_[geometry::tag]*.
     * ``pgd_2d`` *True* if the PGD.nc should be calculated for a 2D domain. Default: *False*
+      type: bool
+    * ``mask_2d`` *True* if you want to use land and water mask for a 2D domain. Default: *False*
       type: bool
     * ``exesurfex`` path to the folder with surfex executables (if supplied locally and not via the uenv).
     * ``nprocs`` Number of process to allocate to the execution of the MPI binary. Default: 1
@@ -662,13 +711,13 @@ class FetchPgdOrMake(_PgdConstruct):
 
     def __init__(self, **kw):
 
-        MANDATORY_CONFIGURATION_VARIABLES = [
-        ]
+        MANDATORY_CONFIGURATION_VARIABLES = []
         OPTIONAL_CONFIGURATION_VARIABLES = [
             "exesurfex",
             "pgdnc_gvar",
             "pgd",
             "pgd_2d",
+            "mask_2d",
         ]
         super().__init__(**kw)
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
@@ -686,16 +735,13 @@ class FetchPgdOrMake(_PgdConstruct):
         if not pgd[0]:
             _ = self.get_pgd_file_from_uenv(fatal=False)
 
-        if len(self.ctx.sequence.effective_inputs(role="SurfexClim")) == 0:
-            return False
-        else:
-            return True
+        return len(self.ctx.sequence.effective_inputs(role="SurfexClim")) != 0
 
     def get_pgd_executable(self):
         """
         get PGD executable from uenv or local path
         """
-        if hasattr(self.conf, 'exesurfex'):
+        if hasattr(self.conf, "exesurfex"):
             self.get_pgd_exe_from_local_path()
         else:
             self.get_pgd_exe_from_uenv()
@@ -726,20 +772,22 @@ class FetchPgdOrMake(_PgdConstruct):
             super().launch_algo(algo)
 
     def put_outputs(self):
-        self.sh.title('Toolbox Output PGD')
-        pgd_tbo = vortex.output(
-            local       = 'PGD.nc',
-            role        = 'SurfexClim',
-            experiment  = self.conf.xpid,
-            geometry    = self.conf.geometry,
-            nativefmt   = 'netcdf',
-            kind        = 'pgdnc',
-            model       = 'surfex',
-            namespace   = 'vortex.cache.fr',
-            namebuild   = 'flat@cen',  # TODO : passer en variable de configuration
-            block       = 'pgd',
-        ),
-        print(self.ticket.prompt, 'pgd_tbo =', pgd_tbo)
+        self.sh.title("Toolbox Output PGD")
+        pgd_tbo = (
+            vortex.output(
+                local="PGD.nc",
+                role="SurfexClim",
+                experiment=self.conf.xpid,
+                geometry=self.conf.geometry,
+                nativefmt="netcdf",
+                kind="pgdnc",
+                model="surfex",
+                namespace="vortex.cache.fr",
+                namebuild="flat@cen",  # TODO : passer en variable de configuration
+                block="pgd",
+            ),
+        )
+        print(self.ticket.prompt, "pgd_tbo =", pgd_tbo)
         print()
 
 
@@ -783,10 +831,10 @@ class FetchPgdOrCrash(FetchPgdOrMake):
       type: str, footprints.stdtypes.FPList
 
     """
+
     def __init__(self, **kw):
 
-        MANDATORY_CONFIGURATION_VARIABLES = [
-        ]
+        MANDATORY_CONFIGURATION_VARIABLES = []
         OPTIONAL_CONFIGURATION_VARIABLES = [
             "force_uenv",
         ]
@@ -807,4 +855,3 @@ class FetchPgdOrCrash(FetchPgdOrMake):
 
     def launch_algo(self, algo, **kwargs):
         pass
-
