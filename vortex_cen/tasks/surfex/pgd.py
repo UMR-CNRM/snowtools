@@ -333,7 +333,7 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
         self.get_forcing(localname="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc")
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
-        # In 2d case, get plenty of 2d-physio files: ClayDB, SandDB, EcoclimapII_Europ
+        # In 2d case, get others physio files: ClayDB, SandDB, EcoclimapII_Europ
         if simulation2d:
             self.get_2D_databases()
             # In 2d case, get 2d mask for land and water in order to reduce the simulation domain
@@ -574,7 +574,7 @@ class MakePgd(_PgdConstruct):
 
     def get_pgd_executable(self):
         """
-        get PREP executable either from local path or from a UEnv
+        get PGD executable either from local path or from a UEnv
         """
         if hasattr(self.conf, "exesurfex"):
             self.get_pgd_exe_from_local_path()
