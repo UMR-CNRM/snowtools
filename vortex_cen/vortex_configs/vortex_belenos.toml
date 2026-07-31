@@ -97,6 +97,3 @@ fort_blocksize = 1048576
 fort_buffered = "true"
 malloc_mmap_max_ = 0
 malloc_trim_threshold_ = -1
-VORTEX_IOSERVER_PROCS="6"
-VORTEX_IOSERVER_TASKS="6"
-VORTEX_IOSERVER_NODES="1"

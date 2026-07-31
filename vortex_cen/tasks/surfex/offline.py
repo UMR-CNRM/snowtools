@@ -965,19 +965,9 @@ class OfflineXiosMpi(_Offline):
         # Pour un exécution de binaire, il faut donner l'objet "exécutable" associé (récupéré par la commande
         # vortex.executable(...))
         # Il est possible de récupérer cet objet avec la ligne suivante :
-        executable = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
-        print(executable)
-        print(algo.binaries)
+        executables = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
 
-        self.component_runner(
-            algo,
-            executable,
-            mpiopts={
-                "nnodes": self.conf.nnodes,  # Redondant avec la valeur par défaut dans mkjob
-                "nprocs": self.conf.nprocs,  # Redondant avec la valeur par défaut dans mkjob
-                "ntasks": self.conf.ntasks,  # Redondant avec la valeur par défaut dans mkjob
-            },
-        )
+        self.component_runner(algo, executables)
 
 
 class _Offline_NOMPI(_Offline):
