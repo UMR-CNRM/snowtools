@@ -106,7 +106,7 @@ class ExtractMassifsWorker(_CenTaylorVortexWorker):
 
     def _commons(self, rundir, thisdir, rdict, **kwargs):
         """
-        Method called by the main **vortex_task** method of the **_CenWorkerMixIn** class
+        Method called by the main **vortex_task** method of the **_CenMixIn** class
         """
         extract_forcing.extract(massif_num=self.massifs, ZS=self.elevations, aspect=self.aspects, slope=self.slopes)
 
@@ -167,7 +167,7 @@ class ConcatForcingsWorker(_CenTaylorVortexWorker):
 
     def _commons(self, rundir, thisdir, rdict, **kwargs):
         """
-        Method called by the main **vortex_task** method of the **_CenWorkerMixIn** class
+        Method called by the main **vortex_task** method of the **_CenMixIn** class
         """
         ds = xr.open_mfdataset(
             self.list_forcings,
