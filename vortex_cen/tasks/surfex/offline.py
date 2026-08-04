@@ -910,7 +910,7 @@ class OfflineXiosMpi(_Offline):
     def get_executable(self):
         super().get_executable()
         self.sh.title("Input XIOS executable from uenv")
-        XIOS_tbx = vortex.executable(
+        self.xios_exe= vortex.executable(
             role="Binary",
             kind="xios",
             local="XIOS",
@@ -919,20 +919,24 @@ class OfflineXiosMpi(_Offline):
             genv=self.conf.get("surfex_uenv", self.conf.uenv),
             gvar=self.conf.get("xios_gvar", "MASTER_XIOS"),
         )
-        print(self.ticket.prompt, "XIOS_tbx =", XIOS_tbx)
+        print(self.ticket.prompt, "XIOS executable =", self.xios_exe)
         print()
 
     def algo(self):
         """
         Algo component to execute OFFLINE with XIOS
         """
-        # self.sh.title("Algo XIOS")
-        # xios_tba = vortex.task(
-        #    kind="ioserv",
-        #    tasks=6,
-        # )
-        # print(self.ticket.prompt, "Algo_xios =", xios_tba)
-        # print()
+        import footprints
+        self.sh.title("Algo XIOS")
+        xios = footprints.proxy.mpibinary(
+            kind="ioserv",
+            nodes=self.conf.io_nodes,
+            tasks=self.conf.io_tasks,
+        )
+        print(self.ticket.prompt, "Xios =", xios)
+        print()
+        #xios.master = self.xios_exe[0].container.localpath()
+        xios.master = self.xios_exe[0].container.abspath
 
         self.sh.title("Algo OFFLINE-XIOS-MPI")
         offline_tba = vortex.task(
@@ -953,6 +957,7 @@ class OfflineXiosMpi(_Offline):
             # MV : on traitera les question de reproductibilité dans un 2nd temps.
             # reprod_info    = self.get_reprod_info,
             # ioserver={"kind": "ioserv", "tasks": 6, "nodes": 1},
+            ioserver = xios,
         )
         print(self.ticket.prompt, "Algo =", offline_tba)
         print()
@@ -967,7 +972,14 @@ class OfflineXiosMpi(_Offline):
         # Il est possible de récupérer cet objet avec la ligne suivante :
         executables = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
 
-        self.component_runner(algo, executables)
+        self.component_runner(algo, executables,
+#            mpiopts={
+#                "nnodes": self.conf.nnodes,
+##                "nprocs": self.conf.nprocs,  # Redondant avec la valeur par défaut dans mkjob
+#                "ntasks": self.conf.ntasks - self.conf.io_tasks,
+#                "envelope": True,
+#            },
+        )
 
 
 class _Offline_NOMPI(_Offline):
