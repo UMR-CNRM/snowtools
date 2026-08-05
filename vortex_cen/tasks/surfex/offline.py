@@ -908,6 +908,7 @@ class OfflineXiosMpi(_Offline):
         print()
 
     def get_executable(self):
+        super().get_executable()
         self.sh.title("Input XIOS executable from uenv")
         self.xios_exe = vortex.executable(
             role="Binary",
@@ -920,7 +921,6 @@ class OfflineXiosMpi(_Offline):
         )
         print(self.ticket.prompt, "XIOS executable =", self.xios_exe)
         print()
-        super().get_executable()
 
     def algo(self):
         """
@@ -956,9 +956,8 @@ class OfflineXiosMpi(_Offline):
             drhookprof=self.conf.get("drhook", False),
             # MV : on traitera les question de reproductibilité dans un 2nd temps.
             # reprod_info    = self.get_reprod_info,
-            # ioserver={"kind": "ioserv", "tasks": 6, "nodes": 1},
             ioserver = xios,
-            iolocation = 0,
+            # iolocation = 0,
         )
         print(self.ticket.prompt, "Algo =", offline_tba)
         print()
@@ -971,7 +970,7 @@ class OfflineXiosMpi(_Offline):
         # Pour un exécution de binaire, il faut donner l'objet "exécutable" associé (récupéré par la commande
         # vortex.executable(...))
         # Il est possible de récupérer cet objet avec la ligne suivante :
-        executables = [tbx.rh for tbx in self.ticket.context.sequence.executables()][1:]
+        executables = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
         #executables = self.offline_exe
 
         self.component_runner(algo, executables,
