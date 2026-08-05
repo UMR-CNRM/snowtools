@@ -184,7 +184,7 @@ standard_variables = dict(
     pgd = dict(
         metavar = True,
         help = "Footprint description of a PGD.nc file stored in a Vortex cache",
-        values = ["pgd_xpid", "pgd_user", "pgd_vapp", "pgd_vconf", "pgd_geometry", "pgd_vortex1"],
+        values = ["pgd_xpid", "pgd_user", "pgd_vapp", "pgd_vconf", "pgd_geometry", "pgd_2d", "pgd_vortex1"],
     ),
     pgd_xpid   = dict(
         help = "Experiment identifier of the PGD file",
@@ -212,6 +212,11 @@ standard_variables = dict(
         type  = "'str', 'list'",
         default = geometry_default,
     ),
+    pgd_2d = dict(
+        help= "Set this value to 'True' if a PGD file for a 2D simulation should be produced",
+        type="bool",
+        default = "False",
+    ),
     pgd_vortex1 = dict(
         help = "Set this value to 'True' if the target PGD file have been produced with a version of vortex <2",
         type = "bool",
@@ -221,6 +226,12 @@ standard_variables = dict(
         help = "Key to look up the PGD.nc file in the uenv if the file should come from there.",
         type = "str",
         default = "'pgd_[geometry::tag]'",
+    ),
+    force_uenv = dict(
+        help = "Set this value to 'True' to search for a PGD.nc file only in the uenv and not in the cache or "
+               "archive.",
+        type = "bool",
+        default = "False",
     ),
     pgd_gvar = dict(
         help = "Key to look up the PGD executable in the uenv if it should come from there.",
@@ -246,7 +257,7 @@ standard_variables = dict(
         metavar = True,
         help = "Footprint description of PREP.nc file(s)",
         values = ["prep_xpid", "prep_user", "prep_vapp", "prep_vconf", "prep_geometry", "prep_vortex1", "prep_member",
-            "prep_block"],
+            "prep_block", "prep_date"],
     ),
     prep_xpid   = dict(
         help = "Experiment identifier of the PREP file",

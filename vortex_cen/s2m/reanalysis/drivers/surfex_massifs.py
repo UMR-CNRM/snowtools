@@ -6,8 +6,8 @@ Add slopes to the SAFRAN "flat massif" FORCING files and launch the OFFLINE exec
 
 from mkjob.nodes import Driver
 import vortex
-from vortex_cen.tasks.surfex.offline import Offline_MPI_Uenv
-from vortex_cen.tasks.surfex.pre_process import _Preprocess
+from vortex_cen.tasks.surfex.offline import Offline_Mpi_Uenv
+from vortex_cen.tasks.surfex.pre_process import PreprocessNamelist
 
 
 def setup(t, **kw):
@@ -15,50 +15,50 @@ def setup(t, **kw):
         tag='surfex',
         ticket=t,
         nodes=[
-            PreProcess(tag='preprocess', ticket=t, **kw),
+            PreprocessNamelist(tag='preprocess', ticket=t, **kw),
             Offline_reanalysis(tag='offline', ticket=t, **kw),
         ],
         options=kw,
     )
 
 
-class PreProcess(_Preprocess):
-    """
-    Task : PreProcess
-    =================
-    Pre-process SURFEX namelist.
+# class PreProcess(_Preprocess):
+#     """
+#     Task : PreProcess
+#     =================
+#     Pre-process SURFEX namelist.
+#
+#     Inputs:
+#     -------
+#     - OPTIONS.nam : raw SURFEX namelist
+#
+#     Outputs:
+#     --------
+#     - OPTIONS.nam : pre-processed SURFEX namelist
+#     """
+#
+#     def __init__(self, **kw):
+#
+#         super().__init__(**kw)
+#         MANDATORY_CONFIGURATION_VARIABLES = [
+#             "uenv|surfex_uenv",
+#             "namelist_source",
+#         ]
+#         OPTIONAL_CONFIGURATION_VARIABLES = [
+#         ]
+#         overwrite = [
+#             "forcing",
+#         ]
+#         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES, overwrite=overwrite)
+#
+#     def get_remote_inputs(self):
+#         self.get_namelist_from_uenv()
+#
+#     def get_local_inputs(self):
+#         self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
 
-    Inputs:
-    -------
-    - OPTIONS.nam : raw SURFEX namelist
 
-    Outputs:
-    --------
-    - OPTIONS.nam : pre-processed SURFEX namelist
-    """
-
-    def __init__(self, **kw):
-
-        super().__init__(**kw)
-        MANDATORY_CONFIGURATION_VARIABLES = [
-            "surfex_uenv|uenv",
-            "namelist_source",
-        ]
-        OPTIONAL_CONFIGURATION_VARIABLES = [
-        ]
-        overwrite = [
-            "forcing",
-        ]
-        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES, overwrite=overwrite)
-
-    def get_remote_inputs(self):
-        self.get_namelist_from_uenv()
-
-    def get_local_inputs(self):
-        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
-
-
-class Offline_reanalysis(Offline_MPI_Uenv):
+class Offline_reanalysis(Offline_Mpi_Uenv):
     """
     Task : Offline_reanalysis
     =========================
@@ -105,7 +105,7 @@ class Offline_reanalysis(Offline_MPI_Uenv):
         self.get_drdt_bst_fit()
         self.get_pgd()
         self.get_executable()
-        self.get_prep()
+        _ = self.get_prep_file_from_cache_or_archive(fatal=True, cache_only=False)
 
     def get_local_inputs(self):
         self.get_namelist_from_cache()

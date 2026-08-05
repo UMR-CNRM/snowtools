@@ -91,7 +91,7 @@ class SodaCommonsMixin(SurfexCommonsMixin):
             model          = 'surfex',
             namespace      = self.conf.get('prep_namespace', 'vortex.multi.fr'),
             namebuild      = 'flat@cen',
-            block          = 'prep/bg',
+            block          = self.conf.get("prep_block", 'prep/background'),
             vortex1        = self.conf.get('prep_vortex1', None),
             fatal          = True,
         ),
@@ -100,8 +100,8 @@ class SodaCommonsMixin(SurfexCommonsMixin):
 
 
 class Soda(SodaCommonsMixin, _CenResearchTask):
-    '''
-    **Task : Soda**
+    """
+    **Task: Soda**
 
     SODA Particle Filter assimilation task.
     Reference : Cluzet et al. (2021): https://gmd.copernicus.org/articles/14/1595/2021/
@@ -114,11 +114,60 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
     - drdt_bst_fit_60.nc (Crocus metamorphism parameters)
     - PGD.nc (Ground physiography)
 
-    **Output:**
+    **Outputs:**
 
-    - Modified ensemble of snowpack initial conditions ("PREP.nc") refered to as "analysis"
+    - Modified ensemble of snowpack initial conditions ("PREP.nc") referred to as "analysis"
 
-    '''
+    **Mandatory configuration variables**
+
+    * ``date`` *date* of the analysis
+      type: str, Date
+    * ``geometry`` *geometry* of the PREP files
+      type: str, footprints.stdtypes.FPList
+    * ``xpid`` Experiment identifier
+      type: str
+    * ``uenv`` User Environment in which the following resources are to be retrieved:
+      Format : uenv:{uenv_name}@{user}
+      type: str
+    * ``sensor`` Sensor used for the observation (ex: MODIS, PLEIADES, VIIRS)
+      type: str
+    * ``members`` Ensemble members
+      type: footprints.stdtypes.FPList
+
+    **Optional configuration variables**
+
+    * ``scope`` Scope of the observation
+      type: str
+    * ``observation_xpid`` Experiment identifier of the observation file
+      type: str
+    * ``observation_user`` User who produced / owns the observation file
+      type: str
+    * ``observation_vapp`` *vapp* of the observation file
+      type: str
+    * ``observation_vconf`` *vconf* of the observation file
+      type: str
+    * ``prep_vapp`` *vapp* of the PREP files
+      type: str
+    * ``prep_vconf`` *vconf* of the PREP files
+      type: str
+    * ``prep_xpid`` Exepriment Identifier of the PREP files
+      type: str
+    * ``prep_user`` User who produced the PREP files
+      type: str
+    * ``prep_vortex1`` Whether or not the PREP files have been produced with Vortex-v1
+      type: bool
+    * ``pgd_vapp`` *vapp* of the PGD file
+      type: str
+    * ``pgd_vconf`` *vconf* of the PGD file
+      type: str
+    * ``pgd_xpid`` Exepriment Identifier of the PGD file
+      type: str
+    * ``pgd_user`` User who produced the PGD file
+      type: str
+    * ``pgd_vortex1`` Whether or not the PGD files have been produced with Vortex-v1
+      type: bool
+
+    """
     def __init__(self, **kw):
 
         super().__init__(**kw)
@@ -155,7 +204,7 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
 
     def get_remote_inputs(self):
 
-        self.get_pgd_from_cache_or_archive()
+        self.get_pgd_file_from_cache_or_archive()
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
         self.get_snow_observation()

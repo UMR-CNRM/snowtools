@@ -1,0 +1,1 @@
+name=surfex_dailyprep_cor task=surfex_dailyprep profile=rd-belenos-mt jobassistant=cen datebegin=2025080106 dateend=2025083106 geometry=cor2_allslopes xpid=double_2026

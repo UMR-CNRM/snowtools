@@ -53,8 +53,7 @@ def open_vortex_data(configfile, configsection=None, **kw) -> xr.Dataset:
     All files will be removed from the working directory when the session closes.
     However, they are stored in the cache to ensure optimal future reutilisation.
 
-    Usage examples :
-    ----------------
+    **Usage examples:**
 
     * With a standard configuration file targeting the S2M reanalysis and keyword arguments to focus
       on a single year and geometry :
@@ -84,8 +83,7 @@ def open_vortex_data(configfile, configsection=None, **kw) -> xr.Dataset:
             print(ds)
             # Your own code or call to external functions here
 
-    Arguments:
-    ----------
+    **Arguments:**
 
     :param configfile: Absolute path to the configuration file or filename of an existing configuration file under
                        vortex_cen/conf containing a (partial) footprint description of the target resource(s).

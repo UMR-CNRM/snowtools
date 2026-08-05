@@ -7,6 +7,11 @@ shadows.py
    :no-members:
    :class-doc-from: class
    :show-inheritance:
+
+.. autoclass:: ShadowsPostes
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
 """
 
 import vortex
@@ -26,6 +31,14 @@ class Shadows(_CenResearchTask):
     **Output:**
 
     - FORCING file with extracted solar masks added.
+
+    **Mandatory configuration variables:**
+
+    * `datebegin` *datebegin* of the forcing file(s). type: str, footprints.stdtypes.FPList
+    * `dateend` *dateend* of the forcing files(s). type: str, footprints.stdtypes.FPList
+    * `forcing_geometry` *geometry* of the input forcing file(s). type: str, footprints.stdtypes.FPList
+    * `geometry` *geometry* of the output forcing file(s). type: str, footprints.stdtypes.FPList
+    * `xpid` Experiment identifier. type: str
 
     """
     def __init__(self, **kw):
@@ -106,11 +119,12 @@ class Shadows(_CenResearchTask):
         Save the output FORCING file(s) in the new geometry.
         WARNING : the output geometry must be in a valid "geometries.ini" file.
 
-        Arguments:
-        :param geometry: Geometry of the output file(s)
-        :type geometry: str
-        :param xpid: Experiment identifier
-        :type xpid: str
+        **Configuration variables:**
+
+        * ``geometry`` Geometry of the output file(s)
+          type: str
+        * ``xpid`` Experiment identifier
+          type: str
         """
 
         self.sh.title('Output FORCING')
@@ -145,3 +159,24 @@ class Shadows(_CenResearchTask):
         ),
         print(self.ticket.prompt, 'diff =', diff)
         print()
+
+class ShadowsPostes(Shadows):
+    """
+    In the reanalysis case, the FORCING files come from the output of the "concatenation" task and are
+    not available at the execution of the transfer node.
+
+    **Mandatory configuration variables:**
+
+    * `datebegin` *datebegin* of the forcing file(s). type: str, footprints.stdtypes.FPList
+    * `dateend` *dateend* of the forcing files(s). type: str, footprints.stdtypes.FPList
+    * `forcing_geometry` *geometry* of the input forcing file(s). type: str, footprints.stdtypes.FPList
+    * `geometry` *geometry* of the output forcing file(s). type: str, footprints.stdtypes.FPList
+    * `xpid` Experiment identifier. type: str
+
+    """
+
+    def get_remote_inputs(self):
+        pass
+
+    def get_local_inputs(self):
+        self.get_forcing(localname='[datebegin:ymdh]_[dateend:ymdh]/FORCING.nc')

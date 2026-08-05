@@ -8,6 +8,7 @@ Introduction
 
 The full vortex documentation is available here : https://vortex-nwp.readthedocs.io/en/latest/index.html.
 A Meteo-France/CNRM-specific documentation is also available here : https://cnrm-gmap.gitlab.meteo.fr/vortex-cnrm-docs/.
+Vortex relies heavily on the "footprints" package : http://intra.cnrm.meteo.fr/algopy/sphinx/vortex/current/technical/footprints_fr.html
 
 The main benefit of the use of vortex in the snowtools package is to standardise data management for snowpack simulation workflows.
 
