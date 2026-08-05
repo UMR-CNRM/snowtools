@@ -518,7 +518,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
         dict_dates_end = get_dic_dateend(list_dates_begin, list_dates_end)
 
         # Verrue pour gérer les footprints *source_app* et *source_conf* de la réanalyse S2M
-        if 'forcing_source' in self.conf:
+        if 'forcing_source' in self.conf and forcing_source_app is None and forcing_source_conf is None:
             if vortex1[0]:   # ça ne devrait pas être necessaire si les forcings ont été produit avec vortex 2, non ?
                 forcing_source_app, forcing_source_conf = \
                     self.get_safran_sources(list_dates_begin, era5=self.conf.forcing_source == 'era5')

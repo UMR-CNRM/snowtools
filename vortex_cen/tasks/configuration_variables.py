@@ -45,8 +45,7 @@ standard_variables = dict(
         type  = "str",
     ),
     geometry   = dict(
-        help = "Geometry of the simulation. This must be a valid geometry tag in your"
-        "'$HOME/.vortexrc/geometries.ini' file.",
+        help = "Geometry of the simulation.",
         type  = "'str', 'list'",
     ),
     member = dict(
@@ -108,8 +107,7 @@ standard_variables = dict(
         default = "$USER",
     ),
     forcing_geometry   = dict(
-        help    = "Geometry of the forcing file(s). This must be a valid geometry tag in your"
-        "'$HOME/.vortexrc/geometries.ini' file.",
+        help    = "Geometry of the forcing file(s).",
         type  = "'str', 'list'",
         default = geometry_default,
     ),
@@ -207,8 +205,7 @@ standard_variables = dict(
         default = "The simulation's *vconf*",
     ),
     pgd_geometry   = dict(
-        help    = "Geometry of the PGD.nc file. This must be a valid geometry tag in your"
-        "'$HOME/.vortexrc/geometries.ini' file.",
+        help    = "Geometry of the PGD.nc file.",
         type  = "'str', 'list'",
         default = geometry_default,
     ),
@@ -280,8 +277,7 @@ standard_variables = dict(
         default = "The simulation's *vconf*",
     ),
     prep_geometry   = dict(
-        help    = "Geometry of the PREP.nc file. This must be a valid geometry tag in your"
-        "'$HOME/.vortexrc/geometries.ini' file.",
+        help    = "Geometry of the PREP.nc file.",
         type  = "'str', 'list'",
         default = geometry_default,
     ),
@@ -359,8 +355,7 @@ standard_variables = dict(
         default = "*vconf*",
     ),
     tg_geometry   = dict(
-        help    = "Geometry of the init_TG.nc file. This must be a valid geometry tag in your"
-        "'$HOME/.vortexrc/geometries.ini' file.",
+        help    = "Geometry of the init_TG.nc file.",
         type  = "'str', 'list'",
         default = geometry_default,
     ),
@@ -481,8 +476,7 @@ standard_variables = dict(
         type = "str",
     ),
     geometries   = dict(
-        help = "List of output geometries of the simulation (these must be valid geometry tags in your"
-        "'$HOME/.vortexrc/geometries.ini' file.",
+        help = "List of output geometries of the simulation.",
         type  = "'list'",
     ),
     diff_xpid = dict(
