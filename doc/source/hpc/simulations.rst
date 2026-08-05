@@ -395,26 +395,35 @@ In this case, simply provide the reference experiment identifier in the "diff_xp
 Reproduce s2m test cases
 ------------------------
 
-
+S2M reanalysis test case:
 .. code-block:: bash
 
-    # S2M reanalysis test case:
+    # s2m command
     s2m research -r alp_allslopes -b 20220801 -e 20230801 -m safran -f reanalysis2020.2 -o reanalysis_test -n $SNOWTOOLS_CEN/snowtools/DATA/OPTIONS_V9_reanalysis.nam
 
     # Equivalent command in snowtools3 :
-    mkjob -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/s2m_reanalysis_testcase.ini -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -a datebegin=20220801 dateend=20230801 geometry=alp_allslopes
+    mkjob -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/s2m_reanalysis_testcase.ini -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -a datebegin=2022080106 dateend=2023080106 geometry=alp_allslopes
 
+
+S2M ESCROC test case:
 .. code-block:: bash
 
-    # S2M ESCROC test case:
+    # s2m command
     s2m research -r cdp -b 1994100101 -e 2014100100 -x 2014100100 -m ESM-SnowMIP -f obs@lafaysse -o E2_test --task=escroc --escroc=E2
 
     # Equivalent command in snowtools3 :
     mkjob -c $SNOWTOOLS_CEN/vortex_cen/Crocus/escroc/conf/s2m_escroc_testcase.ini -f $SNOWTOOLS_CEN/vortex_cen/Crocus/escroc/jobs/escroc.job -a datebegin=1994100101 dateend=2014100100 geometry=cdp
 
+Stochastic perturbation test case:
+.. code-block:: bash
+
+    # s2m command (works only for user lafaysse)
+    s2m research -r cor_flat -b 20200801 -e 20210801 -m s2m -f reanalysis2020.2 -o perturb --task='croco_perturb' --nmembers=80
+
+    # Equivalent command in snowtools3 :
+
 ..
     # Stochastic perturbation test case:
-    s2m research -r cor_flat -b 20200801 -e 20210801 -m s2m -f reanalysis2020.2 -o perturb --task='croco_perturb' --nmembers=80
 
     # Croco openloop test case (before running this test case, please define postes_12_csv geometry in $HOME/.vortexrc/geometries.ini as in ~lafaysse/.vortexrc/geometries.ini ) :
     s2m research -r postes_12_csv -b 2013080106 -e 2014063006 -x 20160801 -m safran -f forcing_20132014B_31D_11_t1500_160@fructusm -o testopenloop -n ~lafaysse/croco/OPTIONS_MOTHER_DEP.nam --task='croco' --croco='openloop' --escroc=E1notartes --nmembers=35 --nforcing=35 --conf=/home/lafaysse/croco/conf.ini -s ~lafaysse/SURFEX/cen/exe_mpi
