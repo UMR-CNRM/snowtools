@@ -42,9 +42,8 @@ from bronx.stdtypes.date import Date
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 
 import footprints
-from vortex.algo.components import Parallel, AlgoComponent, TaylorRun
+from vortex.algo.components import Parallel, AlgoComponent
 from vortex.syntax.stdattrs import a_date
-from vortex_cen.algo.ensemble import PrepareForcingWorker
 from vortex_cen.algo.components import _CenTaylorRun, _CenTaylorVortexWorker
 
 logger = loggers.getLogger(__name__)
@@ -53,7 +52,6 @@ echecker = ExternalCodeImportChecker('snowtools')
 with echecker:
     from snowtools.tools.update_namelist import update_namelist_object_nmembers
     from snowtools.tools.perturb_forcing import forcinput_perturb
-    from snowtools.utils.resources import get_file_period, save_file_period
     from snowtools.scripts.post_processing import croco_postprocess as cpp
 
 
@@ -177,29 +175,19 @@ class PerturbForcingWorker(_CenTaylorVortexWorker):
             kind = dict(
                 values = ['perturbforcing']
             ),
+            reprod_info=dict(
+                info="Informations that must be stored in output files for reproductibility",
+                type=dict,
+                optional=True,
+                default=dict(),
+            )
         )
     )
 
-    def _prepare_forcing_task(self, rundir, thisdir, rdict):
+    def _commons(self, rundir, thisdir, rdict):
 
-        forcingdir = self.forcingdir(rundir, thisdir)
-
-        # TODO (WORK IN PROGRESS)
-
-        # Get the first file covering part of the whole simulation period
-        dateforcbegin, dateforcend = get_file_period("FORCING", forcingdir,
-                                                     datebegin_this_run, self.dateend)
-
-        self.system.mv("FORCING.nc", "FORCING_OLD.nc")
-        forcinput_perturb("FORCING_OLD.nc", "FORCING.nc", **self.reprod_info)
-
-        dateend_this_run = min(self.dateend, dateforcend)
-
-        # Prepare next iteration if needed
-        datebegin_this_run = dateend_this_run
-        need_other_forcing = dateend_this_run < self.dateend
-
-        save_file_period(thisdir, "FORCING", dateforcbegin, dateforcend)
+        self.link_in("../FORCING.nc", "FORCING_IN.nc")
+        forcinput_perturb("FORCING_IN.nc", "FORCING.nc", **self.reprod_info)
 
         return rdict
 
@@ -269,7 +257,9 @@ class PerturbForcingComponent(_CenTaylorRun):
         """
 
         subdirs = super().get_subdirs(rh, opts)
-        subdirs = ['{subdir}/mb{member:04d}' for member in self.members for subdir in subdirs]
+        subdirs = [f'{subdir}/mb{member:04d}' for member in self.members for subdir in subdirs]
+
+        return subdirs
 
 
 @echecker.disabled_if_unavailable

@@ -15,3 +15,4 @@ name=concatenate_forcings_job package=drivers task=concatenate_forcings profile=
 name=add_slopes_job package=drivers task=addslopes profile=rd-belenos-mt xpid=addslopes
 name=escroc_job package=drivers task=escroc profile=rd-belenos-mt xpid=escroc
 name=subtime_job package=drivers task=subtime_forcing profile=rd-belenos-mt datebegin=2020080106 dateend=2020080806 xpid=subtimeforcing
+name=perturbations_job package=drivers task=perturbations profile=rd-belenos-mt datebegin=2020080106 dateend=2022080106 xpid=perturbations
