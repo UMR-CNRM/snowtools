@@ -92,8 +92,8 @@ class OfflineCommonsMixin(SurfexCommonsMixin):
             default_gvar = "master_offline_nompi"
 
         self.sh.title("Input OFFLINE executable from uenv")
-        OFFLINE_tbx = vortex.executable(
-            role="Binary",
+        self.offline_exe = vortex.executable(
+            role="offline",
             kind="offline",
             local="OFFLINE",
             model="surfex",
@@ -101,7 +101,7 @@ class OfflineCommonsMixin(SurfexCommonsMixin):
             gvar=self.conf.get("offline_gvar", default_gvar),
             fatal=fatal,
         )
-        print(self.ticket.prompt, "OFFLINE_tbx =", OFFLINE_tbx)
+        print(self.ticket.prompt, "OFFLINE_tbx =", self.offline_exe)
         print()
 
     def get_executable_from_path(self, fatal=True):
@@ -118,15 +118,15 @@ class OfflineCommonsMixin(SurfexCommonsMixin):
 
         """
         self.sh.title("Input OFFLINE executable from local")
-        OFFLINE_tbx = vortex.executable(
-            role="Binary",
+        self.offline_exe = vortex.executable(
+            role="offline",
             kind="offline",
             local="OFFLINE",
             model="surfex",
             remote=self.conf.exesurfex + "/OFFLINE",
             fatal=fatal,
         )
-        print(self.ticket.prompt, "OFFLINE_tbx =", OFFLINE_tbx)
+        print(self.ticket.prompt, "OFFLINE_tbx =", self.offline_exe)
         print()
 
 
@@ -908,9 +908,8 @@ class OfflineXiosMpi(_Offline):
         print()
 
     def get_executable(self):
-        super().get_executable()
         self.sh.title("Input XIOS executable from uenv")
-        self.xios_exe= vortex.executable(
+        self.xios_exe = vortex.executable(
             role="Binary",
             kind="xios",
             local="XIOS",
@@ -921,6 +920,7 @@ class OfflineXiosMpi(_Offline):
         )
         print(self.ticket.prompt, "XIOS executable =", self.xios_exe)
         print()
+        super().get_executable()
 
     def algo(self):
         """
@@ -958,6 +958,7 @@ class OfflineXiosMpi(_Offline):
             # reprod_info    = self.get_reprod_info,
             # ioserver={"kind": "ioserv", "tasks": 6, "nodes": 1},
             ioserver = xios,
+            iolocation = 0,
         )
         print(self.ticket.prompt, "Algo =", offline_tba)
         print()
@@ -970,7 +971,8 @@ class OfflineXiosMpi(_Offline):
         # Pour un exécution de binaire, il faut donner l'objet "exécutable" associé (récupéré par la commande
         # vortex.executable(...))
         # Il est possible de récupérer cet objet avec la ligne suivante :
-        executables = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
+        executables = [tbx.rh for tbx in self.ticket.context.sequence.executables()][1:]
+        #executables = self.offline_exe
 
         self.component_runner(algo, executables,
 #            mpiopts={
