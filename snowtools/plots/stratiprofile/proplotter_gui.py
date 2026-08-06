@@ -631,7 +631,7 @@ class ProPlotterControllerEscroc(ProPlotterControllerSlider):
         Update the date scaler after opening a file.
         """
         if self.master.fileobj is not None:
-            self.master.choices.params_w.scale_date.config(
+            self.master.choices.params_w.scale_date.Config(
                 from_=0, to=(len(self.master.fileobj.get_time()) - 1),
                 state='normal', showvalue=0, variable=tk.IntVar,
                 command=lambda _: (self.master.choices.params_w.update_slice_date(), self.update_slice_date()))
@@ -715,7 +715,7 @@ class ProPlotterControllerMultiple(ProPlotterControllerSlider):
         Update the date scaler after opening a file.
         """
         if self.master.fileobj is not None:
-            self.master.choices.params_w.scale_date.config(
+            self.master.choices.params_w.scale_date.Config(
                 from_=0, to=(len(self.master.fileobj.get_time()) - 1),
                 state='normal', showvalue=0, variable=tk.IntVar,
                 command=lambda _: (self.master.choices.params_w.update_slice_date(), self.update_slice_date()))

@@ -18,10 +18,14 @@ Snow observation resources
 
 .. autoclass:: SnowObsOneDate
    :show-inheritance:
+
+.. autoclass:: SurfaceObservations
+   :show-inheritance:
 """
 
 from bronx.stdtypes.date import Date
 from vortex_cen.syntax.stdattrs import cendateperiod_deco
+from vortex_cen.data.flow import SurfaceIO
 from vortex.data.flow import GeoFlowResource
 from vortex.data.geometries import HorizontalGeometry
 from vortex.syntax.stddeco import namebuilding_insert
@@ -115,3 +119,27 @@ class SnowObsOneDate(SnowObs):
             )
         )
     ]
+
+class SurfaceObservations(SurfaceIO):
+    """
+    Class for all kind of meteorological observation files.
+    """
+    _footprint = [
+        dict(
+            info = 'Meteorological surface observations',
+            attr = dict(
+                kind = dict(
+                    values = ['SurfaceObservation'],
+                ),
+                model = dict(
+                    optional = True,  # The 'model' footprint of FORCING files is mostly unknown/undefined (and unused)
+                    deafult  = 'unknown',
+                    values   = ['safran'],
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return self.kind

@@ -15,9 +15,9 @@ import matplotlib.style
 from snowtools.utils.prosimu import prosimu
 from snowtools.utils.dates import check_and_convert_date, pretty_date
 from snowtools.plots.temporal.chrono import spaghettis_with_det, spaghettis
-#from snowtools.plots.pearps2m.postprocess import _EnsembleMassif
-#from snowtools.plots.pearps2m.postprocess import EnsembleFlatMassif, EnsembleNorthSouthMassif
-#from snowtools.plots.pearps2m.postprocess import EnsembleStation, EnsembleDiags
+from snowtools.data.ensemble_classes import _EnsembleMassif
+from snowtools.data.ensemble_classes import EnsembleFlatMassif, EnsembleNorthSouthMassif
+from snowtools.data.ensemble_classes import EnsembleStation, EnsembleDiags
 
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 

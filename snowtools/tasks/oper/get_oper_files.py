@@ -8,10 +8,9 @@ Created on 3 aug. 2018
 import sys
 # from optparse import OptionParser
 import argparse
+import vortex
 from collections import defaultdict
-
-from cen.layout.nodes import S2MTaskMixIn
-from vortex import toolbox
+from vortex_cen.tasks.oper_research_mixin import CENTaskMixIn
 from bronx.stdtypes.date import Date, daterange, tomorrow, today
 
 from snowtools.utils.dates import check_and_convert_date
@@ -20,7 +19,7 @@ import footprints
 
 
 
-class configdev(object):
+class Configdev(object):
     rundate = Date(2018, 10, 26, 3)    # Run date can be at 3TU, 6TU, 9TU
     previ = False  # False for analysis, True for forecast
     xpid = "OPER@lafaysse"  # To be changed with IGA account when operational
@@ -30,7 +29,7 @@ class configdev(object):
     firstday = False
 
 
-class config(object):
+class Config(object):
     rundate = Date(2018, 10, 26, 3)    # Run date can be at 3TU, 6TU, 9TU
     previ = False  # False for analysis, True for forecast
     xpid = "oper"
@@ -41,7 +40,7 @@ class config(object):
 
 
 
-class _configcommand(object):
+class _Configcommand(object):
 
     def __init__(self, options):
 
@@ -63,15 +62,15 @@ class _configcommand(object):
         self.pp_quantiles = options.pp_quantiles
 
 
-class configcommand(_configcommand, config):
+class Configcommand(_Configcommand, Config):
     pass
 
 
-class configcommanddev(_configcommand, configdev):
+class Configcommanddev(_Configcommand, Configdev):
     pass
 
 
-class S2MExtractor(S2MTaskMixIn):
+class S2MExtractor(CENTaskMixIn):
     """
     Class to extract S2M results
     """
@@ -81,7 +80,7 @@ class S2MExtractor(S2MTaskMixIn):
 
         :param conf: configuration information for vortex toolboxes
         """
-        toolbox.active_now = True
+        vortex.toolbox.active_now = True
         self.conf = conf
         self.datebegin, self.dateend = self.get_period()
         if not hasattr(self.conf, 'firstday'):
@@ -109,7 +108,7 @@ class S2MExtractor(S2MTaskMixIn):
 
     def get_meteo(self):
 
-        tb01 = toolbox.input(
+        tb01 = vortex.input(
             role           = 'Forcing',
             vapp           = 's2m',
             vconf          = '[geometry::area]',
@@ -136,7 +135,7 @@ class S2MExtractor(S2MTaskMixIn):
                     list_geometry = self.conf.alternate_list_geometry[a]
                 else:
                     list_geometry = self.conf.list_geometry
-                tb01.extend(toolbox.input(
+                tb01.extend(vortex.input(
                     alternate      = 'Forcing',
                     vapp           = 's2m',
                     vconf          = '[geometry::iganame]',
@@ -160,8 +159,8 @@ class S2MExtractor(S2MTaskMixIn):
         return self.get_std(tb01)
 
     def get_snow(self):
-        import cen
-        tb02 = toolbox.input(
+        import vortex_cen
+        tb02 = vortex.input(
             role           = 'pro',
             vapp           = 's2m',
             vconf          = '[geometry::iganame]',
@@ -190,7 +189,7 @@ class S2MExtractor(S2MTaskMixIn):
                 else:
                     list_geometry = self.conf.list_geometry
 
-                tb02.extend(toolbox.input(
+                tb02.extend(vortex.input(
                     alternate      = 'pro',
                     vapp           = 's2m',
                     vconf          = '[geometry::area]',
@@ -245,7 +244,7 @@ class FutureS2MExtractor(S2MExtractor):
 
     def get_meteo(self):
 
-        tb01 = toolbox.input(
+        tb01 = vortex.input(
             role           = 'Forcing',
             vapp           = 's2m',
             vconf          = '[geometry::area]',
@@ -272,7 +271,7 @@ class FutureS2MExtractor(S2MExtractor):
                     list_geometry = self.conf.alternate_list_geometry[a]
                 else:
                     list_geometry = self.conf.list_geometry
-                tb01.extend(toolbox.input(
+                tb01.extend(vortex.input(
                     alternate      = 'Forcing',
                     vapp           = 's2m',
                     vconf          = '[geometry::area]',
@@ -296,8 +295,8 @@ class FutureS2MExtractor(S2MExtractor):
         return self.get_std(tb01)
 
     def get_snow(self):
-        import cen
-        tb02 = toolbox.input(
+        import vortex_cen
+        tb02 = vortex.input(
             role           = 'pro',
             vapp           = 's2m',
             vconf          = '[geometry::area]',
@@ -325,7 +324,7 @@ class FutureS2MExtractor(S2MExtractor):
                 else:
                     list_geometry = self.conf.list_geometry
 
-                tb02.extend(toolbox.input(
+                tb02.extend(vortex.input(
                     alternate      = 'pro',
                     vapp           = 's2m',
                     vconf          = '[geometry::area]',
@@ -350,10 +349,10 @@ class FutureS2MExtractor(S2MExtractor):
         return self.get_std(tb02)
 
     def get_hydro(self):
-        import cen
+        import vortex_cen
 
         if self.conf.previ:
-            tb03 = toolbox.input(
+            tb03 = vortex.input(
                 role           = 'hydro',
                 vapp           = 's2m',
                 vconf          = '[geometry::area]',
@@ -373,7 +372,7 @@ class FutureS2MExtractor(S2MExtractor):
                 fatal          = False,
             )
         else:
-            tb03 = toolbox.input(
+            tb03 = vortex.input(
                 role = 'hydro',
                 vapp = 's2m',
                 vconf = '[geometry::area]',
@@ -398,9 +397,9 @@ class FutureS2MExtractor(S2MExtractor):
 
 
     def get_pp_quantiles(self):
-        import cen
+        import vortex_cen
 
-        tb_pp = toolbox.input(
+        tb_pp = vortex.input(
             role        = 'Postproc_output',
             intent      = 'in',
             vapp        = 's2m',
@@ -411,7 +410,8 @@ class FutureS2MExtractor(S2MExtractor):
             geometry    = self.conf.list_geometry,
             date        = self.conf.rundate,
             datebegin   = self.datebegin if self.conf.previ else '[dateend]/-PT24H',
-            dateend     = self.dateend if self.conf.previ else list(daterange(tomorrow(base=self.datebegin), self.dateend)),
+            dateend     = self.dateend if self.conf.previ else list(daterange(tomorrow(base=self.datebegin),
+                                                                              self.dateend)),
             nativefmt   = 'netcdf',
             kind        = 'SnowpackSimulation',
             model       = 'postproc',
@@ -464,7 +464,7 @@ if __name__ == "__main__":
                         help="Extract, potentially emos postprocessed, quantiles (fresh snow)")
     OPTIONS = PARSER.parse_args()
 
-    config_from_command = configcommanddev(OPTIONS) if OPTIONS.dev else configcommand(OPTIONS)
+    config_from_command = Configcommanddev(OPTIONS) if OPTIONS.dev else Configcommand(OPTIONS)
 
     S2ME = FutureS2MExtractor(conf=config_from_command)
 

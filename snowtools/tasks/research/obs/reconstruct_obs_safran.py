@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
-'''
-'''
+"""
+TODO: to be deleted? (There is the same available in vortex_cen.s2m.reanalysis.obs_safran now)
+"""
 
 from snowtools.tasks.vortex_task_base import _VortexTask
-from vortex.layout.nodes import Driver
+from mkjob.nodes import Driver
 from vortex import toolbox
 from vortex.tools.env import Environment
 
 import snowtools.algo  # noqa
-import snowtools.data.obs  # noqa
+import vortex_cen.data.obs  # noqa
 
 
 def setup(t, **kw):
@@ -23,10 +24,10 @@ def setup(t, **kw):
 
 
 class Reconstruct_SAFRAN_Obs(_VortexTask):
-    '''
+    """
     Task to build SAFRAN-compatible hourly observations files from reconstructed
     observation series.
-    '''
+    """
 
     def get_remote_inputs(self):
 

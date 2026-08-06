@@ -3,10 +3,9 @@
 import os
 import argparse
 
-from snowtools.plots.pearps2m.postprocess_plot import config
+from snowtools.plots.pearps2m.oper_diags_plot import Config
 from bronx.stdtypes.date import today
 from snowtools.DATA import LUSTRE_NOSAVE_USER_DIR
-from snowtools.plots.pearps2m.postprocess import Config
 
 usage = "usage: python secure_graph_prod.py [-b YYYYMMDD] [-e YYYYMMDD] [-o diroutput]"
 
