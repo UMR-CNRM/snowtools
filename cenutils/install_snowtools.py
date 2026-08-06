@@ -153,7 +153,7 @@ if os.path.isdir('.git'):
 elif os.path.exists('.git_info'):
     shutil.copyfile('.git_info', os.path.join(venv, '.snowtools_info'))
 
-# TEMPORARY step to install dev versions of mkjob, vortex-gco and vortex-olive on HPC while the access to nexus in
+# TEMPORARY step to install dev versions of mkjob and vortex-gco on HPC while the access to nexus in
 # blocked
 if 'hpc' in HOSTNAME:
     install_dir = "/home/cnrm_other/cen/mrns/vernaym/Projects/common"
