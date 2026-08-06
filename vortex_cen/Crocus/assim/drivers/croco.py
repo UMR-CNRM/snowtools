@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The "escroc" driver allows to loop over an ensemble of OFFLINE executions without MPI parallelisation,
+The "croco" driver allows to loop over an ensemble of OFFLINE executions without MPI parallelisation,
 followed by a SODA assimilation step in a research context.
 The ensemble members can combine an ensemble of meteorological forcings and different Crocus physics.
 """
@@ -8,6 +8,8 @@ The ensemble members can combine an ensemble of meteorological forcings and diff
 from mkjob.nodes import Driver, WorkshareFamily, LoopFamily
 from vortex_cen.tasks.surfex.pre_process import SodaNamelistPreprocess, PreprocessNamelist
 from vortex_cen.tasks.surfex.offline_ensemble import CrocO
+from vortex_cen.tasks.surfex.pgd import FetchPgdOrCrash
+from vortex_cen.tasks.surfex.prep import FetchPrepFileOrCrash
 from vortex_cen.tasks.surfex.soda import Soda
 
 
@@ -19,6 +21,8 @@ def setup(t, **kw):
             # Common namelist pre-processing
             SodaNamelistPreprocess(tag='soda_preprocess', ticket=t, **kw),
             PreprocessNamelist(tag='offline_preprocess', ticket=t, **kw),
+            FetchPgdOrCrash(tag='fetch_pgd', ticket=t, **kw),
+            FetchPrepFileOrCrash(tag='fetch_prep', ticket=t, **kw),
             # assim sequence
             LoopFamily(
                 tag='dates',
@@ -33,17 +37,30 @@ def setup(t, **kw):
                         worksharename='membersnode,idsnode',
                         worksharesize=10,
                         worksharelimit='nnodes',
-
                         nodes = [
                             CrocO(tag = 'offline', ticket=t, **kw),
-                        ], **kw),
+                        ], **kw
+                    ),
                     Soda(tag='soda', ticket=t,
                         active_callback=lambda s: not s.conf.openloop and s.conf.stopdate_next is not None,
                         **kw),
                 ],
-                loopconf='stopdates',  # stopdates = assimdates.append(enddate)
+                loopconf='assimdates',  # stopdates = assimdates.append(enddate)
                 loopsuffix='+d{:s}',  # format the loop iterator (assimdate(s) as itself ( a string)
-                **kw),
+                active_callback=lambda s: not s.conf.get('openloop', False),
+                **kw
+            ),
+            WorkshareFamily(
+                tag='offline',
+                ticket = t,
+                workshareconf='members,members_id',
+                worksharename='membersnode,idsnode',
+                worksharesize=10,
+                worksharelimit='nnodes',
+                nodes = [
+                    CrocO(tag = 'offline', ticket=t, **kw),
+                ], **kw
+            ),
         ],
         options=kw
     )
