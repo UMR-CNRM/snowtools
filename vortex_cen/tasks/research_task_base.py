@@ -450,7 +450,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
         * ``forcing_member`` *member* footprint, default None (or *member* if provided)
           type forcing_member: int, footprints.stdtypes.FPList
         * ``forcing_namebuild`` *namebuild* footprint, default "flat@cen" (will change soon)
-          type forcing_namebuild: str
+          type forcing_namebuild: str, values: "flat@cen", "date@cen", "date@std"
         * ``forcing_intent`` *intent* footprint (local file permissions), default "in"
           Possible values : "in" (read-only), "inout" (read-write)
           type forcing_intent: str
@@ -544,7 +544,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
             namespace      = namespace,  # default : 'vortex.multi.fr',
             namebuild      = forcing_namebuild,  # default recherche : 'flat@cen', defaut oper : None
             vortex1        = vortex1,
-            date           = '[dateend]',  # TODO : à supprimer (cas recherche uniquement)
+            date           = forcing_date, #'[dateend]',  # TODO : à supprimer (cas recherche uniquement)
             source_app     = forcing_source_app,  # default = None (ne pas refaire l'erreur)
             source_conf    = forcing_source_conf,  # default = None (ne pas refaire l'erreur)
             cutoff         = forcing_cutoff,  # TODO : à supprimer dans le cas recherche

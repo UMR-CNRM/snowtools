@@ -23,7 +23,7 @@ Algo Components for deterministic Surfex simulations.
    :no-members:
    :show-inheritance:
 
-.. autoclass:: rallelSurfex_Pa
+.. autoclass:: Surfex_Parallel
    :no-members:
    :show-inheritance:
 
@@ -89,7 +89,10 @@ class Surfex_PreProcess(AlgoComponent):
             # Update the contents of the namelist (date and location)
             # Location taken in the FORCING file.
             newcontent = update_surfex_namelist_object(
-                namelist.contents, self.datebegin, forcing=self.forcingname, dateend=self.dateend
+                namelist.contents,
+                self.datebegin,
+                forcing=self.forcingname,
+                dateend=self.dateend
             )
             # Save input namelist for comparison
             self.system.cp(namelist.container.basename, namelist.container.basename.rstrip(".nam") + "_IN.nam")
@@ -166,7 +169,8 @@ class Surfex_Parallel(Parallel, DrHookDecoMixin):
                 optional=True,
                 default="[datebegin]",
             ),
-            threshold=dict(info="Threshold on snow water equivalent on August 1st.", type=int, optional=True, default=-999),
+            threshold=dict(info="Threshold on snow water equivalent on August 1st.", type=int,
+                           optional=True, default=-999),
             daily=dict(
                 info="If True, split simulations in daily runs",
                 type=bool,
