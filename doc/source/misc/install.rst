@@ -57,7 +57,7 @@ Make sure you have a github account and that you have a SSH key attached to your
 Prerequisites on Meteo-France computers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- On HPC you first have to set the correct python version and compiler to use by running : ``module load python/3.10.12 gcc/15.2.0``
+- On HPC you first have to set the correct python version and compiler to use by running : ``module load python/3.12.12 gcc/15.2.0``
 - On all Meteo-Frace machines, if you intend to deal with data stored on Meteo-France archive (hendrix), you will have to configure connecton creedentials as explained on page :ref:`vortex-file-transfer`.
 
 Installation
@@ -83,10 +83,10 @@ By default, we recommend external users use the ``plot`` optional dependencies a
 
 - ``plot`` : tools for plotting, including plotting tools of simulation outputs
 - ``scores`` : CRPS score computation
-- ``vortex`` : Tools to work with simulations made on HPC (launching of simulations on Meteo-France HPC and retrieve data produced)
+- ``vortex`` : Tools to work with vortex
 - ``all`` gather previous dependencies
 - ``doc`` : Dependencies for documentation generation (in addition to ``all`` dependency), only available at Meteo-France for the moment.
-- ``hpc``: only used on Meteo-France HPC, to run simullations on these machines, do not try to install elsewhere.
+- ``hpc``: only used on Meteo-France HPC, to run simulations on these machines, do not try to install elsewhere.
 
 Additional dependencies that have to be installed manually
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -152,7 +152,7 @@ CRPS scores
 ^^^^^^^^^^^
 CRPS score is now as an independent package available at https://github.com/UMR-CNRM/snowtools-crps
 
-To install it along with snowtools, just install the optional dependency ``snowtools[scores]`` or ``pip install .[all]``.
+To install it along with snowtools, just install the optional dependency ``pip install snowtools[scores]`` or ``pip install .[all]``.
 Note that you may need to upgrade pip to version above 23.0 to install scores dependency due to a bug in previous pip versions.
 
 .. [#footnote1] To generate a new ssh key, go to your ``~/.ssh`` folder (create if it does not exist) and run ``ssh-keygen -t rsa -b 4096 -f github``. You will be asked for an optional password to protect your key. Once created, go to your `github account, section SSH keys <https://github.com/settings/keys>`_, click on "add a SSH key" and copy the content of the file ``~/.ssh/github.pub`` in the "key" field.
