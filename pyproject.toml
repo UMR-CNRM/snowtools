@@ -20,11 +20,7 @@ dependencies = [
     'bronx',
     'footprints',
     'packaging',
-    'dask',
-    'bottleneck',
     'epygram>=2.0',
-    'scikit-learn',  # For SAFRAN guess generation
-    'vortex-nwp@git+https://github.com/UMR-CNRM/vortex.git',  # A remplacer par 'vortex-nwp' dès que possible
 ]
 requires-python = ">=3.6"
 readme = "README.md"
@@ -40,8 +36,6 @@ classifiers=[
     'Programming Language :: Python :: 3.10',
 
     'Topic :: Scientific/Engineering',
-
-    'License :: CeCILL-C Free Software License Agreement (CECILL-C)',
 ]
 authors = [
     {name = "Snowtools team, leaded by Matthieu Lafaysse, Meteo-France"}
@@ -71,14 +65,30 @@ scores = [
     'snowtools-crps@git+https://github.com/UMR-CNRM/snowtools-crps.git',
 ]
 
+vortex = [
+    'vortex-nwp@git+https://github.com/UMR-CNRM/vortex.git@e5a166f83c2f75d71f9cbf41c6acfa961f1f59f8',  # A remplacer par 'vortex-nwp' dès que possible avec versionnement > 2.4.1
+]
+
 hpc = [
-#    'mkjob@file:///home/cnrm_other/cen/mrns/vernaym/Projects/mkjob',
-#    'vortex-gco@file:///home/cnrm_other/cen/mrns/vernaym/Projects/vortex-gco',
-#    'vortex-olive@file:///home/cnrm_other/cen/mrns/vernaym/Projects/vortex-olive',
+    'scikit-learn',  # For SAFRAN guess generation (used in a task that call a non-properly installed script which do not manage its dependencies)
+    'vortex-nwp@git+https://github.com/UMR-CNRM/vortex.git@e5a166f83c2f75d71f9cbf41c6acfa961f1f59f8',  # A remplacer par 'vortex-nwp' dès que possible avec versionnement > 2.4.1
+    'mkjob@file:///home/cnrm_other/cen/mrns/vernaym/Projects/mkjob',
+    'vortex-gco@file:///home/cnrm_other/cen/mrns/vernaym/Projects/vortex-gco',
+    'vortex-olive@file:///home/cnrm_other/cen/mrns/vernaym/Projects/vortex-olive',
+]
+
+doc = [
+    'sphinx>=4.3',
+    'sphinx-fortran@git+https://github.com/VACUMM/sphinx-fortran.git',
+    'sphinx-toolbox',
+    'graphviz',
+    'mkjob@git+http://gitlab.meteo.fr/cnrm-gmap/mkjob.git',
+    'vortex-gco@git+https://gitlab.meteo.fr/cnrm-gmap/vortex-gco.git'
 ]
 
 # For a full installation
 all = [
+    'vortex-nwp@git+https://github.com/UMR-CNRM/vortex.git@e5a166f83c2f75d71f9cbf41c6acfa961f1f59f8',  # A remplacer par 'vortex-nwp' dès que possible avec versionnement > 2.4.1
     'psycopg2',
     'matplotlib',
     'cartopy',

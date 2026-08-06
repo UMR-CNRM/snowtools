@@ -13,6 +13,7 @@ Main class used for all CEN HPC research tasks.
 .. autoclass:: _CenResearchTask
    :members:
    :show-inheritance:
+
 """
 import vortex
 from mkjob.nodes import Task
@@ -35,27 +36,29 @@ class _CenResearchTask(Task, CENTaskMixIn):
 
     It always follows this procedure (definied in the main `process` method) :
 
-        1. fetch all necessary input resources (files):
-            - from an archive machine --> on a transfert node ('early-fetch')
-            - from the local machine --> on a compute node ('fetch')
+    1. fetch all necessary input resources (files):
+        - from an archive machine --> on a transfert node ('early-fetch')
+        - from the local machine --> on a compute node ('fetch')
 
-        2. execute the algo component (an executable, a script or·a sequence of instructions)
-           of inputs resources necessary to run an algo component (an executable, a script or a
-           sequence of instructions) --> 'compute'
+    2. execute the algo component (an executable, a script or·a sequence of instructions)
+        of inputs resources necessary to run an algo component (an executable, a script or a
+        sequence of instructions) --> 'compute'
 
-        3. save output resources (files produced or modified by the algo component)
-            - to the local machine --> on a compute node ('backup')
-            - to an archive machine --> on a compute node ('late-backup')
+    3. save output resources (files produced or modified by the algo component)
+        - to the local machine --> on a compute node ('backup')
+        - to an archive machine --> on a compute node ('late-backup')
 
-    To implement a new task inheriting from this abstract class, implement a subset of the following methods :
+    To implement a new task inheriting from this abstract class, implement a subset of the following methods:
+
     * get_remote_inputs
     * get_local_inputs
     * algo
+    * launch_algo
     * put_outputs
 
     See their respective documentation for more details.
 
-    Doc :
+    Doc:
     http://intra.cnrm.meteo.fr/algopy/trainings/vortex_dev2022_1/presentation/beamer/vortex_dev_jobs2_presentation.pdf
 
     """
@@ -106,6 +109,9 @@ class _CenResearchTask(Task, CENTaskMixIn):
     def defaults(self, extras):
         """
         Set toolbox defaults, extended with actual arguments ``extras``.
+
+        :param extras: items to add to vortex.defaults.
+        :type extras: dict
         """
 
         t = vortex.ticket()
@@ -155,11 +161,12 @@ class _CenResearchTask(Task, CENTaskMixIn):
         # Format uenv properly : "uenv:{uenv_name}@user" in cas only {uenv_name} is provided
         for key, value in self.conf.items():
             if "uenv" in key:
+                if isinstance(value, bool):
+                    continue
                 if ':' not in value:
                     value = f"uenv:{value}"
                 if '@' not in value:
                     value = f'{value}@{t.env()["USER"]}'
-
                 self.conf[key] = value
 
         # Define a namespace_out variable to apply to all outputs set as the *namespace_out*
@@ -183,9 +190,10 @@ class _CenResearchTask(Task, CENTaskMixIn):
         """
         Enter 'debug' mode to preserve the working directory even after a succesfull execution.
 
-        Associated configuration variable :
-        :param debug: Enter 'debug' mode, default : False
-        :type debug: bool
+        **Associated configuration variable:**
+
+        * ``debug`` Enter 'debug' mode, default : False
+          type debug: bool
 
         """
         if 'debug' in self.conf:
@@ -197,13 +205,14 @@ class _CenResearchTask(Task, CENTaskMixIn):
         """
         Pre-processing step to set usefull class variables.
 
-        Associated (optional) configuration variables :
+        **Associated (optional) configuration variables:**
 
-        :param io_duration: Argument similar to the one of the `get_list_dates_files` method in
-                            snowtools/utils/dates.py. It is used to retrieve the list of *datebegin* and
-                            *dateend* footprints for IO covering sub-periods.
-                            Possible values : "yearly", "monthly" or "full"
-        :type io_duration: str
+        * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
+          snowtools/utils/dates.py. It is used to retrieve the list of *datebegin* and
+          *dateend* footprints for IO covering sub-periods.
+          Possible values : "yearly", "monthly" or "full"
+          type io_duration: str
+
         """
         self.get_list_dates(duration=self.conf.get('io_duration', 'yearly'))
         self.force_configuration_variables()
@@ -248,7 +257,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
                 self.put_outputs()
 
         if 'late-backup' in self.steps:
-            # Reproductibility check with reference output (retrieved from the archive on a transfer node only)
+            # Reproducibility check with reference output (retrieved from the archive on a transfer node only)
             if 'test' in self.conf and 'localtest' not in self.conf:
                 with TestReportContext(self, t):
                     self.unittest()
@@ -273,8 +282,6 @@ class _CenResearchTask(Task, CENTaskMixIn):
         Implement this method in your task to fetch all resources already stored on the local (HPC) cache from a
         compute node.
         """
-        # self.get_remote_inputs()  # TODO : check if really necessary / good practice
-        # TODO: comment SR: definitely a problem: the same file appears twice in the effective input list
         raise NotImplementedError()
 
     def algo(self):
@@ -290,6 +297,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
         Implement this method in your task's algo component.
         The implementation should define how to run the algo component, or call one of the standard
         methods: `launch_MPI_executable()`, `launch_python_algo()`
+
         :param algo: AlgoComponent object
         :param kw:
         """
@@ -302,6 +310,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
 
         :param algo: AlgoComponent object
         :param mpiopts: dict with MPI options nnodes=..., nprocs=..., ntasks=...
+
         """
         # Pour un exécution de binaire, il faut donner l'objet "exécutable" associé (récupéré par la commande
         # vortex.executable(...))
@@ -325,6 +334,8 @@ class _CenResearchTask(Task, CENTaskMixIn):
     def launch_python_algo(self, algo, **kw):
         """
         Run your task's algo component. For algo components consisting of python code.
+        :param algo: AlgoComponent object
+        :param kw: keyword arguments dict
         """
         if algo is not None:
             algo.run(**kw)
@@ -355,6 +366,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
         from the actual simulation's datebegin/dateend arguments.
 
         :param duration: Time period covered by individual files.
+        :type duration: str
 
         """
         if 'datebegin' in self.conf and 'dateend' in self.conf:
@@ -401,72 +413,75 @@ class _CenResearchTask(Task, CENTaskMixIn):
         Look for files covering sub-periods defined by the `io_duration` configuration variable (current values:
         "monthly", "yearly", "full")
 
-        Arguments:
-        ----------
         :param localname: *local* footprint (how to name the file in the working directory).
-            This is an algo/task-specific argument. Default name depends on the actual datebegin/dateend of each file.
-            WARNING : in case a unique value is provided the user should ensure that a single
-            file will be retrieved
+         This is an algo/task-specific argument. Default name depends on the actual datebegin/dateend of each file.
+         WARNING : in case a unique value is provided the user should ensure that a single
+         file will be retrieved
         :type localname: str
+        :param namespace: namespace for fetching the forcing files. Default: vortex.multi.fr
+        :type namespace: str
 
-        Mandatory configuration variables:
-        ----------------------------------
+        **Mandatory configuration variables:**
 
-        :param forcing_datebegin: *datebegin* footprint, default self.conf.datebegin
-        :type forcing_datebegin: str, footprints.stdtypes.FPList
-        :param forcing_dateend: *dateend* footprint, default self.conf.dateend
-        :type forcing_dateend: str, footprints.stdtypes.FPList
-        :param forcing_xpid: Experiment identifier, default self.conf.xpid
-        :type forcing_xpid: str
-        :param forcing_geometry: *geometry* footprint, default self.conf.geometry
-        :type forcing_geometry: str, footprints.stdtypes.FPList
-        :param forcing_vapp: *vapp* footprint, default self.conf.vapp
-        :type forcing_vapp: str
-        :param forcing_vconf: *vconf* footprint, default self.conf.vconf
-        :type forcing_vconf: str
-        :param forcing_block: *block* footprint, default "meteo"
-        :type forcing_vconf: str
-        :param forcing_namespace: *namespace* footprint, default "vortex.multi.fr" (hendrix + local cache)
-        :type forcing_namespace: str
+        * ``forcing_datebegin`` *datebegin* footprint, default self.conf.datebegin
+          type forcing_datebegin: str, footprints.stdtypes.FPList
+        * ``forcing_dateend`` *dateend* footprint, default self.conf.dateend
+          type forcing_dateend: str, footprints.stdtypes.FPList
+        * ``forcing_xpid`` Experiment identifier, default self.conf.xpid
+          type forcing_xpid: str
+        * ``forcing_geometry`` *geometry* footprint, default self.conf.geometry
+          type forcing_geometry: str, footprints.stdtypes.FPList
+        * ``forcing_vapp`` *vapp* footprint, default self.conf.vapp
+          type forcing_vapp: str
+        * ``forcing_vconf`` *vconf* footprint, default self.conf.vconf
+          type forcing_vconf: str
+        * ``forcing_block`` *block* footprint, default "meteo"
+          type forcing_vconf: str
+        * ``forcing_namespace`` *namespace* footprint, default "vortex.multi.fr" (hendrix + local cache)
+          type forcing_namespace: str
 
-        :param forcing_date: *date* footprint (unsed with the research namebuilders), default to [dateend]
-        :type forcing_date: str
-        :param forcing_model: *model* footprint (to be made optional for SurfaceIO objects), default None
-        :type forcing_model: str
+        * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
+          type forcing_date: str
+        * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
+          type forcing_model: str
 
-        Optionnal configuration variables:
-        ----------------------------------
+        **Optional configuration variables:**
 
-        :param forcing_member: *member* footprint, default None (or *member* if provided)
-        :type forcing_member: int, footprints.stdtypes.FPList
-        :param forcing_namebuild: *namebuild* footprint, default "flat@cen" (will change soon)
-        :type forcing_namebuild: str
-        :param forcing_intent: *intent* footprint (local file permissions), default "in"
-                               Possible values : "in" (read-only), "inout" (read-write)
-        :type forcing_intent: str
-        :param forcing_source_app: *source_app* footprint, default None
-        :type forcing_source_app: str, footprints.stdtypes.FPList
-        :param forcing_source_conf: *source_conf* footprint, default None
-        :type forcing_source_conf: str, footprints.stdtypes.FPList
-        :param forcing_source: Retrieve *source_app* and *source_conf* footrprints dictionnaries for S2M reanalysis
-                               Possible values : 'era5', 'era40'
-        :type forcing_source: str
-        :param forcing_cutoff: *cutoff* footprint (to be made optional for SurfaceIO objects), default None
-        :type forcing_cutoff: str
-        :param io_duration: Argument similar to the one of the `get_list_dates_files` method in
-                            snowtools/utils/dates.py.
-                            Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
-                            Possible values : "yearly", "monthly" or "full"
-        :type io_duration: str
-        :param forcing_vortex1: Boolean to identify resources produced with vortex1 (filename without geometry)
-        :type forcing_vortex1: bool
+        * ``forcing_member`` *member* footprint, default None (or *member* if provided)
+          type forcing_member: int, footprints.stdtypes.FPList
+        * ``forcing_namebuild`` *namebuild* footprint, default "flat@cen" (will change soon)
+          type forcing_namebuild: str
+        * ``forcing_intent`` *intent* footprint (local file permissions), default "in"
+          Possible values : "in" (read-only), "inout" (read-write)
+          type forcing_intent: str
+        * ``forcing_source_app`` *source_app* footprint, default None
+          type forcing_source_app: str, footprints.stdtypes.FPList
+        * ``forcing_source_conf`` *source_conf* footprint, default None
+          type forcing_source_conf: str, footprints.stdtypes.FPList
+        * ``forcing_source`` Retrieve *source_app* and *source_conf* footrprints dictionnaries for S2M reanalysis
+          Possible values : 'era5', 'era40'
+          type forcing_source: str
+        * ``forcing_cutoff`` *cutoff* footprint (to be made optional for SurfaceIO objects), default None
+          type forcing_cutoff: str
+        * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
+          snowtools/utils/dates.py.
+          Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
+          Possible values : "yearly", "monthly" or "full"
+          type io_duration: str
+        * ``forcing_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
+          type forcing_vortex1: bool
+
+
+        TODO : prévoir un mécanisme pour rendre des déclarer les arguments obligatoires / optionnels pour
+         chaque tâche (ex: member)
 
         """
 
         t = self.ticket
 
         forcing_datebegin = self.conf.get('forcing_datebegin', self.conf.get('datebegin', None))
-        forcing_dateend   = self.conf.get('forcing_dateend', self.conf.get('dateend', None))
+        forcing_dateend = self.conf.get('forcing_dateend', self.conf.get('dateend', None))
+        forcing_date      = self.conf.get('forcing_date', forcing_dateend)
         forcing_xpid      = self.conf.get('forcing_xpid', self.conf.xpid)
         forcing_user      = self.conf.get('forcing_user', None)
         forcing_vapp      = self.conf.get('forcing_vapp', self.conf.vapp)
@@ -504,8 +519,11 @@ class _CenResearchTask(Task, CENTaskMixIn):
 
         # Verrue pour gérer les footprints *source_app* et *source_conf* de la réanalyse S2M
         if 'forcing_source' in self.conf:
-            forcing_source_app, forcing_source_conf = \
-                self.get_safran_sources(list_dates_begin, era5=self.conf.forcing_source == 'era5')
+            if vortex1[0]:   # ça ne devrait pas être necessaire si les forcings ont été produit avec vortex 2, non ?
+                forcing_source_app, forcing_source_conf = \
+                    self.get_safran_sources(list_dates_begin, era5=self.conf.forcing_source == 'era5')
+            else:
+                forcing_source_app, forcing_source_conf = None, None
 
         self.sh.title(f'Input forcing ({duration} duration)')
         forcing = vortex.input(

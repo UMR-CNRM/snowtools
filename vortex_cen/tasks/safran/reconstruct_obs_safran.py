@@ -3,7 +3,7 @@
 reconstruct_obs_safran.py
 -------------------------
 
-.. autoclass:: Reconstruct_SAFRAN_Obs
+.. autoclass:: ReconstructSafranObs
    :no-members:
    :class-doc-from: class
    :show-inheritance:
@@ -12,7 +12,7 @@ from vortex_cen.tasks.research_task_base import _CenResearchTask
 import vortex
 
 
-class Reconstruct_SAFRAN_Obs(_CenResearchTask):
+class ReconstructSafranObs(_CenResearchTask):
     """
     **Task : Reconstruct_SAFRAN_Obs**
 
@@ -28,6 +28,22 @@ class Reconstruct_SAFRAN_Obs(_CenResearchTask):
     **Output:**
 
     - OBSERVATIONS.tar : archive containing Safran-compatible files with both real and reconstructed observations
+
+    **Mandatory Configuration Variables:**
+
+    * ``datebegin`` First rundate of the guess (hour must be '00')
+    * ``dateend`` Last run date of the guess (hour must be '00')
+    * ``xpid`` Experiment id. Do not use experiment ids with 4 letters.
+    * ``geometry`` Geometry of the simulation. This must be a valid geometry in your
+      '$HOME/.vortexrc/geometries.ini' file.
+    * ``uenv`` Name of the UEnv containing all SAFRAN constant input files and executables.
+
+    **Optional Configuration Variables:**
+
+    * ``newobs_xpid`` Experiment identifier of the reconstructed hourly temperature observation dataset.
+      type: str, default: *xpid*
+    * ``newobs_user`` Username of the producer of the reconstructed hourly temperature observation dataset.
+      type: str, default: $USER
     """
 
     def __init__(self, **kw):

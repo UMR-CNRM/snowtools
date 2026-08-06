@@ -4,8 +4,8 @@ Test the "Pgd2D_Uenv_Pgd" unittask. The driver also includes the "Preprocess_Uen
 """
 
 from mkjob.nodes import Driver
-from vortex_cen.tasks.surfex.pre_process import Preprocess_Uenv_Namelist
-from vortex_cen.tasks.surfex.pgd import Pgd2D_Uenv_Pgd
+from vortex_cen.tasks.surfex.pre_process import PreprocessNamelist
+from vortex_cen.tasks.surfex.pgd import MakePgd
 # from vortex_cen.tasks.surfex.pgd import GetPgd2D
 
 
@@ -14,8 +14,8 @@ def setup(t, **kw):
         tag='pgd2d',
         ticket=t,
         nodes=[
-            Preprocess_Uenv_Namelist(tag='preprocess_namelist2d', ticket=t, **kw),
-            Pgd2D_Uenv_Pgd(tag='pgd2d', ticket=t, **kw),
+            PreprocessNamelist(tag='preprocess_namelist2d', ticket=t, **kw),
+            MakePgd(tag='pgd2d', ticket=t, **kw),
             # GetPgd2D(tag='getpgd2d', ticket=t, **kw),
         ],
         options=kw,

@@ -1,6 +1,12 @@
 # -*- coding:Utf-8 -*-
 """
 SAFRAN input mixin
+------------------
+
+.. autoclass:: SafranMixIn
+   :members:
+   :show-inheritance:
+
 """
 
 import vortex
@@ -9,6 +15,15 @@ import vortex
 class SafranMixIn:
 
     def get_const_safran(self):
+        """
+        Get Safran constant files.
+
+        **Configuration variables used:**
+
+        * ``cycle`` genv with safran constant files.
+        * ``geometry`` dict with possible geometries. type: dict
+        * ``vconf`` actual geometry
+        """
 
         t = vortex.ticket()
 

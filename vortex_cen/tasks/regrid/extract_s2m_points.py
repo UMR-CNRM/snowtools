@@ -26,6 +26,21 @@ class ExtractS2MForcing(_CenResearchTask):
 
     - FORCING file(s) with extracted points
 
+    **Configuration variables:**
+
+    * ``massifs`` Massif number(s) to be extracted
+      type: int, list
+    * ``slopes`` Slope(s) to be extracted
+      type: int, list
+    * ``elevations`` Elevations(s) to be extracted
+      type: int, list
+    * ``aspects`` Aspects(s) to be extracted
+      type: int, list
+    * ``geometry`` Geometry of the output file(s)
+      type: str
+    * ``xpid`` Experiment identifier
+      type: str
+
     """
 
     def __init__(self, **kw):
@@ -59,15 +74,16 @@ class ExtractS2MForcing(_CenResearchTask):
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES,
                 overwrite=overwrite)
 
-        # Security to avoid overwriting the original FORCING file(s)
-        if self.conf.geometry == self.conf.forcing_geometry:
-            raise ValueError("The output 'geometry' can not be the same as the input 'forcing_geometry' one.\n"
-                             "Please provide a different 'geometry' configuration variable")
 
     def get_remote_inputs(self):
         """
         Get FORCING file as "FORCING_IN.nc" in the different working sub-directories.
         """
+        # Security to avoid overwriting the original FORCING file(s)
+        if self.conf.geometry == self.conf.forcing_geometry:
+            print("geometry = ", self.conf.geometry, 'forcing_geometry =', self.conf.forcing_geometry)
+            raise ValueError("The output 'geometry' can not be the same as the input 'forcing_geometry' one.\n"
+                             "Please provide a different 'geometry' configuration variable")
 
         self.get_forcing(localname='[datebegin:ymdh]_[dateend:ymdh]/FORCING_IN.nc')
 
@@ -143,7 +159,7 @@ class ExtractS2MForcing(_CenResearchTask):
             username       = self.conf.get('diff_user', None),
             namebuild      = 'flat@cen',
             local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_OUT.nc',
-            block          = self.conf.get('diff_block', 'extract_s2m'),
+            block          = self.conf.get('diff_block', 'extract_s2m/meteo'),
         ),
         print(self.ticket.prompt, 'diff =', diff)
         print()

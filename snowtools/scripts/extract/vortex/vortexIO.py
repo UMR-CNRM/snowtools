@@ -80,7 +80,7 @@ Examples :
    Looking for a PREP file valid at date "2017080206" for an experiment "test@vernaym" in the "GrandesRousses250m"
    geometry of the application "edelweiss".
 
->>> vortexIO.get_prep('test@vernaym', 'GrandesRousses250m', date='2017080206', vapp='edelweiss')
+>>> vortexIO.get_prep_file('test@vernaym')
 
     --> works but returns
     # ----  Result from get: [False]  ---- #
@@ -90,7 +90,7 @@ Examples :
     It is possible to allow for alternate ressource search by providing an *alternate_xpid* (by default,
     a PREP file from a 'spinup' experiment will be searched first) :
 
->>> vortexIO.get_prep('test@vernaym', 'GrandesRousses250m', date='2017080206', vapp='edelweiss',
+>>> vortexIO.get_prep_file('test@vernaym')
         alternate_xpid='reanalysis2020.2@prep_reanalysis_CEN')
 
     --> works and returns a PREP file

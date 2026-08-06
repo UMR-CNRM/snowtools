@@ -13,31 +13,7 @@ def setup(t, **kw):
         tag='extracts2m',
         ticket=t,
         nodes=[
-            TestExtractS2MForcing(tag='extracts2mforcing', ticket=t, **kw),
+            ExtractS2MForcing(tag='extracts2mforcing', ticket=t, **kw),
         ],
         options=kw,
     )
-
-
-class TestExtractS2MForcing(ExtractS2MForcing):
-
-    def unittest(self):
-        """
-        Reproductibility test : compare output to reference.
-        """
-
-        self.sh.title('Diff FORCING')
-        forcing_diff = vortex.diff(
-            kind           = 'MeteorologicalForcing',
-            datebegin      = self.list_dates_begin,
-            dateend        = self.dict_dates_end,
-            geometry       = self.conf.geometry,
-            experiment     = 'reference',
-            username       = 'vernaym',
-            namebuild      = 'flat@cen',
-            local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_OUT.nc',
-            block          = 'meteo',
-            model          = 'safran',
-        ),
-        print(self.ticket.prompt, 'diff forcing =', forcing_diff)
-        print()

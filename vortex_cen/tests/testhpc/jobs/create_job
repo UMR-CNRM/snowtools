@@ -1,9 +1,11 @@
 name=init_clim_ground_temperature_job package=drivers task=init_clim_ground_temperature profile=rd-belenos-mt xpid=init_tg
 name=preprocess_namelist_job package=drivers task=pre_process profile=rd-belenos-mt datebegin=2020080106 dateend=2023080106 xpid=pre_process_namelist
 name=pgd_job package=drivers task=pgd profile=rd-belenos-mt datebegin=2020080106 dateend=2023080106 xpid=pgd
+name=pgd2d_job package=drivers task=pgd2d profile=rd-belenos-mt datebegin=2020080106 dateend=2023080106 xpid=pgd2d
 name=prep_job package=drivers task=prep profile=rd-belenos-mt datebegin=2020080106 dateend=2023080106 xpid=prep_test
 name=safran_job package=drivers task=safran profile=rd-belenos-mt datebegin=2020080106 dateend=2021080106 xpid=safran
 name=offline_job package=drivers task=offline profile=rd-belenos-mt datebegin=2020080106 dateend=2023080106 xpid=offline
+name=dailyprep_job package=drivers task=dailyprep profile=rd-belenos-mt datebegin=2020080106 dateend=2020083106 xpid=dailyprep
 name=soda_job package=drivers task=soda profile=rd-belenos-mt date=2022022612 geometry=GrandesRousses250m xpid=assim
 name=get_forcing_job package=drivers task=get_forcing profile=rd-belenos-mt xpid=forcing
 name=extract_s2m_job package=drivers task=extract_s2m profile=rd-belenos-mt xpid=extract
@@ -12,4 +14,4 @@ name=interpolate_s2m_job package=drivers task=interpol_forcing profile=rd-beleno
 name=concatenate_forcings_job package=drivers task=concatenate_forcings profile=rd-belenos-mt xpid=concat
 name=add_slopes_job package=drivers task=addslopes profile=rd-belenos-mt xpid=addslopes
 name=escroc_job package=drivers task=escroc profile=rd-belenos-mt xpid=escroc
-name=interpol_big_alp package=drivers task=interpol_subtime_forcing profile=rd-belenos-mt datebegin=2020080106 dateend=2020080806 xpid=interpolsubtimeforcing
+name=subtime_job package=drivers task=subtime_forcing profile=rd-belenos-mt datebegin=2020080106 dateend=2020080806 xpid=subtimeforcing

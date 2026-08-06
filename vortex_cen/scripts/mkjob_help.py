@@ -9,6 +9,8 @@ import glob
 import vortex
 from vortex_cen.tasks.configuration_variables import standard_variables
 
+from snowtools.DATA import SNOWTOOLS_CEN
+
 
 class HiddenPrints:
     def __enter__(self):
@@ -297,7 +299,7 @@ def main():
             if args.vconf:
                 if args.driver:
                     target = os.path.join(
-                        os.environ['SNOWTOOLS_CEN'],
+                        SNOWTOOLS_CEN,
                         'vortex_cen',
                         args.vapp,
                         args.vconf,
@@ -306,7 +308,7 @@ def main():
                     )
                 elif args.jobs:
                     target = os.path.join(
-                        os.environ['SNOWTOOLS_CEN'],
+                        SNOWTOOLS_CEN,
                         'vortex_cen',
                         args.vapp,
                         args.vconf,
@@ -314,7 +316,7 @@ def main():
                     )
                 else:
                     target = os.path.join(
-                        os.environ['SNOWTOOLS_CEN'],
+                        SNOWTOOLS_CEN,
                         'vortex_cen',
                         args.vapp,
                         args.vconf,
@@ -323,7 +325,7 @@ def main():
                     avail_drivers = glob.glob(os.path.dirname(target) + '/drivers/*.py*')
             else:
                 target = os.path.join(
-                    os.environ['SNOWTOOLS_CEN'],
+                    SNOWTOOLS_CEN,
                     'vortex_cen',
                     args.vapp,
                     '__init__.py',
@@ -334,7 +336,7 @@ def main():
             print('====================================')
             for app in ['edelweiss', 's2m', 'Crocus']:
                 target = os.path.join(
-                    os.environ['SNOWTOOLS_CEN'],
+                    SNOWTOOLS_CEN,
                     'vortex_cen',
                     app,
                     '__init__.py',

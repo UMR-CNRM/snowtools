@@ -5,7 +5,7 @@ hourly temperature observations.
 """
 
 from mkjob.nodes import Driver
-from vortex_cen.tasks.safran.reconstruct_obs_safran import Reconstruct_SAFRAN_Obs
+from vortex_cen.tasks.safran.reconstruct_obs_safran import ReconstructSafranObs
 
 
 def setup(t, **kw):
@@ -13,7 +13,7 @@ def setup(t, **kw):
         tag='obs_safran',
         ticket=t,
         nodes=[
-            Reconstruct_SAFRAN_Obs(tag='obs_safran', ticket=t, **kw),
+            ReconstructSafranObs(tag='obs_safran', ticket=t, **kw),
         ],
         options=kw,
     )

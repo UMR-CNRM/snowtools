@@ -22,6 +22,9 @@ Tasks allowing to launch any SURFEX executable.
 .. automodule:: vortex_cen.tasks.surfex.pgd
    :private-members:
 
+.. automodule:: vortex_cen.tasks.surfex.init_clim_ground_temperature
+   :private-members:
+
 .. automodule:: vortex_cen.tasks.surfex.soda
    :private-members:
 """

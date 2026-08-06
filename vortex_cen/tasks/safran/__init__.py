@@ -4,6 +4,9 @@ safran
 
 Generation of SAFRAN forcing files.
 
+.. automodule:: vortex_cen.tasks.safran.common
+   :private-members:
+
 .. automodule:: vortex_cen.tasks.safran.reanalysis
    :private-members:
 

@@ -1,1 +1,1 @@
-profile=rd-belenos-mt name=prep package=drivers task=prep
+profile=rd-belenos-mt name=prep package=drivers task=prep datebegin=2022080106 dateend=2023080106 geometry=cor2_allslopes
