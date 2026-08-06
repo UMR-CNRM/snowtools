@@ -13,7 +13,7 @@ from mkjob.nodes import Driver
 
 from vortex_cen.tasks.surfex.init_clim_ground_temperature import MakeClimGroundTemperatureIfNoPrep
 from vortex_cen.tasks.surfex.offline import OfflineXiosMpi
-from vortex_cen.tasks.surfex.pgd import FetchPgdOrMake
+from vortex_cen.tasks.surfex.pgd import FetchPgdFileOrMake
 from vortex_cen.tasks.surfex.pre_process import PreprocessNamelist
 from vortex_cen.tasks.surfex.prep import FetchPrepFileOrMake
 
@@ -25,7 +25,7 @@ def setup(t, **kw):
         nodes=[
             PreprocessNamelist(tag="preprocess", ticket=t, **kw),
             MakeClimGroundTemperatureIfNoPrep(tag="inittg", ticket=t, **kw),
-            FetchPgdOrMake(tag="pgd", ticket=t, **kw),
+            FetchPgdFileOrMake(tag="pgd", ticket=t, **kw),
             FetchPrepFileOrMake(tag="prep", ticket=t, **kw),
             OfflineXiosMpi(tag="offline", ticket=t, **kw),
         ],

@@ -93,7 +93,7 @@ class SurfexCommonsMixin:
         print(self.ticket.prompt, 'drdt_bst_fit_60 =', drdt_bst_fit_tbi)
         print()
 
-    def get_pgd_from_cache(self):
+    def get_pgd_file_from_cache(self):
         """
         In the general research case, the PGD comes from the vortex cache.
         For "stable" configurations such as the reanalysis, it comes from a UEnv/GEnv.
@@ -181,7 +181,7 @@ class SurfexCommonsMixin:
             model      = 'surfex',
             namespace  = 'vortex.multi.fr',
             namebuild  = 'flat@cen',  # TODO : passer en variable de configuration
-            block      = 'pgd',
+            block      = self.conf.get("pgd_block", 'pgd'),
             vortex1    = self.conf.get('pgd_vortex1', None),
             fatal      = fatal,
         ),

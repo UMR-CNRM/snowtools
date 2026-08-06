@@ -582,7 +582,7 @@ class MakePgd(_PgdConstruct):
             self.get_pgd_exe_from_uenv()
 
 
-class FetchPgdOrMake(_PgdConstruct):
+class FetchPgdFileOrMake(_PgdConstruct):
     """
     **Task: FetchPgdOrMake**
 
@@ -791,7 +791,7 @@ class FetchPgdOrMake(_PgdConstruct):
         print()
 
 
-class FetchPgdOrCrash(FetchPgdOrMake):
+class FetchPgdFileOrCrash(FetchPgdFileOrMake):
     """
     Get a PGD.nc file from an uenv or vortex cache/archive. And put it in the cache of the current experiment.
     Crash if the file does not exist. The ``force_uenv`` configuration variable allows to look for the

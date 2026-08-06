@@ -338,7 +338,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
                 "(e.g.: MakePrepFile, FetchPrepFileOrMake, FetchPrepFileOrCrash)"
             )
             raise e
-        self.get_pgd_from_cache()
+        self.get_pgd_file_from_cache()
 
     def get_executable(self):
         """
@@ -1484,7 +1484,7 @@ class OfflineAssim(OfflineMpi):
 
     def get_local_inputs(self):
         self.get_namelist_from_cache()
-        self.get_pgd_from_cache()
+        self.get_pgd_file_from_cache()
 
     def get_prep_file(self):
         """
@@ -1539,7 +1539,7 @@ class OfflineOpenloop(OfflineMpi):
     def get_local_inputs(self):
 
         self.get_namelist_from_cache()
-        self.get_pgd_from_cache()
+        self.get_pgd_file_from_cache()
 
     def get_prep_file(self):
         """
@@ -1646,7 +1646,7 @@ class OfflineLocalForcing(OfflineMpi):
 
     def get_local_inputs(self):
         # Get PGD and PREP locally because they have been retrieved or produced by a previous task
-        self.get_pgd_from_cache()
+        self.get_pgd_file_from_cache()
         _ = self.get_prep_file_from_cache_or_archive(fatal=True, cache_only=True)
         # Get namelist from the preprocess task output
         self.get_namelist_from_cache()

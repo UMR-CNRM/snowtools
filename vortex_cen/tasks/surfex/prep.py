@@ -211,7 +211,7 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
         init_TG.nc and PGD that should be in cache as well at this point.
         """
         self.get_namelist_from_cache()
-        self.get_pgd_from_cache()
+        self.get_pgd_file_from_cache()
         self.get_init_TG_from_cache_or_archive(fatal=True, cache_only=True)
 
     def get_prep_executable(self):
@@ -259,7 +259,7 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
             model        = 'surfex',
             namespace    = self.conf.get('namespace_out', 'vortex.multi.fr'),
             namebuild    = 'flat@cen',  # TODO : passer en variable de configuration
-            block        = self.conf.get('prep_block', 'prep'),
+            block        = "prep", # finally output blocks should be fixed and input blocks configurable. self.conf.get('prep_block', 'prep'),
             member       = self.conf.get('member', None),
         ),
         print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
@@ -427,7 +427,7 @@ class FetchPrepFileOrMake(_PrepConstruct):
             model       = 'surfex',
             namespace   = 'vortex.cache.fr',
             namebuild   = 'flat@cen',  # TODO : passer en variable de configuration
-            block       = self.conf.get('prep_block', 'prep'),
+            block       = "prep", # after discussion, output blocks should be fixed and input blocks configurable. self.conf.get('prep_block', 'prep'),
             member      = self.conf.get('prep_member', self.conf.get('member', None)),
         ),
         print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
