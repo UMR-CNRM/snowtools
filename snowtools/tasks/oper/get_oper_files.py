@@ -262,7 +262,9 @@ class FutureS2MExtractor(S2MExtractor):
             namespace      = 'vortex.multi.fr',
             cutoff         = 'production' if self.conf.previ else 'assimilation',
             intent         = 'in',
-            fatal          = False
+            fatal          = False,
+            vortex1=True,
+            namebuild='date@std'
         )
 
         if hasattr(self.conf, "alternate_xpid"):
@@ -289,7 +291,9 @@ class FutureS2MExtractor(S2MExtractor):
                     namespace      = 'vortex.multi.fr',
                     cutoff         = 'production' if self.conf.previ else 'assimilation',
                     intent         = 'in',
-                    fatal          = False
+                    fatal          = False,
+                    vortex1=True,
+                    namebuild='date@std'
                 ))
 
         return self.get_std(tb01)
@@ -314,7 +318,9 @@ class FutureS2MExtractor(S2MExtractor):
             namespace      = 'vortex.multi.fr',
             cutoff         = 'production' if self.conf.previ else 'assimilation',
             intent         = 'in',
-            fatal          = False
+            fatal          = False,
+            vortex1 = True,
+            namebuild = 'date@std'
 
         )
         if hasattr(self.conf, "alternate_xpid"):
@@ -342,7 +348,9 @@ class FutureS2MExtractor(S2MExtractor):
                     namespace      = 'vortex.multi.fr',
                     cutoff         = 'production' if self.conf.previ else 'assimilation',
                     intent         = 'in',
-                    fatal          = False
+                    fatal          = False,
+                    vortex1=True,
+                    namebuild='date@std'
 
                 ))
 
@@ -370,6 +378,8 @@ class FutureS2MExtractor(S2MExtractor):
                 cutoff         = 'production',
                 intent         = 'in',
                 fatal          = False,
+                vortex1=True,
+                namebuild='date@std',
             )
         else:
             tb03 = vortex.input(
@@ -391,6 +401,8 @@ class FutureS2MExtractor(S2MExtractor):
                 cutoff = 'assimilation',
                 intent = 'in',
                 fatal = False,
+                vortex1=True,
+                namebuild='date@std',
             )
 
         return self.get_std(tb03)
@@ -417,7 +429,9 @@ class FutureS2MExtractor(S2MExtractor):
             model       = 'postproc',
             namespace   = 'vortex.multi.fr',
             cutoff      = 'production',
-            fatal       = False
+            fatal       = False,
+            vortex1=True,
+            namebuild='date@std',
         )
 
         return self.get_std(tb_pp)
