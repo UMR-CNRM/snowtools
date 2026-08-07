@@ -82,7 +82,8 @@ class SurfaceForcingVortex1(SurfaceIOVortex1):
                 model = dict(
                     optional = True,  # The 'model' footprint of FORCING files is mostly unknown/undefined (and unused)
                     deafult  = 'unknown',
-                    values   = ['safran', 'obs', 's2m', 'adamont', 'edelweiss', 'devine'],
+                    values   = ['safran', 'obs', 's2m', 'adamont', 'edelweiss', 'devine', 'arome', 'antilope',
+                        'pearome', 'unknown'],
                 ),
                 source_app = dict(
                     optional = True

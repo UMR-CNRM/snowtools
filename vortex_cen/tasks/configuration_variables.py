@@ -254,7 +254,7 @@ standard_variables = dict(
         metavar = True,
         help = "Footprint description of PREP.nc file(s)",
         values = ["prep_xpid", "prep_user", "prep_vapp", "prep_vconf", "prep_geometry", "prep_vortex1", "prep_member",
-            "prep_block", "prep_date"],
+            "prep_block", "prep_datevalidity"],
     ),
     prep_xpid   = dict(
         help = "Experiment identifier of the PREP file",
@@ -296,7 +296,7 @@ standard_variables = dict(
         type = "str",
         default = "prep",
     ),
-    prep_date = dict(
+    prep_datevalidity = dict(
         help = "Validity date of the PREP file (if different from *datebegin*)",
         type = "str or Date",
         default = datebegin_default,
