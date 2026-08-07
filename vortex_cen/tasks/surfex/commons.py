@@ -321,7 +321,7 @@ class SurfexCommonsMixin:
 
         * ``prep_xpid`` or ``xpid`` Experiment id the prep file should be searched for or put in cache.
         * ``prep_user`` name of the user who produced the PREP file. Default: None.
-        * ``prep_date`` or ``datebegin`` Validity date of the prep file. Default is ``datebegin`` but can be any date.
+        * ``prep_datevalidity`` or ``datebegin`` Validity date of the prep file. Default is ``datebegin``.
         * ``prep_vapp`` or ``vapp`` Application name to search the PREP.nc file.
         * ``prep_vconf`` or ``vconf`` Configuration name to search the PREP.nc file.
         * ``prep_vortex1`` type: bool. *True* if the requested PREP.nc file was produced with vortex 1 and thus uses
@@ -350,7 +350,7 @@ class SurfexCommonsMixin:
             username       = self.conf.get('prep_user', None),
             # MV : il faut définir la date de validité du fichier PREP qui par défaut
             # est la *datebegin* de simulation mais peut être arbitraire si 'date_prep' est renseigné
-            datevalidity   = self.conf.get('prep_date', self.conf.datebegin),
+            datevalidity   = self.conf.get('prep_datevalidity', self.conf.datebegin),
             # MV : Pour prévoir les cas où le PREP vient d'un vapp / vconf différent
             # de ceux de la tâche
             vapp           = self.conf.get('prep_vapp', self.conf.vapp),

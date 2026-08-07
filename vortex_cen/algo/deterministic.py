@@ -84,6 +84,10 @@ class Surfex_PreProcess(AlgoComponent):
                 "info": "Name of the first forcing file",
                 "type": str,
             },
+            # "forcingname": {
+            #     "info": "Name of the first forcing file",
+            #     "type": str,
+            # },
         }
     }
 
@@ -106,6 +110,8 @@ class Surfex_PreProcess(AlgoComponent):
         for namelist in self.find_namelists():
             # Update the contents of the namelist (date and location)
             # Location taken in the FORCING file.
+            first_forcing = self.context.sequence.effective_inputs(kind="FORCING")[0].rh
+            forcingname = first_forcing.container.localpath()
             newcontent = update_surfex_namelist_object(
                 namelist.contents,
                 self.datebegin,

@@ -447,8 +447,6 @@ class _CenResearchTask(Task, CENTaskMixIn):
         * ``forcing_namespace`` *namespace* footprint, default "vortex.multi.fr" (hendrix + local cache)
           type forcing_namespace: str
 
-        * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
-          type forcing_date: str
         * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
           type forcing_model: str
 
@@ -488,15 +486,12 @@ class _CenResearchTask(Task, CENTaskMixIn):
 
         forcing_datebegin = self.conf.get('forcing_datebegin', self.conf.get('datebegin', None))
         forcing_dateend = self.conf.get('forcing_dateend', self.conf.get('dateend', None))
-        forcing_date      = self.conf.get('forcing_date', forcing_dateend)
         forcing_xpid      = self.conf.get('forcing_xpid', self.conf.xpid)
         forcing_user      = self.conf.get('forcing_user', None)
         forcing_vapp      = self.conf.get('forcing_vapp', self.conf.vapp)
         forcing_vconf     = self.conf.get('forcing_vconf', self.conf.vconf)
         forcing_block     = self.conf.get('forcing_block', 'meteo')
         forcing_member    = self.conf.get('forcing_member', self.conf.get('member', None))
-        if forcing_member is not None and not isinstance(forcing_member, int):
-            forcing_member = FPList(forcing_member)
         # forcing_geometry value may depend on the task's output 'geometry' value
         if 'forcing_geometry' in self.conf:
             if isinstance(self.conf.forcing_geometry, dict):
@@ -507,8 +502,8 @@ class _CenResearchTask(Task, CENTaskMixIn):
             forcing_geometry = self.conf.geometry
         # Security : in case of an ensemble of forcing files, get the FORCING of each member in a
         # separate directory to avoid overwrinting files.
-        if (isinstance(forcing_member, list) and len(forcing_member) > 1 and '[member]' not in localname):
-            localname = f'mb[member]/{localname}'
+        if (isinstance(forcing_member, list) and len(forcing_member) > 1 and 'member' not in localname):
+            localname = f'mb[member%04d]/{localname}'
         # TODO : modifier le namebuilder par defaut lorsque le nouveau incluant la
         # géométrie sera disponible
         forcing_namebuild = self.conf.get('forcing_namebuild', 'flat@cen')
@@ -517,7 +512,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
         forcing_source_app  = self.conf.get('forcing_source_app', None)
         forcing_source_conf = self.conf.get('forcing_source_conf', None)
         forcing_cutoff = self.conf.get('forcing_cutoff', None)
-        vortex1        = self.conf.get('forcing_vortex1', False),
+        vortex1        = self.conf.get('forcing_vortex1', False)
 
         duration = self.conf.get('io_duration', 'yearly')
         list_dates_begin, list_dates_end, _, _ = get_list_dates_files(Date(forcing_datebegin),

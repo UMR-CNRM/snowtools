@@ -442,7 +442,7 @@ class CrocO(Escroc):
         Algo component to execute OFFLINE several times in parallel
         """
 
-        self.sh.title('Algo Offline-CorcO')
+        self.sh.title('Algo Offline-CrocO')
         croco_tba = vortex.task(
             engine         = 'blind',
             kind           = "croco",
