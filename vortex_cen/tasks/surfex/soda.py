@@ -81,7 +81,7 @@ class SodaCommonsMixin(SurfexCommonsMixin):
             member         = self.get_list_members(),
             vapp           = self.conf.get('prep_vapp', self.conf.vapp),
             vconf          = self.conf.get('prep_vconf', self.conf.vconf),
-            local          = 'mb[member]/PREP_[datevalidity:ymdh].nc',
+            local          = 'mb[member%04d]/PREP_[datevalidity:ymdh].nc',
             experiment     = self.conf.get('prep_xpid', self.conf.xpid),
             username       = self.conf.get('prep_user', None),
             geometry       = self.conf.geometry,
@@ -246,7 +246,7 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
 
         self.sh.title('Output PREP (analysis)')
         prep = vortex.output(
-            local          = 'mb[member]/PREP_[datevalidity:ymdh].nc',
+            local          = 'mb[member%04d]/PREP_[datevalidity:ymdh].nc',
             role           = 'SnowpackInit',
             experiment     = self.conf.xpid,
             geometry       = self.conf.geometry,
@@ -285,7 +285,7 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
         """
         self.sh.title("Reproductibility check : PREP")
         diff = vortex.diff(
-            local          = 'mb[member]/PREP_[datevalidity:ymdh].nc',
+            local          = 'mb[member%04d]/PREP_[datevalidity:ymdh].nc',
             role           = 'SnowpackInit',
             experiment     = self.conf.diff_xpid,
             username       = self.conf.get('diff_user', None),
