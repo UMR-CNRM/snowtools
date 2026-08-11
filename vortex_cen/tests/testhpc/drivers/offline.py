@@ -9,11 +9,11 @@ The driver also includes the following tasks :
 """
 
 from mkjob.nodes import Driver
-from vortex_cen.tasks.surfex.pre_process import Preprocess_Uenv_Namelist
-from vortex_cen.tasks.surfex.offline import Offline_MPI_Uenv
-from vortex_cen.tasks.surfex.pgd import GetPgd1D
-from vortex_cen.tasks.surfex.prep import GetPrep
-from vortex_cen.tasks.surfex.init_clim_ground_temperature import GetClimGroundTemperature
+from vortex_cen.tasks.surfex.pre_process import PreprocessNamelist
+from vortex_cen.tasks.surfex.offline import Offline_Mpi_Uenv
+from vortex_cen.tasks.surfex.pgd import FetchPgdOrMake
+from vortex_cen.tasks.surfex.prep import FetchPrepFileOrMake
+from vortex_cen.tasks.surfex.init_clim_ground_temperature import FetchClimGroundTemperatureOrMake
 
 
 def setup(t, **kw):
@@ -21,11 +21,11 @@ def setup(t, **kw):
         tag='offline',
         ticket=t,
         nodes=[
-            Preprocess_Uenv_Namelist(tag='preprocess_uenv_namelist', ticket=t, **kw),
-            GetClimGroundTemperature(tag='getClimGroundTemperature', ticket=t, **kw),
-            GetPgd1D(tag='getpgd1d', ticket=t, **kw),
-            GetPrep(tag='getprep', ticket=t, **kw),
-            Offline_MPI_Uenv(tag='offline_mpi_uenv', ticket=t, **kw),
+            PreprocessNamelist(tag='preprocess_uenv_namelist_offline', ticket=t, **kw),
+            FetchClimGroundTemperatureOrMake(tag='fetchclimgroundtemperature_offline', ticket=t, **kw),
+            FetchPgdOrMake(tag='getpgd1d', ticket=t, **kw),
+            FetchPrepFileOrMake(tag='offline_getprep', ticket=t, **kw),
+            Offline_Mpi_Uenv(tag='offline_mpi_uenv', ticket=t, **kw),
         ],
         options=kw,
     )

@@ -5,7 +5,7 @@ Generation of SURFEX initial conditions file (PREP.nc)
 
 import vortex
 from mkjob.nodes import Driver
-from vortex_cen.tasks.surfex.prep import _Prep_Construct
+from vortex_cen.tasks.surfex.prep import _PrepConstruct
 
 
 def setup(t, **kw):
@@ -18,8 +18,13 @@ def setup(t, **kw):
         options=kw,
     )
 
-
-class MakePrep(_Prep_Construct):
+# TODO: This class should not be necessary here. I'd suggest to:
+#  - Add PreprocessUenvNamelist node to the driver. If no path is given in the configuration file, the namelist is
+#    fetched from the unev.
+#  - Add FetchClimGroundTemperatureOrCrash node to the driver. With the configuration variable force_uenv = True
+#    the init_TG.nc file is fetched from the uenv only.
+#  - Use the MakePrepFile class from from vortex_cen.tasks.surfex.prep
+class MakePrep(_PrepConstruct):
     """
     Task : MakePrep
     ===============
@@ -46,7 +51,8 @@ class MakePrep(_Prep_Construct):
 
         MANDATORY_CONFIGURATION_VARIABLES = [
             "geometry",
-            "uenv|surfex_uenv",
+            "surfex_uenv|uenv",
+            "consts_surfex_uenv|uenv",
         ]
 
         OPTIONAL_CONFIGURATION_VARIABLES = [
@@ -80,7 +86,7 @@ class MakePrep(_Prep_Construct):
             model          = 'surfex',
             local          = 'PGD.nc',
             geometry       = self.conf.geometry,
-            genv           = self.conf.uenv,
+            genv           = self.conf.get('consts_surfex_uenv', self.conf.uenv),
             gvar           = 'PGD_[geometry:tag]',
         ),
         print(self.ticket.prompt, 'PGD =', pgd)

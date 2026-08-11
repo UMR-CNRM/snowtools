@@ -215,9 +215,9 @@ class SnowtoolsAccessor:
             stats=ds.snowtools.snow_cover_stats()
 
         :param snow_depth_variable: Name of the variable containing the snow depth (default value for SURFEX outpus)
-        :type start_hour: str
-        :param threshold: Snow depth threshold to consider a given point / day as "snow covered"
-        :type start_hour: float
+        :type snow_depth_variable: str
+        :param snow_depth_threshold: Snow depth threshold to consider a given point / day as "snow covered"
+        :type snow_depth_threshold: float
         """
 
         from snowtools.tools.SnowCoverDuration import lcscd

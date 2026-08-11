@@ -1,14 +1,26 @@
 # -*- coding: utf-8 -*-
 """
-Created on 18 March 2024
-@author: Vernay.M
+research_task_base.py
+---------------------
+
+Main class used for all CEN HPC research tasks.
+
+.. inheritance-diagram:: vortex_cen.tasks.research_task_base
+   :top-classes: mkjob.nodes.Node
+   :private-bases:
+   :parts: 4
+
+.. autoclass:: _CenResearchTask
+   :members:
+   :show-inheritance:
+
 """
 import vortex
 from mkjob.nodes import Task
-from vortex_cen.layout.nodes import S2MTaskMixIn
+from vortex_cen.tasks.oper_research_mixin import CENTaskMixIn
 from bronx.stdtypes.date import Date
-from footprints.stdtypes import FPDict
-# from vortex.syntax.stdattrs import Namespace
+from footprints.stdtypes import FPDict, FPList
+from footprints.util import rangex
 
 from vortex_cen.tools.monitoring import InputReportContext, OutputReportContext
 from vortex_cen.tools.monitoring import AlgoReportContext, TestReportContext
@@ -16,7 +28,7 @@ from vortex_cen.tools.monitoring import AlgoReportContext, TestReportContext
 from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
 
 
-class _CenResearchTask(Task, S2MTaskMixIn):
+class _CenResearchTask(Task, CENTaskMixIn):
     """
     Abstract class defining the common sequence of actions for CEN's vortex tasks.
 
@@ -24,32 +36,30 @@ class _CenResearchTask(Task, S2MTaskMixIn):
 
     It always follows this procedure (definied in the main `process` method) :
 
-        1. fetch all necessary input resources (files):
-            - from an archive machine --> on a transfert node ('early-fetch')
-            - from the local machine --> on a compute node ('fetch')
+    1. fetch all necessary input resources (files):
+        - from an archive machine --> on a transfert node ('early-fetch')
+        - from the local machine --> on a compute node ('fetch')
 
-        2. execute the algo component (an executable, a script or·a sequence of instructions)
-           of inputs resources necessary to run an algo component (an executable, a script or a
-           sequence of instructions) --> 'compute'
+    2. execute the algo component (an executable, a script or·a sequence of instructions)
+        of inputs resources necessary to run an algo component (an executable, a script or a
+        sequence of instructions) --> 'compute'
 
-        3. save output resources (files produced or modified by the algo component)
-            - to the local machine --> on a compute node ('backup')
-            - to an archive machine --> on a compute node ('late-backup')
+    3. save output resources (files produced or modified by the algo component)
+        - to the local machine --> on a compute node ('backup')
+        - to an archive machine --> on a compute node ('late-backup')
 
-    To implement a new task inheriting from this abstract class, implement a subset of the following methods :
+    To implement a new task inheriting from this abstract class, implement a subset of the following methods:
+
     * get_remote_inputs
     * get_local_inputs
     * algo
+    * launch_algo
     * put_outputs
 
     See their respective documentation for more details.
 
-    Doc :
+    Doc:
     http://intra.cnrm.meteo.fr/algopy/trainings/vortex_dev2022_1/presentation/beamer/vortex_dev_jobs2_presentation.pdf
-
-    TODO:
-    1. Make a separate abstract task for real-time applications ?
-    2. Move methods from S2MTaskMixIn here (or research-specific methods in case of #1) ?
 
     """
 
@@ -99,6 +109,9 @@ class _CenResearchTask(Task, S2MTaskMixIn):
     def defaults(self, extras):
         """
         Set toolbox defaults, extended with actual arguments ``extras``.
+
+        :param extras: items to add to vortex.defaults.
+        :type extras: dict
         """
 
         t = vortex.ticket()
@@ -148,11 +161,12 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         # Format uenv properly : "uenv:{uenv_name}@user" in cas only {uenv_name} is provided
         for key, value in self.conf.items():
             if "uenv" in key:
+                if isinstance(value, bool):
+                    continue
                 if ':' not in value:
                     value = f"uenv:{value}"
                 if '@' not in value:
                     value = f'{value}@{t.env()["USER"]}'
-
                 self.conf[key] = value
 
         # Define a namespace_out variable to apply to all outputs set as the *namespace_out*
@@ -163,14 +177,23 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         self.header('Toolbox defaults')
         vortex.defaults.show()
 
+    def force_configuration_variables(self):
+        """
+        Implement this method to force the value of some configuration variables in specific use cases of the task.
+        In particular, if an input for the task comes from the output of a previous task in the driver, the "block" of
+        the input is imposed by the output block of the producing task.
+        """
+        pass
+
     @property
     def debug(self):
         """
         Enter 'debug' mode to preserve the working directory even after a succesfull execution.
 
-        Associated configuration variable :
-        :param debug: Enter 'debug' mode, default : False
-        :type debug: bool
+        **Associated configuration variable:**
+
+        * ``debug`` Enter 'debug' mode, default : False
+          type debug: bool
 
         """
         if 'debug' in self.conf:
@@ -182,18 +205,17 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         """
         Pre-processing step to set usefull class variables.
 
-        Associated (optional) configuration variables :
+        **Associated (optional) configuration variables:**
 
-        :param io_duration: Argument similar to the one of the `get_list_dates_files` method in
-                            snowtools/utils/dates.py. It is used to retrieve the list of *datebegin* and
-                            *dateend* footprints for IO covering sub-periods.
-                            Possible values : "yearly", "monthly" or "full"
-        :type io_duration: str
+        * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
+          snowtools/utils/dates.py. It is used to retrieve the list of *datebegin* and
+          *dateend* footprints for IO covering sub-periods.
+          Possible values : "yearly", "monthly" or "full"
+          type io_duration: str
+
         """
-        if 'io_duration' in self.conf:
-            self.get_list_dates(duration=self.conf.io_duration)
-        else:
-            self.get_list_dates()
+        self.get_list_dates(duration=self.conf.get('io_duration', 'yearly'))
+        self.force_configuration_variables()
 
     def process(self):
         """
@@ -235,7 +257,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
                 self.put_outputs()
 
         if 'late-backup' in self.steps:
-            # Reproductibility check with reference output (retrieved from the archive on a transfer node only)
+            # Reproducibility check with reference output (retrieved from the archive on a transfer node only)
             if 'test' in self.conf and 'localtest' not in self.conf:
                 with TestReportContext(self, t):
                     self.unittest()
@@ -260,8 +282,6 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         Implement this method in your task to fetch all resources already stored on the local (HPC) cache from a
         compute node.
         """
-        # self.get_remote_inputs()  # TODO : check if really necessary / good practice
-        # TODO: comment SR: definitely a problem: the same file appears twice in the effective input list
         raise NotImplementedError()
 
     def algo(self):
@@ -277,6 +297,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         Implement this method in your task's algo component.
         The implementation should define how to run the algo component, or call one of the standard
         methods: `launch_MPI_executable()`, `launch_python_algo()`
+
         :param algo: AlgoComponent object
         :param kw:
         """
@@ -289,6 +310,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
 
         :param algo: AlgoComponent object
         :param mpiopts: dict with MPI options nnodes=..., nprocs=..., ntasks=...
+
         """
         # Pour un exécution de binaire, il faut donner l'objet "exécutable" associé (récupéré par la commande
         # vortex.executable(...))
@@ -312,6 +334,8 @@ class _CenResearchTask(Task, S2MTaskMixIn):
     def launch_python_algo(self, algo, **kw):
         """
         Run your task's algo component. For algo components consisting of python code.
+        :param algo: AlgoComponent object
+        :param kw: keyword arguments dict
         """
         if algo is not None:
             algo.run(**kw)
@@ -327,7 +351,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         """
         Implement this method in unittest tasks to monitor the test results.
         """
-        if 'diff_xpid' in self.conf:
+        if 'diff_xpid' in self.conf and self.conf.diff_xpid:
             self.diff()
 
     def diff(self):
@@ -342,6 +366,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         from the actual simulation's datebegin/dateend arguments.
 
         :param duration: Time period covered by individual files.
+        :type duration: str
 
         """
         if 'datebegin' in self.conf and 'dateend' in self.conf:
@@ -350,95 +375,121 @@ class _CenResearchTask(Task, S2MTaskMixIn):
                 get_list_dates_files(Date(self.conf.datebegin), Date(self.conf.dateend), duration)
             self.dict_dates_end = get_dic_dateend(self.list_dates_begin, list_dates_end)
             self.dict_dates_end_pro = get_dic_dateend(self.list_dates_begin_pro, self.list_dates_end_pro)
+        elif 'rundate' in self.conf:  # Real-time only --> make a specific default class ?
+            # TODO : Trouver une meilleur solution que ce comportement implicite
+            self.conf.datebegin = self.conf.rundate
+            self.conf.dateend = self.conf.rundate
+            self.list_dates_begin = [self.conf.rundate]
+            self.dict_dates_end   = {self.conf.rundate: self.conf.rundate}
         elif 'date' in self.conf:  # Real-time only --> make a specific default class ?
+            # TODO : Trouver une meilleur solution que ce comportement implicite
+            self.conf.datebegin = self.conf.date
+            self.conf.dateend = self.conf.date
             self.list_dates_begin = [self.conf.date]
             self.dict_dates_end   = {self.conf.date: self.conf.date}
         else:
             # TODO
             pass
 
-    def get_forcing(self, localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc', alternate=True,
-            namespace='vortex.multi.fr'):
+    def get_list_members(self):
+        """
+        Return the complete list of ensemble members from either
+        - the exact 'member' value (int) --> returns [member]
+        - the 'members' list (FPList or list) --> returns the list of members
+        - the number of members 'nmembers' (int) --> returns the list of 'nmembers' values starting from 1
+        """
+        if self.conf.member is not None:
+            return rangex(self.conf.member)
+        elif 'members' in self.conf:
+            # members is the list of ensemble members, ex : range(35), '0-35-1', [1, 2, 3]
+            return rangex(self.conf.members)
+        elif 'nmembers' in self.conf:
+            # nmembers is the number of ensemble members (int)
+            return rangex(1, self.conf.nmembers)
+
+    def get_forcing(self, localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc', namespace='vortex.multi.fr'):
         """
         Method to get meteorological forcing file(s) covering the simulation period.
-        First, check if an existing forcing file covers the full simulation period.
-        If no such file exists, check for files covering standard sub-periods (yearly or monthly files).
+        Look for files covering sub-periods defined by the `io_duration` configuration variable (current values:
+        "monthly", "yearly", "full")
 
-
-        Arguments:
         :param localname: *local* footprint (how to name the file in the working directory).
-                          This is an algo/task-specific argument.
-                          Default name depends on the actual datebegin/dateend of each file.
-                          WARNING : in case a unique value is provided the user should ensure that a single
-                          file will be retrieved (for example set the alternate argument to False)
+         This is an algo/task-specific argument. Default name depends on the actual datebegin/dateend of each file.
+         WARNING : in case a unique value is provided the user should ensure that a single
+         file will be retrieved
         :type localname: str
-        :param alternate: Allow to search for alternative files covering sub-periods.
-        :type alternate: bool
+        :param namespace: namespace for fetching the forcing files. Default: vortex.multi.fr
+        :type namespace: str
 
-        Mandatory configuration variables:
-        ----------------------------------
+        **Mandatory configuration variables:**
 
-        :param forcing_datebegin: *datebegin* footprint, default self.conf.datebegin
-        :type forcing_datebegin: str, footprints.stdtypes.FPList
-        :param forcing_dateend: *dateend* footprint, default self.conf.dateend
-        :type forcing_dateend: str, footprints.stdtypes.FPList
-        :param forcing_xpid: Experiment identifier, default self.conf.xpid
-        :type forcing_xpid: str
-        :param forcing_geometry: *geometry* footprint, default self.conf.geometry
-        :type forcing_geometry: str, footprints.stdtypes.FPList
-        :param forcing_vapp: *vapp* footprint, default self.conf.vapp
-        :type forcing_vapp: str
-        :param forcing_vconf: *vconf* footprint, default self.conf.vconf
-        :type forcing_vconf: str
-        :param forcing_block: *block* footprint, default "meteo"
-        :type forcing_vconf: str
-        :param forcing_namespace: *namespace* footprint, default "vortex.multi.fr" (hendrix + local cache)
-        :type forcing_namespace: str
+        * ``forcing_datebegin`` *datebegin* footprint, default self.conf.datebegin
+          type forcing_datebegin: str, footprints.stdtypes.FPList
+        * ``forcing_dateend`` *dateend* footprint, default self.conf.dateend
+          type forcing_dateend: str, footprints.stdtypes.FPList
+        * ``forcing_xpid`` Experiment identifier, default self.conf.xpid
+          type forcing_xpid: str
+        * ``forcing_geometry`` *geometry* footprint, default self.conf.geometry
+          type forcing_geometry: str, footprints.stdtypes.FPList
+        * ``forcing_vapp`` *vapp* footprint, default self.conf.vapp
+          type forcing_vapp: str
+        * ``forcing_vconf`` *vconf* footprint, default self.conf.vconf
+          type forcing_vconf: str
+        * ``forcing_block`` *block* footprint, default "meteo"
+          type forcing_vconf: str
+        * ``forcing_namespace`` *namespace* footprint, default "vortex.multi.fr" (hendrix + local cache)
+          type forcing_namespace: str
 
-        :param forcing_date: *date* footprint (unsed with the research namebuilders), default to [dateend]
-        :type forcing_date: str
-        :param forcing_model: *model* footprint (to be made optional for SurfaceIO objects), default None
-        :type forcing_model: str
+        * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
+          type forcing_date: str
+        * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
+          type forcing_model: str
 
-        Optionnal configuration variables:
-        ----------------------------------
+        **Optional configuration variables:**
 
-        :param forcing_member: *member* footprint, default None (or *member* if provided)
-        :type forcing_member: int, footprints.stdtypes.FPList
-        :param forcing_namebuild: *namebuild* footprint, default "flat@cen" (will change soon)
-        :type forcing_namebuild: str
-        :param forcing_intent: *intent* footprint (local file permissions), default "in"
-                               Possible values : "in" (read-only), "inout" (read-write)
-        :type forcing_intent: str
-        :param forcing_source_app: *source_app* footprint, default None
-        :type forcing_source_app: str, footprints.stdtypes.FPList
-        :param forcing_source_conf: *source_conf* footprint, default None
-        :type forcing_source_conf: str, footprints.stdtypes.FPList
-        :param forcing_source: Retrieve *source_app* and *source_conf* footrprints dictionnaries for S2M reanalysis
-                               Possible values : 'era5', 'era40'
-        :type forcing_source: str
-        :param forcing_cutoff: *cutoff* footprint (to be made optional for SurfaceIO objects), default None
-        :type forcing_cutoff: str
-        :param io_duration: Argument similar to the one of the `get_list_dates_files` method in
-                            snowtools/utils/dates.py.
-                            Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
-                            Possible values : "yearly", "monthly" or "full"
-        :type io_duration: str
-        :param forcing_vortex1: Boolean to identify resources produced with vortex1 (filename without geometry)
-        :type forcing_vortex1: bool
+        * ``forcing_member`` *member* footprint, default None (or *member* if provided)
+          type forcing_member: int, footprints.stdtypes.FPList
+        * ``forcing_namebuild`` *namebuild* footprint, default "flat@cen" (will change soon)
+          type forcing_namebuild: str
+        * ``forcing_intent`` *intent* footprint (local file permissions), default "in"
+          Possible values : "in" (read-only), "inout" (read-write)
+          type forcing_intent: str
+        * ``forcing_source_app`` *source_app* footprint, default None
+          type forcing_source_app: str, footprints.stdtypes.FPList
+        * ``forcing_source_conf`` *source_conf* footprint, default None
+          type forcing_source_conf: str, footprints.stdtypes.FPList
+        * ``forcing_source`` Retrieve *source_app* and *source_conf* footrprints dictionnaries for S2M reanalysis
+          Possible values : 'era5', 'era40'
+          type forcing_source: str
+        * ``forcing_cutoff`` *cutoff* footprint (to be made optional for SurfaceIO objects), default None
+          type forcing_cutoff: str
+        * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
+          snowtools/utils/dates.py.
+          Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
+          Possible values : "yearly", "monthly" or "full"
+          type io_duration: str
+        * ``forcing_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
+          type forcing_vortex1: bool
+
+
+        TODO : prévoir un mécanisme pour rendre des déclarer les arguments obligatoires / optionnels pour
+         chaque tâche (ex: member)
 
         """
 
         t = self.ticket
 
         forcing_datebegin = self.conf.get('forcing_datebegin', self.conf.get('datebegin', None))
-        forcing_dateend   = self.conf.get('forcing_dateend', self.conf.get('dateend', None))
+        forcing_dateend = self.conf.get('forcing_dateend', self.conf.get('dateend', None))
+        forcing_date      = self.conf.get('forcing_date', forcing_dateend)
         forcing_xpid      = self.conf.get('forcing_xpid', self.conf.xpid)
         forcing_user      = self.conf.get('forcing_user', None)
         forcing_vapp      = self.conf.get('forcing_vapp', self.conf.vapp)
         forcing_vconf     = self.conf.get('forcing_vconf', self.conf.vconf)
         forcing_block     = self.conf.get('forcing_block', 'meteo')
         forcing_member    = self.conf.get('forcing_member', self.conf.get('member', None))
+        if forcing_member is not None and not isinstance(forcing_member, int):
+            forcing_member = FPList(forcing_member)
         # forcing_geometry value may depend on the task's output 'geometry' value
         if 'forcing_geometry' in self.conf:
             if isinstance(self.conf.forcing_geometry, dict):
@@ -458,20 +509,29 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         # TODO : ne pas utiliser de source_app / source_conf à l'avenir
         forcing_source_app  = self.conf.get('forcing_source_app', None)
         forcing_source_conf = self.conf.get('forcing_source_conf', None)
-        # Verrue pour gérer les footprints *source_app* et *source_conf* de la réanalyse S2M
-        if 'forcing_source' in self.conf:
-            forcing_source_app, forcing_source_conf = \
-                self.get_safran_sources([forcing_datebegin], era5=self.conf.forcing_source == 'era5')
         forcing_cutoff = self.conf.get('forcing_cutoff', None)
         vortex1        = self.conf.get('forcing_vortex1', False),
 
-        self.sh.title('Input forcing (full simulation period)')
+        duration = self.conf.get('io_duration', 'yearly')
+        list_dates_begin, list_dates_end, _, _ = get_list_dates_files(Date(forcing_datebegin),
+                Date(forcing_dateend), duration)
+        dict_dates_end = get_dic_dateend(list_dates_begin, list_dates_end)
+
+        # Verrue pour gérer les footprints *source_app* et *source_conf* de la réanalyse S2M
+        if 'forcing_source' in self.conf:
+            if vortex1[0]:   # ça ne devrait pas être necessaire si les forcings ont été produit avec vortex 2, non ?
+                forcing_source_app, forcing_source_conf = \
+                    self.get_safran_sources(list_dates_begin, era5=self.conf.forcing_source == 'era5')
+            else:
+                forcing_source_app, forcing_source_conf = None, None
+
+        self.sh.title(f'Input forcing ({duration} duration)')
         forcing = vortex.input(
             role           = 'Forcing',  # Used for parallelisation and alternates only
             kind           = 'MeteorologicalForcing',
             nativefmt      = 'netcdf',
-            datebegin      = forcing_datebegin,  # default : self.conf.datebegin
-            dateend        = forcing_dateend,  # default : self.conf.dateend
+            datebegin      = list_dates_begin,
+            dateend        = dict_dates_end,
             experiment     = forcing_xpid,  # default : self.conf.xpid
             username       = forcing_user,
             geometry       = forcing_geometry,  # default : self.conf.geometry
@@ -488,52 +548,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             source_app     = forcing_source_app,  # default = None (ne pas refaire l'erreur)
             source_conf    = forcing_source_conf,  # default = None (ne pas refaire l'erreur)
             cutoff         = forcing_cutoff,  # TODO : à supprimer dans le cas recherche
-            fatal          = False,  # Do not crash now, there is an alternative
+            fatal          = True,
         ),
         print(t.prompt, 'FORCING =', forcing)
         print()
-
-        if not forcing[0] and alternate:
-
-            # TODO : ne plus faire d'alternate, prescrire obligatoirement le duration (plus rapide)
-            # 2 cas : 'Yearly', + exception pour 1er / dernier fichiers
-            # NB : eviter les alternates dans les tâches
-
-            # Sécurité si *forcing_datebegin* != *datebegin* ou *forcing_dateend* != *dateend*
-            duration = self.conf.get('io_duration', 'yearly')
-            list_dates_begin, list_dates_end, _, _ = get_list_dates_files(Date(forcing_datebegin),
-                    Date(forcing_dateend), duration)
-            dict_dates_end = get_dic_dateend(list_dates_begin, list_dates_end)
-
-            # Verrue pour gérer les footprints *source_app* et *source_conf* de la réanalyse S2M
-            if 'forcing_source' in self.conf:
-                forcing_source_app, forcing_source_conf = \
-                    self.get_safran_sources(list_dates_begin, era5=self.conf.forcing_source == 'era5')
-
-            self.sh.title('Input forcing (sub-periods)')
-            forcing = vortex.input(
-                alternate      = 'Forcing',
-                kind           = 'MeteorologicalForcing',
-                nativefmt      = 'netcdf',
-                datebegin      = list_dates_begin,
-                dateend        = dict_dates_end,
-                experiment     = forcing_xpid,  # default : self.conf.xpid
-                username       = forcing_user,
-                geometry       = forcing_geometry,  # default : self.conf.geometry
-                local          = localname,
-                vapp           = forcing_vapp,  # default : self.conf.vapp
-                vconf          = forcing_vconf,  # default : self.conf.vconf
-                block          = forcing_block,  # default : 'meteo' ?
-                member         = forcing_member,  # default : None
-                intent         = forcing_intent,  # default : 'in' ?
-                namespace      = namespace,  # default : 'vortex.multi.fr',
-                namebuild      = forcing_namebuild,  # default recherche : 'flat@cen', defaut oper : None
-                vortex1        = vortex1,
-                date           = '[dateend]',  # TODO : à supprimer dans le cas recherche
-                source_app     = forcing_source_app,  # default = None (ne pas refaire l'erreur)
-                source_conf    = forcing_source_conf,  # default = None (ne pas refaire l'erreur)
-                cutoff         = forcing_cutoff,  # TODO : à supprimer dans le cas recherche
-                fatal          = True,  # This is the last try, crash in case of failure
-            ),
-            print(t.prompt, 'FORCING (alternate) =', forcing)
-            print()

@@ -8,6 +8,7 @@ Introduction
 
 The full vortex documentation is available here : https://vortex-nwp.readthedocs.io/en/latest/index.html.
 A Meteo-France/CNRM-specific documentation is also available here : https://cnrm-gmap.gitlab.meteo.fr/vortex-cnrm-docs/.
+Vortex relies heavily on the "footprints" package : http://intra.cnrm.meteo.fr/algopy/sphinx/vortex/current/technical/footprints_fr.html
 
 The main benefit of the use of vortex in the snowtools package is to standardise data management for snowpack simulation workflows.
 
@@ -20,10 +21,10 @@ Installing and configuring Vortex
 Installing snowtools automatically installs Vortex. Please follow the snowtools installation documentation to ensure a valid installation of Vortex and associated tools.
 For an independent installation, follow the Vortex documentation.
 
-Vortex data management
-----------------------
-
-TODO
+..
+    Votex data management
+    ----------------------
+    TODO
 
 The vortex data tree
 --------------------
@@ -116,13 +117,16 @@ The resource's *kind*
 
 The prefix of the file name is the resource *kind* footprint (type string) or any alias deriving from it.
 
+.. _vortex_geometries:
+
 The resource's *geometry*
 """""""""""""""""""""""""
 
 The second level of the file name is derived from the *geometry* footprint (string or list of str type), which is a tag identifying a geometry object describing a given discretisation of space.
+Standard NWP geometries are referenced in the vortex_nwp package, and additional "CEN"-specific geometries are references in the vortex-cen plugin.
 
-**NB** A description of the geometry object must be provided in a geometries.ini file stored under $HOME/.vortexrc (the *geometry* footprint is the geometry block/entry name)
-For example, *geometry='GrandesRousses250m'* identifies the following geometry :
+Any "new" geometry not included in these standard geometries must be provided in a ``geometries.ini`` file stored under $HOME/.vortexrc.
+The *geometry* footprint is the geometry block/entry name. For example, *geometry='GrandesRousses250m'* identifies the following geometry :
 
 .. code-block:: ini
 
@@ -132,11 +136,10 @@ For example, *geometry='GrandesRousses250m'* identifies the following geometry :
     area       = GrandesRousses
 
 The minimum information to provide for the description of a geometry is the geometry *kind* ("ustructured" for massif-like geometries or "lonlat" for 2D simulations).
-A default "geometries.ini" file containing all standard geometries commonly used at CEN is provided in snowtools, under $SNOWTOOLS_CEN/snowtools/conf/geometries_vortex2.ini
 
 .. note::
 
-    This is a major difference with the naming convention used at CEN before the migration to vortex-2:
+    This *geometry* information in the file name is a major difference with the naming convention used at CEN before the migration to vortex-2:
     The *geometry* used to appear at the *vconf* level and not in the filename.
 
 The resource's *datebegin* and *dateend*
@@ -252,10 +255,73 @@ The *cutoff* footprint (type string) is a (confusing) NWP-derived term to distin
 The *cutoff*  footprint is optional for the "cen" namebuilder, but is mandatory for the standard vortex namebuilder (it appears as a letter at the *date* level, with a format yyyymmddThhmm[**AP**]).
 
 
-Parallelisation management with vortex
---------------------------------------
+Get data archived with vortex at CEN
+------------------------------------
 
-TODO
+As mentioned in the introduction, Vortex provides simulation IOs manipulation tools.
+Getting data archived with Vortex requires to provide a valid footprint description of the target file(s).
+Vortex provides the `vtx` command line to fetch (and) store data to/from the vortex data tree from a description writen in a YAML configuration file :
+https://vortex-nwp.readthedocs.io/en/latest/user-guide/cli.html
+
+An example of such a yaml configuration file to extract a specific file from the S2M reanalysis is provided : vortex_cen/conf/S2MReanalysis.yaml
+
+Extracting this data can simply be done with :
+
+.. code::
+
+   vtx get S2MReanalysis.yaml
+
+However, the use of the `vtx` tool to extract the entire S2M dataset is not straightforward due to the annual data storage convention.
+
+More broadly, using data extractors means that the fetched files are duplicated from the vortex data tree into the user's working directory and become "wild" files.
+This results in the loss of the benefits to use vortex in the first place.
+In addition, the duplication of potentialy large dataset can lead to very sub-optimal data management.
+
+Most snow-related simulation IOs are NetCDF files opened with xarray and its extensions provided by the snowtools package (see :ref:`xarray` for more information).
+Among those extensions, a `open_vortex_data` wrapper is provided to fetch files from the vortex data tree and read them with xarray in a single python command.
+
+The typical use of this wrapper would be to write the vortex/footprint description of the target data in a configuration file. For example:
+
+.. code::ini
+
+   # description.ini
+
+   [DEFAULT]
+   vapp=s2m
+   vconf=reanalysis
+   datebegin=2024080106
+   dateend=2025080106
+   experiment=release_2026.1
+   username=vernaym
+   duration=yearly
+   kind=PRO
+   block=pro
+   geometry=cor2_flat
+
+And call the `open_vortex_data` with the absolute or relative path to this configuration file to the "configfile" keyword argument.
+
+.. code-block:: python
+
+    from snowtools.utils.xarray_snowtools import open_vortex_data
+
+    with open_vortex_data(configfile='description.ini') as ds:
+        print(ds)
+        # `ds` is an xarray.Dataset containing the target data
+        # Do any data manipulation here :
+        # * apply native xarray methods to `ds`
+        # * apply xarray_snowtools_accessor methods to `ds`
+        # * code block
+        # * call external functions with ds as argument
+        # ...
+
+This workflow enables all file transfer and opening operations to be completed discreetly in the background, allowing you to focus on the data itself.
+
+    
+
+..
+    Parallelisation management with vortex
+    --------------------------------------
+    TODO
 
 Vortex glossary
 ---------------
@@ -272,7 +338,7 @@ Vortex glossary
 
 **Resource Handlers** consist of an association of a provider, a resource and a container. They establish a bridge between the vortex and the user worlds.
 
-**algo components** refer to the classes outlying the core algorithm to produce a given set of outputs files from a given set of inputs files.
+**algo components** refer to the classes outlying the core algorithm to produce a given set of output files from a given set of input files.
 
 
 

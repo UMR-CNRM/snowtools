@@ -5,7 +5,7 @@
 from .ensemble_surfex_tasks_common import Ensemble_Surfex_Task
 from .hydro_task import Hydro_Task
 from mkjob.nodes import Driver, Task
-from vortex_cen.layout.nodes import S2MTaskMixIn
+from vortex_cen.tasks.oper_research_mixin import CENTaskMixIn
 import vortex
 import footprints
 
@@ -22,7 +22,7 @@ def setup(t, **kw):
     )
 
 
-class Four_Seasons_Task(S2MTaskMixIn, Task):
+class Four_Seasons_Task(CENTaskMixIn, Task):
     """
     Task : Four_Seasons_Task
     ========================

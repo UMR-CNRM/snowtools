@@ -1,5 +1,42 @@
+# -*- coding: utf-8 -*-
 """
+surfex.py
+---------
+
 SURFEX/Crocus output resources.
+
+.. inheritance-diagram:: Prep
+   :top-classes: vortex.nwp.data.modelstates.InitialCondition
+   :private-bases:
+   :parts: 5
+
+.. inheritance-diagram:: Pro
+   :top-classes: vortex_cen.data.flow.SurfaceIO, vortex_cen.data.flow.SurfaceIOVortex1,
+   :private-bases:
+   :parts: 2
+
+.. inheritance-diagram:: PrepVortex1
+   :top-classes: vortex.nwp.data.modelstates.InitialCondition
+   :private-bases:
+   :parts: 5
+
+.. inheritance-diagram:: ProVortex1
+   :top-classes: vortex_cen.data.flow.SurfaceIO, vortex_cen.data.flow.SurfaceIOVortex1,
+   :private-bases:
+   :parts: 2
+
+.. autoclass:: Pro
+   :show-inheritance:
+
+.. autoclass:: Prep
+   :show-inheritance:
+
+.. autoclass:: ProVortex1
+   :show-inheritance:
+
+.. autoclass:: PrepVortex1
+   :show-inheritance:
+
 """
 
 from bronx.stdtypes.date import Date
@@ -65,9 +102,13 @@ class Prep(InitialCondition):
                 # but the validity date of the file can be different.
                 # In research applications, there is only the validity date which makes sense.
                 datevalidity = dict(
+                    info = "The validity date of the PREP file",
+                    type = Date,
+                ),
+                date = dict(
+                    info = "The production date of the PREP file",
                     optional = True,
                     type = Date,
-                    default = '[date]',
                 ),
                 # This notion does not mean anything in our case (and seems to be rather
                 # ambiguous also in other cases)
@@ -142,9 +183,13 @@ class PrepVortex1(InitialCondition):
                 # but the validity date of the file can be different.
                 # In research applications, there is only the validity date which makes sense.
                 datevalidity = dict(
+                    info = "The validity date of the PREP file",
+                    type = Date,
+                ),
+                date = dict(
+                    info = "The production date of the PREP file",
                     optional = True,
                     type = Date,
-                    default = '[date]',
                 ),
                 # This notion does not mean anything in our case (and seems to be rather
                 # ambiguous also in other cases)

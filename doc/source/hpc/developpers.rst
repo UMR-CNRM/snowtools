@@ -91,8 +91,8 @@ This example illustrates the creation of a "task" with :
           datebegin   = self.conf.datebegin,
           dateend     = self.conf.dateend,
           geometry    = self.conf.get('forcing_geometry', self.conf.geometry),  # Must be the same as the input geometry in this example
-          block       = self.conf.get('out_block', 'extract_subperiod'),  # Allow for a user-defined block, by set default as task "tag"
-          nativefmt   = 'netcdf'
+          block       = 'meteo',  # Force output block at "meteo" (arbitrary choice)
+          nativefmt   = 'netcdf',
           namespace   = 'vortex.cache.fr',  # Do not archive the output file on Hendrix in this exemple (duplicated data)
           namebuild   = 'flat@cen',
       ),
@@ -187,7 +187,6 @@ The documentation of the example task of section :ref:`minimal_example` would lo
            "forcing_xpid+help=Experiment identifier of the input forcing;type=str;default=The current experiment identifier",
            "forcing_user+help=Name of the producer of the input forcing;type=str;default=$USER",
            "forcing_block+help=*block* level of the input forcing;type=str;default=meteo",
-           "out_block+help=*block* of the output file(s);type=str;default=extract_subperiod",
        ]
 
 For more information on the documentation of configuration variables, see section :ref:`dynamic_documentation`.
@@ -586,7 +585,7 @@ You can now execute your task in parallel by modifying the algo of section :ref:
 Dynamic documentation of unit tasks
 -----------------------------------
 
-The documenation of all configuration variables used by a given task is build dynamically by the "mkjob-help" script.
+The documentation of all configuration variables used by a given task is build dynamically by the "mkjob-help" script.
 To do so, the list of the name of the configuration variables must be provided in the "MANDATORY_CONFUGURATION_VARIABLES" and "OPTIONAL_CONFIGURATION_VARIABLES" attributes of the task.
 In order to inherit from the documentation of parent classes, these attributes should be extended as follows:
 
@@ -758,6 +757,69 @@ For example, the following class attributes
 
 states that for this given task, the value of the *forcing_geometry* configuration variable must be a list (instead of 'str or list') and that there is no default value.
 This syntax can also be used to document variables not in the "standard_variables" dictionnary. In this case, at least the "help" message and the variable "type" must be provided.
+
+Sphinx style documentation of unit tasks
+----------------------------------------
+
+Task classes should also provide a sphinx style documentation of the configuration
+variables used or potentially used:
+
+.. code-block:: python
+
+    """
+    **Task: PreprocessNamelist**
+
+    Task for pre-processing a namelist coming from a User Environment.
+    NB: This is the task to use to guarantee the simulation's reproductibility
+
+    **Mandatory configuration variables:**
+
+    * ``surfex_uenv`` or if not present ``uenv`` User Environment from which the namelist file should be fetched.
+      Format : uenv:{uenv_name}@{user}
+    * ``namelist_source`` In an UEnv, several namelistes can be present in an *.tar* archive,
+      the *source*  footprint allows to define the exact name of the nameliste to fetch.
+      For example, *OPTIONS_default.nam*.
+    * ``forcing_datebegin`` *datebegin* footprint, default self.conf.datebegin
+      type forcing_datebegin: str, footprints.stdtypes.FPList
+    * ``forcing_dateend`` *dateend* footprint, default self.conf.dateend
+      type forcing_dateend: str, footprints.stdtypes.FPList
+    * ``forcing_xpid`` Experiment identifier, default self.conf.xpid
+      type forcing_xpid: str
+    ...
+
+    **Optional configuration variables:**
+
+    * ``namelist_path`` absolute path to the namelist file if the namelist is not in the uenv.
+    * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
+      snowtools/utils/dates.py.
+      Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
+      Possible values : "yearly", "monthly" or "full"
+      type io_duration: str
+    * ``forcing_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
+      type forcing_vortex1: bool
+    ...
+
+    """
+
+Format:
+
+.. code-block:: python
+
+    """
+    **Headings:**
+
+    * use bullet list and if the line is too long
+      there must be exactly two spaces in the beginning of the continuation
+      line
+    * ``variable name`` emphasise variable names this way
+        - there might
+        - be a second level
+        - of the bullet list
+
+      don't forget the empty line to end the bullet list.
+
+    """
+
 
 Testing unit tasks
 ------------------

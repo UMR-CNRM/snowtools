@@ -1,6 +1,15 @@
 # -*- coding: utf-8 -*-
-'''
-'''
+"""
+add_slopes.py
+-------------
+
+Add slopes to forcing file(s) in the SAFRAN "flat" massif geometry.
+
+.. autoclass:: AddSlopes
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+"""
 
 import vortex
 from vortex_cen.tasks.research_task_base import _CenResearchTask
@@ -8,16 +17,34 @@ from vortex_cen.tasks.research_task_base import _CenResearchTask
 
 class AddSlopes(_CenResearchTask):
     """
+    **Task : AddSlopes**
     Add slopes to forcing file in a "flat" geometry.
 
-    Inputs :
-    --------
+    **Input:**
+
     - SAFRAN-generated FORCING file in a "flat" geometry.
 
-    Outputs :
-    ---------
+    **Output:**
+
     - FORCING file wih slopes and aspects.
 
+    **Mandatory configuration variables:**
+
+    * ``datebegin`` *datebegin* of the forcing file(s)
+      type: str, footprints.stdtypes.FPList
+    * ``dateend`` *dateend* of the forcing files(s)
+      type: str, footprints.stdtypes.FPList
+    * ``forcing_geometry`` *geometry* of the input forcing file(s)
+      type: str, footprints.stdtypes.FPList
+    * ``geometry`` *geometry* of the output forcing file(s)
+      type: str, footprints.stdtypes.FPList
+    * ``xpid`` Experiment identifier
+      type: str
+
+    **Optional configuration variables:**
+
+    * ``max_ntasks`` The maximum number of parallel tasks (in case of huge memory usage)
+      type: int
    """
 
     def __init__(self, **kw):
@@ -111,12 +138,13 @@ class AddSlopes(_CenResearchTask):
 
         return algo
 
-    def launch_algo(self, algo):
+    def launch_algo(self, algo, **kwargs):
         """
         launch the algo component.
 
         :param algo: Algorithm to be launched.
         :type algo: AlgoComponent
+        :param kwargs: Keyword arguments not used.
         """
         self.launch_python_algo(algo)
 
@@ -125,11 +153,12 @@ class AddSlopes(_CenResearchTask):
         Save the output FORCING file(s) in the new geometry.
         WARNING : the output geometry must be in a valid "geometries.ini" file.
 
-        Arguments:
-        :param geometry: Geometry of the output file(s)
-        :type geometry: str
-        :param xpid: Experiment identifier
-        :type xpid: str
+        **Configuration variables used:**
+
+        * ``geometry`` Geometry of the output file(s)
+          type: str
+        * ``xpid`` Experiment identifier
+          type: str
         """
 
         self.sh.title('Output FORCING')

@@ -16,7 +16,6 @@ from snowtools.DATA import DIRDATAPGD
 
 
 class s2mTest(TestWithTempFolderWithLog):
-
     def setUp(self):
         super(s2mTest, self).setUp()
         self.commonoptions = " -o " + self.diroutput + " -g"

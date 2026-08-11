@@ -1,4 +1,13 @@
 # -*- coding:Utf-8 -*-
+"""
+reforecast.py
+-------------
+
+.. autoclass:: SafranReforecast
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+"""
 
 import footprints
 from bronx.stdtypes.date import Period
@@ -8,30 +17,49 @@ from vortex_cen.tasks.research_task_base import _CenResearchTask
 
 class SafranReforecast(_CenResearchTask):
     """
-    Task : SafranReforecast
-    =======================
+    **Task : SafranReforecast**
 
     Safran ensemble re-forecast task (daily run covering J 6H --> J+4 6H).
     SAFRAN guess files come from both the PEARP ensemble and ARPEGE (as member 'N+1') from the 0 UTC run.
 
-    Inputs
-    ------
-    - Guess : daily packed files containing all lead time of a given 0H run of ARPEGE / PERAP
-    - listem : List of SAFRAN massifs
-    - listeml : List of coordinates of the SAFRAN massifs
-    - Listeo : list of potential observation sites to assimilate (mandatory but unused)
-    - NORELmt : Monthly mean precipitation value
-    - rsclim / icrccm : Climatological values
-    - ADAPT/ANALYSE/EBAUCHE/IMPRESS/MELANGE/SORTIES : Safran namelists
-    - carpost.tar : Files describing the output "postes"
-    - safrane : Safran executable for synoptic interpolation of the guess on the Safran geometry
-    - syrpluie / syrmRR : Safran executables for precipitation spatio-temporal precipitation interpolation
-    - sytist : Safran executable for hourly interpolation and the creation of FORCING files
+    **Input:**
 
-    Outputs
-    -------
-    - FORCING_massifs.nc : Ensemble of forcing files on the "flat" massif geometry
-    - FORCING_postes.nc : Ensemble of forcing files on the "postes" geometry
+    - Guess: daily packed files containing all lead time of a given 0H run of ARPEGE / PERAP
+    - listem: List of SAFRAN massifs
+    - listeml: List of coordinates of the SAFRAN massifs
+    - Listeo: list of potential observation sites to assimilate (mandatory but unused)
+    - NORELmt: Monthly mean precipitation value
+    - rsclim / icrccm: Climatological values
+    - ADAPT/ANALYSE/EBAUCHE/IMPRESS/MELANGE/SORTIES: Safran namelists
+    - carpost.tar: Files describing the output "postes"
+    - safrane: Safran executable for synoptic interpolation of the guess on the Safran geometry
+    - syrpluie / syrmRR: Safran executables for precipitation spatio-temporal precipitation interpolation
+    - sytist: Safran executable for hourly interpolation and the creation of FORCING files
+
+    **Output:**
+
+    - FORCING_massifs.nc: Ensemble of forcing files on the "flat" massif geometry
+    - FORCING_postes.nc: Ensemble of forcing files on the "postes" geometry
+
+    **Mandatory Configuration Variables:**
+
+    * ``datebegin`` First rundate of the guess (hour must be '00')
+    * ``dateend`` Last run date of the guess (hour must be '00')
+    * ``xpid`` Experiment id. Do not use experiment ids with 4 letters.
+    * ``geometry`` Geometry of the simulation. This must be a valid geometry in your
+      '$HOME/.vortexrc/geometries.ini' file.
+    * ``uenv`` Name of the UEnv containing all SAFRAN constant input files and executables
+    * ``prv_terms`` Lead times of the Safran guess files. type: footprints.stdtypes.FPList, format = first-last-step
+    * ``ntasks`` Number of parallel tasks to allocate to the execution.  type: int or dict[geometry]
+    * ``nnodes`` Number of nodes to allocate to the execution. type: int or dict[geometry]
+    * `` members`` The list of ensemble members. Default: None
+    * ``execution`` Type of SAFRAN execution. type: str, choices: analysis, forecast, reanalysis, reforecast
+    * ``assim`` Allow assimilation of observations. type: bool
+
+    **Optional Configuration Variables:**
+
+    * ``guess_xpid`` Experiment identifier of the SAFRAN guess files. type: str Default: *xpid*
+    * ``guess_user`` Username of the producer of the SAFRAN guess files. type: str, default: $USER
     """
 
     def __init__(self, **kw):

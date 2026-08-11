@@ -781,19 +781,19 @@ class forcinput_select(forcinput_tomodify):
         INFOmassifs = infomassifs()
         dicLonLat = INFOmassifs.getAllMassifLatLon()
 
-        lat = np.empty(massifnumber.shape, np.float)
-        lon = np.empty(massifnumber.shape, np.float)
+        lat = np.empty(massifnumber.shape, np.float64)
+        lon = np.empty(massifnumber.shape, np.float64)
 
         for point in range(0, len(massifnumber)):
             lonlat = dicLonLat[massifnumber[point]]
             lat[point] = lonlat[1]
             lon[point] = lonlat[0]
 
-        var = forcing.createVariable("LAT", np.float, dimension, fill_value=varFillValue)
+        var = forcing.createVariable("LAT", np.float64, dimension, fill_value=varFillValue)
         setattr(var, 'long_name', 'latitude')
         setattr(var, 'units', 'degrees_north')
         var[:] = lat
-        var = forcing.createVariable("LON", np.float, dimension, fill_value=varFillValue)
+        var = forcing.createVariable("LON", np.float64, dimension, fill_value=varFillValue)
         setattr(var, 'long_name', 'longitude')
         setattr(var, 'units', 'degrees_east')
         var[:] = lon

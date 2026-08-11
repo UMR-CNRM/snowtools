@@ -6,8 +6,8 @@ Launch the OFFLINE executable with forcing files produced by the "concatenation_
 
 from mkjob.nodes import Driver
 import vortex
-from vortex_cen.tasks.surfex.offline import Offline_MPI_Uenv
-from vortex_cen.tasks.surfex.pre_process import Preprocess_Uenv_Namelist
+from vortex_cen.tasks.surfex.offline import Offline_Mpi_Uenv
+from vortex_cen.tasks.surfex.pre_process import PreprocessNamelist
 
 
 def setup(t, **kw):
@@ -15,14 +15,14 @@ def setup(t, **kw):
         tag='surfex_postes',
         ticket=t,
         nodes=[
-            Preprocess_Uenv_Namelist(tag='preprocess', ticket=t, **kw),
+            PreprocessNamelist(tag='preprocess', ticket=t, **kw),
             Offline_reanalysis_postes(tag='offline', ticket=t, **kw),
         ],
         options=kw,
     )
 
 
-class Offline_reanalysis_postes(Offline_MPI_Uenv):
+class Offline_reanalysis_postes(Offline_Mpi_Uenv):
     """
     Task : Offline_reanalysis_postes
     ================================
@@ -68,9 +68,9 @@ class Offline_reanalysis_postes(Offline_MPI_Uenv):
 
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
-        self.get_pgd_from_uenv()
+        _ = self.get_pgd_file_from_uenv()
         self.get_executable()
-        self.get_prep()
+        _ = self.get_prep_file_from_cache_or_archive(fatal=True, cache_only=False)
 
     def get_local_inputs(self):
         self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')

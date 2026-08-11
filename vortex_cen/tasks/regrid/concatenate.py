@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+concatenate.py
+--------------
+
+.. autoclass:: ForcingSpatialConcatenation
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
 """
 
 
@@ -13,14 +20,32 @@ class ForcingSpatialConcatenation(_CenResearchTask):
     FORCING files over different years are processed in parallel.
     Ex : concatenation of "postes" simulations over different mountain ranges
 
-    Inputs:
-    --------
+    **Input:**
+
     - Set of FORCING files to concatenate
 
-    Outputs:
-    ---------
+    **Output:**
+
     - Single FORCING file
 
+    **Mandatory Configuration variables:**
+
+    * ``forcing_geometry`` List of geometries of the FORCING files to concatenate
+      type: footprints.stdtypes.FPList
+    * ``xpid`` Experiment identifier
+      type: str
+    * ``geometry`` Geometry of the output file(s)
+      type: str
+    * ``datebegin`` begin date(s) of files
+    * ``dateend`` end date(s) of files
+    * ``namespace_out`` namespace of output files
+
+    **Optional configuration variables:**
+
+    * ``max_ntasks`` The maximum number of parallel tasks (in case of huge memory usage)
+      type: int
+    * ``block`` Output block of the concatenated FORCING files
+      type: str
     """
 
     def __init__(self, **kw):
@@ -83,12 +108,13 @@ class ForcingSpatialConcatenation(_CenResearchTask):
 
         return algo
 
-    def launch_algo(self, algo):
+    def launch_algo(self, algo, **kwargs):
         """
         launch the algo component.
 
         :param algo: Algorithm to be launched.
         :type algo: AlgoComponent
+        :param kwargs: Additional configuration variables. Not used
         """
         self.launch_python_algo(algo)
 
