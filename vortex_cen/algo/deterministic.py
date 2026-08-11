@@ -23,7 +23,11 @@ Algo Components for deterministic Surfex simulations.
    :no-members:
    :show-inheritance:
 
-.. autoclass:: rallelSurfex_Pa
+.. autoclass:: Surfex_Parallel
+   :no-members:
+   :show-inheritance:
+
+.. autoclass:: Surfex_Xios_Parallel
    :no-members:
    :show-inheritance:
 
