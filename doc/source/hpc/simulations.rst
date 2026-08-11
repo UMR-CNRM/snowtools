@@ -207,55 +207,26 @@ These arguments can either be added in the configuration file, or be provided to
 
    mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2020080106 dateend=2021080106 geometry=cor2_allslopes
 
-Reproductible simulations with a user-controlled SURFEX/Crocus configuration
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+Reproducible simulations with custom SURFEX namelists
+""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 The default SURFEX/Crocus simulations described on the sections above are based on reference SURFEX/Crocus executables and namelists.
 
 You can use your own namelist and executables by creating a new user environment (:ref:`uenv_creation`) or by modifying an existing one (:ref:`uenv_modification`).
 
-After compiling SURFEX, put the compiled executables in the $HOME/.vortexrc/hack/uget/<your_username>/data with the following naming convention <exec_name>_<MPI/NOMPI>_<SURFEX_git_commit>, where:
-
-* *exec_name* is "OFFLINE", "PGD", "PREP" or "SODA"
-* *SURFEX_git_commit* can be retrieved from the ".git_info" in your SURFEX root directory (make sure that the compiled executables match this commit)
-
-.. note::
-   This step can also be achived with the "surfex_uenv.py" script available under vortex_cen/scripts
-
-To create a new UEnv, open a file in $HOME/.vortexrc/hack/uget/<your_username>/env with the name of your choice (for example "new_env_name").
-To update an existing UEnv named "reference_uenv" owned by the user "uenv_owner", create a copy of this UEnv into a "new_env_name":
-
-.. code-block::
-
-  uget hack env <reference_uenv>@<uenv_owner> into <new_env_name>
-
-This creates the file $HOME/.vortexrc/hack/uget/<your_username>/env/<new_env_name> containing the "reference_uenv" information.
-Then add or modify the following lines in file $HOME/.vortexrc/hack/uget/<your_username>/env/<new_env_name> :
-
-.. code-block::
-
-  MASTER_OFFLINE_MPI="uget:OFFLINE_MPI_<SURFEX_git_commit>@<your_username>"
-  MASTER_OFFLINE_NOMPI="uget:OFFLINE_NOMPI_<SURFEX_git_commit>@<your_username>"
-  MASTER_PGD_MPI="uget:PGD_MPI_<SURFEX_git_commit>@<your_username>"
-  MASTER_PGD_NOMPI="uget:PGD_NOMPI_<SURFEX_git_commit>@<your_username>"
-  MASTER_PREP_MPI="uget:PREP_MPI_<SURFEX_git_commit>@<your_username>"
-  MASTER_PREP_NOMPI="uget:PREP_NOMPI_<SURFEX_git_commit>@<your_username>"
-  MASTER_SODA_MPI="uget:SODA_MPI_<SURFEX_git_commit>@<your_username>"
-  MASTER_SODA_NOMPI="uget:SODA_NOMPI_<SURFEX_git_commit>@<your_username>"
-
-Similarly, put your SURFEX namelists in the $HOME/.vortexrc/hack/uget/<your_username>/data/namelists_surfex_vXX directory, and add the following line to the file $HOME/.vortexrc/hack/uget/<your_username>/env/<new_env_name> :
+Put your SURFEX namelists in the $HOME/.vortexrc/hack/uget/<your_username>/data/namelists_surfex_vXX directory, and add the following line to the file $HOME/.vortexrc/hack/uget/<your_username>/env/<new_env_name> :
 
 .. code-block::
 
    NAMELIST_SURFEX="uget:namelists_surfex_vXX.tar@<your_username>"
 
-You can now use your own executables and namelists by adding the "surfex_uenv=new_env_name" to your configuration file, as well as the target namelist from your pool of namelists with the *namelist_source* variable.
+You can now use your own set of namelists by adding the "uenv=new_env_name" to your configuration file, as well as the target namelist from your pool of namelists with the *namelist_source* variable.
 For example if your $HOME/.vortexrc/hack/uget/<your_username>/data/namelists_surfex_vXX directory contains two namelists named "OPTIONS_PAPPUS.nam" and "OPTIONS_NO_PAPPUS.nam", you can choose to use the "OPTIONS_PAPPUS.nam" namelist with the following block in a "first_test.ini" configuration file deriving from the "default_conf.ini" configuration file :
 
 .. code-block::
 
    [surfex]
-   surfex_uenv=new_env_name
+   uenv=new_env_name
    namelist_source=OPTIONS_PAPPUS.nam
 
 and the associated mkjob command line would be :
@@ -272,14 +243,74 @@ mkjob command lines).
    To fine-tune your configurations, use the 'mkjob-help -a Crocus -c deterministic -d surfex --bytask' command.
    This will tell you the list of possible configuration variables for each task of the surfex driver.
 
+
+Reproducible simulations with a user-controlled SURFEX version
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+In order to ensure the reproducibility of simulations, it is necessary to know the SURFEX version (i.e. the git commit number) of the code from which the executables originate.
+In order to do so robustly, compile SURFEX using the "compile_surfex_hpc.sh" script, which can be found under snowtools/cenutils.
+
+After compiling SURFEX, this script will generate a ready-to-use "uenv" containing all SURFEX executables. The name of the uenv is displayed on screen at the end of the script.
+You can this uenv in your simulations by providing its name to the "surfex_uenv" environment variable :
+
+.. code-block::
+
+   [surfex]
+   ...
+   surfex_uenv=surfex_executables_<#git_commit>
+
+.. note::
+
+   The "compile_surfex_hpc.sh" script tries to indroduce the commit id in the name of the uenv and the associated executable files with the following algorithm:
+    * a commit id was found in a ".git_info" file. This means that the target SURFEX repository is a copy of a git repository with the "cenutils/put" script
+      --> add this commit id in the executable file names with an "_uncertain" suffix to track that this is an uncertain information
+    * a commit was found from a git repository, but there are local untracked changes.
+      --> warn the user and use an "Unknown" suffix in the executable file names
+    * a commit was found from a git repository with no local changes, but the commit is not on the remote repository
+      --> use the commit id as suffix and warn the user that a "git push" is required
+    * a commit was found from a git repository with no local changes and  the commit is on the remote
+      --> use the commit id as suffix (full traceability ensured)
+    * no associated commit found
+      --> use an "Unknown" suffix in the executable file names
 ..
-    Non-reproductible simulations with a user-controlled SURFEX/Crocus configuration
-    """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+  After compiling SURFEX, put the compiled executables in the $HOME/.vortexrc/hack/uget/<your_username>/data with the following naming convention <exec_name>_<MPI/NOMPI>_<SURFEX_git_commit>, where:
+
+  * *exec_name* is "OFFLINE", "PGD", "PREP" or "SODA"
+  * *SURFEX_git_commit* can be retrieved from the ".git_info" in your SURFEX root directory (make sure that the compiled executables match this commit)
+
+  .. note::
+     This step can also be achived with the "surfex_uenv.py" script available under vortex_cen/scripts
+
+  To create a new UEnv, open a file in $HOME/.vortexrc/hack/uget/<your_username>/env with the name of your choice (for example "new_env_name").
+  To update an existing UEnv named "reference_uenv" owned by the user "uenv_owner", create a copy of this UEnv into a "new_env_name":
+
+  .. code-block::
+
+    uget hack env <reference_uenv>@<uenv_owner> into <new_env_name>
+
+  This creates the file $HOME/.vortexrc/hack/uget/<your_username>/env/<new_env_name> containing the "reference_uenv" information.
+  Then add or modify the following lines in file $HOME/.vortexrc/hack/uget/<your_username>/env/<new_env_name> :
+
+  .. code-block::
+
+    MASTER_OFFLINE_MPI="uget:OFFLINE_MPI_<SURFEX_git_commit>@<your_username>"
+    MASTER_OFFLINE_NOMPI="uget:OFFLINE_NOMPI_<SURFEX_git_commit>@<your_username>"
+    MASTER_PGD_MPI="uget:PGD_MPI_<SURFEX_git_commit>@<your_username>"
+    MASTER_PGD_NOMPI="uget:PGD_NOMPI_<SURFEX_git_commit>@<your_username>"
+    MASTER_PREP_MPI="uget:PREP_MPI_<SURFEX_git_commit>@<your_username>"
+    MASTER_PREP_NOMPI="uget:PREP_NOMPI_<SURFEX_git_commit>@<your_username>"
+    MASTER_SODA_MPI="uget:SODA_MPI_<SURFEX_git_commit>@<your_username>"
+    MASTER_SODA_NOMPI="uget:SODA_NOMPI_<SURFEX_git_commit>@<your_username>"
+
+
+..
+    Non-reproducible simulations with a user-controlled SURFEX/Crocus configuration
+    """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
     .. warning::
 
-        The reproductibility of your simulations can not be guaranteed if you follow the instructions of this section.
-        To ensure the reproductibility of you simulations, you should provide your namelist and executables in a proper User Environment (see previous section)
+        The reproducibility of your simulations can not be guaranteed if you follow the instructions of this section.
+        To ensure the reproducibility of you simulations, you should provide your namelist and executables in a proper User Environment (see previous section)
 
     You can also use your own namelist by setting the *namelist_path* variable to point to your target namelist.
 
@@ -371,13 +402,9 @@ For example, to increase your job's wall time to 1 hour, add "time=1:00:00" to y
    forcing_vortex1=True
    time=1:00:00
 
-..
-  TODO : exemple de lancement d'une simu SURFEX
 
-  * Force a specific PREP file
-
-Reproductibility check
-----------------------
+Reproducibility check
+---------------------
 
 In certain situations, you may wish to verify that the files produced are identical to the reference files produced by a previous experiment that you are attempting to replicate.
 In this case, simply provide the reference experiment identifier in the "diff_xpid" configuration variable (and optionaly the username of the owner of this experiment in the "diff_user" configuration variable and the block in the "diff_block" configuration variable) :
