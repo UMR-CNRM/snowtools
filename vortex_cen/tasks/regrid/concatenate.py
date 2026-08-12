@@ -132,6 +132,7 @@ class ForcingSpatialConcatenation(_CenResearchTask):
             namebuild      = 'flat@cen',
             local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_OUT.nc',
             block          = self.conf.get('out_block', 'concatenate'),
+            namespace = self.namespace_out,
         ),
         print(self.ticket.prompt, 'Output forcing =', forcing_out)
         print()
@@ -151,6 +152,7 @@ class ForcingSpatialConcatenation(_CenResearchTask):
             namebuild      = 'flat@cen',
             local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_OUT.nc',
             block          = self.conf.get('diff_block', 'concatenate'),
+            namespace=self.namespace_out,
         ),
         print(self.ticket.prompt, 'diff =', diff)
         print()

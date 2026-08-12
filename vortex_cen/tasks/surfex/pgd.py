@@ -417,7 +417,7 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
                 nativefmt="netcdf",
                 kind="pgdnc",
                 model="surfex",
-                namespace="vortex.multi.fr",
+                namespace=self.namespace_out,
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block="pgd",
             ),
@@ -722,6 +722,11 @@ class FetchPgdFileOrMake(_PgdConstruct):
         super().__init__(**kw)
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
 
+    @property
+    def namespace_out(self):
+        """Namespace for output files"""
+        return "vortex.cache.fr"
+
     def pgd_avail(self):
         """
         Try to get PGD.nc from cache or archive. If not available try to get PGD.nc from uenv.
@@ -782,7 +787,7 @@ class FetchPgdFileOrMake(_PgdConstruct):
                 nativefmt="netcdf",
                 kind="pgdnc",
                 model="surfex",
-                namespace="vortex.cache.fr",
+                namespace=self.namespace_out,
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block="pgd",
             ),

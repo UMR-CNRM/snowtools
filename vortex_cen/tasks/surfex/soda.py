@@ -229,7 +229,7 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
 
         return algo
 
-    def launch_algo(self, algo):
+    def launch_algo(self, algo, **kwargs):
 
         executable = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
         self.component_runner(algo, executable,
@@ -255,7 +255,7 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
             nativefmt      = 'netcdf',
             kind           = 'PREP',
             model          = 'surfex',
-            namespace      = 'vortex.multi.fr',
+            namespace      = self.namespace_out,
             namebuild      = 'flat@cen',
             block          = 'soda/analysis',
             fatal          = True

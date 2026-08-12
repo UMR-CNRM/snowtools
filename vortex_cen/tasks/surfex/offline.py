@@ -411,7 +411,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
                 nativefmt="netcdf",
                 kind="PREP",
                 model="surfex",
-                namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
+                namespace=self.namespace_out,
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block=self.conf.get("out_block", "prep"),
                 member=self.conf.get("member", None),
@@ -433,7 +433,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
                 nativefmt="netcdf",
                 kind="SnowpackSimulation",
                 model="surfex",
-                namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
+                namespace=self.namespace_out,
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block=self.conf.get("out_block", "pro"),
                 member=self.conf.get("member", None),
@@ -455,7 +455,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
                 nativefmt="netcdf",
                 kind="SnowpackSimulation",
                 model="surfex",
-                namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
+                namespace=self.namespace_out,
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block=self.conf.get("out_block", "cumul"),
                 member=self.conf.get("member", None),
@@ -478,7 +478,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
                 nativefmt="netcdf",
                 kind="SnowpackSimulation",
                 model="surfex",
-                namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
+                namespace=self.namespace_out,
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block=self.conf.get("out_block", "diag"),
                 member=self.conf.get("member", None),
@@ -1365,7 +1365,7 @@ class OfflineMpiDailyPrep(OfflineMpi):
                 nativefmt="netcdf",
                 kind="SnowpackSimulation",
                 model="surfex",
-                namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
+                namespace=self.namespace_out,
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block="cumul",
                 member=self.conf.get("member", None),
@@ -1387,7 +1387,7 @@ class OfflineMpiDailyPrep(OfflineMpi):
                 nativefmt="netcdf",
                 kind="SnowpackSimulation",
                 model="surfex",
-                namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
+                namespace=self.namespace_out,
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block="diag",
                 member=self.conf.get("member", None),
@@ -1409,7 +1409,7 @@ class OfflineMpiDailyPrep(OfflineMpi):
                 nativefmt="netcdf",
                 kind="PREP",
                 model="surfex",
-                namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
+                namespace=self.namespace_out,
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block="prep",
                 member=self.conf.get("member", None),
@@ -1430,7 +1430,7 @@ class OfflineMpiDailyPrep(OfflineMpi):
                 nativefmt="netcdf",
                 kind="SnowpackSimulation",
                 model="surfex",
-                namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
+                namespace=self.namespace_out,
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block="pro",
                 member=self.conf.get("member", None),

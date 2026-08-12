@@ -50,6 +50,13 @@ class ExtractSubPeriod(_CenResearchTask):
 
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
 
+    @property
+    def namespace_out(self):
+        """
+        namespace for output files
+        """
+        return self.conf.get("namespace_out", "vortex.cache.fr")
+
     def get_remote_inputs(self):
         """
         get forcing files in the "massif" geometry, output grid file and interpolation binary.
@@ -93,7 +100,7 @@ class ExtractSubPeriod(_CenResearchTask):
                 nativefmt="netcdf",
                 kind="MeteorologicalForcing",
                 model="s2m",
-                namespace=self.conf.get("namespace_out", "vortex.cache.fr"),
+                namespace=self.namespace_out,
                 namebuild="flat@cen",
                 block="subperiod",
                 member=self.conf.get("member", None),

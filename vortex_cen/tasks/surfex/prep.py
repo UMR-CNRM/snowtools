@@ -196,6 +196,11 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
         super().__init__(**kw)
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
 
+    @property
+    def namespace_out(self):
+        """Namespace for output files"""
+        return "vortex.cache.fr"
+
     def get_remote_inputs(self):
         """
         Get ecoclimapI_covers_param.bin, ecoclimapII_eu_covers_param.bin,
@@ -257,7 +262,7 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
             nativefmt    = 'netcdf',
             kind         = 'PREP',
             model        = 'surfex',
-            namespace    = self.conf.get('namespace_out', 'vortex.multi.fr'),
+            namespace    = self.namespace_out,
             namebuild    = 'flat@cen',  # TODO : passer en variable de configuration
             block        = "prep", # finally output blocks should be fixed and input blocks configurable. self.conf.get('prep_block', 'prep'),
             member       = self.conf.get('member', None),
@@ -425,7 +430,7 @@ class FetchPrepFileOrMake(_PrepConstruct):
             nativefmt   = 'netcdf',
             kind        = 'PREP',
             model       = 'surfex',
-            namespace   = 'vortex.cache.fr',
+            namespace   = self.namespace_out,
             namebuild   = 'flat@cen',  # TODO : passer en variable de configuration
             block       = "prep", # after discussion, output blocks should be fixed and input blocks configurable. self.conf.get('prep_block', 'prep'),
             member      = self.conf.get('prep_member', self.conf.get('member', None)),
@@ -487,7 +492,7 @@ class FetchPrepFileOrCrash(FetchPrepFileOrMake):
 
     def get_remote_inputs(self):
 
-        prep_tbi = self.get_prep_file_from_cache_or_archive(fatal=True)
+        self.get_prep_file_from_cache_or_archive(fatal=True)
 
     def get_local_inputs(self):
         pass
