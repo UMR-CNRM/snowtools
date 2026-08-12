@@ -257,7 +257,7 @@ standard_variables = dict(
         metavar = True,
         help = "Footprint description of PREP.nc file(s)",
         values = ["prep_xpid", "prep_user", "prep_vapp", "prep_vconf", "prep_geometry", "prep_vortex1", "prep_member",
-            "prep_block"],
+            "prep_block", "prep_date"],
     ),
     prep_xpid   = dict(
         help = "Experiment identifier of the PREP file",

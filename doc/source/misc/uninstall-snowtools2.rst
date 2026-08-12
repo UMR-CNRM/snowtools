@@ -44,7 +44,7 @@ remove the corresponding lines from your ``~/.bashrc``, ``~/.bash_profile`` or `
 Vortex geometries
 ^^^^^^^^^^^^^^^^^
 
-Custom geometries could be defined in ``~/.vortexrc/geometries.ini``. This possibility will continue but the standard geometries (both for research and oper) are now automatically loaded by vortex from the snowtools/vortex-cen packages. Hence, you either have to rmeove completely this file or at least to remove all common geometries from this file.
+Custom geometries could be defined in ``~/.vortexrc/geometries.ini``. This possibility will continue but the standard geometries (both for research and oper) are now automatically loaded by vortex from the snowtools/vortex-cen packages. Hence, you either have to remove completely this file or at least to remove all common geometries from this file.
 
 Ensure changes are taken into account
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

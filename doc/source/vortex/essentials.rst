@@ -8,6 +8,7 @@ Introduction
 
 The full vortex documentation is available here : https://vortex-nwp.readthedocs.io/en/latest/index.html.
 A Meteo-France/CNRM-specific documentation is also available here : https://cnrm-gmap.gitlab.meteo.fr/vortex-cnrm-docs/.
+Vortex relies heavily on the "footprints" package : http://intra.cnrm.meteo.fr/algopy/sphinx/vortex/current/technical/footprints_fr.html
 
 The main benefit of the use of vortex in the snowtools package is to standardise data management for snowpack simulation workflows.
 
@@ -124,7 +125,7 @@ The resource's *geometry*
 The second level of the file name is derived from the *geometry* footprint (string or list of str type), which is a tag identifying a geometry object describing a given discretisation of space.
 Standard NWP geometries are referenced in the vortex_nwp package, and additional "CEN"-specific geometries are references in the vortex-cen plugin.
 
-Any "new" geometry not included in these standrd geometries must be provided in a ``geometries.ini`` file stored under $HOME/.vortexrc.
+Any "new" geometry not included in these standard geometries must be provided in a ``geometries.ini`` file stored under $HOME/.vortexrc.
 The *geometry* footprint is the geometry block/entry name. For example, *geometry='GrandesRousses250m'* identifies the following geometry :
 
 .. code-block:: ini

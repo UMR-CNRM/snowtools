@@ -27,6 +27,10 @@ Algo Components for deterministic Surfex simulations.
    :no-members:
    :show-inheritance:
 
+.. autoclass:: Surfex_Xios_Parallel
+   :no-members:
+   :show-inheritance:
+
 .. autoclass:: Interpol_Forcing
    :no-members:
    :show-inheritance:
