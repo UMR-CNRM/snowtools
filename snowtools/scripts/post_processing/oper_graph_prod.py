@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-usage: python postprocess.py [-b YYYYMMDD] [-e YYYYMMDD] [-o diroutput]
+usage: python oper_graph_prod.py [-b YYYYMMDD] [-e YYYYMMDD] [-o diroutput]
 
     #) extracts operational simulation results
     #) Plots maps for the Alps, the Pyrenees the Corse, Vosges, Massif Central, Jura
@@ -17,7 +17,7 @@ from snowtools.plots.pearps2m.oper_diags_plot import main
 from snowtools.plots.pearps2m.oper_diags_plot import pp_plots
 
 if __name__ == "__main__":
-    USAGE = "usage: python postprocess.py [-b YYYYMMDD] [-e YYYYMMDD] [-o diroutput]"
+    USAGE = "usage: python oper_graph_prod.py [-b YYYYMMDD] [-e YYYYMMDD] [-o diroutput]"
 
     PARSER = argparse.ArgumentParser(description="Postprocess new snow heights: "
                                                  "1) extracts operational simulation results,"
@@ -37,6 +37,7 @@ if __name__ == "__main__":
     PARSER.add_argument("--dble", action="store_true", dest="dble", default=False)
     OPTIONS = PARSER.parse_args()  # @UnusedVariable
     c = Config(OPTIONS)
+    # c.list_geometry = ['cor']
     main(c)
     if OPTIONS.dev:
         pp_plots(c)

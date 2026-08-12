@@ -6,7 +6,6 @@ Created on 3 aug. 2018
 """
 
 import sys
-# from optparse import OptionParser
 import argparse
 import vortex
 from collections import defaultdict
@@ -22,21 +21,25 @@ import footprints
 class Configdev(object):
     rundate = Date(2018, 10, 26, 3)    # Run date can be at 3TU, 6TU, 9TU
     previ = False  # False for analysis, True for forecast
-    xpid = "OPER@lafaysse"  # To be changed with IGA account when operational
+    xpid = "DEV"  # To be changed with IGA account when operational
+    username = "lafaysse"
     list_geometry = ['alp', 'pyr', 'cor']  # List of extracted geometries
-
     list_members = footprints.util.rangex(0, 36)  # 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
     firstday = False
-
+    namebuild = "date@std"
+    namespace = "vortex.multi.fr" # "vortex.archive-legacy.fr"
 
 class Config(object):
     rundate = Date(2018, 10, 26, 3)    # Run date can be at 3TU, 6TU, 9TU
     previ = False  # False for analysis, True for forecast
     xpid = "oper"
+    username = None
+    namebuild = "date@std"
     # converted later with iganame property
     list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']
     list_members = footprints.util.rangex(0, 36)  # 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
     firstday = False
+    namespace = "vortex.multi.fr"
 
 
 
@@ -250,6 +253,7 @@ class FutureS2MExtractor(S2MExtractor):
             vconf          = '[geometry::area]',
             local          = '[geometry::area]/[date:ymdh]/mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
             experiment     = self.conf.xpid,
+            username = self.conf.username,
             block          = 'meteo',
             geometry       = self.conf.list_geometry,
             date           = self.conf.rundate,
@@ -259,12 +263,12 @@ class FutureS2MExtractor(S2MExtractor):
             nativefmt      = 'netcdf',
             kind           = 'MeteorologicalForcing',
             model          = 's2m',
-            namespace      = 'vortex.multi.fr',
+            namespace      = self.conf.namespace,
             cutoff         = 'production' if self.conf.previ else 'assimilation',
             intent         = 'in',
             fatal          = False,
             vortex1=True,
-            namebuild='date@std'
+            namebuild= self.conf.namebuild,
         )
 
         if hasattr(self.conf, "alternate_xpid"):
@@ -279,6 +283,7 @@ class FutureS2MExtractor(S2MExtractor):
                     vconf          = '[geometry::area]',
                     local          = '[geometry::area]/[date:ymdh]/mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                     experiment     = alternate_xpid,
+                    username=self.conf.username,
                     block          = 'meteo',
                     geometry       = list_geometry,
                     date           = self.conf.rundate,
@@ -288,12 +293,12 @@ class FutureS2MExtractor(S2MExtractor):
                     nativefmt      = 'netcdf',
                     kind           = 'MeteorologicalForcing',
                     model          = 's2m',
-                    namespace      = 'vortex.multi.fr',
+                    namespace      = self.conf.namespace,
                     cutoff         = 'production' if self.conf.previ else 'assimilation',
                     intent         = 'in',
                     fatal          = False,
                     vortex1=True,
-                    namebuild='date@std'
+                    namebuild= self.conf.namebuild,
                 ))
 
         return self.get_std(tb01)
@@ -306,6 +311,7 @@ class FutureS2MExtractor(S2MExtractor):
             vconf          = '[geometry::area]',
             local          = '[geometry::area]/[date:ymdh]/mb[member]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
             experiment     = self.conf.xpid,
+            username=self.conf.username,
             block          = 'pro',
             geometry       = self.conf.list_geometry,
             date           = self.conf.rundate,
@@ -315,14 +321,20 @@ class FutureS2MExtractor(S2MExtractor):
             nativefmt      = 'netcdf',
             kind           = 'SnowpackSimulation',
             model          = 'surfex',
-            namespace      = 'vortex.multi.fr',
+            namespace      = self.conf.namespace,
             cutoff         = 'production' if self.conf.previ else 'assimilation',
             intent         = 'in',
             fatal          = False,
             vortex1 = True,
-            namebuild = 'date@std'
+            namebuild = self.conf.namebuild,
 
         )
+        # print(tb02[0].provider.namebuilder)
+        # print(tb02[0].provider._SPECIAL_EXPS)
+        # print(tb02[0].provider.namebuilder.as_dump())
+        # print(tb02[0].store.__dict__)
+        # print(tb02[0].store.fullname())
+        #raise EnvironmentError
         if hasattr(self.conf, "alternate_xpid"):
             for a, alternate_xpid in enumerate(self.conf.alternate_xpid):
                 if hasattr(self.conf, "alternate_list_geometry"):
@@ -336,6 +348,7 @@ class FutureS2MExtractor(S2MExtractor):
                     vconf          = '[geometry::area]',
                     local          = '[geometry::area]/[date:ymdh]/mb[member]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
                     experiment     = alternate_xpid,
+                    username=self.conf.username,
                     block          = 'pro',
                     geometry       = list_geometry,
                     date           = self.conf.rundate,
@@ -345,12 +358,12 @@ class FutureS2MExtractor(S2MExtractor):
                     nativefmt      = 'netcdf',
                     kind           = 'SnowpackSimulation',
                     model          = 'surfex',
-                    namespace      = 'vortex.multi.fr',
+                    namespace      = self.conf.namespace,
                     cutoff         = 'production' if self.conf.previ else 'assimilation',
                     intent         = 'in',
                     fatal          = False,
                     vortex1=True,
-                    namebuild='date@std'
+                    namebuild= self.conf.namebuild,
 
                 ))
 
@@ -366,6 +379,7 @@ class FutureS2MExtractor(S2MExtractor):
                 vconf          = '[geometry::area]',
                 local          = '[geometry::area]/[date:ymdh]/HYDRO_[datebegin:ymdh]_[dateend:ymdh].nc',
                 experiment     = self.conf.xpid,
+                username=self.conf.username,
                 block          = 'hydro',
                 geometry       = self.conf.list_geometry,
                 date           = self.conf.rundate,
@@ -374,12 +388,12 @@ class FutureS2MExtractor(S2MExtractor):
                 nativefmt      = 'netcdf',
                 kind           = 'SnowpackSimulation',
                 model          = 'postproc',
-                namespace      = 'vortex.multi.fr',
+                namespace      = self.conf.namespace,
                 cutoff         = 'production',
                 intent         = 'in',
                 fatal          = False,
                 vortex1=True,
-                namebuild='date@std',
+                namebuild= self.conf.namebuild,
             )
         else:
             tb03 = vortex.input(
@@ -388,6 +402,7 @@ class FutureS2MExtractor(S2MExtractor):
                 vconf = '[geometry::area]',
                 local = '[geometry::area]/[date:ymdh]/HYDRO_[datebegin:ymdh]_[dateend:ymdh].nc',
                 experiment = self.conf.xpid,
+                username=self.conf.username,
                 block = 'hydro',
                 geometry = self.conf.list_geometry,
                 date = self.conf.rundate,
@@ -397,12 +412,12 @@ class FutureS2MExtractor(S2MExtractor):
                 kind = 'SnowpackSimulation',
                 model = 'postproc',
                 member = 35,
-                namespace = 'vortex.multi.fr',
+                namespace = self.conf.namespace,
                 cutoff = 'assimilation',
                 intent = 'in',
                 fatal = False,
                 vortex1=True,
-                namebuild='date@std',
+                namebuild= self.conf.namebuild,
             )
 
         return self.get_std(tb03)
@@ -418,6 +433,7 @@ class FutureS2MExtractor(S2MExtractor):
             vconf       = '[geometry::area]',
             local       = '[geometry::area]/[date:ymdh]/PRO_post_[datebegin:ymdh]_[dateend:ymdh].nc',
             experiment  = self.conf.xpid,
+            username=self.conf.username,
             block       = 'postproc',
             geometry    = self.conf.list_geometry,
             date        = self.conf.rundate,
@@ -427,11 +443,11 @@ class FutureS2MExtractor(S2MExtractor):
             nativefmt   = 'netcdf',
             kind        = 'SnowpackSimulation',
             model       = 'postproc',
-            namespace   = 'vortex.multi.fr',
+            namespace   = self.conf.namespace,
             cutoff      = 'production',
             fatal       = False,
             vortex1=True,
-            namebuild='date@std',
+            namebuild= self.conf.namebuild,
         )
 
         return self.get_std(tb_pp)
