@@ -776,25 +776,6 @@ class FetchPgdFileOrMake(_PgdConstruct):
         else:
             super().launch_algo(algo)
 
-    def put_outputs(self):
-        self.sh.title("Toolbox Output PGD")
-        pgd_tbo = (
-            vortex.output(
-                local="PGD.nc",
-                role="SurfexClim",
-                experiment=self.conf.xpid,
-                geometry=self.conf.geometry,
-                nativefmt="netcdf",
-                kind="pgdnc",
-                model="surfex",
-                namespace=self.namespace_out,
-                namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block="pgd",
-            ),
-        )
-        print(self.ticket.prompt, "pgd_tbo =", pgd_tbo)
-        print()
-
 
 class FetchPgdFileOrCrash(FetchPgdFileOrMake):
     """
