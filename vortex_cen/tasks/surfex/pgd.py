@@ -388,19 +388,9 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
         # vortex.executable(...))
         executable = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
         #
-        # MV : Il faudra également pouvoir fournir le nombre de process et le nombre de tâches via le fichier de conf
-        # TODO : réfléchir à la procédure pour définir des valeurs par défaut en fonction du domaine comme c'est
-        # le cas actuellement
-        # TODO : S'assurer que ce qui suit fonctionne avec un executable compilé sans MPI,
-        # ou prévoir un switch MPI / NOMPI
         self.component_runner(
             algo,
             executable,
-            mpiopts={
-                "nnodes": self.conf.get("nnodes", 1),
-                "nprocs": self.conf.get("nprocs", 1),
-                "ntasks": self.conf.get("ntasks", 1),
-            },
         )
 
     def put_outputs(self):
