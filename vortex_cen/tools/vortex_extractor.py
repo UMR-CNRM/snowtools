@@ -123,6 +123,8 @@ def get_data(configfile=None, configsection=None, **kw):
         if kw.get(key, False):
             description.update({key: kw.get(key)})
 
+    description = set_default_block(description)
+
     # Set time information depending on the kind of resource to extract
     description = set_time_info(description, **kw)
 
@@ -145,6 +147,20 @@ def get_data(configfile=None, configsection=None, **kw):
     rh = vortex.input(**description)
 
     return rh
+
+
+def set_default_block(description):
+    """
+    Set the default block value for PRO files (only one possibility in this case)
+    """
+
+    if "kind" not in description.keys():
+        raise ValueError("Missing the *kind* footprint")
+    else:
+        if "block" not in description.keys() and description["kind"] in ["PRO", "SnowpackSimulation"]:
+            description["block"] = "offline/pro"
+
+        return description
 
 
 def read_configuration_file(description, configfile, configsection):
