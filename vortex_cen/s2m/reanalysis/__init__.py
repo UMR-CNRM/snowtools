@@ -3,7 +3,8 @@
 The s2m "reanalysis" configuration
 ==================================
 
-Production of the reference SAFRAN-SURFEX/Crocus-Mepra (S2M) reanalysis dataset
+SAFRAN-SURFEX/Crocus-Mepra (S2M) reanalysis simulations (reference dataset and research SURFEX simulations
+based on the reference SAFRAN reanalysis)
 
 Workflow :
 ----------

@@ -598,4 +598,22 @@ s2m unit test:
 Equivalent command in snowtools3:
 TODO : voir avec Sabine quand ça sera prêt
 
+The s2m_reanalysis launcher
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+.. automodule:: vortex_cen.scripts.s2m_reanalysis
+
+The s2m_oper launcher
+^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: vortex_cen.scripts.s2m_oper
+
+.. note::
+
+   The s2m_oper script is used to operate the S2M real time chain.
+   The scheduling of the different elements of the chain can be done by installing the cron provided in the file vortex_cen/s2m/oper/cron.txt
+
+The assim launcher
+^^^^^^^^^^^^^^^^^^
+
+.. automodule:: vortex_cen.scripts.assim
