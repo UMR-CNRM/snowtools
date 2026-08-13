@@ -55,8 +55,8 @@ with echecker:
     from snowtools.tools.initTG import generate_clim
     from snowtools.tools.massif_diags import massif_simu
     from snowtools.tools.update_namelist import update_surfex_namelist_object
-    from snowtools.utils.resources import get_file_period, save_file_date, save_file_period
-    from snowtools.utils.FileException import FileNameException
+    from snowtools.utils.resources import save_file_date, save_file_period
+    from snowtools.utils.FileException import MultipleValueException
 
 
 @echecker.disabled_if_unavailable
@@ -74,7 +74,12 @@ class Surfex_PreProcess(AlgoComponent):
                 "info": "Date in the namelist to run PREP.",
                 "type": Date,
             },
-            "dateend": {"info": "Date in the namelist to stop OFFLINE.", "type": Date, "optional": True, "default": None},
+            "dateend": {
+                "info": "Date in the namelist to stop OFFLINE.",
+                "type": Date,
+                "optional": True,
+                "default": None
+            },
             "forcingname": {
                 "info": "Name of the first forcing file",
                 "type": str,
@@ -196,11 +201,6 @@ class SurfexMixIn(_CenMixIn):
             self.modify_prep(datebegin_this_run)
 
             if need_other_forcing:
-                #try:
-                #    # Get the first file covering part of the whole simulation period
-                #    dateforcbegin, dateforcend = get_file_period("FORCING", ".", datebegin_this_run, self.dateend)
-                #except FileNameException:
-                #    dateforcbegin, dateforcend = self.find_forcing(datebegin_this_run, self.dateend)
                 dateforcbegin, dateforcend = self.find_forcing(datebegin_this_run, self.dateend)
 
             if self.daily:
@@ -229,11 +229,50 @@ class SurfexMixIn(_CenMixIn):
             datebegin_this_run = dateend_this_run
             need_other_run = dateend_this_run < self.dateend
 
+    def sort_forcings(self, avail_forcings, list_datebegin, list_dateend):
+        """
+        Sort available forcing files with ascending *datebegin*
+        """
+        list_datebegin = np.asarray(list_datebegin)
+        list_dateend   = np.asarray(list_dateend)
+        avail_forcings = np.asarray(avail_forcings)
+        idx = np.argsort(list_datebegin)
+        return avail_forcings[idx], list_datebegin[idx], list_dateend[idx]
+
     def find_forcing(self, datebegin, dateend):
+        """
+        This method is designed to find a forcing file covering the next simulation period
+        (starting at *datebegin*) among available forcing files.
+        """
+        # First retrieve the list of available forcing files and the associated lists of datebegin/dateend
         avail_forcings = [x.rh for x in self.context.sequence.effective_inputs(role='Forcing')]
         list_datebegin = [forcing.resource.datebegin for forcing in avail_forcings]
         list_dateend = [forcing.resource.dateend for forcing in avail_forcings]
-        idx = np.searchsorted(list_datebegin, datebegin)
+
+        # Sort lists with ascending *datebegin*
+        avail_forcings, list_datebegin, list_dateend = self.sort_forcings(avail_forcings, list_datebegin, list_dateend)
+
+        # Find the index correponding to the last element in the ordered list of forcing's *datebegin*
+        # smaller or equal to the begining of the next iteration
+        idx_max = np.searchsorted(list_datebegin, datebegin, side='right')
+
+        # Among forcing files starting before the begining of the next iteration, get the list of indices
+        # of those ending after the begining of the next iteration
+        valid_indices = np.where(list_dateend[:idx_max] >= datebegin)[0]
+
+        if len(valid_indices) == 0:
+            # raise an error because there is a time period not covered by any forcing file
+            next_date = dateend if idx_max == len(list_datebegin) else list_datebegin[idx_max]
+            raise FileNotFoundError(f'No forcing file was found for the period {datebegin} - {next_date}')
+        elif len(valid_indices) > 1:
+            # raise an error because there are several files covering the same period of time
+            print("Forcing files found : \n" + [fic.container.basename for fic in avail_forcings[valid_indices]])
+            raise MultipleValueException
+        else:
+            # A single forcing file has been identified to run the next simulation's interation
+            idx = valid_indices[0]
+
+        # Create a symbolic link to the forcing file and return the period covered
         target = avail_forcings[idx].container.basename
         logger.info(f'Next FORCING file : {target}')
         self.link_in(target, 'FORCING.nc')
@@ -307,7 +346,12 @@ class Surfex_Parallel(Parallel, DrHookDecoMixin, SurfexMixIn):
                 optional=True,
                 default="[datebegin]",
             ),
-            threshold=dict(info="Threshold on snow water equivalent on August 1st.", type=int, optional=True, default=-999),
+            threshold=dict(
+                info="Threshold on snow water equivalent on August 1st.",
+                type=int,
+                optional=True,
+                default=-999
+            ),
             daily=dict(
                 info="If True, split simulations in daily runs",
                 type=bool,
@@ -349,7 +393,8 @@ class Surfex_Xios_Parallel(Parallel, ParallelIoServerMixin, SurfexMixIn, DrHookD
     """
 
     _footprint = {  # noqa: RUF012
-        "info": "AlgoComponent designed to run SURFEX experiments over large domains with MPI parallelization and IO server XIOS",
+        "info": "AlgoComponent designed to run SURFEX experiments over large domains with MPI parallelization "
+                "and IO server XIOS",
         "attr": {
             # Unused ?
             # binary = dict(
