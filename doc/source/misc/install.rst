@@ -93,10 +93,10 @@ Additional dependencies that have to be installed manually
 
 **GDAL** is a dependency for some geopsatial processings. You first need to install gdal binaries (e.g. on Ubuntu, run ``sudo apt install libgdal libgdal-dev``, already installed on Meteo-France machines). Then, you need to install the python binding manually to be consistently with your installed ``libgdal-dev`` version by running: ``pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="$(gdal-config --cflags)"``.
 
-Optional additional vortex tools
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Optional additional denpendencies on nexus
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-By default, Pip fetches package distributions from the global Python package registry, pypi.org. To install internal vortex plugins, configure Pip so that it can reach MF’s internal Nexus package registry. iNote thas is is not required on HPC which are already configured. To do so, add the following lines to ~/.config/pip/pip.containaing:
+By default, Pip fetches package distributions from the global Python package registry, pypi.org. The MF's internal Nexus package registry provides additional packages that can be usefull (for example vortex-gco, which enables the use of "Uenv" tools). It is thus recommended to configure Pip so that it can access Nexus. To do so, add the following lines to ~/.config/pip/pip.conf containaing:
 
 .. code-block:: ini
 
@@ -104,6 +104,8 @@ By default, Pip fetches package distributions from the global Python package reg
     index = https://nexus-sidev.meteo.fr/repository/pypi-group/pypi
     index-url = https://nexus-sidev.meteo.fr/repository/pypi-group/simple
     extra-index-url = https://nexus.meteo.fr/pypi-vortex-releases/simple
+
+Note that this is not required on HPC because the access to Nexus from HPC is currently blocked.
 
 
 [Optional] Install UEnv tools
