@@ -150,17 +150,20 @@ if os.path.isdir('.git'):
 elif os.path.exists('.git_info'):
     shutil.copyfile('.git_info', os.path.join(venv, '.snowtools_info'))
 
-# TEMPORARY step to install dev versions of mkjob and vortex-gco on HPC while the access to nexus in
+# TEMPORARY step to install dev versions of mkjob, vortex-gco and vortex-olive on HPC while the access to nexus in
 # blocked
 if 'hpc' in HOSTNAME:
-    install_dir = "/home/cnrm_other/cen/mrns/vernaym/Projects"
-    for package in ["mkjob", "vortex-gco"]:
+    install_dir = "/home/cnrm_other/cen/mrns/vernaym/Projects/common"
+    for package in ["mkjob", "vortex-gco", "vortex-olive"]:
         target = os.path.join(install_dir, package)
         subprocess.run([pip, 'install', '--no-build-isolation', '-e', target], check=True)
 
 # Configure Vortex
 vortex_config = os.path.join(os.environ['HOME'], '.vortex.d', 'vortex.toml')
-if not (os.path.isfile(vortex_config) or os.path.islink(vortex_config)):
+if not os.path.exists(vortex_config):
+    if os.path.islink(vortex_config):
+        os.remove(vortex_config)
+    # TODO : utiliser https://gitlab.meteo.fr/cnrm-gmap/vortex-conf ?
     config_dir = os.path.join(os.environ['HOME'], '.vortex.d')
     if not os.path.exists(config_dir):
         os.makedirs(config_dir)
