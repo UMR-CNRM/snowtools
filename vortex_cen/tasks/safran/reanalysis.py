@@ -560,7 +560,7 @@ class SafranReanalysis(_CenResearchTask):
                 datebegin      = datebegin.ymd6h,
                 dateend        = dateend.ymd6h,
                 date           = dateend.ymd6h,
-                namespace      = self.conf.namespace,
+                namespace      = 'vortex.multi.fr',
                 namebuild      = 'flat@cen',
             ),
             print(t.prompt, 'tb27 =', tb27)
@@ -580,7 +580,7 @@ class SafranReanalysis(_CenResearchTask):
                 datebegin      = datebegin.ymd6h,
                 dateend        = dateend.ymd6h,
                 date           = dateend.ymd6h,
-                namespace      = self.conf.namespace,
+                namespace      = 'vortex.multi.fr',
                 namebuild      = 'flat@cen',
             ),
             print(t.prompt, 'tb28 =', tb27)
@@ -601,7 +601,7 @@ class SafranReanalysis(_CenResearchTask):
                 date           = dateend.ymd6h,
                 local          = '[datebegin::ymd6h]_[dateend::ymd6h]/'
                                  'liste_obs_[datebegin::ymd6h]_[dateend::ymd6h].tar.gz',
-                namespace      = self.conf.namespace,
+                namespace      = 'vortex.multi.fr',
                 namebuild      = 'flat@cen',
             )
             print(t.prompt, 'tb32 =', tb29)
@@ -622,7 +622,7 @@ class SafranReanalysis(_CenResearchTask):
                                  'listings_safran_[datebegin::ymdh]_[dateend::ymdh].tar.gz',
                 nativefmt      = 'tar',
                 model          = 'safran',
-                namespace      = self.conf.namespace,
+                namespace      = 'vortex.multi.fr',
                 namebuild      = 'flat@cen',
             )
             print(t.prompt, 'tb31 =', tb31)

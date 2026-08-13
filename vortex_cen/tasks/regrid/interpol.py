@@ -233,23 +233,21 @@ class InterpolateS2MForcing(_CenResearchTask, InterpolMixIn):
     def put_outputs(self):
 
         self.sh.title("Toolbox output interpolated forcing file")
-        forcing_tbo = (
-            vortex.output(
-                local="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc",
-                experiment=self.conf.xpid,
-                geometry=self.conf.geometry,
-                datebegin=self.conf.datebegin,
-                dateend=self.conf.dateend,
-                nativefmt="netcdf",
-                kind="MeteorologicalForcing",
-                model="s2m",
-                namespace=self.namespace_out,
-                namebuild="flat@cen",
-                block=self.conf.get("out_block", "interpol"),
-                member=self.conf.get("member", None),
-            ),
+        output = vortex.output(
+            local="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc",
+            experiment=self.conf.xpid,
+            geometry=self.conf.geometry,
+            datebegin=self.conf.datebegin,
+            dateend=self.conf.dateend,
+            nativefmt="netcdf",
+            kind="MeteorologicalForcing",
+            model="s2m",
+            namespace=self.namespace_out,
+            namebuild="flat@cen",
+            block="interpol",
+            member=self.conf.get("member", None),
         )
-        print(self.ticket.prompt, "interpolated forcing file toolbox =", forcing_tbo)
+        print(self.ticket.prompt, "interpolated forcing file toolbox =", output)
         print()
 
     def diff(self):
@@ -258,20 +256,20 @@ class InterpolateS2MForcing(_CenResearchTask, InterpolMixIn):
         """
         self.sh.title("Reproductibility check : FORCING")
         diff = vortex.diff(
-                local="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc",
-                experiment=self.conf.diff_xpid,
-                username=self.conf.get("diff_user", None),
-                geometry=self.conf.geometry,
-                datebegin=self.conf.datebegin,
-                dateend=self.conf.dateend,
-                nativefmt="netcdf",
-                kind="MeteorologicalForcing",
-                model="s2m",
-                namespace=self.namespace_out,
-                namebuild="flat@cen",
-                block=self.conf.get("diff_block", "interpol"),
-                member=self.conf.get("member", None),
-            ),
+            local="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc",
+            experiment=self.conf.diff_xpid,
+            username=self.conf.get("diff_user", None),
+            geometry=self.conf.geometry,
+            datebegin=self.conf.datebegin,
+            dateend=self.conf.dateend,
+            nativefmt="netcdf",
+            kind="MeteorologicalForcing",
+            model="s2m",
+            namespace="vortex.multi.fr",
+            namebuild="flat@cen",
+            block="interpol",
+            member=self.conf.get("member", None),
+        ),
         print(self.ticket.prompt, "diff =", diff)
         print()
 
