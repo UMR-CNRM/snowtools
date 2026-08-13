@@ -46,8 +46,11 @@ class TestWithTempFolder(unittest.TestCase):
             self._feedErrorsToResult(result, self._outcome.errors)
         else:  # Python >= 3.11
             result = self._outcome.result
-        error = self.list2reason(result.errors)
-        failure = self.list2reason(result.failures)
+        try:
+            error = self.list2reason(result.errors)
+            failure = self.list2reason(result.failures)
+        except AttributeError:
+            error, failure = self.execinfo2error(result._excinfo)
         ok = not error and not failure
 
         if not ok:
@@ -62,6 +65,21 @@ class TestWithTempFolder(unittest.TestCase):
     def list2reason(self, exc_list):
         if exc_list and exc_list[-1][0] is self:
             return exc_list[-1][1]
+
+    def execinfo2error(self, execinfos):
+
+        if execinfos is not None:
+            errors = []
+            failures = []
+            for exec_info in execinfos:
+                if exec_info is not None:
+                    if issubclass(exec_info.type, self.failureException):
+                        failures.append(exec_info.value)
+                    else:
+                        errors.append(exec_info.type)
+            return errors, failures
+        else:
+            return None, None
 
 
 class TestWithTempFolderWithChdir(TestWithTempFolder):
