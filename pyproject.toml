@@ -107,6 +107,7 @@ mapplotter = 'snowtools.plots.maps.mapplotter:main'
 procompare = 'snowtools.plots.stratiprofile.procompare:main'
 mkjob-help = 'vortex_cen.scripts.mkjob_help:main'
 s2m_oper = 'vortex_cen.scripts.s2m_oper:main'
+s2m_reanalysis = 'vortex_cen.scripts.s2m_reanalysis:main'
 get_simulation_output = 'vortex_cen.scripts.get_simulation_output:main'
 
 [project.entry-points."xarray.backends"]

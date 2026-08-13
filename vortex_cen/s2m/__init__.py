@@ -3,11 +3,11 @@
 The "s2m" application
 =====================
 
-SAFRAN-SURFEX/Crocus-MEPRA simulations in a "SAFRAN-massif" geometry.
+SAFRAN-SURFEX/Crocus-MEPRA simulations in a standard "SAFRAN-massif" geometry.
 
 Associated  configurations:
 
-* **reanalysis**: production of the reference S2M reanalysis dataset
+* **reanalysis**: production of S2M-like reanalyses (SAFRAN forcings and geometries)
 
 * **reforecast**: production of a S2M reforecast for the training of operationnal new snow forecasts
   post-processing algorithm

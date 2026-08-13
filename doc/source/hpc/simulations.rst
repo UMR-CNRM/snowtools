@@ -392,13 +392,25 @@ In this case, simply provide the reference experiment identifier in the "diff_xp
    the `diff_*` variables can be parsed directly in the mkjob command line since they don't affect the simulation's output
 
 
-Simulation log
---------------
-..
-  TODO : copie d'écran pour montrer ou trouver le numéro XXXX
-  /scratch/mtool/<username>/depot/mstepXXXX --> actual jobs ("step.0[123]") + output logs ("step.0[123].out)
-  /scratch/mtool/<username>/spool/XXXX --> répertoire d'exécution
-  /scratch/mtool/<username>/abort/XXXX --> copie de l'état du répertoire d'exécution après un crash
-  /scratch/mtool/<username>/cache --> local vortex (+ uenv) cache
+Specific launchers
+------------------
 
+The s2m_reanalysis launcher
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+.. automodule:: vortex_cen.scripts.s2m_reanalysis
+
+The s2m_oper launcher
+^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: vortex_cen.scripts.s2m_oper
+
+.. note::
+
+   The s2m_oper script is used to operate the S2M real time chain.
+   The scheduling of the different elements of the chain can be done by installing the cron provided in the file vortex_cen/s2m/oper/cron.txt
+
+The assim launcher
+^^^^^^^^^^^^^^^^^^
+
+.. automodule:: vortex_cen.scripts.assim

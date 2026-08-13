@@ -1,4 +1,20 @@
 # -*- coding: utf-8 -*
+"""
+This script allows to launch a SURFEX/Crocus experiment with snow data assimilation.
+
+Such an experiment is a loop over the following sequence of actions over a set of assimilation dates:
+
+    1. Run an ensemble of SURFEX/Crocus simulations (OFFLINE executable) with an MPI parallelisation until
+       an assimilation date. All simulation members are initialised with the same initial conditions (PREP file).
+       --> Associated task : "offline_openloop"
+    2. Assimilate an available snow observation at the assimilation date with a Particle Filter (SODA executable)
+
+    3. Run an ensemble of SURFEX/Crocus simulations (OFFLINE executable) with an MPI parallelisation from
+       the last assimilation date, until the next assimilaiton date (or the date of end simiulation).
+       The difference with the execution of step 1 is that this time, each simuaiton member is initialised by
+       specific initial conditions (PREP file) coming from step 2 (SODA analysis).
+       --> Associated task : "offline_assim"
+"""
 
 import argparse
 import time
