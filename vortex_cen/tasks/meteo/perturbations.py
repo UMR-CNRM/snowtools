@@ -62,14 +62,9 @@ class ForcingPerturbations(_CenResearchTask):
         OPTIONAL_CONFIGURATION_VARIABLES = [
             "forcing",
         ]
-        overwrite = [
-            "datebegin",
-            "dateend",
-        ]
         super().__init__(**kw)
 
-        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES,
-                overwrite=overwrite)
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
 
     def get_remote_inputs(self):
 

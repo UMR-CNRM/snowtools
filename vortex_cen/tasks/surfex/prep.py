@@ -198,8 +198,12 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
             "diff_xpid",
             "diff_user",
         ]
+        overwrite = [
+            "dateend",
+        ]
         super().__init__(**kw)
-        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES,
+                overwrite=overwrite)
 
     @property
     def namespace_out(self):
