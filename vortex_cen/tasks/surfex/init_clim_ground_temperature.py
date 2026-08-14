@@ -271,8 +271,6 @@ class FetchClimGroundTemperatureOrMake(InitClimGroundTemperature):
       type forcing_vconf: str
     * ``forcing_namespace`` *namespace* footprint, default "vortex.multi.fr" (hendrix + local cache)
       type forcing_namespace: str
-    * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
-      type forcing_date: str
     * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
       type forcing_model: str
     * ``xpid`` experiment id of the current experiment. Used to store the output.
@@ -548,7 +546,7 @@ class FetchClimGroundTemperatureOrCrash(InitClimGroundTemperature, _CenResearchT
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
 
     def get_remote_inputs(self):
-        force_uenv = self.conf.get("force_uenv", False)
+        force_uenv = self.conf.get("force_uenv", True)
         initg = self.get_init_TG_from_uenv(fatal=force_uenv)
         if not initg[0]:
             _ = self.get_init_TG_from_cache_or_archive(fatal=True, cache_only=False)

@@ -832,7 +832,7 @@ class FetchPgdOrCrash(FetchPgdOrMake):
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
 
     def get_remote_inputs(self):
-        force_uenv = self.conf.get("force_uenv", False)
+        force_uenv = self.conf.get("force_uenv", True)
         pgd = self.get_pgd_file_from_uenv(fatal=force_uenv)
         if len(self.ctx.sequence.effective_inputs(role="SurfexClim")) == 0:
             _ = self.get_pgd_file_from_cache_or_archive(fatal=True)
