@@ -443,31 +443,34 @@ Equivalent command in snowtools3:
 Croco openloop test case
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-s2m unit test (before running this test case, please define postes_12_csv geometry in $HOME/.vortexrc/geometries.ini as in ~lafaysse/.vortexrc/geometries.ini):
+The following s2m unit test fails because of missing SURFEX executables under /home/cnrm_other/cen/mrns/lafaysse/SURFEX/cen/exe_mpi:
+
 
 .. code-block:: bash
 
+    # before running this test case, please define postes_12_csv geometry in $HOME/.vortexrc/geometries.ini as in ~lafaysse/.vortexrc/geometries.ini
 
     s2m research -r postes_12_csv -b 2013080106 -e 2014063006 -x 20160801 -m safran -f forcing_20132014B_31D_11_t1500_160@fructusm -o testopenloop -n ~lafaysse/croco/OPTIONS_MOTHER_DEP.nam --task='croco' --croco='openloop' --escroc=E1notartes --nmembers=35 --nforcing=35 --conf=/home/lafaysse/croco/conf.ini -s ~lafaysse/SURFEX/cen/exe_mpi
     # snowtools.utils.FileException.FileNameException: Unknown file : /home/cnrm_other/cen/mrns/lafaysse/SURFEX/cen/exe_mpi/PGD
 
-.. note::
-   This test fails because of missing SURFEX executables under /home/cnrm_other/cen/mrns/lafaysse/SURFEX/cen/exe_mpi
+The following command works at the time this documentation is writen, with no guarantee that it will continue to work in the future:
+
+.. code-block:: bash
+
+    s2m research -r grandesrousses -b 2019080106 -e 2020080106 -m s2m -f perturb.reanalysis2020.2@lafaysse -o testopenloop -n /home/cnrm_other/cen/mrns/vernaym/.vortexrc/hack/uget/vernaym/data/s2m_testcase_namelists/OPTIONS_croco_openloop.nam --task='croco' --croco='openloop' --escroc=E1notartes --nmembers=35 --nforcing=35 --conf=/home/cnrm_other/cen/mrns/vernaym/tmp/croco_openloop/conf.ini -s /home/cnrm_other/cen/mrns/vernaym/tmp/croco_openloop
 
 
 Equivalent command in snowtools3:
 
-..
-    s2m command to reproduce Bastien's simulation with SURFEX V9 (cf /home/cnrm_other/cen/mrns/fructusm/BASTIEN_SAUVEGARDE/test_surfex_V9/assim_openloop) ?
-    --> fail because "The "grandesrousses" Geometry object does not exist yet")
-    # TODO : voir avec Mathieu quelle simulation de référence choisir
-    python /home/cnrm_other/cen/mrns/fructusm/git/snowtools/snowtools/tasks/s2m_command.py research -n /home/cnrm_other/cen/mrns/fructusm/BASTIEN_SAUVEGARDE/test_surfex_V9/assim_openloop/test_open_loop.nam -r grandesrousses -b 2018080106 -e 2019080106 --escroc=E1notartes -o testopenloop --nmembers=35 --nforcing=35 --croco='openloop' -f perturb.reanalysis2020.2@lafaysse -m s2m --walltime=2:00:00 --conf=/home/cnrm_other/cen/mrns/fructusm/BASTIEN_SAUVEGARDE/test_surfex_V9/assim_openloop/conf.ini --task='croco' -s /home/cnrm_other/cen/mrns/fructusm/git/SURFEX_CEN/exe
-
 .. code-block:: bash
 
-   mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/assim/jobs/croco_openloop.job -c /home/cnrm_other/cen/mrns/vernaym/snowtools/vortex_cen/Crocus/assim/conf/s2m_croco_test_case.ini -a datebegin=2013080106 dateend=2014063006 geometry=postes_12_csv
+   mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/assim/jobs/croco_openloop.job -c /home/cnrm_other/cen/mrns/vernaym/snowtools/vortex_cen/Crocus/assim/conf/s2m_croco_test_case.ini -a datebegin=2019080106 dateend=2020080106 geometry=grandesrousses
 
-Croco-openloop equivalent with MPI parallelisation for OFFLINE (TODO : à tester quand Hendrix sera à nouveau accessible)
+.. note::
+
+    This test crashes with SURFEX executables corresponding to tag "crocus3.0.2"
+
+Croco-openloop equivalent with multi-node MPI parallelisation for OFFLINE (TODO : à tester quand Hendrix sera à nouveau accessible)
 
 .. code-block:: bash
 
@@ -488,7 +491,9 @@ s2m unit test:
 
 Croco-assim command in snowtools3 :
 
-TODO : voir avec Mathieu quelle simulation de référence choisir
+.. code-block::
+
+   mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/assim/jobs/croco_assim.job -c /home/cnrm_other/cen/mrns/vernaym/snowtools/vortex_cen/Crocus/assim/conf/s2m_croco_test_case.ini -a datebegin=2019080106 dateend=2020080106 geometry=grandesrousses
 
 Croco-assim equivalent with MPI parallelisation for OFFLINE (TODO : à tester quand Hendrix sera à nouveau accessible)
 
