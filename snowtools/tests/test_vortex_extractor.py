@@ -52,7 +52,7 @@ class Test_vortex_extractor(unittest.TestCase):
         cmd = f"{self.basecmd} --configfile={self.test_no_section_conf}"
         self.launch_cmd(cmd)
 
-    def test_default_block_pro_files(self):
+    def test_block_pro_files_default(self):
         cmd = f"{self.basecmd} --configfile={self.test_default_block_pro_files}"
         self.launch_cmd(cmd)
 

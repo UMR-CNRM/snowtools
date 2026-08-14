@@ -47,14 +47,6 @@ from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
 from vortex.util.config import GenericConfigParser
 
 
-# Default footprints for research data
-vortex.defaults(
-    nativefmt = 'netcdf',
-    namespace = 'vortex.multi.fr',
-    namebuild = 'flat@cen',
-)
-
-
 def get_data(configfile=None, configsection=None, **kw):
     """
     Main method to call for the extraction of any resource archived with vortex in a research context.
@@ -113,6 +105,8 @@ def get_data(configfile=None, configsection=None, **kw):
 
     """
 
+    set_default_footprints()
+
     description = dict()
 
     # Read configuration file
@@ -147,6 +141,17 @@ def get_data(configfile=None, configsection=None, **kw):
     rh = vortex.input(**description)
 
     return rh
+
+
+def set_default_footprints():
+    """
+    Set default footprints for research data
+    """
+    vortex.defaults(
+        nativefmt = 'netcdf',
+        namespace = 'vortex.multi.fr',
+        namebuild = 'flat@cen',
+    )
 
 
 def set_default_block(description):
