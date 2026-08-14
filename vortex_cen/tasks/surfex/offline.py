@@ -256,8 +256,6 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
       type forcing_namespace: str
     * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
       type forcing_date: str
-    * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
-      type forcing_model: str
 
     **Optional**
 
@@ -410,10 +408,10 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
                 datevalidity=self.list_dates_end_pro,
                 nativefmt="netcdf",
                 kind="PREP",
-                model="surfex",
                 namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block=self.conf.get("out_block", "prep"),
+                model="surfex",
                 member=self.conf.get("member", None),
             ),
         )
@@ -432,10 +430,10 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
                 dateend=self.dict_dates_end_pro,
                 nativefmt="netcdf",
                 kind="SnowpackSimulation",
-                model="surfex",
                 namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block=self.conf.get("out_block", "pro"),
+                model="surfex",
                 member=self.conf.get("member", None),
             ),
         )
@@ -454,11 +452,11 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
                 dateend=self.dict_dates_end_pro,
                 nativefmt="netcdf",
                 kind="SnowpackSimulation",
-                model="surfex",
                 namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block=self.conf.get("out_block", "cumul"),
                 member=self.conf.get("member", None),
+                model="surfex",
                 fatal=False,
             ),
         )
@@ -477,11 +475,11 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
                 dateend=self.dict_dates_end_pro,
                 nativefmt="netcdf",
                 kind="SnowpackSimulation",
-                model="surfex",
                 namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block=self.conf.get("out_block", "diag"),
                 member=self.conf.get("member", None),
+                model="surfex",
                 fatal=False,
             ),
         )
@@ -505,10 +503,10 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
                 datevalidity=self.list_dates_end_pro,
                 nativefmt="netcdf",
                 kind="PREP",
-                model="surfex",
                 namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block=self.conf.get("diff_block", "offline/prep"),
+                model="surfex",
                 member=self.conf.get("member", None),
             ),
         )
@@ -640,8 +638,6 @@ class OfflineMpi(_Offline):
       type forcing_namespace: str
     * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
       type forcing_date: str
-    * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
-      type forcing_model: str
 
     **Optional**
 
@@ -832,8 +828,6 @@ class OfflineXiosMpi(_Offline):
       type forcing_namespace: str
     * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
       type forcing_date: str
-    * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
-      type forcing_model: str
 
     **Optional**
 
@@ -1088,8 +1082,6 @@ class _Offline_NOMPI(_Offline):
       type forcing_namespace: str
     * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
       type forcing_date: str
-    * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
-      type forcing_model: str
 
     **Optional**
 
@@ -1168,7 +1160,7 @@ class Offline_Mpi_Uenv(OfflineMpi):
 
 class OfflineMpiDailyPrep(OfflineMpi):
     """
-    Do a surfex simulation with daily prep file output
+    Do a surfex simulation with daily prep file output.
 
     **Inputs:**
 
@@ -1287,8 +1279,6 @@ class OfflineMpiDailyPrep(OfflineMpi):
       type forcing_namespace: str
     * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
       type forcing_date: str
-    * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
-      type forcing_model: str
 
     **Optional**
 
@@ -1364,11 +1354,11 @@ class OfflineMpiDailyPrep(OfflineMpi):
                 dateend=list(daterange(tomorrow(base=self.conf.datebegin), self.conf.dateend)),
                 nativefmt="netcdf",
                 kind="SnowpackSimulation",
-                model="surfex",
                 namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block="cumul",
                 member=self.conf.get("member", None),
+                model="surfex",
                 fatal=False,
             ),
         )
@@ -1386,11 +1376,11 @@ class OfflineMpiDailyPrep(OfflineMpi):
                 dateend=list(daterange(tomorrow(base=self.conf.datebegin), self.conf.dateend)),
                 nativefmt="netcdf",
                 kind="SnowpackSimulation",
-                model="surfex",
                 namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block="diag",
                 member=self.conf.get("member", None),
+                model="surfex",
                 fatal=False,
             ),
         )
@@ -1408,10 +1398,10 @@ class OfflineMpiDailyPrep(OfflineMpi):
                 datevalidity=list(daterange(tomorrow(base=self.conf.datebegin), self.conf.dateend)),
                 nativefmt="netcdf",
                 kind="PREP",
-                model="surfex",
                 namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block="prep",
+                model="surfex",
                 member=self.conf.get("member", None),
             ),
         )
@@ -1429,10 +1419,10 @@ class OfflineMpiDailyPrep(OfflineMpi):
                 dateend=list(daterange(tomorrow(base=self.conf.datebegin), self.conf.dateend)),
                 nativefmt="netcdf",
                 kind="SnowpackSimulation",
-                model="surfex",
                 namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block="pro",
+                model="surfex",
                 member=self.conf.get("member", None),
             ),
         )
@@ -1497,12 +1487,12 @@ class OfflineAssim(OfflineMpi):
                 geometry=self.conf.geometry,
                 nativefmt="netcdf",
                 kind="PREP",
-                model="surfex",
                 namespace="vortex.multi.fr",
                 vortex1=self.conf.get("prep_vortex1", False),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration ?
-                block=self.conf.get("prep_block", "soda/analysis"),
+                block=self.conf.get("prep_block", "analysis"),
                 member=self.conf.member,  # TODO: where does the "member" configuration come from?
+                model="surfex",
                 intent="inout",
             ),
         )
@@ -1552,11 +1542,11 @@ class OfflineOpenloop(OfflineMpi):
                 geometry=self.conf.geometry,
                 nativefmt="netcdf",
                 kind="PREP",
-                model="surfex",
                 namespace="vortex.multi.fr",
                 vortex1=self.conf.get("prep_vortex1", False),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration ?
                 block=self.conf.get("prep_block", "prep"),
+                model="surfex",
                 intent="inout",
             ),
         )
@@ -1582,10 +1572,10 @@ class OfflineOpenloop(OfflineMpi):
                 date=self.list_dates_end_pro,
                 nativefmt="netcdf",
                 kind="PREP",
-                model="surfex",
                 namespace=self.namespace_out,
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block="prep/background",
+                block="background",
+                model="surfex",
                 member=self.conf.get("member", None),
             ),
         )

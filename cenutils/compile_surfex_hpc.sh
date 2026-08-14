@@ -134,6 +134,7 @@ if git rev-parse --is-inside-work-tree ; then
                 The compiled executables can not be associated to any git commit."
     else
         # Code up to date with last commit
+        # TODO : add an eventual tag ?
         surfex_commit=$(git log -n 1 --pretty=format:"%h")
         if [[ $(git branch -r --contains $surfex_commit) = "" ]]; then
             # Commit on local branch only --> must be pushed to ensure reproducibililty

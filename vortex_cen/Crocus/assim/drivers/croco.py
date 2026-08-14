@@ -9,7 +9,8 @@ from mkjob.nodes import Driver, WorkshareFamily, LoopFamily
 from vortex_cen.tasks.surfex.pre_process import SodaNamelistPreprocess, PreprocessNamelist
 from vortex_cen.tasks.surfex.offline_ensemble import CrocO
 from vortex_cen.tasks.surfex.pgd import FetchPgdOrCrash
-from vortex_cen.tasks.surfex.prep import FetchPrepFileOrCrash
+#from vortex_cen.tasks.surfex.prep import FetchPrepFileOrCrash
+from vortex_cen.tasks.surfex.prep import PrepRefill
 from vortex_cen.tasks.surfex.soda import Soda
 
 
@@ -22,7 +23,8 @@ def setup(t, **kw):
             SodaNamelistPreprocess(tag='soda_preprocess', ticket=t, **kw),
             PreprocessNamelist(tag='offline_preprocess', ticket=t, **kw),
             FetchPgdOrCrash(tag='fetch_pgd', ticket=t, **kw),
-            FetchPrepFileOrCrash(tag='fetch_prep', ticket=t, **kw),
+            #FetchPrepFileOrCrash(tag='fetch_prep', ticket=t, **kw),
+            PrepRefill(tag='prep_refill', ticket=t, **kw),
             # assim sequence
             LoopFamily(
                 tag='dates',
@@ -42,23 +44,24 @@ def setup(t, **kw):
                         ], **kw
                     ),
                     Soda(tag='soda', ticket=t,
-                        active_callback=lambda s: not s.conf.openloop and s.conf.stopdate_next is not None,
+                        active_callback=lambda s: (not s.conf.get('openloop', False) and
+                            s.conf.assimdate_next is not None),
                         **kw),
                 ],
-                loopconf='assimdates',  # stopdates = assimdates.append(enddate)
+                loopconf='assimdates',
                 loopsuffix='+d{:s}',  # format the loop iterator (assimdate(s) as itself ( a string)
                 active_callback=lambda s: not s.conf.get('openloop', False),
                 **kw
             ),
             WorkshareFamily(
-                tag='offline',
+                tag='offline_final',
                 ticket = t,
                 workshareconf='members,members_id',
                 worksharename='membersnode,idsnode',
                 worksharesize=10,
                 worksharelimit='nnodes',
                 nodes = [
-                    CrocO(tag = 'offline', ticket=t, **kw),
+                    CrocO(tag = 'offline_final', ticket=t, **kw),
                 ], **kw
             ),
         ],

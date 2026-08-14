@@ -440,9 +440,6 @@ class _CenResearchTask(Task, CENTaskMixIn):
         * ``forcing_namespace`` *namespace* footprint, default "vortex.multi.fr" (hendrix + local cache)
           type forcing_namespace: str
 
-        * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
-          type forcing_model: str
-
         **Optional configuration variables:**
 
         * ``forcing_member`` *member* footprint, default None (or *member* if provided)
