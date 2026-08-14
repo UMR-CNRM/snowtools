@@ -182,6 +182,7 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
             "xpid",
             "consts_surfex_uenv|uenv",
             "surfex_uenv|uenv",
+            "prep_date|datebegin",
         ]
         OPTIONAL_CONFIGURATION_VARIABLES = [
             "pgd",
@@ -234,7 +235,7 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
         PREP_tba = vortex.task(
             kind       = 'make_prep',
             engine     = 'parallel',
-            date       = self.conf.get('date', self.conf.get('datebegin', None)),
+            date       = self.conf.get('prep_date', self.conf.get('datebegin', None)),
         )
         print(self.ticket.prompt, 'Toolbox algo prep=', PREP_tba)
         print()
@@ -255,7 +256,7 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
             local        = 'PREP.nc',
             role         = 'SnowpackInit',
             experiment   = self.conf.xpid,
-            datevalidity = self.conf.get('date', self.conf.get('datebegin', None)),
+            datevalidity = self.conf.get('prep_date', self.conf.get('datebegin', None)),
             vapp         = self.conf.vapp,
             vconf        = self.conf.vconf,
             geometry     = self.conf.geometry,
