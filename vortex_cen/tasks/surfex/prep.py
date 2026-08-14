@@ -184,6 +184,7 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
             "surfex_uenv|uenv",
         ]
         OPTIONAL_CONFIGURATION_VARIABLES = [
+            "date+help=Date of validity of the PREP.nc file to generate;default=*datebegin*",
             "pgd",
             "ntasks",
             "nnodes",
@@ -193,8 +194,12 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
             "diff_xpid",
             "diff_user",
         ]
+        overwrite = [
+            "dateend",
+        ]
         super().__init__(**kw)
-        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES,
+                overwrite=overwrite)
 
     def get_remote_inputs(self):
         """
