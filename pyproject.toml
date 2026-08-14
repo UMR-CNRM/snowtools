@@ -108,6 +108,7 @@ procompare = 'snowtools.plots.stratiprofile.procompare:main'
 mkjob-help = 'vortex_cen.scripts.mkjob_help:main'
 s2m_oper = 'vortex_cen.scripts.s2m_oper:main'
 get_simulation_output = 'vortex_cen.scripts.get_simulation_output:main'
+assim = 'vortex_cen.scripts.assim:main'
 
 [project.entry-points."xarray.backends"]
 snowtools = "snowtools.utils.xarray_snowtools_backend:SnowtoolsBackendEntrypoint"
