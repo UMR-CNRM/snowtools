@@ -395,96 +395,148 @@ In this case, simply provide the reference experiment identifier in the "diff_xp
 Reproduce s2m test cases
 ------------------------
 
-S2M reanalysis test case:
+S2M reanalysis test case
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+s2m command:
 .. code-block:: bash
 
-    # s2m command
     s2m research -r alp_allslopes -b 20220801 -e 20230801 -m safran -f reanalysis2020.2 -o reanalysis_test -n $SNOWTOOLS_CEN/snowtools/DATA/OPTIONS_V9_reanalysis.nam
 
-    # Equivalent command in snowtools3 :
+Equivalent command in snowtools3 :
+.. code-block:: bash
+
     mkjob -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/s2m_reanalysis_testcase.ini -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -a datebegin=2022080106 dateend=2023080106 geometry=alp_allslopes
 
 
-S2M ESCROC test case:
+S2M ESCROC test case
+^^^^^^^^^^^^^^^^^^^^
+
+s2m command:
+
 .. code-block:: bash
 
-    # s2m command
     s2m research -r cdp -b 1994100101 -e 2014100100 -x 2014100100 -m ESM-SnowMIP -f obs@lafaysse -o E2_test --task=escroc --escroc=E2
 
-    # Equivalent command in snowtools3 :
-    mkjob -c $SNOWTOOLS_CEN/vortex_cen/Crocus/escroc/conf/s2m_escroc_testcase.ini -f $SNOWTOOLS_CEN/vortex_cen/Crocus/escroc/jobs/escroc.job -a datebegin=1994100101 dateend=2014100100 geometry=cdp
+Equivalent command in snowtools3:
 
-Stochastic perturbation test case:
 .. code-block:: bash
 
-    # s2m command (seems to work only for user lafaysse)
+    mkjob -c $SNOWTOOLS_CEN/vortex_cen/Crocus/escroc/conf/s2m_escroc_testcase.ini -f $SNOWTOOLS_CEN/vortex_cen/Crocus/escroc/jobs/escroc.job -a datebegin=1994100101 dateend=2014100100 geometry=cdp
+
+Stochastic perturbations test case
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+s2m command (seems to work only for user lafaysse):
+
+.. code-block:: bash
+
     s2m research -r cor_flat -b 20200801 -e 20210801 -m s2m -f reanalysis2020.2 -o perturb --task='croco_perturb' --nmembers=80
 
-    # Equivalent command in snowtools3 :
+Equivalent command in snowtools3:
+
+.. code-block:: bash
+
     mkjob -c $SNOWTOOLS_CEN/vortex_cen/meteo/semidistributed/conf/s2m_stochastic_perturbation_test_case.ini -f $SNOWTOOLS_CEN/vortex_cen/meteo/semidistributed/jobs/perturbations.jobs -a datebegin=2020080106 dateend=2021080106 geometry=cor_flat
 
 
-Croco openloop test case: (before running this test case, please define postes_12_csv geometry in $HOME/.vortexrc/geometries.ini as in ~lafaysse/.vortexrc/geometries.ini ) :
+Croco openloop test case
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+s2m unit test (before running this test case, please define postes_12_csv geometry in $HOME/.vortexrc/geometries.ini as in ~lafaysse/.vortexrc/geometries.ini):
+
 .. code-block:: bash
 
-    # s2m unit test (fail because of missing SURFEX executables...)
+
     s2m research -r postes_12_csv -b 2013080106 -e 2014063006 -x 20160801 -m safran -f forcing_20132014B_31D_11_t1500_160@fructusm -o testopenloop -n ~lafaysse/croco/OPTIONS_MOTHER_DEP.nam --task='croco' --croco='openloop' --escroc=E1notartes --nmembers=35 --nforcing=35 --conf=/home/lafaysse/croco/conf.ini -s ~lafaysse/SURFEX/cen/exe_mpi
     # snowtools.utils.FileException.FileNameException: Unknown file : /home/cnrm_other/cen/mrns/lafaysse/SURFEX/cen/exe_mpi/PGD
 
-    # s2m command to reproduce Bastien's simulation with SURFEX V9 (cf /home/cnrm_other/cen/mrns/fructusm/BASTIEN_SAUVEGARDE/test_surfex_V9/assim_openloop) ?
-    # --> fail because "The "grandesrousses" Geometry object does not exist yet")
+.. note::
+   This test fails because of missing SURFEX executables under /home/cnrm_other/cen/mrns/lafaysse/SURFEX/cen/exe_mpi
+
+
+Equivalent command in snowtools3:
+
+..
+    s2m command to reproduce Bastien's simulation with SURFEX V9 (cf /home/cnrm_other/cen/mrns/fructusm/BASTIEN_SAUVEGARDE/test_surfex_V9/assim_openloop) ?
+    --> fail because "The "grandesrousses" Geometry object does not exist yet")
     # TODO : voir avec Mathieu quelle simulation de référence choisir
     python /home/cnrm_other/cen/mrns/fructusm/git/snowtools/snowtools/tasks/s2m_command.py research -n /home/cnrm_other/cen/mrns/fructusm/BASTIEN_SAUVEGARDE/test_surfex_V9/assim_openloop/test_open_loop.nam -r grandesrousses -b 2018080106 -e 2019080106 --escroc=E1notartes -o testopenloop --nmembers=35 --nforcing=35 --croco='openloop' -f perturb.reanalysis2020.2@lafaysse -m s2m --walltime=2:00:00 --conf=/home/cnrm_other/cen/mrns/fructusm/BASTIEN_SAUVEGARDE/test_surfex_V9/assim_openloop/conf.ini --task='croco' -s /home/cnrm_other/cen/mrns/fructusm/git/SURFEX_CEN/exe
 
-    # Croco-openloop command in snowtools3 :
-    # TODO : voir avec Mathieu quelle simulation de référence choisir
-    mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/assim/jobs/croco_openloop.job -c /home/cnrm_other/cen/mrns/vernaym/snowtools/vortex_cen/Crocus/assim/conf/s2m_croco_test_case.ini -a datebegin=2013080106 dateend=2014063006 geometry=postes_12_csv
-
-    # Croco-openloop equivalent with MPI parallelisation for OFFLINE (TODO : à tester quand Hendrix sera à nouveau accessible)
-    # p $SNOWTOOLS_CEN/vortex-cen/scripts/assim.py -b 2021080206 -e 2022080106 --vapp=Crocus --vconf=assim -c $SNOWTOOLS_CEN/vortex-cen/Crocus/assim/conf/openloop_example.ini
-
-
-Croco test case with assim of real observations:
 .. code-block:: bash
 
-    # s2m unit test (fail because of missing SURFEX executables...)
-    s2m research -r postes_12_csv -b 2013080106 -e 2014063006 -x 20160801 -m safran -f forcing_20132014B_31D_11_t1500_160@fructusm -o test0l -n ~lafaysse/croco/OPTIONS_MOTHER_DEP.nam --task='croco' --croco='real' --escroc=E1notartes --nmembers=35 --nforcing=35 --conf=/home/lafaysse/croco/conf.ini -s ~lafaysse/SURFEX/cen/exe_mpi --obsxpid=obs@lafaysse --sensor=bdclim
+   mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/assim/jobs/croco_openloop.job -c /home/cnrm_other/cen/mrns/vernaym/snowtools/vortex_cen/Crocus/assim/conf/s2m_croco_test_case.ini -a datebegin=2013080106 dateend=2014063006 geometry=postes_12_csv
 
-    # Croco-assim command in snowtools3 :
-    # TODO : voir avec Mathieu quelle simulation de référence choisir
+Croco-openloop equivalent with MPI parallelisation for OFFLINE (TODO : à tester quand Hendrix sera à nouveau accessible)
 
-    # Croco-assim equivalent with MPI parallelisation for OFFLINE (TODO : à tester quand Hendrix sera à nouveau accessible)
-    # p $SNOWTOOLS_CEN/vortex-cen/scripts/assim.py -b 2021080206 -e 2022080106 --vapp=Crocus --vconf=assim -c $SNOWTOOLS_CEN/vortex-cen/Crocus/assim/conf/openloop_example.ini -a 2022022612
-
-
-Replay operational analysis and forecast:
-.. code-blck:: bash
-
-    # s2m unit test (fail)
-    s2m oper -b 2025091503 -r alp --dev
-    s2m oper -b 2025091503 -r alp --task='forecast' --dev
-
-    # Equivalent commands in snowtools3 :
-    s2m_oper -j surfex_ana -d 2026080603 -r alp
-    s2m_oper -j surfex_prv -d 2026080603 -r alp
-
-
-Building of reforecast initial conditions test case:
 .. code-block:: bash
 
-    # s2m unit test:
-    s2m research -r vog3_allslopes -b 20000801 -e 20010801 -a 400 -m s2m -f reanalysis_era5.2023 -p reanalysis_era5.2025.2 -o initialconditions_test -n $SNOWTOOLS_CEN/snowtools/DATA/OPTIONS_V9_reanalysis_forprep.nam --task='surfex_dailyprep' --walltime='00:45:00'
+   assim -b 2021080206 -e 2022080106 --vapp=Crocus --vconf=assim -c $SNOWTOOLS_CEN/vortex_cen/Crocus/assim/conf/openloop_example.ini
 
-    # Equivalent commands in snowtools3 :
-    # TODO : voir avec Sabine
 
-Reforecast test case:
+Croco test case with assim of real observations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+s2m unit test:
+
 .. code-block:: bash
 
-    # s2m unit test:
-    s2m research -b 20000302 -e 20000327 -r vog3_allslopes -n /home/cnrm_other/cen/mrns/lafaysse/PycharmProjects/snowtools_git/snowtools/DATA/OPTIONS_reforecast.nam --task='reforecast' -m safran -f reforecast_2023 --nmembers=11 -p initdaily_era5.2025.2@lafaysse -o reforecast_test
+   s2m research -r postes_12_csv -b 2013080106 -e 2014063006 -x 20160801 -m safran -f forcing_20132014B_31D_11_t1500_160@fructusm -o test0l -n ~lafaysse/croco/OPTIONS_MOTHER_DEP.nam --task='croco' --croco='real' --escroc=E1notartes --nmembers=35 --nforcing=35 --conf=/home/lafaysse/croco/conf.ini -s ~lafaysse/SURFEX/cen/exe_mpi --obsxpid=obs@lafaysse --sensor=bdclim
 
-    # Equivalent commands in snowtools3 :
-    # TODO : voir avec Sabine
+.. note::
+   This test fails because executables under ~lafaysse/SURFEX/cen/exe_mpi are missing
+
+Croco-assim command in snowtools3 :
+
+TODO : voir avec Mathieu quelle simulation de référence choisir
+
+Croco-assim equivalent with MPI parallelisation for OFFLINE (TODO : à tester quand Hendrix sera à nouveau accessible)
+
+.. code-block:: bash
+
+   assim -b 2021080206 -e 2022080106 --vapp=Crocus --vconf=assim -c $SNOWTOOLS_CEN/vortex_cen/Crocus/assim/conf/assim_example.ini -a 2022022612
+
+
+Replay operational analysis and forecast
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+s2m unit test (fail)
+
+.. code-block:: bash
+
+   s2m oper -b 2025091503 -r alp --dev
+   s2m oper -b 2025091503 -r alp --task='forecast' --dev
+
+Equivalent commands in snowtools3 :
+
+.. code-block:: bash
+
+   s2m_oper -j surfex_ana -d 2026080603 -r alp
+   s2m_oper -j surfex_prv -d 2026080603 -r alp
+
+
+Building of reforecast initial conditions test case
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+s2m unit test:
+
+.. code-block:: bash
+
+   s2m research -r vog3_allslopes -b 20000801 -e 20010801 -a 400 -m s2m -f reanalysis_era5.2023 -p reanalysis_era5.2025.2 -o initialconditions_test -n $SNOWTOOLS_CEN/snowtools/DATA/OPTIONS_V9_reanalysis_forprep.nam --task='surfex_dailyprep' --walltime='00:45:00'
+
+Equivalent command in snowtools3 :
+TODO : voir avec Sabine
+
+Reforecast test case
+^^^^^^^^^^^^^^^^^^^^
+
+s2m unit test:
+
+.. code-block:: bash
+
+   s2m research -b 20000302 -e 20000327 -r vog3_allslopes -n /home/cnrm_other/cen/mrns/lafaysse/PycharmProjects/snowtools_git/snowtools/DATA/OPTIONS_reforecast.nam --task='reforecast' -m safran -f reforecast_2023 --nmembers=11 -p initdaily_era5.2025.2@lafaysse -o reforecast_test
+
+Equivalent command in snowtools3:
+TODO : voir avec Sabine quand ça sera prêt
 
 
