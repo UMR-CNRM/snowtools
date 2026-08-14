@@ -68,14 +68,14 @@ standard_variables = dict(
         format = uenv_format,
         # TODO : définir un uenv par défaut
     ),
-    surfex_uenv     = dict(
-        help = "Name of the User Environment containing SURFEX executables and namelists",
+    surfex_uenv = dict(
+        help = "Name of the User Environment containing SURFEX executables",
         type = "str",
         format = uenv_format,
         default = "*uenv*",
     ),
-    consts_surfex_uenv     = dict(
-        help = "Name of the User Environment containing all SURFEX constant files",
+    consts_surfex_uenv = dict(
+        help = "Name of the User Environment containing all SURFEX constant files (including the namelist)",
         type = "str",
         format = uenv_format,
         default = "*uenv*",

@@ -253,7 +253,8 @@ class SurfexCommonsMixin:
 
         **Configuration Variables used:**
 
-        * ``surfex_uenv`` or if not present ``uenv`` User Environment from which the namelist file should be fetched.
+        * ``consts_surfex_uenv`` or if not present ``uenv`` User Environment from which the namelist file should be
+            fetched.
                  Format : uenv:{uenv_name}@{user}
         * ``namelist_source`` In an UEnv, several namelistes can be present in an *.tar* archive,
           the *source*  footprint allows to define the exact name of the nameliste to fetch.
@@ -265,7 +266,7 @@ class SurfexCommonsMixin:
             # Dans un UEnv, plusieurs namelistes peuvent être stockées dans une archive ".tar",
             # le footprint *source* permet de définir le nom exact de la nameliste à récupérer.
             source   = self.conf.namelist_source,  # ex : OPTIONS_default.nam
-            genv     = self.conf.get('surfex_uenv', self.conf.uenv),
+            genv     = self.conf.get('consts_surfex_uenv', self.conf.uenv),
             kind     = 'namelist',
             model    = 'surfex',
             local    = 'OPTIONS.nam',
