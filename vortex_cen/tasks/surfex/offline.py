@@ -294,6 +294,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
             "xpid",
             "geometry",
             "consts_surfex_uenv|uenv",
+            "namelists_surfex_uenv|uenv",
             "surfex_uenv|uenv",
         ]
 

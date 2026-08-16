@@ -28,7 +28,8 @@ class SurfexCommonsMixin:
 
         **Configuration Variables used:**
 
-        * ``surfex_uenv`` or if not present ``uenv`` User Environment in which the following resources are to be retrieved :
+        * ``surfex_uenv`` or if not present ``uenv`` User Environment in which the following resources are to be
+          retrieved :
           - ecoclimapI_covers_param.bin
           - ecoclimapII_eu_covers_param.bin
 
@@ -74,7 +75,8 @@ class SurfexCommonsMixin:
 
         **Configuration Variables used:**
 
-        * ``surfex_uenv`` or if not present ``uenv`` User Environment in which the following resources are to be retrieved :
+        * ``consts_surfex_uenv`` or if not present ``uenv`` User Environment in which the following resources are to be
+          retrieved :
           - ecoclimapI_covers_param.bin
           - ecoclimapII_eu_covers_param.bin
 
@@ -147,7 +149,8 @@ class SurfexCommonsMixin:
         Method to be used in tasks that fetch or try to fetch the pgd file from the cache or archive.
 
         :param fatal: If True, the method raises a fatal error if the file could not be fetched. Default: True.
-            Should be False only in tasks that implement a second option for fetching a pgd file, for example from an uenv.
+            Should be False only in tasks that implement a second option for fetching a pgd file, for example from an
+            uenv.
         :type fatal: bool
         :return: pgd toolbox
 
@@ -242,7 +245,7 @@ class SurfexCommonsMixin:
             namespace    = 'vortex.cache.fr',
             block        = 'namelist',
             nativefmt    = 'nam',
-            intent = 'inout', # needed for dailyprep
+            intent = 'inout',  # needed for dailyprep
         ),
         print(self.ticket.prompt, 'namelist =', namelist_tbi)
         print()
@@ -253,7 +256,7 @@ class SurfexCommonsMixin:
 
         **Configuration Variables used:**
 
-        * ``consts_surfex_uenv`` or if not present ``uenv`` User Environment from which the namelist file should be
+        * ``namelists_surfex_uenv`` or if not present ``uenv`` User Environment from which the namelist file should be
             fetched.
                  Format : uenv:{uenv_name}@{user}
         * ``namelist_source`` In an UEnv, several namelistes can be present in an *.tar* archive,
@@ -266,7 +269,7 @@ class SurfexCommonsMixin:
             # Dans un UEnv, plusieurs namelistes peuvent être stockées dans une archive ".tar",
             # le footprint *source* permet de définir le nom exact de la nameliste à récupérer.
             source   = self.conf.namelist_source,  # ex : OPTIONS_default.nam
-            genv     = self.conf.get('consts_surfex_uenv', self.conf.uenv),
+            genv     = self.conf.get('namelists_surfex_uenv', self.conf.uenv),
             kind     = 'namelist',
             model    = 'surfex',
             local    = 'OPTIONS.nam',
@@ -307,7 +310,8 @@ class SurfexCommonsMixin:
 
 
         :param fatal: If *True*, the method raises a fatal error if the file could not be fetched. Default: *True*.
-            Should be False only in tasks that implement a second option for fetching a pgd file, for example from an uenv.
+            Should be False only in tasks that implement a second option for fetching a pgd file, for example from an
+            uenv.
         :type fatal: bool
         :param cache_only: If *True*, the method gets the PREP file from the cache only. Default: *False*.
             *cache_only=False* should be used in tasks that are supposed to fetch a PREP file as a remote input,
@@ -438,8 +442,6 @@ class SurfexCommonsMixin:
                   'corresponding configuration sections match. ')
             raise e
         return init_tg
-
-
 
     def get_init_TG_from_uenv(self, fatal=True):
         """

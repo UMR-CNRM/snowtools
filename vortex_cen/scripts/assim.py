@@ -9,6 +9,7 @@ import vortex
 from vortex.util.config import GenericConfigParser
 
 # TODO : Have a look at mkjob "subjobs" tool
+# TODO : Launch this script as a job to avoid waiting on a login node
 
 
 def parse_command_line():
