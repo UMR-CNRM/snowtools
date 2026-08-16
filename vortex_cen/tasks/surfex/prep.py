@@ -181,6 +181,7 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
             "geometry",
             "xpid",
             "consts_surfex_uenv|uenv",
+            "namelists_surfex_uenv|uenv",
             "surfex_uenv|uenv",
             "prep_date|datebegin",
             "forcing_datebegin",

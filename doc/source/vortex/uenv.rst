@@ -36,7 +36,6 @@ Name your file(s) with a distinctive suffix (version number, git commit or tag,.
 
    Namelists are a special case : serveral namelist files can be added under ``$HOME/.vortexrc/hack/uget/your_username/data/<namelist_dir_XXX>``
 
-
 2. Create a text file with a distinctive name which is the name of your UEnv (ex ``MyFirstUenv.0``) in ``$HOME/.vortexrc/hack/uget/your_username/env``
 
 3. In this text file, associate a key to each file:
@@ -75,6 +74,22 @@ Name your file(s) with a distinctive suffix (version number, git commit or tag,.
 
    * By convention, the "keys" of SURFEX executables are MASTER_SURFEX_<NAME_OF_EXEC>_MPI or MASTER_SURFEX_<NAME_OF_EXEC>_NOMPI.
    * It is possible to use files from another user's UEnv in your own UEnv : simply copy the corresponding lines from their UEnv file into yours
+
+User Environments for surfex simulations
+----------------------------------------
+
+Constant files for SURFEX simulations can be grouped in 3 different categories:
+
+* files that do not change frequently, for which a default uenv is commonly used (eccoclimap*, drdt_bst_fit, SandDB, ClayDB).
+  The associated default uenv for these files can be set with the "consts_surfex_uenv" configuration variable.
+
+* SURFEX executables can be provided in a specific uenv identified by the "surfex_uenv" configuration variable.
+
+* SURFEX namelists can be provided in a specific uenv identified by the "namelists_surfex_env" configuration variables.
+
+.. note::
+
+   Of course it is possible to group all these constant files into a single user environment and simply use the "uenv" configuration variable, following the instructions provided in the next section
 
 .. _uenv_surfex:
 
@@ -162,6 +177,7 @@ Using UEnv ``TargetUEnv.X`` owned by another user
 .. code-block:: bash
 
    toolbox.input(genv='uenv:TargetUEnv.X@the_other_user', gvar='Key_from_TargetUEnv.X', unknown=True, filename='...')
+
 
 Examples of available User Environments (UEnv)
 ----------------------------------------------
