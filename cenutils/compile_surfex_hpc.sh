@@ -129,9 +129,9 @@ if git rev-parse --is-inside-work-tree ; then
     if ! git diff HEAD --quiet ; then
         # Un-tracked local changes : the commit may not ensure reproducibility
         # TODO : définir le comportement à adopter dans ce cas
-        surfex_commit="Unknown"
+        surfex_commit="$(git log -n 1 --pretty=format:'%h')_uncommitted_local_changes"
         outstr="WARNING : there are untracked local changes since last commit.
-                The compiled executables can not be associated to any git commit."
+                The commit associated to the compiled executables may not ensure reproducibility."
     else
         # Code up to date with last commit
         # TODO : add an eventual tag ?
