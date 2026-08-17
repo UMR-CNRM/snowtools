@@ -550,8 +550,25 @@ class FetchClimGroundTemperatureOrCrash(InitClimGroundTemperature, _CenResearchT
     def get_remote_inputs(self):
         force_uenv = self.conf.get("force_uenv", True)
         initg = self.get_init_TG_from_uenv(fatal=force_uenv)
-        if not initg[0]:
+        if not initg[0] and not force_uenv:
             _ = self.get_init_TG_from_cache_or_archive(fatal=True, cache_only=False)
+
+        # Place the retrieved file in th cache where the next task will look for it
+        self.sh.title("Refill local cache with retrieved initial values of ground temperature")
+        init_ground_temperature_out = vortex.output(
+            role       = "InitialValuesOfGroundTemperature",
+            kind       = "climTG",
+            nativefmt  = "netcdf",
+            local      = "init_TG.nc",
+            experiment = self.conf.xpid,
+            geometry   = self.conf.geometry,
+            model      = "surfex",
+            namespace  = "vortex.cache.fr",
+            namebuild  = "flat@cen",
+            block      = self.conf.get("out_block", "prep"),
+        )
+        print(self.ticket.prompt, "Output init ground temperature =", init_ground_temperature_out)
+        print()
 
     def get_local_inputs(self):
         pass
