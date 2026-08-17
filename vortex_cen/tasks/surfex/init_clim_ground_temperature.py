@@ -559,3 +559,6 @@ class FetchClimGroundTemperatureOrCrash(InitClimGroundTemperature, _CenResearchT
 
     def launch_algo(self, algo, **kwargs):
         pass
+
+    def put_outputs(self):
+        pass

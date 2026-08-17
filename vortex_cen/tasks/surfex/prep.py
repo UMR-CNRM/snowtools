@@ -499,6 +499,10 @@ class FetchPrepFileOrCrash(FetchPrepFileOrMake):
     def launch_algo(self, algo, **kwargs):
         pass
 
+    def put_outputs(self):
+        pass
+
+
 class PrepRefill(FetchPrepFileOrCrash):
     """
     **Task : PrepRefill**
