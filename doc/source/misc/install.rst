@@ -10,7 +10,7 @@ Snowtools install for users
 If you are only a user of snowtools, you can install the package easily with pip in a virtual environment:
 
 1. Download the source code: ``git clone https://github.com/UMR-CNRM/snowtools.git``
-2. Create a virtual environment : ``python3 -m venv <name_of_your_virtual_env>``
+2. Create a virtual environment : ``python3 -m venv --system-site-packages <name_of_your_virtual_env>``
 3. Enter in the virtual environment:  ``source <name_of_your_virtual_env>/bin/activate``
 4. Ensure you are at the root of the snowtools repository and install the package (with optional dependencies plot) by running:
 
@@ -57,14 +57,14 @@ Make sure you have a github account and that you have a SSH key attached to your
 Prerequisites on Meteo-France computers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- On HPC you first have to set the correct python version and compiler to use by running : ``module load python/3.12.12 gcc/15.2.0``
+- On HPC you first have to set the correct python version and compiler to use by running : ``module load python/3.12.12 gcc/15.2.0`` (``module load python/3.10.12 gcc/15.2.0`` on taranis)
 - On all Meteo-Frace machines, if you intend to deal with data stored on Meteo-France archive (hendrix), you will have to configure connecton creedentials as explained on page :ref:`vortex-file-transfer`.
 
 Installation
 ^^^^^^^^^^^^
 
 1. Choose a location where to store your virtual environments (e.g. ``~/my_envs``, if you do not have a dedicated folder, create it with ``mkdir ~/my_envs``).
-2. Create a virtual environment :  ``python3 -m venv ~/my_envs/snowtools_env``.
+2. Create a virtual environment :  ``python3 -m venv --system-site-packages ~/my_envs/snowtools_env``.
 3. Enter in the virtual environment:  ``source ~/my_envs/snowtools_env/bin/activate``.
 4. Use the script dedicated to installation of snowtools on Meteo-France machines : ``python3 cenutils/install_snowtools.py -o all -e``
    (This command will run ``pip install`` of snowtools, as an editable install and prepare necessary configuration for vortex).

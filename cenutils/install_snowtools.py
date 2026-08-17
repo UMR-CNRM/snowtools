@@ -61,15 +61,14 @@ if sys.base_prefix == sys.prefix:
         if not os.path.isfile(os.path.join(venv, 'bin', 'pip')):
             # Create the virtual environment if it does not exist already
             from venv import create
-#            if 'hpc' in HOSTNAME:
-#                # Do not create a virtual environment with system site packages on HPC
-#                # Update 6/8/2026 :
-#                # Installing the virtual environment with system site packages on HPC seems
-#                # to work fine after the migration to setuptools
-#                create(venv, with_pip=True)
-#            else:
-#                create(venv, with_pip=True, system_site_packages=True)
-            create(venv, with_pip=True, system_site_packages=True)
+            if 'hpc' in HOSTNAME:
+                # Do not create a virtual environment with system site packages on HPC.
+                # This leads to crashes when using the environment :
+                # ImportError: /lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found
+                raise ValueError("The use of the '-v' option on HPC leads to unexplained crashes")
+                # create(venv, with_pip=True)
+            else:
+                create(venv, with_pip=True, system_site_packages=True)
             outstr = outstr + "Snowtools has been installed in a new virtual environment.\n" \
                 "To activate it, run :\n" \
                 f"source {venv}/bin/activate"
@@ -90,6 +89,7 @@ if sys.base_prefix == sys.prefix:
 
         raise SystemError('It looks like you are not in a virtual environment.\n'
                 'Please activate a virtual environment or create one with the -v/--venv argument.')
+
 else:
     # The script was called from within a virtual environment
     outstr = outstr + "Snowtools has been installed in the current virtual environment."
@@ -119,22 +119,25 @@ else:
     pip_options = list()
 
 # Ensure to use the latest available pip version
-print("Running command:")
-print(f"{pip} install --upgrade pip")
-subprocess.run([pip, 'install'] + pip_options + ['--upgrade', 'pip'], check=True)
+#print("Running command:")
+#print(f"{pip} install --upgrade pip")
+#subprocess.run([pip, 'install'] + pip_options + ['--upgrade', 'pip'], check=True)
 
 # Get a proper version of setuptools (more than 66 -> editable, less than 71 to avoir bug)
-print("Setuptools:")
-subprocess.run([pip, 'install'] + ['setuptools>=66.0.0,<71.0.0'], check=True)
+#print("Setuptools:")
+#subprocess.run([pip, 'install'] + ['setuptools>=66.0.0,<71.0.0'], check=True)
 
 # Snowtools installation
 # ----------------------
 
 os.chdir(snowtools_dir)
 
-if args.editable and sys.version_info < (3, 10, 1):
+if args.editable:
 
-    raise SystemError('Editable install is not possible with python versions lower than 3.10')
+    if sys.version_info < (3, 10, 1):
+        raise SystemError('Editable install is not possible with python versions lower than 3.10')
+
+    pip_options.extend(['--no-build-isolation', '-e'])
 
 # Install snowtools
 # pip install [--no-build-isolation -e] .
@@ -156,7 +159,8 @@ if 'hpc' in HOSTNAME:
     install_dir = "/home/cnrm_other/cen/mrns/vernaym/Projects/common"
     for package in ["mkjob", "vortex-gco", "vortex-olive"]:
         target = os.path.join(install_dir, package)
-        subprocess.run([pip, 'install', '--no-build-isolation', '-e', target], check=True)
+        #subprocess.run([pip, 'install', '--no-build-isolation', '-e', target], check=True)
+        subprocess.run([pip, 'install', target], check=True)
 
 # Configure Vortex
 vortex_config = os.path.join(os.environ['HOME'], '.vortex.d', 'vortex.toml')
