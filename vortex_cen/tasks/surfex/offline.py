@@ -371,7 +371,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
             datebegin=self.conf.datebegin,
             dateend=self.conf.dateend,
             # MV : *dateinit* correspond à la date de validité du fichier PREP
-            dateinit=self.ticket.context.sequence.effective_inputs(role="SnowpackInit")[0].rh.resource.date,
+            dateinit=self.ticket.context.sequence.effective_inputs(role="SnowpackInit")[0].rh.resource.datevalidity,
             # MV : la valeur par défaut de "threshold" dans la commande s2m est -999
             # TODO : cette valeur par défaut pourrait être codée directement dans l'algo
             threshold=self.conf.get("august_threshold", -999),
@@ -942,7 +942,7 @@ class OfflineXiosMpi(_Offline):
             datebegin=self.conf.datebegin,
             dateend=self.conf.dateend,
             # MV : *dateinit* correspond à la date de validité du fichier PREP
-            dateinit=self.ticket.context.sequence.effective_inputs(role="SnowpackInit")[0].rh.resource.date,
+            dateinit=self.ticket.context.sequence.effective_inputs(role="SnowpackInit")[0].rh.resource.datevalidity,
             # MV : la valeur par défaut de "threshold" dans la commande s2m est -999
             # TODO : cette valeur par défaut pourrait être codée directement dans l'algo
             threshold=self.conf.get("august_threshold", -999),
