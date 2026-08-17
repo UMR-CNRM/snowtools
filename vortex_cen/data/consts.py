@@ -126,15 +126,15 @@ class climTG(GenvModelGeoResource):
     def realkind(self):
         return 'init_TG'
 
-    def namebuilding_info(self):
-
-        nbi = super().namebuilding_info()
-        nbi.update(
-            # will work only with the @cen namebuilder:
-            cen_rawbasename=(self.realkind + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)),
-            # With the standard provider, the usual keys will be used.
-        )
-        return nbi
+#    def namebuilding_info(self):
+#
+#        nbi = super().namebuilding_info()
+#        nbi.update(
+#            # will work only with the @cen namebuilder:
+#            cen_rawbasename=(self.realkind + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)),
+#            # With the standard provider, the usual keys will be used.
+#        )
+#        return nbi
 
 
 class GridTarget(GenvModelGeoResource):
