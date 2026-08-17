@@ -201,3 +201,25 @@ FAQ - Frequent issues
     FileNotFoundError: [Errno 2] No such file or directory: 'ftput'
 
 * Team UEnv (@CONST_CEN, @SAFRAN_CEN and @SURFEX_CEN) are no longer possible with Vortex2 (see snowtools ticket #306 or https://gitlab.meteo.fr/cnrm-gmap/vortex-gco/-/work_items/4#note_93731 for more information)
+
+* The name of the repository conatining the SURFEX namelists must be suffixed ".tar" in the uenv.
+  The following works fine :
+
+.. code-block::
+
+   NAMELIST_SURFEX="uget:namelists_surfex9_0_crocus3_0_2_std.tar@lafaysse"
+
+whereas
+
+.. code-block::
+
+   NAMELIST_SURFEX="uget:namelists_surfex9_0_crocus3_0_2_std@lafaysse"
+
+raises the following error :
+
+.. code-block::
+
+    # [2026/08/17-12:36:48][vortex.data.abstractstores][incacheget:1180][INFO]: incacheget on uget://uget.hack.fr//data/namelists_surfex9_0_crocus3_0_2_std (to: namelists_surfex9_0_crocus3_0_2_std)
+    # [2026/08/17-12:36:48][vortex.data.abstractstores][incacheget:1199][INFO]: incacheget retrieve rc=True location=/home/cnrm_other/cen/mrns/vernaym/.vortexrc/hack/uget/vernaym/data/namelists_surfex9_0_crocus3_0_2_std
+    # [2026/08/17-12:36:48][vortex_gco.data.stores][ugetget:1664][ERROR]: 'namelists_surfex9_0_crocus3_0_2_std' should be a tarfile
+
