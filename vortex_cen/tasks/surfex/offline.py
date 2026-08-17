@@ -380,7 +380,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
             # TODO : cette valeur par défaut pourrait être codée directement dans l'algo
             drhookprof=self.conf.get("drhook", False),
             # MV : on traitera les question de reproductibilité dans un 2nd temps.
-            reprod_info    = self.get_reprod_info,
+            reprod_info=self.get_reprod_info,
         )
         print(self.ticket.prompt, "Algo =", offline_tba)
         print()
@@ -447,26 +447,26 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
         # WARNING : "CUMUL" resources do not differ from "PRO" resources
         # The following toolbox will overwrites the PRO files already archived
 
-#        self.sh.title("Output CUMUL")
-#        cumul_tbo = (
-#            vortex.output(
-#                local="CUMUL_[datebegin:ymdh]_[dateend:ymdh].nc",
-#                experiment=self.conf.xpid,
-#                geometry=self.conf.geometry,
-#                datebegin=self.list_dates_begin_pro,
-#                dateend=self.dict_dates_end_pro,
-#                nativefmt="netcdf",
-#                kind="SnowpackSimulation",
-#                namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
-#                namebuild="flat@cen",  # TODO : passer en variable de configuration
-#                block="offline",
-#                member=self.conf.get("member", None),
-#                model="surfex",
-#                fatal=False,
-#            ),
-#        )
-#        print(self.ticket.prompt, "cumul_tbo =", cumul_tbo)
-#        print()
+        #        self.sh.title("Output CUMUL")
+        #        cumul_tbo = (
+        #            vortex.output(
+        #                local="CUMUL_[datebegin:ymdh]_[dateend:ymdh].nc",
+        #                experiment=self.conf.xpid,
+        #                geometry=self.conf.geometry,
+        #                datebegin=self.list_dates_begin_pro,
+        #                dateend=self.dict_dates_end_pro,
+        #                nativefmt="netcdf",
+        #                kind="SnowpackSimulation",
+        #                namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
+        #                namebuild="flat@cen",  # TODO : passer en variable de configuration
+        #                block="offline",
+        #                member=self.conf.get("member", None),
+        #                model="surfex",
+        #                fatal=False,
+        #            ),
+        #        )
+        #        print(self.ticket.prompt, "cumul_tbo =", cumul_tbo)
+        #        print()
         pass
 
     def put_diag(self):
@@ -474,26 +474,26 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
         # WARNING : "CUMUL" resources do not differ from "PRO" resources
         # The following toolbox will overwrites the PRO files already archived
 
-#        self.sh.title("Output DIAG")
-#        diag_tbo = (
-#            vortex.output(
-#                local="DIAG_[datebegin:ymdh]_[dateend:ymdh].nc",
-#                experiment=self.conf.xpid,
-#                geometry=self.conf.geometry,
-#                datebegin=self.list_dates_begin_pro,
-#                dateend=self.dict_dates_end_pro,
-#                nativefmt="netcdf",
-#                kind="SnowpackSimulation",
-#                namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
-#                namebuild="flat@cen",  # TODO : passer en variable de configuration
-#                block="offline",
-#                member=self.conf.get("member", None),
-#                model="surfex",
-#                fatal=False,
-#            ),
-#        )
-#        print(self.ticket.prompt, "diag_tbo =", diag_tbo)
-#        print()
+        #        self.sh.title("Output DIAG")
+        #        diag_tbo = (
+        #            vortex.output(
+        #                local="DIAG_[datebegin:ymdh]_[dateend:ymdh].nc",
+        #                experiment=self.conf.xpid,
+        #                geometry=self.conf.geometry,
+        #                datebegin=self.list_dates_begin_pro,
+        #                dateend=self.dict_dates_end_pro,
+        #                nativefmt="netcdf",
+        #                kind="SnowpackSimulation",
+        #                namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
+        #                namebuild="flat@cen",  # TODO : passer en variable de configuration
+        #                block="offline",
+        #                member=self.conf.get("member", None),
+        #                model="surfex",
+        #                fatal=False,
+        #            ),
+        #        )
+        #        print(self.ticket.prompt, "diag_tbo =", diag_tbo)
+        #        print()
         pass
 
     def diff(self):
@@ -703,7 +703,7 @@ class OfflineMpi(_Offline):
             algo,
             executable,
             mpiopts={
-                "nnodes": self.conf.get('nnodes', 1),  # Redondant avec la valeur par défaut dans mkjob
+                "nnodes": self.conf.get("nnodes", 1),  # Redondant avec la valeur par défaut dans mkjob
                 "nprocs": self.conf.ntasks,  # Redondant avec la valeur par défaut dans mkjob
                 "ntasks": self.conf.ntasks,  # Redondant avec la valeur par défaut dans mkjob
             },
@@ -930,6 +930,7 @@ class OfflineXiosMpi(_Offline):
         Algo component to execute OFFLINE with XIOS
         """
         import footprints
+
         self.sh.title("Algo XIOS")
         xios = footprints.proxy.mpibinary(
             kind="ioserv",
@@ -938,7 +939,7 @@ class OfflineXiosMpi(_Offline):
         )
         print(self.ticket.prompt, "Xios =", xios)
         print()
-        #xios.master = self.xios_exe[0].container.localpath()
+        # xios.master = self.xios_exe[0].container.localpath()
         xios.master = self.xios_exe[0].container.abspath
 
         self.sh.title("Algo OFFLINE-XIOS-MPI")
@@ -959,8 +960,8 @@ class OfflineXiosMpi(_Offline):
             drhookprof=self.conf.get("drhook", False),
             # MV : on traitera les question de reproductibilité dans un 2nd temps.
             # reprod_info    = self.get_reprod_info,
-            ioserver = xios,
-            iolocation = 0,
+            ioserver=xios,
+            iolocation=0,
         )
         print(self.ticket.prompt, "Algo =", offline_tba)
         print()
@@ -973,16 +974,18 @@ class OfflineXiosMpi(_Offline):
         # Pour un exécution de binaire, il faut donner l'objet "exécutable" associé (récupéré par la commande
         # vortex.executable(...))
         # Il est possible de récupérer cet objet avec la ligne suivante :
-        #executables = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
+        # executables = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
         executables = self.offline_exe
 
-        self.component_runner(algo, executables,
-#            mpiopts={
-#                "nnodes": self.conf.nnodes,
-##                "nprocs": self.conf.nprocs,  # Redondant avec la valeur par défaut dans mkjob
-#                "ntasks": self.conf.ntasks - self.conf.io_tasks,
-#                "envelope": True,
-#            },
+        self.component_runner(
+            algo,
+            executables,
+            #            mpiopts={
+            #                "nnodes": self.conf.nnodes,
+            ##                "nprocs": self.conf.nprocs,  # Redondant avec la valeur par défaut dans mkjob
+            #                "ntasks": self.conf.ntasks - self.conf.io_tasks,
+            #                "envelope": True,
+            #            },
         )
 
 
@@ -1566,6 +1569,9 @@ class OfflineAssim(OfflineOpenloop):
         )
         print(self.ticket.prompt, "prep_tbi =", prep_tbi)
         print()
+
+    def put_prep(self):
+        return super().put_prep()
 
 
 class OfflineLocalForcing(OfflineMpi):

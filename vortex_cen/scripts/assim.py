@@ -19,107 +19,126 @@ Such an experiment is a loop over the following sequence of actions over a set o
 import argparse
 import time
 
-from bronx.stdtypes.date import Date, Time
-from snowtools.tools.execute import callSystemOrDie
 import vortex
+from bronx.stdtypes.date import Date, Time
 from vortex.util.config import GenericConfigParser
 
 # TODO : Have a look at mkjob "subjobs" tool
 # TODO : Launch this script as a job to avoid waiting on a login node
+from snowtools.tools.execute import callSystemOrDie
 
 
 def parse_command_line():
 
     parser = argparse.ArgumentParser(
-        description='Launch a SURFEX/Crocus experiment with snow data assimilation. \n'
-        'Such an experiment is loop over the following sequence of actions over a set of assimilation dates:\n'
-        '1. Run an ensemble of SURFEX/Crocus simulations (OFFLINE executable) with an MPI parallelisation until '
-        'an assimilation date. All simulation members are initialised with the same initial conditions (PREP file).\n'
+        description="Launch a SURFEX/Crocus experiment with snow data assimilation. \n"
+        "Such an experiment is loop over the following sequence of actions over a set of assimilation dates:\n"
+        "1. Run an ensemble of SURFEX/Crocus simulations (OFFLINE executable) with an MPI parallelisation until "
+        "an assimilation date. All simulation members are initialised with the same initial conditions (PREP file).\n"
         '--> Associated task : "offline_openloop"\n'
-        '2. Assimilate an available snow observation at the assimilation date with a Particle Filter '
-        '(SODA executable)\n'
-        '3. Run an ensemble of SURFEX/Crocus simulations (OFFLINE executable) with an MPI parallelisation from '
-        'the last assimilation date, until the next assimilaiton date (or the date of end simiulation).\n'
-        'The difference with the execution of step 1 is that this time, each simuaiton member is initialised by'
-        'specific initial conditions (PREP file) coming from step 2 (SODA analysis).\n'
+        "2. Assimilate an available snow observation at the assimilation date with a Particle Filter "
+        "(SODA executable)\n"
+        "3. Run an ensemble of SURFEX/Crocus simulations (OFFLINE executable) with an MPI parallelisation from "
+        "the last assimilation date, until the next assimilaiton date (or the date of end simiulation).\n"
+        "The difference with the execution of step 1 is that this time, each simuaiton member is initialised by"
+        "specific initial conditions (PREP file) coming from step 2 (SODA analysis).\n"
         '--> Associated task : "offline_assim"\n'
     )
 
-    parser.add_argument('-b', '--datebegin', type=str,
-                        help="Date of the beginning of the simulation.")
+    parser.add_argument("-b", "--datebegin", type=str, help="Date of the beginning of the simulation.")
 
-    parser.add_argument('-e', '--dateend', type=str,
-                        help="Date of the end of the simulation.")
+    parser.add_argument("-e", "--dateend", type=str, help="Date of the end of the simulation.")
 
-    parser.add_argument("--vapp",
-            help="Target application (ex: edelweiss)", type=str, required=True)
+    parser.add_argument("--vapp", help="Target application (ex: edelweiss)", type=str, required=True)
 
-    parser.add_argument("--vconf",
-            help="Target configuration", type=str, required=True)
+    parser.add_argument("--vconf", help="Target configuration", type=str, required=True)
 
-    parser.add_argument("-c", "--conf",
-            help="Path to the simulation's configuration file", type=str, required=True)
+    parser.add_argument("-c", "--conf", help="Path to the simulation's configuration file", type=str, required=True)
 
-    parser.add_argument("-a", "--assimdates", nargs="+",
-            help="List of assimilation dates", required=False, default=list())
+    parser.add_argument("-a", "--assimdates", nargs="+", help="List of assimilation dates", required=False, default=list())
 
     # Temporary argument for script debuging
-    parser.add_argument("--keep_existing_prep", action='store_true', default=False,
-            help="Do not remove existing PREP files to avoid waiting (DBUG mode only)", required=False)
+    parser.add_argument(
+        "--keep_existing_prep",
+        action="store_true",
+        default=False,
+        help="Do not remove existing PREP files to avoid waiting (DBUG mode only)",
+        required=False,
+    )
 
-    parser.add_argument("-g", "--geometry",
-            help="Simulation's geometry", type=str, required=False)
-#
-#    parser.add_argument("-x", "--xpid",
-#            help="Experiment identifier", type=str, required=False)
-#
-#    parser.add_argument("-n", "--nmembers",
-#            help="Number of simulation members", type=int, required=False)
+    parser.add_argument("-g", "--geometry", help="Simulation's geometry", type=str, required=False)
+    #
+    #    parser.add_argument("-x", "--xpid",
+    #            help="Experiment identifier", type=str, required=False)
+    #
+    #    parser.add_argument("-n", "--nmembers",
+    #            help="Number of simulation members", type=int, required=False)
 
     args = parser.parse_args()
-
+    print(args)
     # Add simulation date end to list of assimilation dates for last loop
     args.assimdates.append(args.dateend)
 
     return args
 
 
-def wait_mandatory_input(vapp, vconf, xpid, block, geometry, assimdate, nmembers, walltime, keep_existing_prep=False):
+def fetch_prep_footprints(vapp: str, vconf: str, xpid: str, geometry: str, assimdate: str, nmembers: int):
+    prep = vortex.input(
+        kind="PREP",
+        vapp=vapp,
+        vconf=vconf,
+        datevalidity=assimdate,
+        experiment=xpid,
+        geometry=geometry,
+        member=[mb for mb in range(nmembers)],
+        namebuild="flat@cen",
+        block="offline",
+        model="surfex",
+        namespace="vortex.cache.fr",
+        nativefmt="netcdf",
+        local="PREP.nc",
+        now=False,
+    )
+    return prep
+
+
+def fetch_and_clear_preps(
+    vapp: str, vconf: str, xpid: str, geometry: str, assimdate: str, nmembers: int, keep_existing_prep=False
+):
+    prep_footprints = fetch_prep_footprints(
+        vapp=vapp, vconf=vconf, xpid=xpid, geometry=geometry, assimdate=assimdate, nmembers=nmembers
+    )
+    if not keep_existing_prep:
+        for fic in prep_footprints:
+            fic.delete()
+
+
+def wait_mandatory_input(
+    vapp: str, vconf: str, block: str, xpid: str, geometry: str, assimdate: str, nmembers: int, walltime: Time
+):
     launch = False
     start = Date.now()
     timer = Date.now()
-    prep = vortex.input(
-        kind           = 'PREP',
-        vapp           = vapp,
-        vconf          = vconf,
-        datevalidity   = assimdate,
-        experiment     = xpid,
-        geometry       = geometry,
-        member         = [mb for mb in range(nmembers)],
-        namebuild      = 'flat@cen',
-        block          = 'offline',
-        # stage          = '_bg' if task == 'soda' else '_an',
-        model          = 'surfex',
-        namespace      = 'vortex.cache.fr',
-        nativefmt      = 'netcdf',
-        local          = 'PREP.nc',
-        now            = False,
-    )
-    if not keep_existing_prep:
-        for fic in prep:
-            fic.delete()
+    prep = fetch_prep_footprints(app=vapp, vconf=vconf, xpid=xpid, geometry=geometry, assimdate=assimdate, nmembers=nmembers)
+    # if not args.keep_existing_prep:
+    #     for fic in prep:
+    #         fic.delete()
     time.sleep(1)
-    while (timer - start < walltime * 1.1) and not launch:
-        if all([fic.get() for fic in prep]):
-            print('==================================================================')
-            print(f'{block} PREP files present, launching the next simulation step.')
-            print('==================================================================')
+    while timer - start < walltime * 1.1:
+        if all(fic.get() for fic in prep) and not launch:
+            print("==================================================================")
+            print(f"{block} PREP files present, launching the next simulation step.")
+            print("==================================================================")
             launch = True
+            return launch
         else:
-            print(f'Waiting for {block} PREP files')
+            print(f"Waiting for {block} PREP files")
             time.sleep(10)
             timer = Date.now()
     # TODO : gérer proprement les "timeouts"
+    print("==================================================================")
+    print(f"{block} PREP files not present and walltime reached. Stopping exection.")
+    print("==================================================================")
     return launch
 
 
@@ -138,8 +157,7 @@ def mkjob_command(jobname, taskname, conf, datebegin=None, dateend=None, date=No
 
     confinfo = f"-c {conf}"
 
-    cmd = " ".join([base, dateinfo, confinfo])
-
+    cmd = f"{base} {dateinfo} {confinfo}"
     return cmd
 
 
@@ -169,12 +187,21 @@ def mkjob_list_commands(taskname, conf, njobs=17, mb0=0, datebegin=None, dateend
 
     mkjob_list = []
     if njobs == 1:
-        mkjob_list.append(mkjob_command(jobname=jobname, taskname=taskname, conf=conf,
-            datebegin=datebegin, dateend=dateend, date=date))
+        mkjob_list.append(
+            mkjob_command(jobname=jobname, taskname=taskname, conf=conf, datebegin=datebegin, dateend=dateend, date=date)
+        )
     else:
         for job_number in range(mb0, mb0 + njobs):
-            mkjob_list.append(mkjob_command(jobname=f'{jobname}_mb{str(job_number)}', taskname=taskname, conf=conf,
-                datebegin=datebegin, dateend=dateend, date=date))
+            mkjob_list.append(
+                mkjob_command(
+                    jobname=f"{jobname}_mb{str(job_number)}",
+                    taskname=taskname,
+                    conf=conf,
+                    datebegin=datebegin,
+                    dateend=dateend,
+                    date=date,
+                )
+            )
 
     return mkjob_list
 
@@ -184,11 +211,10 @@ def main():
     args = parse_command_line()
     iniparser = GenericConfigParser(inifile=args.conf)
 
-    nmembers = int(iniparser.get('DEFAULT', 'nmembers'))
-    xpid = iniparser.get('DEFAULT', 'xpid')
+    nmembers = int(iniparser.get("DEFAULT", "nmembers"))
+    xpid = iniparser.get("DEFAULT", "xpid")
     # walltime tells the method "wait_mandatory_input" how long it has to wait before crashing
-    walltime = Time(iniparser.get('offline_openloop_job', 'time'))
-
+    walltime = Time(iniparser.get("offline_openloop_job", "time"))
     datebegin = args.datebegin
     first_run = True
     for date in args.assimdates:
@@ -198,33 +224,52 @@ def main():
         if first_run:
             # This is the first run:
             # launch a set of offline_MPI tasks with a single PREP file as initial conditions
-            offline = mkjob_list_commands('offline_openloop', conf=args.conf, njobs=nmembers, datebegin=datebegin,
-                    dateend=dateend)
+            fetch_and_clear_preps(block="prep/background", assimdate=date, nmembers=nmembers)
+            fetch_and_clear_preps(block="soda/analysis", assimdate=date, nmembers=nmembers)
+            offline = mkjob_list_commands("offline_openloop", datebegin=datebegin, dateend=dateend)
             first_run = False
-        elif wait_mandatory_input(vapp=args.vapp, vconf=args.vconf, xpid=xpid, geometry=args.geometry, block='analysis',
-                assimdate=datebegin, nmembers=nmembers, walltime=walltime, keep_existing_prep=args.keep_existing_prep):
+        elif wait_mandatory_input(
+            vapp=args.vapp,
+            vconf=args.vconf,
+            xpid=xpid,
+            geometry=args.geometry,
+            block="analysis",
+            assimdate=datebegin,
+            nmembers=nmembers,
+            walltime=walltime,
+            keep_existing_prep=args.keep_existing_prep,
+        ):
             # This is a run after an assimilation step:
-            # aunch a set of offline_MPI tasks with an ensemble of PREP files as initial conditions
-            offline = mkjob_list_commands('offline_assim', conf=args.conf, njobs=nmembers, datebegin=datebegin,
-                    dateend=dateend)
-            walltime = Time(iniparser.get('offline_assim_job', 'time'))
+            # Launch a set of offline_MPI tasks with an ensemble of PREP files as initial conditions
+            offline = mkjob_list_commands("offline_assim", datebegin=datebegin, dateend=dateend)
+            walltime = Time(iniparser.get("offline_assim_job", "time"))
+        else:
+            break
 
         for mkjob in offline:
             print("Run command: " + mkjob + "\n")
             callSystemOrDie(mkjob)
 
         # 2. Launch a SODA assimilation (except if end of simulation reached)
-        if dateend != args.dateend:
-            if wait_mandatory_input(vapp=args.vapp, vconf=args.vconf, xpid=xpid, block='background',
-                    geometry=args.geometry, assimdate=date, nmembers=nmembers, walltime=walltime,
-                    keep_existing_prep=args.keep_existing_prep):
-                soda = mkjob_command(jobname='soda_job', taskname='soda', date=date, conf=args.conf)
-                print("Run command: " + soda + "\n")
-                callSystemOrDie(soda)
-                walltime = Time(iniparser.get('soda_job', 'time'))
-                datebegin = date
+        if dateend != args.dateend and wait_mandatory_input(
+            vapp=args.vapp,
+            vconf=args.vconf,
+            xpid=xpid,
+            block="background",
+            geometry=args.geometry,
+            assimdate=date,
+            nmembers=nmembers,
+            walltime=walltime,
+            keep_existing_prep=args.keep_existing_prep,
+        ):
+            soda = mkjob_command(jobname="soda_job", taskname="soda", date=date)
+            print("Run command: " + soda + "\n")
+            callSystemOrDie(soda)
+            walltime = Time(iniparser.get("soda_job", "time"))
+            datebegin = date
+        else:
+            break
 
 
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     main()
