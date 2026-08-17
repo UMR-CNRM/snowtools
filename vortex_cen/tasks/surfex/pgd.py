@@ -831,3 +831,6 @@ class FetchPgdFileOrCrash(FetchPgdFileOrMake):
 
     def launch_algo(self, algo, **kwargs):
         pass
+
+    def put_outputs(self):
+        pass
