@@ -57,7 +57,10 @@ with echecker:
 
 @echecker.disabled_if_unavailable
 class Surfex_PreProcess(AlgoComponent):
-    """Algo component to apply the required preprocessing before a SURFEX run (e.g. namelists adjustements)"""
+    """
+    Algo component to apply the required preprocessing before a SURFEX run (e.g. namelists adjustements)
+    WARNING : this algo should not be used anymore
+    """
 
     _footprint = {  # noqa: RUF012
         "attr": {
@@ -85,6 +88,8 @@ class Surfex_PreProcess(AlgoComponent):
         return namcandidates
 
     def execute(self, rh, opts):
+
+        print('WARNING : this algo should not be used anymore')
 
         # Add forcing preparation
 
@@ -142,10 +147,36 @@ class Pgd_Parallel_from_Forcing(Parallel):
         ),
     )
 
+    def find_namelists(self, opts=None):
+        """Find any namelists candidates in actual context inputs."""
+        namcandidates = [x.rh for x in self.context.sequence.effective_inputs(kind="namelist")]
+        self.system.subtitle("Namelist candidates")
+        for nam in namcandidates:
+            nam.quickview()
+
+        return namcandidates
+
+    def modify_namelist(self, datebegin, dateend, forcingname):
+
+        # Modification of the namelist
+        for namelist in self.find_namelists():
+            # Update the contents of the namelist (date and location)
+            # Location taken in the FORCING file.
+            # TODO : ajouter le "forcingname" à l'appel à "update_surfex_namelist_object"
+            newcontent = update_surfex_namelist_object(namelist.contents, datebegin, forcing=forcingname,
+                    dateend=dateend, updateloc=False)
+            newnam = footprints.proxy.container(filename=namelist.container.basename)
+            newcontent.rewrite(newnam)
+            newnam.close()
+
     def execute(self, rh, opts):
-        self.system.symlink(self.forcingname, "FORCING.nc")
+        firstforcing = self.context.sequence.effective_inputs(role='Forcing')[0]
+        # retrieve FORCING information for namelist pre-processing
+        datebegin = firstforcing.rh.resource.datebegin
+        dateend = firstforcing.rh.resource.dateend
+        forcingname = firstforcing.rh.container.basename
+        self.modify_namelist(datebegin, dateend, forcingname)
         super().execute(rh, opts)
-        self.system.remove("FORCING.nc")
 
 
 @echecker.disabled_if_unavailable
