@@ -248,7 +248,7 @@ class SurfexMixIn(_CenMixIn):
 
         # Among forcing files starting before the begining of the next iteration, get the list of indices
         # of those ending after the begining of the next iteration
-        valid_indices = np.where(list_dateend[:idx_max] >= datebegin)[0]
+        valid_indices = np.where(list_dateend[:idx_max] > datebegin)[0]
 
         if len(valid_indices) == 0:
             # raise an error because there is a time period not covered by any forcing file
@@ -256,7 +256,8 @@ class SurfexMixIn(_CenMixIn):
             raise FileNotFoundError(f'No forcing file was found for the period {datebegin} - {next_date}')
         elif len(valid_indices) > 1:
             # raise an error because there are several files covering the same period of time
-            print("Forcing files found : \n" + [fic.container.basename for fic in avail_forcings[valid_indices]])
+            print("Forcing files found : \n" +
+                "\n".join([fic.container.basename for fic in avail_forcings[valid_indices]]))
             raise MultipleValueException
         else:
             # A single forcing file has been identified to run the next simulation's interation
@@ -326,10 +327,6 @@ class Pgd_Parallel_from_Forcing(Parallel, SurfexMixIn):
         "and using a FORCING.nc as input for topography.",
         attr=dict(
             kind=dict(values=["pgd_from_forcing"]),
-#            forcingname=dict(
-#                info="Name of the first forcing file",
-#                type=str,
-#            ),
             engine=dict(optional=True, default="parallel"),
         ),
     )
@@ -340,6 +337,7 @@ class Pgd_Parallel_from_Forcing(Parallel, SurfexMixIn):
         datebegin = firstforcing.rh.resource.datebegin
         dateend = firstforcing.rh.resource.dateend
         forcingname = firstforcing.rh.container.basename
+        self.system.symlink(forcingname, "FORCING.nc")
         self.modify_namelist(datebegin, dateend, forcingname)
         super().execute(rh, opts)
 

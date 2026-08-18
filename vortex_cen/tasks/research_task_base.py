@@ -336,7 +336,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
         :param algo: AlgoComponent object
         """
         executable = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
-        self.component_runner(algo, executable)
+        self.component_runner(algo, executable, mpiopts=dict(nnodes=1, nprocs=1, ntasks=1))
 
     def launch_python_algo(self, algo, **kw):
         """
@@ -518,7 +518,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
 
         # Verrue pour gérer les footprints *source_app* et *source_conf* de la réanalyse S2M
         if 'forcing_source' in self.conf and forcing_source_app is None and forcing_source_conf is None:
-            if vortex1[0]:   # ça ne devrait pas être necessaire si les forcings ont été produit avec vortex 2, non ?
+            if vortex1:  # pour la rétro-compatibilité
                 forcing_source_app, forcing_source_conf = \
                     self.get_safran_sources(list_dates_begin, era5=self.conf.forcing_source == 'era5')
             else:

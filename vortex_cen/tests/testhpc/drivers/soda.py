@@ -5,6 +5,7 @@ Test the "Soda" unittask. The driver also includes the "Soda_Namelist_Preprocess
 
 from mkjob.nodes import Driver
 from vortex_cen.tasks.surfex.pre_process import SodaNamelistPreprocess
+from vortex_cen.tasks.surfex.pgd import FetchPgdOrCrash
 from vortex_cen.tasks.surfex.soda import Soda, FetchBackgroundOrCrash
 
 
@@ -14,6 +15,7 @@ def setup(t, **kw):
         ticket=t,
         nodes=[
             SodaNamelistPreprocess(tag='soda_preprocess', ticket=t, **kw),
+            FetchPgdOrCrash(tag='fetch_pgd_soda', ticket=t, **kw),
             FetchBackgroundOrCrash(tag='fetch_background', ticket=t, **kw),
             Soda(tag='soda', ticket=t, **kw),
         ],
