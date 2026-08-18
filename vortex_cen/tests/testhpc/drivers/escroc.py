@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Test the "Escroc" unittask. The driver includes the "Preprocess_Uenv_Namelist" and "GetPgd1D" tasks.
+Test the "Escroc" unittask. The driver includes the "GetPgd1D" task.
 """
 
 from mkjob.nodes import Driver
