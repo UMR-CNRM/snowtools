@@ -313,7 +313,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
             "august_threshold",
             "diff_xpid",
             "diff_user",
-            "diff_block+default=offline/prep",
+            "diff_block+default=offline",
         ]
 
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
@@ -413,6 +413,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block="offline",
                 member=self.conf.get("member", None),
+                model="surfex",
             ),
         )
         print(self.ticket.prompt, "prep_tbo =", prep_tbo)
@@ -434,6 +435,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block="offline",
                 member=self.conf.get("member", None),
+                model="surfex",
             ),
         )
         print(self.ticket.prompt, "pro_tbo =", pro_tbo)
@@ -492,21 +494,20 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
         # Diff of PRO files always fails because netcdf can not properly read them.
         # --> check reproductibility on PREP file
         self.sh.title("Reproducibility check: PREP")
-        diff = (
-            vortex.diff(
-                local="PREP_[datevalidity:ymdh].nc",
-                role="SnowpackInit",
-                experiment=self.conf.diff_xpid,
-                username=self.conf.diff_user,
-                geometry=self.conf.geometry,
-                datevalidity=self.list_dates_end_pro,
-                nativefmt="netcdf",
-                kind="PREP",
-                namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
-                namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block="offline"),
-                member=self.conf.get("member", None),
-            ),
+        diff = vortex.diff(
+            local="PREP_[datevalidity:ymdh].nc",
+            role="SnowpackInit",
+            experiment=self.conf.diff_xpid,
+            username=self.conf.diff_user,
+            geometry=self.conf.geometry,
+            datevalidity=self.list_dates_end_pro,
+            nativefmt="netcdf",
+            kind="PREP",
+            namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
+            namebuild="flat@cen",  # TODO : passer en variable de configuration
+            block="offline",
+            member=self.conf.get("member", None),
+            model="surfex",
         )
         print(self.ticket.prompt, "diff =", diff)
         print()
@@ -1334,8 +1335,8 @@ class OfflineMpiDailyPrep(OfflineMpi):
             engine="parallel",
             binary="OFFLINE",
             kind="deterministic",
-            datebegin=self.conf.get("forcing_datebegin", self.conf.datebegin),
-            dateend=self.conf.get("forcing_dateend", self.conf.dateend),
+            datebegin=self.conf.datebegin,
+            dateend=self.conf.dateend,
             # MV : *dateinit* correspond à la date de validité du fichier PREP
             dateinit=self.ticket.context.sequence.effective_inputs(role="SnowpackInit")[0].rh.resource.datevalidity,
             # MV : la valeur par défaut de "threshold" dans la commande s2m est -999
@@ -1413,6 +1414,7 @@ class OfflineMpiDailyPrep(OfflineMpi):
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block="offline",
                 member=self.conf.get("member", None),
+                model="surfex",
             ),
         )
         print(self.ticket.prompt, "prep_tbo =", prep_tbo)
@@ -1433,6 +1435,7 @@ class OfflineMpiDailyPrep(OfflineMpi):
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block="offline",
                 member=self.conf.get("member", None),
+                model="surfex",
             ),
         )
         print(self.ticket.prompt, "pro_tbo =", pro_tbo)
@@ -1478,9 +1481,8 @@ class OfflineAssim(OfflineMpi):
     def get_prep_file(self):
         """
         All members are initialised by a different PREP file coming from a SODA analysis
-        --> Force *block* value to "prep/an" and *member" to the associated member value.
+        --> Use default *block* "soda" and *member" to the associated member value.
         SR: Must *block* really be hard coded here? Can't this be configured?
-
         """
 
         self.sh.title("Input PREP")
@@ -1499,7 +1501,7 @@ class OfflineAssim(OfflineMpi):
                 namespace="vortex.multi.fr",
                 vortex1=self.conf.get("prep_vortex1", False),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration ?
-                block=self.conf.get("prep_block", "analysis"),
+                block=self.conf.get("prep_block", "soda"),
                 member=self.conf.member,  # TODO: where does the "member" configuration come from?
                 model="surfex",
                 intent="inout",
@@ -1564,7 +1566,7 @@ class OfflineOpenloop(OfflineMpi):
 
     def put_prep(self):
         """
-        Archive PREP files as "background" state --> force block value to "prep/bg"
+        Archive PREP files as "background" state
         """
 
         self.sh.title("Output PREP")
@@ -1585,6 +1587,7 @@ class OfflineOpenloop(OfflineMpi):
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block="offline",
                 member=self.conf.get("member", None),
+                model="surfex",
             ),
         )
         print(self.ticket.prompt, "prep_tbo =", prep_tbo)

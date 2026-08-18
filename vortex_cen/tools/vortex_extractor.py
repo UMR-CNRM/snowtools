@@ -163,7 +163,7 @@ def set_default_block(description):
         raise ValueError("Missing the *kind* footprint")
     else:
         if "block" not in description.keys() and description["kind"] in ["PRO", "SnowpackSimulation"]:
-            description["block"] = "offline/pro"
+            description["block"] = "offline"
 
         return description
 

@@ -117,7 +117,7 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
       type diff_xpid: str
     * ``diff_user`` *user name* associated with the reference file (only if different from current user). Default: None
       type diff_user: str
-    * ``diff_block`` *block* part of the vortex path of the reference file. Default: "init_tg/prep"
+    * ``diff_block`` *block* part of the vortex path of the reference file. Default: "init_tg"
       type diff_block: str
     """
 
@@ -134,7 +134,7 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
             "namespace_out+default=vortex.multi.fr",
             "diff_xpid",
             "diff_user",
-            "diff_block+default=init_tg/prep",
+            "diff_block+default=init_tg",
         ]
 
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
@@ -196,7 +196,7 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
             model      = "surfex",
             namespace  = self.conf.get("namespace_out", "vortex.multi.fr"),
             namebuild  = "flat@cen",
-            block      = self.conf.get("out_block", "prep"),
+            block      = self.conf.get("out_block", "init_tg"),
         )
         print(self.ticket.prompt, "Output init ground temperature =", init_ground_temperature_out)
         print()
@@ -218,7 +218,7 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
             model      = "surfex",
             namespace  = "vortex.multi.fr",
             namebuild  = "flat@cen",
-            block      = self.conf.get("diff_block", "init_tg/prep"),
+            block      = self.conf.get("diff_block", "init_tg"),
         )
         print(self.ticket.prompt, "diff init_tg =", init_tg_diff)
         print()
@@ -314,7 +314,7 @@ class FetchClimGroundTemperatureOrMake(InitClimGroundTemperature):
       type diff_xpid: str
     * ``diff_user`` *user name* associated with the reference file (only if different from current user). Default: None
       type diff_user: str
-    * ``diff_block`` *block* part of the vortex path of the reference file. Default: "init_tg/prep"
+    * ``diff_block`` *block* part of the vortex path of the reference file. Default: "init_tg"
       type diff_block: str
 
     """

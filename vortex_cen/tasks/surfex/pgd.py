@@ -37,7 +37,6 @@ Tasks designed to launch the PGD executable.
 """
 
 import vortex
-from vortex.util.helpers import InputCheckerError
 
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
@@ -370,7 +369,6 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
         self.sh.title("Toolbox algo PGD")
         pgd_tba = vortex.task(
             kind="pgd_from_forcing",
-            #forcingname=firstforcing.rh.container.basename,
         )
         print(self.ticket.prompt, "Toolbox algo pgd=", pgd_tba)
         print()
@@ -390,6 +388,7 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
         self.component_runner(
             algo,
             executable,
+            mpiopts = dict(nnodes=1, nprocs=1, ntasks=1)  # Force no-MPI
         )
 
     def put_outputs(self):
@@ -426,20 +425,18 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
         else:
             block = "pgd"
         self.sh.title("Reproductibility check : PGD")
-        diff = (
-            vortex.diff(
-                local="PGD.nc",
-                role="SurfexClim",
-                experiment=self.conf.diff_xpid,
-                username=self.conf.get("diff_user", None),
-                geometry=self.conf.geometry,
-                nativefmt="netcdf",
-                kind="pgdnc",
-                model="surfex",
-                namespace="vortex.multi.fr",
-                namebuild="flat@cen",
-                block=block,
-            ),
+        diff = vortex.diff(
+            local="PGD.nc",
+            role="SurfexClim",
+            experiment=self.conf.diff_xpid,
+            username=self.conf.get("diff_user", None),
+            geometry=self.conf.geometry,
+            nativefmt="netcdf",
+            kind="pgdnc",
+            model="surfex",
+            namespace="vortex.multi.fr",
+            namebuild="flat@cen",
+            block=block,
         )
         print(self.ticket.prompt, "diff =", diff)
         print()
@@ -832,7 +829,7 @@ class FetchPgdOrCrash(FetchPgdOrMake):
 
     def get_remote_inputs(self):
         force_uenv = self.conf.get("force_uenv", True)
-        pgd = self.get_pgd_file_from_uenv(fatal=force_uenv)
+        self.get_pgd_file_from_uenv(fatal=force_uenv)
         if len(self.ctx.sequence.effective_inputs(role="SurfexClim")) == 0:
             _ = self.get_pgd_file_from_cache_or_archive(fatal=True)
 

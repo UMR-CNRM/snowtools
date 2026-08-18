@@ -213,17 +213,16 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
 
     def get_remote_inputs(self):
 
-        self.get_pgd_file_from_cache_or_archive()
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
         self.get_snow_observation()
         self.get_soda_exe_from_uenv()
 
     def get_local_inputs(self):
-
         # TODO : Make a "FetchBackgroundOrCrash" class to put the driver in other situations (ex : unit tests)
         self.get_background()
         self.get_namelist_from_cache()
+        self.get_pgd_from_cache()
 
     def algo(self):
 
