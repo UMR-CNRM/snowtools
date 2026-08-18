@@ -214,6 +214,9 @@ class Escroc(_Offline):
         """
         Algo component to execute OFFLINE several time in parallel with different namelists.
         """
+
+        ctx = self.ticket.context
+
         self.sh.title('Algo OFFLINE-ESCROC')
         algo = vortex.task(
             kind           = "escroc",
@@ -223,7 +226,7 @@ class Escroc(_Offline):
             # MV TODO : gérer la conversion en Date dans l'algo
             datebegin      = Date(self.conf.datebegin),
             dateend        = Date(self.conf.dateend),
-            dateinit       = Date(self.conf.get('prep_date', self.conf.datebegin)),
+            dateinit       = ctx.sequence.effective_inputs(role="SnowpackInit")[0].rh.resource.datevalidity,
             # MV TODO :  La valeur par défaut de "threshold" est à sortir de la tâche
             threshold      = self.conf.get('august_threshold', -999),
             members        = self.get_list_members(),
@@ -478,6 +481,8 @@ class CrocO(Escroc):
         Algo component to execute OFFLINE several times in parallel
         """
 
+        ctx = self.ticket.context
+
         # TODO (MV) : Clarifier la distinction entre les algos "escroc" (multi-physiue uniquement) et "croco"
         # (ensemble météo + multiphysique optionelle).
         # --> Faire des algos distincts
@@ -490,7 +495,7 @@ class CrocO(Escroc):
             # MV TODO : gérer la conversion en Date dans l'algo
             datebegin      = Date(self.conf.assimdate_prev or self.conf.datebegin),
             dateend        = Date(self.conf.assimdate or self.conf.dateend),
-            dateinit       = Date(self.conf.assimdate_prev or self.conf.get('prep_date', self.conf.datebegin)),
+            dateinit       = ctx.sequence.effective_inputs(role="SnowpackInit")[0].rh.resource.datevalidity,
             # MV TODO :  La valeur par défaut de "threshold" est à sortir de la tâche
             threshold      = self.conf.get('august_threshold', -999),
             members        = self.get_list_members(),
