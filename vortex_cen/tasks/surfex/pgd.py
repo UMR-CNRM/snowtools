@@ -361,17 +361,16 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
         """
         Algo component to produce the PGD file
         """
-        avail_forcings = self.ticket.context.sequence.effective_inputs(role="Forcing")
-        if len(avail_forcings) > 0:
-            firstforcing = avail_forcings[0]
-        else:
-            raise InputCheckerError("No FORCING file present, the task can not run properly")
+#        avail_forcings = self.ticket.context.sequence.effective_inputs(role="Forcing")
+#        if len(avail_forcings) > 0:
+#            firstforcing = avail_forcings[0]
+#        else:
+#            raise InputCheckerError("No FORCING file present, the task can not run properly")
 
         self.sh.title("Toolbox algo PGD")
         pgd_tba = vortex.task(
             kind="pgd_from_forcing",
-            # Le nom local de la ressource est fourni par le "container"
-            forcingname=firstforcing.rh.container.basename,
+            #forcingname=firstforcing.rh.container.basename,
         )
         print(self.ticket.prompt, "Toolbox algo pgd=", pgd_tba)
         print()

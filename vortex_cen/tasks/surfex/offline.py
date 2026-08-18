@@ -413,7 +413,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
                 model="surfex",
                 namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block=self.conf.get("out_block", "prep"),
+                block="offline",
                 member=self.conf.get("member", None),
             ),
         )
@@ -435,7 +435,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
                 model="surfex",
                 namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block=self.conf.get("out_block", "pro"),
+                block="offline",
                 member=self.conf.get("member", None),
             ),
         )
@@ -457,7 +457,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
                 model="surfex",
                 namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block=self.conf.get("out_block", "cumul"),
+                block="offline",
                 member=self.conf.get("member", None),
                 fatal=False,
             ),
@@ -480,7 +480,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
                 model="surfex",
                 namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block=self.conf.get("out_block", "diag"),
+                block="offline",
                 member=self.conf.get("member", None),
                 fatal=False,
             ),
@@ -508,7 +508,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
                 model="surfex",
                 namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block=self.conf.get("diff_block", "offline/prep"),
+                block="offline"),
                 member=self.conf.get("member", None),
             ),
         )
@@ -1380,7 +1380,7 @@ class OfflineMpiDailyPrep(OfflineMpi):
                 model="surfex",
                 namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block="cumul",
+                block="offline",
                 member=self.conf.get("member", None),
                 fatal=False,
             ),
@@ -1402,7 +1402,7 @@ class OfflineMpiDailyPrep(OfflineMpi):
                 model="surfex",
                 namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block="diag",
+                block="offline",
                 member=self.conf.get("member", None),
                 fatal=False,
             ),
@@ -1424,7 +1424,7 @@ class OfflineMpiDailyPrep(OfflineMpi):
                 model="surfex",
                 namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block="prep",
+                block="offline",
                 member=self.conf.get("member", None),
             ),
         )
@@ -1445,7 +1445,7 @@ class OfflineMpiDailyPrep(OfflineMpi):
                 model="surfex",
                 namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block="pro",
+                block="offline",
                 member=self.conf.get("member", None),
             ),
         )
@@ -1598,7 +1598,7 @@ class OfflineOpenloop(OfflineMpi):
                 model="surfex",
                 namespace=self.namespace_out,
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block="prep/background",
+                block="offline",
                 member=self.conf.get("member", None),
             ),
         )
