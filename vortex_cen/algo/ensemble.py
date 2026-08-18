@@ -249,7 +249,7 @@ class SurfexWorker(_CenWorkerBlindRun):
         # Determinstic cases : the namelist is prepared in the preprocess algo component in order to allow
         # to build PGD and PREP
         # MV : Cela justifierai de faire des algos distincts...
-        namelist_ready = self.kind == 'deterministic'
+        namelist_ready = self.kind == 'deterministic'  # Cas oper uniquement
         need_other_run = True
         need_other_forcing = True
         need_save_forcing = False
