@@ -122,6 +122,7 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
 
     **Inputs:**
 
+    * ``FORCING`` file (used only to set the simulation's geometry in the namelist)
     * ``OPTIONS.nam`` ready-to-use SURFEX namelist (coming from an execution of a "Preprocess_Task")
     * ``ecoclimapI_covers_param.bin`` and ``ecoclimapII_eu_covers_param.bin`` (binaries for vegetation generation)
     * ``drdt_bst_fit_60.nc`` (Crocus metamorphism parameters)
@@ -183,8 +184,11 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
             "consts_surfex_uenv|uenv",
             "surfex_uenv|uenv",
             "prep_date|datebegin",
+            "forcing_datebegin",
+            "forcing_dateend",
         ]
         OPTIONAL_CONFIGURATION_VARIABLES = [
+            "forcing",
             "pgd",
             "ntasks",
             "nnodes",
@@ -207,6 +211,7 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
         Get ecoclimapI_covers_param.bin, ecoclimapII_eu_covers_param.bin,
         Get drdt_bst_fit_60.nc, PGD.nc
         """
+        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
         self.get_prep_executable()
@@ -592,7 +597,6 @@ class PrepRefill(FetchPrepFileOrCrash):
         ),
         print(self.ticket.prompt, 'Prep =', prep)
         print()
-
 
 
 class MakePrepFile(_PrepConstruct):
