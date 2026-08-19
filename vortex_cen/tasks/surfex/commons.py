@@ -225,83 +225,46 @@ class SurfexCommonsMixin:
         print()
         return pgd
 
-    def get_namelist_from_cache(self):
+    def get_namelist(self):
         """
-        get OPTIONS.nam from the local cache usually produced by
-        a previous execution of a "pre_process" task.
-
-        **Configuration Variables used:**
-
-        * ``xpid`` experiment identifier
+        Get the OPTIONS.nam namelist.
+        If an ``allow_path=True`` AND a ``namelist_path`` configuration variables are provided,
+        fetch the user-provided target file (WARNING : non-reproducible case).
+        In any other case, fetch the namelist from a uenv.
         """
-        # Namelist mandatory to run OFFLINE and taken from the cache
-        self.sh.title('Input SURFEX-ready namelist')
-        namelist_tbi = vortex.input(
-            role         = 'Nam_surfex',
-            kind         = 'namelist',
-            model        = 'surfex',
-            local        = 'OPTIONS.nam',
-            experiment   = self.conf.xpid,
-            namespace    = 'vortex.cache.fr',
-            block        = 'namelist',
-            nativefmt    = 'nam',
-            intent = 'inout',  # needed for dailyprep
-        ),
-        print(self.ticket.prompt, 'namelist =', namelist_tbi)
-        print()
 
-    def get_namelist_from_uenv(self):
-        """
-        Get namelist from UEnv. To be used typically by the preprocess_namelist task.
+        if (self.allow_path and self.conf.get('namelist_path', False)):
 
-        **Configuration Variables used:**
+            self.sh.title('Input Namelist from absolute path (non-reproducible)')
+            namelist_tbi = vortex.input(
+                role     = 'Nam_surfex',
+                remote   = self.conf.namelist_path,
+                kind     = 'namelist',
+                model    = 'surfex',
+                local    = 'OPTIONS.nam',
+                # la nameliste va être modifiée, il faut s'assurer du droit d'écriture (<==> intent='inout')
+                intent   = 'inout',
+            )
+            print(self.ticket.prompt, 'namelist_tbi =', namelist_tbi)
+            print()
 
-        * ``namelists_surfex_uenv`` or if not present ``uenv`` User Environment from which the namelist file should be
-            fetched.
-                 Format : uenv:{uenv_name}@{user}
-        * ``namelist_source`` In an UEnv, several namelistes can be present in an *.tar* archive,
-          the *source*  footprint allows to define the exact name of the nameliste to fetch.
-          For example, *OPTIONS_default.nam*.
-        """
-        self.sh.title('Input Namelist')
-        namelist_tbi = vortex.input(
-            role     = 'Nam_surfex',
-            # Dans un UEnv, plusieurs namelistes peuvent être stockées dans une archive ".tar",
-            # le footprint *source* permet de définir le nom exact de la nameliste à récupérer.
-            source   = self.conf.namelist_source,  # ex : OPTIONS_default.nam
-            genv     = self.conf.get('namelists_surfex_uenv', self.conf.uenv),
-            kind     = 'namelist',
-            model    = 'surfex',
-            local    = 'OPTIONS.nam',
-            # la nameliste va être modifiée, il faut s'assurer du droit d'écriture (<==> intent='inout')
-            intent   = 'inout',
-        )
-        print(self.ticket.prompt, 'namelist_tbi =', namelist_tbi)
-        print()
+        else:
 
-    def get_namelist_from_path(self):
-        """
-        Get namelist from a user-defined local path.
-        A quick and dirty solution while experimenting
-        with namelist parameters without properly archiving the experiments.
-        Be aware that using uenvs with versioning is considered a better practice leading to more reproducible results.
-
-        **Configuration Variables used:**
-
-        * ``namelist_path`` absolute path to the namelist file
-        """
-        self.sh.title('Input Namelist')
-        namelist_tbi = vortex.input(
-            role     = 'Nam_surfex',
-            remote   = self.conf.namelist_path,
-            kind     = 'namelist',
-            model    = 'surfex',
-            local    = 'OPTIONS.nam',
-            # la nameliste va être modifiée, il faut s'assurer du droit d'écriture (<==> intent='inout')
-            intent   = 'inout',
-        )
-        print(self.ticket.prompt, 'namelist_tbi =', namelist_tbi)
-        print()
+            self.sh.title('Input Namelist')
+            namelist_tbi = vortex.input(
+                role     = 'Nam_surfex',
+                # Dans un UEnv, plusieurs namelistes peuvent être stockées dans une archive ".tar",
+                # le footprint *source* permet de définir le nom exact de la nameliste à récupérer.
+                source   = self.conf.namelist_source,  # ex : OPTIONS_default.nam
+                genv     = self.conf.get('namelists_surfex_uenv', self.conf.uenv),
+                kind     = 'namelist',
+                model    = 'surfex',
+                local    = 'OPTIONS.nam',
+                # la nameliste va être modifiée, il faut s'assurer du droit d'écriture (<==> intent='inout')
+                intent   = 'inout',
+            )
+            print(self.ticket.prompt, 'namelist_tbi =', namelist_tbi)
+            print()
 
     def get_prep_file_from_cache_or_archive(self, fatal=True, cache_only=False, local="PREP.nc"):
         """

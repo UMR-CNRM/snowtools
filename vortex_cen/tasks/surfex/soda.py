@@ -221,7 +221,7 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
     def get_local_inputs(self):
         # TODO : Make a "FetchBackgroundOrCrash" class to put the driver in other situations (ex : unit tests)
         self.get_background()
-        self.get_namelist_from_cache()
+        self.get_namelist()
         self.get_pgd_from_cache()
 
     def algo(self):

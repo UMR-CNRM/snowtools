@@ -733,7 +733,7 @@ class EscrocResearch(Escroc):
         self.get_pgd_from_cache()
         self.get_prep_file_from_cache_or_archive(fatal=True, cache_only=True)
         # Get namelist from the preprocess task output
-        self.get_namelist_from_cache()
+        self.get_namelist()
         # Get FORCING locally because they have already been retrieved by the preprocess task
         self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
 
