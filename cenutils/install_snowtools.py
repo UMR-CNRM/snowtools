@@ -21,7 +21,9 @@ parser.add_argument('-v', '--venv', type=str, required=False, default=None,
                          "If this script is already called from a virtual environment,"
                          "this argument is ignored.")
 
-parser.add_argument('-o', '--optional', choices=['plot', 'sql', 'scores', 'all'], nargs='*', default=['all'],
+parser.add_argument('-o', '--optional', choices=['plot', 'sql', 'scores', 'all', 'vortex', 'doc'],
+                    nargs='*',
+                    default=['all'],
                     help="Install optional dependencies (this option is ignored on MF's HPC):\n" +
                          "* 'plot' install graphical tools\n" +
                          "* 'sql' install sql extraction tools\n" +
@@ -119,13 +121,10 @@ else:
     pip_options = list()
 
 # Ensure to use the latest available pip version
-#print("Running command:")
-#print(f"{pip} install --upgrade pip")
-#subprocess.run([pip, 'install'] + pip_options + ['--upgrade', 'pip'], check=True)
+# print("Running command:")
+# print(f"{pip} install --upgrade pip")
+# subprocess.run([pip, 'install'] + pip_options + ['--upgrade', 'pip'], check=True)
 
-# Get a proper version of setuptools (more than 66 -> editable, less than 71 to avoir bug)
-#print("Setuptools:")
-#subprocess.run([pip, 'install'] + ['setuptools>=66.0.0,<71.0.0'], check=True)
 
 # Snowtools installation
 # ----------------------
@@ -137,7 +136,7 @@ if args.editable:
     if sys.version_info < (3, 10, 1):
         raise SystemError('Editable install is not possible with python versions lower than 3.10')
 
-    pip_options.extend(['--no-build-isolation', '-e'])
+    pip_options.extend(['-e'])
 
 # Install snowtools
 # pip install [--no-build-isolation -e] .
@@ -159,7 +158,6 @@ if 'hpc' in HOSTNAME:
     install_dir = "/home/cnrm_other/cen/mrns/vernaym/Projects/common"
     for package in ["mkjob", "vortex-gco", "vortex-olive"]:
         target = os.path.join(install_dir, package)
-        #subprocess.run([pip, 'install', '--no-build-isolation', '-e', target], check=True)
         subprocess.run([pip, 'install', target], check=True)
 
 # Configure Vortex
