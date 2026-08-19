@@ -211,6 +211,10 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES,
                 overwrite=overwrite)
 
+    @property
+    def nmembers(self):
+        return len(self.get_list_members())
+
     def get_remote_inputs(self):
 
         self.get_ecoclimap()
@@ -219,9 +223,9 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
         self.get_soda_exe_from_uenv()
 
     def get_local_inputs(self):
+        self.get_namelist()
         # TODO : Make a "FetchBackgroundOrCrash" class to put the driver in other situations (ex : unit tests)
         self.get_background()
-        self.get_namelist()
         self.get_pgd_from_cache()
 
     def algo(self):
@@ -232,6 +236,7 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
             binary         = 'SODA',
             kind           = "s2m_soda",
             dateassim      = self.conf.get('assimdate', self.conf.get('date', None)),
+            nmembers       = self.nmembers,
         )
         print(self.ticket.prompt, 'Algo =', algo)
         print()

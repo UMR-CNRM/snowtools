@@ -219,6 +219,7 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
         self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
+        self.get_namelist()
         self.get_prep_executable()
 
     def get_local_inputs(self):

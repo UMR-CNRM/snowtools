@@ -271,10 +271,7 @@ class PreprocessNamelist(_Preprocess):
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
 
     def get_remote_inputs(self):
-        if 'namelist_path' in self.conf:
-            get_namelist()
-        else:
-            get_namelist()
+        self.get_namelist()
         self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
 
 
@@ -354,7 +351,7 @@ class PreprocessUenvNamelist(_Preprocess):
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
 
     def get_remote_inputs(self):
-        get_namelist()
+        self.get_namelist()
         self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
 
 
@@ -402,7 +399,7 @@ class SodaNamelistPreprocess(SurfexCommonsMixin, _CenResearchTask):
 
     def get_remote_inputs(self):
 
-        get_namelist()
+        self.get_namelist()
 
     def get_local_inputs(self):
         pass
