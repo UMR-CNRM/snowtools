@@ -9,7 +9,6 @@ from mkjob.nodes import Driver, WorkshareFamily, LoopFamily
 from vortex_cen.tasks.surfex.pre_process import SodaNamelistPreprocess, PreprocessNamelist
 from vortex_cen.tasks.surfex.offline_ensemble import CrocO
 from vortex_cen.tasks.surfex.pgd import FetchPgdOrCrash
-#from vortex_cen.tasks.surfex.prep import FetchPrepFileOrCrash
 from vortex_cen.tasks.surfex.prep import PrepRefill
 from vortex_cen.tasks.surfex.soda import Soda
 
@@ -23,7 +22,6 @@ def setup(t, **kw):
             SodaNamelistPreprocess(tag='soda_preprocess', ticket=t, **kw),
             PreprocessNamelist(tag='offline_preprocess', ticket=t, **kw),
             FetchPgdOrCrash(tag='fetch_pgd', ticket=t, **kw),
-            #FetchPrepFileOrCrash(tag='fetch_prep', ticket=t, **kw),
             PrepRefill(tag='prep_refill', ticket=t, **kw),
             # assim sequence
             LoopFamily(

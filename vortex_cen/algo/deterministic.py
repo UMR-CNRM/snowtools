@@ -222,15 +222,16 @@ class SurfexMixIn(_CenMixIn):
             datebegin_this_run = dateend_this_run
             need_other_run = dateend_this_run < self.dateend
 
-    def sort_forcings(self, avail_forcings, list_datebegin, list_dateend):
+    def sort_forcings(self, list_forcing, list_datebegin, list_dateend):
         """
         Sort available forcing files with ascending *datebegin*
         """
-        list_datebegin = np.asarray(list_datebegin)
-        list_dateend   = np.asarray(list_dateend)
-        avail_forcings = np.asarray(avail_forcings)
+        # Remove duplicates in case of ensemble simulations
+        list_datebegin = np.unique(np.asarray(list_datebegin))
+        list_dateend   = np.unique(np.asarray(list_dateend))
+        list_forcing = np.unique(np.asarray(list_forcing))
         idx = np.argsort(list_datebegin)
-        return avail_forcings[idx], list_datebegin[idx], list_dateend[idx]
+        return list_forcing[idx], list_datebegin[idx], list_dateend[idx]
 
     def find_forcing(self, datebegin, dateend):
         """
@@ -245,11 +246,12 @@ class SurfexMixIn(_CenMixIn):
             avail_forcings = self.avail_forcings
         else:
             avail_forcings = [x.rh for x in self.context.sequence.effective_inputs(role='Forcing')]
+        list_forcing = [forcing.container.basename for forcing in avail_forcings]
         list_datebegin = [forcing.resource.datebegin for forcing in avail_forcings]
         list_dateend = [forcing.resource.dateend for forcing in avail_forcings]
 
         # Sort lists with ascending *datebegin*
-        avail_forcings, list_datebegin, list_dateend = self.sort_forcings(avail_forcings, list_datebegin, list_dateend)
+        list_forcing, list_datebegin, list_dateend = self.sort_forcings(list_forcing, list_datebegin, list_dateend)
 
         # Find the index correponding to the last element in the ordered list of forcing's *datebegin*
         # smaller or equal to the begining of the next iteration
@@ -265,15 +267,16 @@ class SurfexMixIn(_CenMixIn):
             raise FileNotFoundError(f'No forcing file was found for the period {datebegin} - {next_date}')
         elif len(valid_indices) > 1:
             # raise an error because there are several files covering the same period of time
-            print("Forcing files found : \n" +
-                "\n".join([fic.container.basename for fic in avail_forcings[valid_indices]]))
+            print("Forcing files found : \n" + "\n".join(list_forcing[valid_indices]))
             raise MultipleValueException
         else:
             # A single forcing file has been identified to run the next simulation's interation
             idx = valid_indices[0]
 
         # Return the target forcing file's name and the period covered
-        forcingname = avail_forcings[idx].container.basename
+        # convert filename to proper string, because otherwise it is a <class 'numpy.str_'>,
+        # which prosimu interprets as a list and tries to extend
+        forcingname = str(list_forcing[idx])
         logger.info(f'Next FORCING file : {forcingname}')
         return list_datebegin[idx], min(list_dateend[idx], dateend), forcingname
 

@@ -468,7 +468,7 @@ class FetchPrepFileOrCrash(FetchPrepFileOrMake):
       type: str
     * ``prep_xpid`` or ``xpid`` Experiment id the prep file should be searched for or put in cache.
     * ``prep_user`` name of the user who produced the PREP file. Default: None.
-    * ``prep_datevalidity``Validity date of the prep file.
+    * ``prep_datevalidity`` Validity date of the prep file.
     * ``prep_vapp`` or ``vapp`` Application name to search the PREP.nc file.
     * ``prep_vconf`` or ``vconf`` Configuration name to search the PREP.nc file.
     * ``prep_vortex1`` type: bool. *True* if the requested PREP.nc file was produced with vortex 1 and thus uses
