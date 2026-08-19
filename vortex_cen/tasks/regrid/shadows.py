@@ -160,6 +160,7 @@ class Shadows(_CenResearchTask):
         print(self.ticket.prompt, 'diff =', diff)
         print()
 
+
 class ShadowsPostes(Shadows):
     """
     In the reanalysis case, the FORCING files come from the output of the "concatenation" task and are

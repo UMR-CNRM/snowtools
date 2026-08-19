@@ -382,15 +382,7 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
         :param algo: algo component to launch (pgd_tba)
         :param kwargs: not used
         """
-        # Pour un exécution de binaire, il faut donner l'objet "exécutable" associé (récupéré par la commande
-        # vortex.executable(...))
-        executable = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
-        #
-        self.component_runner(
-            algo,
-            executable,
-            mpiopts = dict(nnodes=1, nprocs=1, ntasks=1)  # Force no-MPI
-        )
+        self.launch_executable(algo)
 
     def put_outputs(self):
         """
