@@ -830,3 +830,7 @@ class FetchPgdFileOrCrash(FetchPgdFileOrMake):
 
     def put_outputs(self):
         pass
+
+    def diff(self):
+        # No file produced, no need for reproducibility check
+        pass

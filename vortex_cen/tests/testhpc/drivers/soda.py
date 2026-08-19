@@ -16,7 +16,7 @@ def setup(t, **kw):
         nodes=[
             SodaNamelistPreprocess(tag='soda_preprocess', ticket=t, **kw),
             FetchPgdOrCrash(tag='fetch_pgd_soda', ticket=t, **kw),
-            FetchBackgroundOrCrash(tag='fetch_background', ticket=t, **kw),
+            FetchBackgroundOrCrash(tag='fetch_background_soda', ticket=t, **kw),
             Soda(tag='soda', ticket=t, **kw),
         ],
         options=kw,
