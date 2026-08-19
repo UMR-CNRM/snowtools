@@ -101,6 +101,10 @@ class _CenMixIn(object):
 
         rdict = dict(rc=True)
         rundir = self.system.getcwd()
+        # Retrieve the list of available forcings now because it will no longer be available in the
+        # worker's subcontexts.
+        # TODO : do that in a specific "preprocess" method ?
+        self.avail_forcings = [x.rh for x in self.context.sequence.effective_inputs(role='Forcing')]
         if self.subdir is not self.system.path.dirname(rundir):
             thisdir = self.system.path.join(rundir, self.subdir)
             with self.system.cdcontext(self.subdir, create=True):

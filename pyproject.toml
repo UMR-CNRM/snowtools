@@ -72,6 +72,7 @@ vortex = [
 hpc = [
     'scikit-learn',  # For SAFRAN guess generation
     'vortex-nwp@git+https://github.com/UMR-CNRM/vortex.git@e5a166f83c2f75d71f9cbf41c6acfa961f1f59f8',  # A remplacer par 'vortex-nwp' dès que possible avec versionnement > 2.4.1
+#    'vortex-nwp>2.4.2',
 #    'mkjob@file:///home/cnrm_other/cen/mrns/vernaym/Projects/mkjob',  # A rajouter lorsque l'accès à Nexus depuis le HPC sera ouvert
 #    'vortex-gco@file:///home/cnrm_other/cen/mrns/vernaym/Projects/vortex-gco',  # A rajouter lorsque l'accès à Nexus depuis le HPC sera ouvert
 #    'vortex-olive@file:///home/cnrm_other/cen/mrns/vernaym/Projects/vortex-olive',  # A rajouter lorsque l'accès à Nexus depuis le HPC sera ouvert
@@ -89,6 +90,7 @@ doc = [
 # For a full installation
 all = [
     'vortex-nwp@git+https://github.com/UMR-CNRM/vortex.git@e5a166f83c2f75d71f9cbf41c6acfa961f1f59f8',  # A remplacer par 'vortex-nwp' dès que possible avec versionnement > 2.4.1
+#    'vortex-nwp>2.4.2',
     'psycopg2',
     'matplotlib',
     'cartopy',

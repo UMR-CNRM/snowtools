@@ -22,7 +22,7 @@ def setup(t, **kw):
             FetchClimGroundTemperatureOrMake(tag='fetchclimgroundtemperature_offline', ticket=t, **kw),
             FetchPgdFileOrMake(tag='getpgd1d', ticket=t, **kw),
             FetchPrepFileOrMake(tag='offline_getprep', ticket=t, **kw),
-            Offline_Mpi_Uenv(tag='offline_mpi_uenv', ticket=t, **kw),
+            Offline_Mpi_Uenv(tag='offline', ticket=t, **kw),
         ],
         options=kw,
     )
