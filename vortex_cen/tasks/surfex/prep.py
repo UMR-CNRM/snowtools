@@ -218,6 +218,7 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
         self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
+        self.get_namelist()
         self.get_prep_executable()
 
     def get_local_inputs(self):
@@ -225,7 +226,6 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
         Get OPTIONS.nam which is always in cache and
         init_TG.nc and PGD that should be in cache as well at this point.
         """
-        self.get_namelist()
         self.get_pgd_from_cache()
         self.get_init_TG_from_cache_or_archive(fatal=True, cache_only=True)
 

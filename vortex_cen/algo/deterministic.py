@@ -155,6 +155,9 @@ class SurfexMixIn(_CenMixIn):
         need_other_run = True
         need_other_forcing = True
         datebegin_this_run = self.datebegin
+        # A FORCING file is required to put the simulation's geometry into the namelist
+        _, _, firstforcing = self.find_forcing(self.datebegin, self.dateend)
+        self.modify_namelist(self.datebegin, self.dateend, forcingname=firstforcing)
 
         while need_other_run:
             # Modification of the PREP file
@@ -166,7 +169,7 @@ class SurfexMixIn(_CenMixIn):
             if self.daily:
                 dateend_this_run = min(tomorrow(base=datebegin_this_run), min(self.dateend, dateforcend))
                 need_other_forcing = dateend_this_run == dateforcend
-                self.modify_namelist(datebegin_this_run, dateend_this_run)
+                self.modify_namelist(datebegin_this_run, dateend_this_run, updateloc=False)
             else:
                 dateend_this_run = min(self.dateend, dateforcend)
 
@@ -253,14 +256,14 @@ class SurfexMixIn(_CenMixIn):
 
         return namcandidates
 
-    def modify_namelist(self, datebegin, dateend, forcingname="FORCING.nc"):
+    def modify_namelist(self, datebegin, dateend, forcingname="FORCING.nc", updateloc=True):
 
         # Modification of the namelist
         for namelist in self.find_namelists():
             # Update the contents of the namelist (date and location)
             # Location taken in the FORCING file.
             newcontent = update_surfex_namelist_object(namelist.contents, datebegin, forcing=forcingname,
-                    dateend=dateend, updateloc=False)
+                    dateend=dateend, updateloc=updateloc)
             newnam = footprints.proxy.container(filename=namelist.container.basename)
             newcontent.rewrite(newnam)
             newnam.close()

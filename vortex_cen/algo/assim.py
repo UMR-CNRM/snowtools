@@ -74,6 +74,10 @@ class Soda(Parallel):
                 type = Date,
                 optional = False
             ),
+            nmembers=dict(
+                info="The number of members that will be processed",
+                type=int,
+            ),
         )
     )
 
@@ -92,6 +96,7 @@ class Soda(Parallel):
                                 'PREP_' + self.dateassim.ymdHh + '_PF_ENS' + str(jj) + '.nc')
         # symbolic link from a virtual PREP.nc to the first member (for SODA date-reading reasons)
         self.system.symlink(mb_sections[0].rh.container.localpath(), 'PREP.nc')
+        self.modify_namelist()
 
     def postfix(self, rh, opts):
         super().postfix(rh, opts)
@@ -119,10 +124,37 @@ class Soda(Parallel):
             if self.system.path.isfile(fprefix):
                 self.system.mv(fprefix, fprefix + '_' + self.dateassim.ymdh + '.txt')
 
+    def find_namelists(self, opts=None):
+        """Find any namelists candidates in actual context inputs."""
+        namcandidates = [x.rh for x in self.context.sequence.effective_inputs(kind='namelist')]
+        self.system.subtitle('Namelist candidates')
+        for nam in namcandidates:
+            nam.quickview()
+
+        return namcandidates
+
+    def modify_namelist(self):
+
+        # Modification of the namelist
+        for namelist in self.find_namelists():
+            # Update the contents of the namelist (number of members)
+            # Location taken in the FORCING file.
+            newcontent = update_namelist_object_nmembers(
+                namelist.contents,
+                nmembers=self.nmembers
+            )
+            newnam = footprints.proxy.container(filename=namelist.container.basename)
+            newcontent.rewrite(newnam)
+            newnam.close()
+
 
 @echecker.disabled_if_unavailable
 class SodaPreProcess(AlgoComponent):
-    """Prepare SODA namelist according to configuration file"""
+    """Prepare SODA namelist according to configuration file
+    WARNING : this algo should not be used anymore (the preprocessing of the namelist is now
+    done in the Soda algo). It is here only for retro-compatibility.
+
+    """
 
     _footprint = dict(
         attr = dict(

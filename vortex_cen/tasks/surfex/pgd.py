@@ -338,6 +338,7 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
             # In 2d case, get 2d mask for land and water in order to reduce the simulation domain
             if self.conf.get("mask_2d", False):
                 self.get_mask_files()
+        self.get_namelist()
         self.get_pgd_executable()
 
     def get_pgd_executable(self):
@@ -354,7 +355,7 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
         Get OPTIONS.nam which is always in the user's local cache because it comes
         from a namelist pre-processing task.
         """
-        self.get_namelist()
+        pass
 
     def algo(self):
         """

@@ -323,10 +323,10 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
         self.get_forcing(localname="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc")
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
+        self.get_namelist()
         self.get_executable()
 
     def get_local_inputs(self):
-        self.get_namelist()
         try:
             _ = self.get_prep_file_from_cache_or_archive(fatal=True, cache_only=True)
         except SectionFatalError as e:
@@ -1469,13 +1469,13 @@ class OfflineAssim(OfflineMpi):
         self.get_forcing(localname="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc")
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
+        self.get_namelist()
         self.get_prep_file()  # TODO: check if this could be replaced by a suitable configuration
         #  of the FetchPrepFileOrCrash and OfflineMpi classes? In this case the
         #  corresponding drivers could simply use the OfflineMpi class.
         self.get_executable_from_uenv()
 
     def get_local_inputs(self):
-        self.get_namelist()
         self.get_pgd_from_cache()
 
     def get_prep_file(self):
@@ -1522,6 +1522,7 @@ class OfflineOpenloop(OfflineMpi):
         self.get_forcing(localname="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc")
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
+        self.get_namelist()
         self.get_prep_file()  # TODO: check if this could be replaced by a suitable configuration
         #  of the FetchPrepFileOrCrash and OfflineMpi classes? In this case the
         #  corresponding drivers could simply use the OfflineMpi class.
@@ -1529,7 +1530,6 @@ class OfflineOpenloop(OfflineMpi):
 
     def get_local_inputs(self):
 
-        self.get_namelist()
         self.get_pgd_from_cache()
 
     def get_prep_file(self):
@@ -1633,6 +1633,7 @@ class OfflineLocalForcing(OfflineMpi):
 
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
+        self.get_namelist()
         self.get_executable()
 
     def get_local_inputs(self):
@@ -1640,6 +1641,5 @@ class OfflineLocalForcing(OfflineMpi):
         self.get_pgd_from_cache()
         _ = self.get_prep_file_from_cache_or_archive(fatal=True, cache_only=True)
         # Get namelist from the preprocess task output
-        self.get_namelist()
         # Get FORCING locally because they have already been retrieved by the preprocess task
         self.get_forcing(localname="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc")

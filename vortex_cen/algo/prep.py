@@ -39,10 +39,8 @@ class Prep(Parallel, SurfexMixIn):
     def execute(self, rh, opts):
         firstforcing = self.context.sequence.effective_inputs(role='Forcing')[0]
         # retrieve FORCING information for namelist pre-processing
-        datebegin = firstforcing.rh.resource.datebegin
-        dateend = firstforcing.rh.resource.dateend
         forcingname = firstforcing.rh.container.basename
-        self.modify_namelist(datebegin, dateend, forcingname)
+        self.modify_namelist(self.date, self.date, forcingname)
         super().execute(rh, opts)
 
     def postfix(self, rh, opts):
