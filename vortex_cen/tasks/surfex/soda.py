@@ -220,10 +220,10 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
         self.get_snow_observation()
+        self.get_namelist()
         self.get_soda_exe_from_uenv()
 
     def get_local_inputs(self):
-        self.get_namelist()
         # TODO : Make a "FetchBackgroundOrCrash" class to put the driver in other situations (ex : unit tests)
         self.get_background()
         self.get_pgd_from_cache()
