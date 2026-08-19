@@ -447,7 +447,8 @@ class CrocO(Escroc):
         * the first iteration fethes the single PREP file as defined by the user in the configuration file
         * the next iteration are the output of a SODA execution
         """
-        if self.conf.assimdate_prev is None:
+
+        if self.conf.get('assimdate_prev', None) is None:
             # First iteration
             super().get_prep_file_from_cache_or_archive()
         else:
@@ -476,6 +477,18 @@ class CrocO(Escroc):
     def get_executable(self):
         self.get_executable_from_uenv(mpi=True)
 
+    def next_datebegin(self):
+        if self.conf.get('assimdate_prev', None) is None:
+            return self.conf.datebegin
+        else:
+            return Date(self.conf.assimdate_prev)
+
+    def next_dateend(self):
+        if self.conf.get('assimdate', None) is None:
+            return self.conf.dateend
+        else:
+            return Date(self.conf.assimdate)
+
     def algo(self):
         """
         Algo component to execute OFFLINE several times in parallel
@@ -493,8 +506,8 @@ class CrocO(Escroc):
             # binary         = 'OFFLINE',  # unused
             verbose        = True,
             # MV TODO : gérer la conversion en Date dans l'algo
-            datebegin      = Date(self.conf.assimdate_prev or self.conf.datebegin),
-            dateend        = Date(self.conf.assimdate or self.conf.dateend),
+            datebegin      = self.next_datebegin(),
+            dateend        = self.next_dateend(),
             dateinit       = ctx.sequence.effective_inputs(role="SnowpackInit")[0].rh.resource.datevalidity,
             # MV TODO :  La valeur par défaut de "threshold" est à sortir de la tâche
             threshold      = self.conf.get('august_threshold', -999),
@@ -521,8 +534,8 @@ class CrocO(Escroc):
             local          = 'mb[member%04d]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
             experiment     = self.conf.xpid,
             geometry       = self.conf.geometry,
-            datebegin      = self.conf.assimdate_prev or self.conf.datebegin,
-            dateend        = self.conf.assimdate or self.conf.dateend,
+            datebegin      = self.next_datebegin(),
+            dateend        = self.next_dateend(),
             nativefmt      = 'netcdf',
             kind           = 'SnowpackSimulation',
             # TODO : le storage de sortie devrait être traité à plus haut niveau, en créant une variable de conf
@@ -545,12 +558,12 @@ class CrocO(Escroc):
             role           = 'SnowpackInit',
             experiment     = self.conf.xpid,
             geometry       = self.conf.geometry,
-            datevalidity   = self.conf.assimdate or self.conf.dateend,
+            datevalidity   = self.next_dateend(),
             nativefmt      = 'netcdf',
             kind           = 'PREP',
             namespace      = self.namespace_out,
             namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
-            block          = 'background',
+            block          = 'offline',
             model          = 'surfex',
             member         = self.get_list_members(),
         ),

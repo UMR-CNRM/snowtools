@@ -412,11 +412,13 @@ S2M reanalysis test case
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 s2m command:
+
 .. code-block:: bash
 
     s2m research -r alp_allslopes -b 20220801 -e 20230801 -m safran -f reanalysis2020.2 -o reanalysis_test -n $SNOWTOOLS_CEN/snowtools/DATA/OPTIONS_V9_reanalysis.nam
 
 Equivalent command in snowtools3 :
+
 .. code-block:: bash
 
     mkjob -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/s2m_reanalysis_testcase.ini -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -a datebegin=2022080106 dateend=2023080106 geometry=alp_allslopes
@@ -483,11 +485,13 @@ Equivalent command in snowtools3:
 
     This test crashes with SURFEX executables corresponding to tag "crocus3.0.2"
 
-Croco-openloop equivalent with multi-node MPI parallelisation for OFFLINE (TODO : à tester quand Hendrix sera à nouveau accessible)
 
-.. code-block:: bash
+..
+  Croco-openloop equivalent with multi-node MPI parallelisation for OFFLINE (TODO : à tester quand Hendrix sera à nouveau accessible)
 
-   assim -b 2021080206 -e 2022080106 --vapp=Crocus --vconf=assim -c $SNOWTOOLS_CEN/vortex_cen/Crocus/assim/conf/openloop_example.ini
+  .. code-block:: bash
+
+     assim -b 2021080206 -e 2022080106 --vapp=Crocus --vconf=assim -c $SNOWTOOLS_CEN/vortex_cen/Crocus/assim/conf/openloop_example.ini
 
 
 Croco test case with assim of real observations
@@ -508,11 +512,12 @@ Croco-assim command in snowtools3 :
 
    mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/assim/jobs/croco_assim.job -c /home/cnrm_other/cen/mrns/vernaym/snowtools/vortex_cen/Crocus/assim/conf/s2m_croco_test_case.ini -a datebegin=2019080106 dateend=2020080106 geometry=grandesrousses
 
-Croco-assim equivalent with MPI parallelisation for OFFLINE (TODO : à tester quand Hendrix sera à nouveau accessible)
+..
+  Croco-assim equivalent with MPI parallelisation for OFFLINE (TODO : à tester quand Hendrix sera à nouveau accessible)
 
-.. code-block:: bash
+  .. code-block:: bash
 
-   assim -b 2021080206 -e 2022080106 --vapp=Crocus --vconf=assim -c $SNOWTOOLS_CEN/vortex_cen/Crocus/assim/conf/assim_example.ini -a 2022022612
+     assim -b 2021080206 -e 2022080106 --vapp=Crocus --vconf=assim -c $SNOWTOOLS_CEN/vortex_cen/Crocus/assim/conf/assim_example.ini -a 2022022612
 
 
 Replay operational analysis and forecast

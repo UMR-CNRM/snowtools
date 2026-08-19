@@ -298,11 +298,12 @@ class SurfexWorker(_CenWorkerBlindRun, SurfexMixIn):
                             dateforcbegin, dateforcend, forcingname = self.find_forcing(datebegin_this_run,
                                     self.dateend)
                             self.link_in(self.system.path.join(forcingdir, massif, forcingname), 'FORCING.nc')
-                        except (FileNotFoundError, MultipleValueException):
-                            deterministic = self.subdir == "mb035"
-                            rdict['rc'] = S2MExecutionError("missing forcing file in directory " + forcingdir + "/" +
-                                                            massif, deterministic, self.subdir, datebegin_this_run,
-                                                            self.dateend)
+                        except (FileNotFoundError, MultipleValueException) as e:
+#                            deterministic = self.subdir == "mb035"
+#                            rdict['rc'] = S2MExecutionError("missing forcing file in directory " + forcingdir + "/" +
+#                                                            massif, deterministic, self.subdir, datebegin_this_run,
+#                                                            self.dateend)
+                            rdict['rc'] = e
                             return rdict  # Note than in the other case return rdict is at the end
                         forcingname = "FORCING_" + massif + ".nc"
                         self.system.mv("FORCING.nc", forcingname)
@@ -332,11 +333,12 @@ class SurfexWorker(_CenWorkerBlindRun, SurfexMixIn):
                     try:
                         dateforcbegin, dateforcend, forcingname = self.find_forcing(datebegin_this_run, self.dateend)
                         self.link_in(self.system.path.join(forcingdir, forcingname), 'FORCING.nc')
-                    except (FileNotFoundError, MultipleValueException):
-                        deterministic = self.subdir == "mb035"  # MV : S2M-spécifique, à externaliser
-                        rdict['rc'] = S2MExecutionError("missing forcing file in directory " + forcingdir,
-                                                        deterministic, self.subdir, datebegin_this_run,
-                                                        self.dateend)
+                    except (FileNotFoundError, MultipleValueException) as e:
+#                        deterministic = self.subdir == "mb035"  # MV : S2M-spécifique, à externaliser
+#                        rdict['rc'] = S2MExecutionError("missing forcing file in directory " + forcingdir,
+#                                                        deterministic, self.subdir, datebegin_this_run,
+#                                                        self.dateend)
+                        rdict['rc'] = e
                         return rdict
                     print("FORCING FOUND")
 
