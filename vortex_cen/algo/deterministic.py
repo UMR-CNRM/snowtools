@@ -146,6 +146,11 @@ class Generate_Clim_TG(AlgoComponent):
 class SurfexMixIn(_CenMixIn):
 
     def execute_offline(self, rh, opts):
+        """
+        This should become the main methdo to execute OFFLINE.
+        Application-specific methods should be called beforehand to ensure that
+        the current working directory contains all necessary input files.
+        """
 
         need_other_run = True
         need_other_forcing = True
@@ -156,8 +161,8 @@ class SurfexMixIn(_CenMixIn):
             self.modify_prep(datebegin_this_run)
 
             if need_other_forcing:
-                dateforcbegin, dateforcend = self.find_forcing(datebegin_this_run, self.dateend)
-
+                dateforcbegin, dateforcend, forcingname = self.find_forcing(datebegin_this_run, self.dateend)
+                self.link_in(forcingname, 'FORCING.nc')
             if self.daily:
                 dateend_this_run = min(tomorrow(base=datebegin_this_run), min(self.dateend, dateforcend))
                 need_other_forcing = dateend_this_run == dateforcend
@@ -200,7 +205,13 @@ class SurfexMixIn(_CenMixIn):
         (starting at *datebegin*) among available forcing files.
         """
         # First retrieve the list of available forcing files and the associated lists of datebegin/dateend
-        avail_forcings = [x.rh for x in self.context.sequence.effective_inputs(role='Forcing')]
+        if hasattr(self, 'avail_forcings'):
+            # In Surfex algo components deriving from Taylorism, the list of available forcings
+            # must be retieved before each worker goes into its own context where the effective
+            # inputs are no longer available
+            avail_forcings = self.avail_forcings
+        else:
+            avail_forcings = [x.rh for x in self.context.sequence.effective_inputs(role='Forcing')]
         list_datebegin = [forcing.resource.datebegin for forcing in avail_forcings]
         list_dateend = [forcing.resource.dateend for forcing in avail_forcings]
 
@@ -228,11 +239,10 @@ class SurfexMixIn(_CenMixIn):
             # A single forcing file has been identified to run the next simulation's interation
             idx = valid_indices[0]
 
-        # Create a symbolic link to the forcing file and return the period covered
-        target = avail_forcings[idx].container.basename
-        logger.info(f'Next FORCING file : {target}')
-        self.link_in(target, 'FORCING.nc')
-        return list_datebegin[idx], min(list_dateend[idx], dateend)
+        # Return the target forcing file's name and the period covered
+        forcingname = avail_forcings[idx].container.basename
+        logger.info(f'Next FORCING file : {forcingname}')
+        return list_datebegin[idx], min(list_dateend[idx], dateend), forcingname
 
     def find_namelists(self, opts=None):
         """Find any namelists candidates in actual context inputs."""

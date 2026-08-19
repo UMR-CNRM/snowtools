@@ -46,6 +46,8 @@ from bronx.stdtypes.date import Date
 from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
 from vortex.util.config import GenericConfigParser
 
+# TODO : Use a Vortex's "temporary_dir_context" to keep current working directory clean
+
 
 def get_data(configfile=None, configsection=None, **kw):
     """
