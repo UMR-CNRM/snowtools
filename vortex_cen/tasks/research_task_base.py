@@ -19,7 +19,7 @@ import vortex
 from mkjob.nodes import Task
 from vortex_cen.tasks.oper_research_mixin import CENTaskMixIn
 from bronx.stdtypes.date import Date
-from footprints.stdtypes import FPDict, FPList
+from footprints.stdtypes import FPDict
 from footprints.util import rangex
 
 from vortex_cen.tools.monitoring import InputReportContext, OutputReportContext
@@ -184,6 +184,10 @@ class _CenResearchTask(Task, CENTaskMixIn):
         the input is imposed by the output block of the producing task.
         """
         pass
+
+    @property
+    def allow_path(self):
+        return self.conf.get("allow_path", False)
 
     @property
     def debug(self):

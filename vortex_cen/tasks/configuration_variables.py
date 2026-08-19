@@ -230,9 +230,9 @@ standard_variables = dict(
         type = "str",
         default = "'pgd_[geometry::tag]'",
     ),
-    force_uenv = dict(
-        help = "Set this value to 'True' to search for a PGD.nc file only in the uenv and not in the cache or "
-               "archive.",
+    allow_path = dict(
+        help = "Set this value to 'True' to enable parsing inputs with an absolute path. "
+        "WARNING : never set 'allow_path=True' if you want your simulation to be reproducible",
         type = "bool",
         default = "False",
     ),

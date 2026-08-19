@@ -354,7 +354,7 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
         Get OPTIONS.nam which is always in the user's local cache because it comes
         from a namelist pre-processing task.
         """
-        self.get_namelist_from_cache()
+        self.get_namelist()
 
     def algo(self):
         """
