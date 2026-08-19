@@ -102,7 +102,7 @@ class Escroc(_Offline):
       type: str
     * ``prep_vconf`` *vconf* of the PREP file, if different from the task's *vconf*
       type: str
-    * ``prep_date`` Validity date of the PREP file (if different from *datebegin*)
+    * ``prep_datevalidity`` Validity date of the PREP file (if different from *datebegin*)
       type: str
     * ``prep_block`` *block* of the PREP file (default 'prep', but can be different after an assimilation step)
       type: str
@@ -356,7 +356,7 @@ class CrocO(Escroc):
       type: str
     * ``prep_vconf`` *vconf* of the PREP file, if different from the task's *vconf*
       type: str
-    * ``prep_date`` Validity date of the PREP file (if different from *datebegin*)
+    * ``prep_datevalidity`` Validity date of the PREP file (if different from *datebegin*)
       type: str
     * ``prep_block`` *block* of the PREP file (default 'prep', but can be different after an assimilation step)
       type: str
@@ -623,7 +623,7 @@ class EscrocResearch(Escroc):
       type: str
     * ``prep_vconf`` *vconf* of the PREP file, if different from the task's *vconf*
       type: str
-    * ``prep_date`` Validity date of the PREP file (if different from *datebegin*)
+    * ``prep_datevalidity`` Validity date of the PREP file (if different from *datebegin*)
       type: str
     * ``prep_block`` *block* of the PREP file (default 'prep', but can be different after an assimilation step)
       type: str

@@ -776,6 +776,10 @@ class FetchPgdOrMake(_PgdConstruct):
         print(self.ticket.prompt, "pgd_tbo =", pgd_tbo)
         print()
 
+    def diff(self):
+        # This is a non-reproducible task anyway
+        pass
+
 
 class FetchPgdOrCrash(FetchPgdOrMake):
     """
@@ -843,4 +847,8 @@ class FetchPgdOrCrash(FetchPgdOrMake):
         pass
 
     def put_outputs(self):
+        pass
+
+    def diff(self):
+        # No file produced, no need for reproducibility check
         pass

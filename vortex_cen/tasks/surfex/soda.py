@@ -289,28 +289,8 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
         print()
 
     def diff(self):
-        """
-        Test output reproductibility [OPTIONAL]
-        """
-        self.sh.title("Reproductibility check : PREP")
-        diff = vortex.diff(
-            local          = 'mb[member%04d]/PREP_[datevalidity:ymdh].nc',
-            role           = 'SnowpackInit',
-            experiment     = self.conf.diff_xpid,
-            username       = self.conf.get('diff_user', None),
-            geometry       = self.conf.geometry,
-            datevalidity   = self.conf.get('assimdate', self.conf.get('date', None)),
-            member         = self.get_list_members(),
-            nativefmt      = 'netcdf',
-            kind           = 'PREP',
-            model          = 'surfex',
-            namespace      = 'vortex.multi.fr',
-            namebuild      = 'flat@cen',
-            block          = 'soda',
-            fatal          = True
-        ),
-        print(self.ticket.prompt, 'diff =', diff)
-        print()
+        # The "random" selection of particles in SODA makes reproducibility tests pointless
+        pass
 
 
 class FetchBackgroundOrCrash(SodaCommonsMixin, _CenResearchTask):
@@ -331,7 +311,6 @@ class FetchBackgroundOrCrash(SodaCommonsMixin, _CenResearchTask):
 
     * ``prep_xpid`` or ``xpid`` Experiment id the prep file should be searched for or put in cache.
     * ``prep_user`` name of the user who produced the PREP file. Default: None.
-    * ``prep_date`` or ``datebegin`` Validity date of the prep file. Default is ``datebegin`` but can be any date.
     * ``prep_vapp`` or ``vapp`` Application name to search the PREP.nc file.
     * ``prep_vconf`` or ``vconf`` Configuration name to search the PREP.nc file.
     * ``prep_vortex1`` type: bool. *True* if the requested PREP.nc file was produced with vortex 1 and thus uses
@@ -372,24 +351,4 @@ class FetchBackgroundOrCrash(SodaCommonsMixin, _CenResearchTask):
         pass
 
     def put_outputs(self):
-
-        self.sh.title('Output SODA background PREPs')
-        prep = vortex.output(
-            role           = 'SnowpackInit',
-            member         = self.get_list_members(),
-            vapp           = self.conf.vapp,
-            vconf          = self.conf.vconf,
-            local          = 'mb[member%04d]/PREP_[datevalidity:ymdh].nc',
-            experiment     = self.conf.xpid,
-            geometry       = self.conf.geometry,
-            datevalidity   = self.conf.get('assimdate', self.conf.get('date', None)),
-            nativefmt      = 'netcdf',
-            kind           = 'PREP',
-            model          = 'surfex',
-            namespace      = 'vortex.cache.fr',
-            namebuild      = 'flat@cen',
-            block          = 'refill_background',
-            fatal          = True,
-        ),
-        print(self.ticket.prompt, 'Background PREP =', prep)
-        print()
+        pass

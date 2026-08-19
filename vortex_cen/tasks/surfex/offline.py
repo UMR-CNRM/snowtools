@@ -202,7 +202,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
       type: str
     * ``prep_vconf`` *vconf* of the PREP file, if different from the task's *vconf*
       type: str
-    * ``prep_date`` Validity date of the PREP file (if different from *datebegin*)
+    * ``prep_datevalidity`` Validity date of the PREP file (if different from *datebegin*)
       type: str
     * ``prep_block`` *block* of the PREP file (default 'prep', but can be different after an assimilation step)
       type: str
@@ -583,7 +583,7 @@ class OfflineMpi(_Offline):
       type: str
     * ``prep_vconf`` *vconf* of the PREP file, if different from the task's *vconf*
       type: str
-    * ``prep_date`` Validity date of the PREP file (if different from *datebegin*)
+    * ``prep_datevalidity`` Validity date of the PREP file (if different from *datebegin*)
       type: str
     * ``prep_block`` *block* of the PREP file (default 'prep', but can be different after an assimilation step)
       type: str
@@ -773,7 +773,7 @@ class OfflineXiosMpi(_Offline):
       type: str
     * ``prep_vconf`` *vconf* of the PREP file, if different from the task's *vconf*
       type: str
-    * ``prep_date`` Validity date of the PREP file (if different from *datebegin*)
+    * ``prep_datevalidity`` Validity date of the PREP file (if different from *datebegin*)
       type: str
     * ``prep_block`` *block* of the PREP file (default 'prep', but can be different after an assimilation step)
       type: str
@@ -1046,7 +1046,7 @@ class _Offline_NOMPI(_Offline):
       type: str
     * ``prep_vconf`` *vconf* of the PREP file, if different from the task's *vconf*
       type: str
-    * ``prep_date`` Validity date of the PREP file (if different from *datebegin*)
+    * ``prep_datevalidity`` Validity date of the PREP file (if different from *datebegin*)
       type: str
     * ``prep_block`` *block* of the PREP file (default 'prep', but can be different after an assimilation step)
       type: str
@@ -1237,7 +1237,7 @@ class OfflineMpiDailyPrep(OfflineMpi):
       type: str
     * ``prep_vconf`` *vconf* of the PREP file, if different from the task's *vconf*
       type: str
-    * ``prep_date`` Validity date of the PREP file (if different from *datebegin*)
+    * ``prep_datevalidity`` Validity date of the PREP file (if different from *datebegin*)
       type: str
     * ``prep_block`` *block* of the PREP file (default 'prep', but can be different after an assimilation step)
       type: str
@@ -1492,7 +1492,7 @@ class OfflineAssim(OfflineMpi):
                 role="SnowpackInit",
                 experiment=self.conf.get("prep_xpid", self.conf.xpid),
                 username=self.conf.get("prep_user", None),
-                date=self.conf.get("prep_date", self.conf.datebegin),
+                date=self.conf.get("prep_datevalidity", self.conf.datebegin),
                 vapp=self.conf.get("prep_vapp", self.conf.vapp),
                 vconf=self.conf.get("prep_vconf", self.conf.vconf),
                 geometry=self.conf.geometry,
@@ -1547,7 +1547,7 @@ class OfflineOpenloop(OfflineMpi):
                 role="SnowpackInit",
                 experiment=self.conf.get("prep_xpid", self.conf.xpid),
                 username=self.conf.get("prep_user", None),
-                date=self.conf.get("prep_date", self.conf.datebegin),
+                date=self.conf.get("prep_datevalidity", self.conf.datebegin),
                 vapp=self.conf.get("prep_vapp", self.conf.vapp),
                 vconf=self.conf.get("prep_vconf", self.conf.vconf),
                 geometry=self.conf.geometry,
