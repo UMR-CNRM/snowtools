@@ -121,10 +121,9 @@ else:
     pip_options = list()
 
 # Ensure to use the latest available pip version
-# print("Running command:")
-# print(f"{pip} install --upgrade pip")
-# subprocess.run([pip, 'install'] + pip_options + ['--upgrade', 'pip'], check=True)
-
+print("Running command:")
+print(f"{pip} install --upgrade pip")
+subprocess.run([pip, 'install'] + pip_options + ['--upgrade', 'pip'], check=True)
 
 # Snowtools installation
 # ----------------------
