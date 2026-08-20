@@ -416,7 +416,8 @@ class _CenResearchTask(Task, CENTaskMixIn):
             # nmembers is the number of ensemble members (int)
             return rangex(1, self.conf.nmembers)
 
-    def get_forcing(self, localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc', namespace='vortex.multi.fr'):
+    def get_forcing(self, localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc', namespace='vortex.multi.fr',
+            fatal=True):
         """
         Method to get meteorological forcing file(s) covering the simulation period.
         Look for files covering sub-periods defined by the `io_duration` configuration variable (current values:
@@ -549,7 +550,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
             source_app     = forcing_source_app,  # default = None (ne pas refaire l'erreur)
             source_conf    = forcing_source_conf,  # default = None (ne pas refaire l'erreur)
             cutoff         = forcing_cutoff,  # TODO : à supprimer dans le cas recherche
-            fatal          = True,
+            fatal          = fatal,
         ),
         print(t.prompt, 'FORCING =', forcing)
         print()

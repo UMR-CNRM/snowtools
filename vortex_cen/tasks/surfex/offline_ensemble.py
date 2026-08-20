@@ -740,19 +740,17 @@ class EscrocResearch(Escroc):
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
         self.get_executable()
+        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
+        self.get_namelist()
 
     def get_local_inputs(self):
         # Get PGD and PREP locally because they have been retrieved or produced by a previous task
         self.get_pgd_from_cache()
         self.get_prep_file_from_cache_or_archive(fatal=True, cache_only=True)
-        # Get namelist from the preprocess task output
-        self.get_namelist()
-        # Get FORCING locally because they have already been retrieved by the preprocess task
-        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
 
     def get_executable(self):
 
-        if "exesurfex" in self.conf:
+        if self.allow_path and "exesurfex" in self.conf:
             self.get_executable_from_path()
         else:
             self.get_executable_from_uenv()

@@ -396,7 +396,7 @@ class FetchPrepFileOrMake(_PrepConstruct):
         * ``prep_gvar`` specify the name of the PREP executable in the uenv. Default is ``master_prep_mpi``
           if the mpi parameter is True and ``master_prep_nompi`` otherwise.
         """
-        if hasattr(self.conf, 'exesurfex'):
+        if self.allow_path and hasattr(self.conf, 'exesurfex'):
             self.get_prep_exe_from_path()
         else:
             self.get_prep_exe_from_uenv()
@@ -705,7 +705,7 @@ class MakePrepFile(_PrepConstruct):
           if the mpi parameter is True and ``master_prep_nompi`` otherwise.
         * ``mpi`` If True, *mpi* executable is fetched, if False *nompi* executable. Default: True
         """
-        if hasattr(self.conf, 'exesurfex'):
+        if self.allow_path and hasattr(self.conf, 'exesurfex'):
             self.get_prep_exe_from_path()
         else:
             mpi = self.conf.get("mpi", True)

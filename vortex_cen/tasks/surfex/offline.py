@@ -351,7 +351,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
           if the mpi parameter is True and ``master_offline_nompi`` otherwise.
         * ``mpi`` If True, *mpi* executable is fetched, if False *nompi* executable. Default: True
         """
-        if hasattr(self.conf, "exesurfex"):
+        if self.allow_path and hasattr(self.conf, "exesurfex"):
             self.get_executable_from_path()
         else:
             mpi = self.conf.get("mpi", True)
@@ -1635,11 +1635,11 @@ class OfflineLocalForcing(OfflineMpi):
         self.get_drdt_bst_fit()
         self.get_namelist()
         self.get_executable()
+        self.get_forcing(localname="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc", fatal=False)
 
     def get_local_inputs(self):
         # Get PGD and PREP locally because they have been retrieved or produced by a previous task
         self.get_pgd_from_cache()
         _ = self.get_prep_file_from_cache_or_archive(fatal=True, cache_only=True)
-        # Get namelist from the preprocess task output
-        # Get FORCING locally because they have already been retrieved by the preprocess task
+        # Get FORCING locally in case they have been produced by a previous task
         self.get_forcing(localname="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc")
