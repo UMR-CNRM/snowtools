@@ -24,12 +24,12 @@ Tasks designed to launch the PGD executable.
    :class-doc-from: class
    :show-inheritance:
 
-.. autoclass:: FetchPgdOrMake
+.. autoclass:: FetchPgdFileOrMake
    :no-members:
    :class-doc-from: class
    :show-inheritance:
 
-.. autoclass:: FetchPgdOrCrash
+.. autoclass:: FetchPgdFileOrCrash
    :no-members:
    :class-doc-from: class
    :show-inheritance:
@@ -563,7 +563,7 @@ class MakePgd(_PgdConstruct):
 
 class FetchPgdFileOrMake(_PgdConstruct):
     """
-    **Task: FetchPgdOrMake**
+    **Task: FetchPgdFileOrMake**
 
     Generation of ground physiography (PGD.nc file).
     If PGD.nc is available in cache or archive for the current experiment fetch it.
