@@ -22,7 +22,7 @@ Install dependencies with pip
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Most of the packages can easily be installed in a virtual environment with ``pip`` (for instance with ``pip install -r requirements.txt``). This is useless if you plan to then install snowtools with  ``pip``.
 
-Only GDAL python binding need to be installed manually to be installed consistently with your installed ``libgdal-dev`` version. Please install before the system packages ``ligdal`` and ``libgdal-dev`` (or similar) and run: ``pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="$(gdal-config --cflags)"``.
+Only GDAL python binding need to be installed manually to be installed consistently with your installed ``libgdal-dev`` version. Please install before the system packages ``ligdal`` and ``libgdal-dev`` (or similar) and run: ``pip install --no-cache --force-reinstall gdal[numpy]=="$(gdal-config --version).*"`` (Make sure you have ``numpy``, ``wheel`` and ``setuptools>=67`` installed before running tis line. Older pip versions may require the following command line install : ``pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="$(gdal-config --cflags)"``).
 
 .. _sec-install_users:
 
