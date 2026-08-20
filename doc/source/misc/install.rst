@@ -91,7 +91,7 @@ By default, we recommend external users use the ``plot`` optional dependencies a
 Additional dependencies that have to be installed manually
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**GDAL** is a dependency for some geopsatial processings. You first need to install gdal binaries (e.g. on Ubuntu, run ``sudo apt install libgdal libgdal-dev``, already installed on Meteo-France machines). Then, you need to install the python binding manually to be consistently with your installed ``libgdal-dev`` version by running: ``pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="$(gdal-config --cflags)"``.
+**GDAL** is a dependency for some geopsatial processings. You first need to install gdal binaries (e.g. on Ubuntu, run ``sudo apt install libgdal libgdal-dev``, already installed on Meteo-France machines). Then, you need to install the python binding manually to be consistently with your installed ``libgdal-dev`` version by running: ``pip install --no-cache gdal[numpy]=="$(gdal-config --version).*"`` (please make sure ``numpy``, ``wheel`` and ``setuptools>=67`` are installed beforehand).
 
 Optional additional denpendencies on nexus
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
