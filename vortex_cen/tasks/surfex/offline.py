@@ -414,7 +414,6 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block="offline",
                 member=self.conf.get("member", None),
-                model="surfex",
             ),
         )
         print(self.ticket.prompt, "prep_tbo =", prep_tbo)
@@ -437,7 +436,6 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block="offline",
                 member=self.conf.get("member", None),
-                model="surfex",
             ),
         )
         print(self.ticket.prompt, "pro_tbo =", pro_tbo)
@@ -460,7 +458,6 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block="offline",
                 member=self.conf.get("member", None),
-                model="surfex",
                 fatal=False,
             ),
         )
@@ -484,7 +481,6 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block="offline",
                 member=self.conf.get("member", None),
-                model="surfex",
                 fatal=False,
             ),
         )
@@ -1375,7 +1371,6 @@ class OfflineMpiDailyPrep(OfflineMpi):
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block="offline",
                 member=self.conf.get("member", None),
-                model="surfex",
                 fatal=False,
             ),
         )
@@ -1398,7 +1393,6 @@ class OfflineMpiDailyPrep(OfflineMpi):
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block="offline",
                 member=self.conf.get("member", None),
-                model="surfex",
                 fatal=False,
             ),
         )
@@ -1421,7 +1415,6 @@ class OfflineMpiDailyPrep(OfflineMpi):
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block="offline",
                 member=self.conf.get("member", None),
-                model="surfex",
             ),
         )
         print(self.ticket.prompt, "prep_tbo =", prep_tbo)
@@ -1443,7 +1436,6 @@ class OfflineMpiDailyPrep(OfflineMpi):
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block="offline",
                 member=self.conf.get("member", None),
-                model="surfex",
             ),
         )
         print(self.ticket.prompt, "pro_tbo =", pro_tbo)

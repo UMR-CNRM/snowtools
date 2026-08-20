@@ -491,7 +491,8 @@ class _CenResearchTask(Task, CENTaskMixIn):
         t = self.ticket
 
         forcing_datebegin = self.conf.get('forcing_datebegin', self.conf.get('datebegin', None))
-        forcing_dateend = self.conf.get('forcing_dateend', self.conf.get('dateend', None))
+        forcing_dateend   = self.conf.get('forcing_dateend', self.conf.get('dateend', None))
+        forcing_date      = self.conf.get('forcing_date', self.conf.get('dateend', None))  # oper only
         forcing_xpid      = self.conf.get('forcing_xpid', self.conf.xpid)
         forcing_user      = self.conf.get('forcing_user', None)
         forcing_vapp      = self.conf.get('forcing_vapp', self.conf.vapp)
@@ -552,7 +553,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
             namespace      = namespace,  # default : 'vortex.multi.fr',
             namebuild      = forcing_namebuild,  # default recherche : 'flat@cen', defaut oper : None
             vortex1        = vortex1,
-            date           = forcing_date, #'[dateend]',  # TODO : à supprimer (cas recherche uniquement)
+            date           = forcing_date,  # oper only
             source_app     = forcing_source_app,  # default = None (ne pas refaire l'erreur)
             source_conf    = forcing_source_conf,  # default = None (ne pas refaire l'erreur)
             cutoff         = forcing_cutoff,  # TODO : à supprimer dans le cas recherche
