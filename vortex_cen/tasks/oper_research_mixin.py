@@ -12,18 +12,21 @@ Multiple inheritance together with the standard Task class is required to use th
    :noindex:
 
 """
+import sys
+from pathlib import Path
 
-import os
 from bronx.stdtypes.date import yesterday, Date, Period, Time
 from bronx.fancies import loggers
 from bronx.syntax.externalcode import ExternalCodeImportChecker
+import vortex
 from vortex.tools.actions import actiond as ad
 from vortex.algo.components import DelayedAlgoComponentError
 
 echecker = ExternalCodeImportChecker('snowtools')
 with echecker:
-    from snowtools import __file__ as snowtoolsdir
+    # from snowtools import __file__ as snowtoolsdir
     from snowtools.utils.git import get_summary_git
+    from snowtools.DATA import SNOWTOOLS_CEN
 
 logger = loggers.getLogger(__name__)
 
@@ -346,10 +349,28 @@ class CENTaskMixIn:
         """
         Provide information that should be stored in output files for reproducibility purposes
         """
+        t = vortex.ticket()
+
         reprod_info = dict()
         reprod_info['id'] = self.conf.xpid  # Standard version attribute name that can not be changed
         reprod_info['task'] = self.tag
-        reprod_info['conf'] = self.conf
-        reprod_info['snowtools_commit'] = get_summary_git(os.path.dirname(os.path.dirname(snowtoolsdir)))
+        reprod_info['conf'] = ','.join([f'{k}={v}' for k, v in self.conf.items()])
+
+        # If snowtools is an editable install, get git info from the target snowtools repository
+        snowtools_commit = get_summary_git(SNOWTOOLS_CEN)
+        if snowtools_commit == '':
+            # If snowtools is a non editable install, try to get git info directly from the current virtual environment
+            # it should be there if snowtools was installed with the installation script
+            # TODO : find a more way to avoid using 'sys.prefix'
+            snowtools_commit = get_summary_git(t.sh.path.join(sys.prefix, '.snowtools_info'))
+
+        reprod_info['snowtools_commit'] = get_summary_git(SNOWTOOLS_CEN)
+
+        # Get commit associated to the configuration file and driver (which can currently be different from
+        # the snowtools commit in case of non-editable install)
+        iniconf = Path(self.conf.iniconf)
+        # Currently the configuration file in in the snowtools repository
+        # The following line should be adapted as soon as a better workflow is established
+        reprod_info['configuration_commit'] = get_summary_git(iniconf.parent.parent.parent.parent.parent)
 
         return reprod_info

@@ -19,10 +19,10 @@ import os
 import glob
 import tarfile
 from collections import defaultdict
+import xarray as xr
 
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, Period
-from bronx.syntax.externalcode import ExternalCodeImportChecker
 from vortex.util.helpers import InputCheckerError
 from footprints.stdtypes import FPList
 from vortex.syntax.stdattrs import a_date
@@ -30,10 +30,6 @@ from vortex.algo.components import ParaExpresso
 from vortex_cen.algo.components import _CenTaylorRun, _CenTaylorVortexWorker, _CenWorkerBlindRun
 from vortex.tools.systems import ExecutionError
 from vortex_cen.algo.ensemble import S2MExecutionError
-
-echecker = ExternalCodeImportChecker('snowtools')
-with echecker:
-    from snowtools.utils import S2M_standard_file
 
 logger = loggers.getLogger(__name__)
 
@@ -744,12 +740,12 @@ class SytistWorker(_SafranWorker):
 
     def postfix(self, rdict):
         if self.metadata:
-            for f in ['FORCING_massif.nc', 'FORCING_postes.nc']:
-                if self.system.path.isfile(f):
-                    forcing_to_modify = getattr(S2M_standard_file, self.metadata)(f, "a")
-                    forcing_to_modify.GlobalAttributes(**self.reprod_info)
-                    forcing_to_modify.add_standard_names()
-                    forcing_to_modify.close()
+            for forcing_name in ['FORCING_massif.nc', 'FORCING_postes.nc']:
+                if self.system.path.isfile(forcing_name):
+                    with xr.open_dataset(forcing_name, engine='snowtools') as forcing:
+                        getattr(forcing, self.metadata).GlobalAttributes(**self.reprod_info)
+                        #getattr(forcing, self.metadata).add_standard_names()  # Already called by GlobalAttributes
+                        forcing.to_netcdf(forcing_name)
 
         if 'rc' in rdict.keys() and (isinstance(rdict['rc'], S2MExecutionError) or
                                      isinstance(rdict['rc'], InputCheckerError)):

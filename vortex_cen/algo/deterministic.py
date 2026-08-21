@@ -37,8 +37,10 @@ Algo Components for deterministic Surfex simulations.
 
 """
 
+import numpy as np
 import xarray as xr
 
+import footprints
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, tomorrow
 from bronx.syntax.externalcode import ExternalCodeImportChecker
@@ -53,6 +55,9 @@ with echecker:
     from snowtools.tools.change_prep import prep_tomodify
     from snowtools.tools.initTG import generate_clim
     from snowtools.utils import xarray_snowtools  # noqa
+    from snowtools.utils.FileException import MultipleValueException
+    from snowtools.tools.update_namelist import update_surfex_namelist_object
+    from snowtools.utils.resources import save_file_date, save_file_period
 
 
 @echecker.disabled_if_unavailable
@@ -179,18 +184,7 @@ class SurfexMixIn(_CenMixIn):
             save_file_date(".", "SURFOUT", dateend_this_run, newprefix="PREP")
 
             # Post-process
-            pro = xr.open_dataset("ISBA_PROGNOSTIC.OUT.nc", engine='snowtools')
-            pro.surfex.massif_natural_risk()
-            pro.dataset.GlobalAttributes(**self.reprod_info)
-            pro.dataset.add_standard_names()
-            pro.close()
-
-            save_file_period(".", "ISBA_PROGNOSTIC.OUT", datebegin_this_run, dateend_this_run, newprefix="PRO")
-
-            if self.system.path.isfile("ISBA_DIAGNOSTICS.OUT.nc"):
-                save_file_period(".", "ISBA_DIAGNOSTICS.OUT", datebegin_this_run, dateend_this_run, newprefix="DIAG")
-            if self.system.path.isfile("ISBA_DIAG_CUMUL.OUT.nc"):
-                save_file_period(".", "ISBA_DIAG_CUMUL.OUT", datebegin_this_run, dateend_this_run, newprefix="CUMUL")
+            self.surfex_postprocess(datebegin_this_run, dateend_this_run)
 
             if need_other_forcing:
                 # Remove the symbolic link for next iteration
@@ -375,14 +369,18 @@ class Surfex_Parallel(Parallel, DrHookDecoMixin, SurfexMixIn):
     )
 
     def surfex_postprocess(self, datebegin_this_run, dateend_this_run):
-        # Post-process
-        pro = massif_simu("ISBA_PROGNOSTIC.OUT.nc", openmode="a")
-        pro.massif_natural_risk()
-        pro.dataset.GlobalAttributes(**self.reprod_info)
-        pro.dataset.add_standard_names()
-        pro.close()
+        """
+        Post-processing of SURFEX output files
+        """
 
-        save_file_period(".", "ISBA_PROGNOSTIC.OUT", datebegin_this_run, dateend_this_run, newprefix="PRO")
+        # Add massif natural risk diagnostics to output PRO files
+        with xr.open_dataset("ISBA_PROGNOSTIC.OUT.nc", engine='snowtools') as pro:
+            pro.surfex.massif_natural_risk()
+            pro.crocus.GlobalAttributes(**self.reprod_info)
+            #pro.crocus.add_standard_names()  # Already called by GlobalAttributes
+            pro.to_netcdf(f'PRO_{datebegin_this_run.ymdh}_{dateend_this_run.ymdh}.nc')
+
+        #save_file_period(".", "ISBA_PROGNOSTIC.OUT", datebegin_thisrun, dateend_this_run, newprefix="PRO")
 
         if self.system.path.isfile("ISBA_DIAGNOSTICS.OUT.nc"):
             save_file_period(".", "ISBA_DIAGNOSTICS.OUT", datebegin_this_run, dateend_this_run, newprefix="DIAG")

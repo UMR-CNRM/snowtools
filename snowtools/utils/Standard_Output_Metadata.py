@@ -97,9 +97,9 @@ class StandardNC:
         # temporal coverage
         self.ds.attrs["time_coverage_start"] = time.data[0].astype(str)
         self.ds.attrs["time_coverage_end"] = time.data[-1].astype(str)
-        self.ds.attrs["time_coverage_duration"] = str(time[-1] - time[0])
+        self.ds.attrs["time_coverage_duration"] = (time[-1] - time[0]).astype(str)
         if len(time) > 1:
-            self.ds.attrs["time_coverage_resolution"] = str(time[1] - time[0])
+            self.ds.attrs["time_coverage_resolution"] = (time[1] - time[0]).astype(str)
 
         # system env
         self.ds.attrs["python_version"] = sys.version
@@ -112,24 +112,26 @@ class StandardNC:
         for name, value in additionnal_attributes.items():
             self.ds.attrs[name] = value
 
+        return self.ds
+
     @staticmethod
     def standard_names():
         return dict(ZS="surface_altitude", time="time")
 
     def special_long_names(self):
         """
-        Retourne un dictionnaire {nom_variable: long_name}
-        spécifique aux massifs (extrait de la version originale).
+        Return a massif-specific {variable_name: long_name} dictionary
         """
-        massif_name = getattr(self.ds, "getmassifname", None)
-        if massif_name is None:
-            raise AttributeError("Le Dataset doit posséder l’attribut 'getmassifname'.")
-        return {
-            massif_name: "SAFRAN massif number. Metadata are provided in the associated shapefile."
-        }
+        massifname = self.getmassifname
+        longnames = dict()
+        longnames[massifname] = 'SAFRAN massif number. Metadata are provided in the associated shapefile.'
+
+        return longnames
 
     def add_standard_names(self):
-        """Applique les dictionnaires standard_name et long_name aux variables."""
+        """
+        Apply "standard_name" and "long_name" dictionaries to variables
+        """
         std = self.standard_names()
         long = self.special_long_names()
 
@@ -138,6 +140,8 @@ class StandardNC:
                 da.attrs["standard_name"] = std[var_name]
             if var_name in long:
                 da.attrs["long_name"] = long[var_name]
+
+        return self.ds
 
     def apply_to_all(self, func, **kwargs):
         """
@@ -170,6 +174,8 @@ class StandardCROCUS(StandardNC):
         self.ds.attrs['keywords'] = self.ds.attrs['keywords'] + ',SNOW WATER EQUIVALENT,SNOW,ALBEDO,AVALANCHE,' \
             'FREEZE/THAW,SNOW COVER,SNOW DENSITY,SNOW DEPTH,SNOW ENERGY BALANCE,SNOW MELT,SNOW WATER EQUIVALENT,' \
             'SNOW/ICE TEMPERATURE'
+
+        return self.ds
 
         # self.get_coord()  # TODO : à mettre dans un accesseur spécifique ?
 
@@ -242,11 +248,13 @@ class StandardCROCUS(StandardNC):
     def add_standard_names(self):
         super(StandardCROCUS, self).add_standard_names()
         if os.path.isfile("OPTIONS.nam"):
-            for varname in self.variables.keys():
+            for varname in self.ds.keys():
                 if varname[0:2] in ['TG', 'WG']:
-                    if hasattr(self.variables[varname], 'long_name'):
-                        self.variables[varname].long_name = self.variables[varname].long_name + \
+                    if hasattr(self.ds[varname], 'long_name'):
+                        self.ds[varname].attrs['long_name'] = self.ds[varname].attrs['long_name'] + \
                             self.soil_long_names(varname)
+
+        return self.ds
 
     @property
     def getlatname(self):
@@ -272,7 +280,7 @@ class StandardS2M(StandardNC):
         """
         Convert from an x/y projection to lat/lon by reading the info in the SURFEX namelist
         """
-        # ----- Lecture du type de grille dans le namelist -----
+        # Read grid type in the namelist
         n = NamelistParser()
         N = n.parse("OPTIONS.nam")
         gridtype = N["NAM_PGD_GRID"].CGRID
@@ -293,7 +301,7 @@ class StandardS2M(StandardNC):
 
         transformer = Transformer.from_crs(epsg_src, "epsg:4326", always_xy=True)
 
-        # On s'assure que xvar/yvar sont des DataArray 2D
+        #  xvar/yvar must be 2D DataArrays
         x = np.asarray(xvar)
         y = np.asarray(yvar)
 
@@ -313,10 +321,10 @@ class StandardS2M(StandardNC):
 
         if latname is None or lonname is None:
             raise AttributeError(
-                "Le Dataset doit posséder les attributs 'getlatname' et 'getlonname'."
+                "The Dataset must have 'getlatname' and 'getlonname' attributes."
             )
 
-        # lat/lon déjà présentes
+        # lat/lon already present
         if set([latname, lonname]).issubset(set(self.ds.variables)):
             lat = self.ds[latname]
             lon = self.ds[lonname]
@@ -394,3 +402,60 @@ class StandardS2M(StandardNC):
         self.ds["LON"] = da_lon
 
         return da_lat, da_lon
+
+
+class StandardSAFRAN(StandardNC):
+
+    def GlobalAttributes(self, **additionnal_attributes):
+        super(StandardSAFRAN, self).GlobalAttributes(**additionnal_attributes)
+        self.read_constant_attributes('StandardSAFRAN')
+        self.title = self.title + ": meteorological variables"
+        self.summary = self.summary + ' This file provides the SAFRAN meteorological fields'
+        self.keywords = self.keywords + ',INCOMING SOLAR RADIATION,LONGWAVE RADIATION,SHORTWAVE RADIATION,AIR' \
+                                        ' TEMPERATURE,SURFACE TEMPERATURE,ABSOLUTE HUMIDITY,RELATIVE HUMIDITY,' \
+                                        'WIND DIRECTION,WIND SPEED,SURFACE WINDS,RAIN,LIQUID PRECIPITATION,' \
+                                        'HOURLY PRECIPITATION AMOUNT,SOLID PRECIPITATION'
+
+        return self.ds
+
+    @property
+    def getlatname(self):
+        return 'LAT'
+
+    @property
+    def getlonname(self):
+        return 'LON'
+
+    @property
+    def getcoordname(self):
+        return 'x', 'y'
+
+    def standard_names(self):
+
+        dicfather = super(StandardSAFRAN, self).standard_names()
+
+        dicson = dict(PSurf = 'surface_air_pressure',
+                      Tair  = 'air_temperature',
+                      Qair  = 'specific_humidity',
+                      Wind_DIR = 'wind_from_direction',
+                      Wind = 'wind_speed',
+                      Rainf = 'rainfall_flux',
+                      Snowf = 'snowfall_flux',
+                      LWdown = 'surface_downwelling_longwave_flux_in_air',
+                      DIR_SWdown = 'surface_direct_downwelling_shortwave_flux_in_air',
+                      SCA_SWdown = 'surface_diffuse_downwelling_shortwave_flux_in_air',
+                      NEB = 'cloud_area_fraction',
+                      HUMREL = 'relative_humidity',
+                      CO2air = 'mass_concentration_of_carbon_dioxide_in_air',
+                      isoZeroAltitude = 'freezing_level_altitude',
+                      LAT        = 'latitude',
+                      LON        = 'longitude',
+                      )
+
+        dicfather.update(dicson)
+
+        return dicfather
+
+    @property
+    def getmassifname(self):
+        return 'massif_number'
