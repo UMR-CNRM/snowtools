@@ -45,8 +45,7 @@ standard_variables = dict(
         type  = "str",
     ),
     geometry   = dict(
-        help = "Geometry of the simulation. This must be a valid geometry tag in your"
-        "'$HOME/.vortexrc/geometries.ini' file.",
+        help = "Geometry of the simulation.",
         type  = "'str', 'list'",
     ),
     member = dict(
@@ -64,19 +63,25 @@ standard_variables = dict(
         type = "int",
     ),
     uenv     = dict(
-        help = "Name of the User Environment containing constant files",
+        help = "Name of the User Environment containing all constant files",
         type = "str",
         format = uenv_format,
         # TODO : définir un uenv par défaut
     ),
-    surfex_uenv     = dict(
-        help = "Name of the User Environment containing SURFEX executables and namelists",
+    surfex_uenv = dict(
+        help = "Name of the User Environment containing SURFEX executables",
         type = "str",
         format = uenv_format,
         default = "*uenv*",
     ),
-    consts_surfex_uenv     = dict(
-        help = "Name of the User Environment containing all SURFEX constant files",
+    consts_surfex_uenv = dict(
+        help = "Name of the User Environment containing all SURFEX constant files other than executables and namelists",
+        type = "str",
+        format = uenv_format,
+        default = "*uenv*",
+    ),
+    namelists_surfex_uenv = dict(
+        help = "Name of the User Environment containing a pool of SURFEX namelists",
         type = "str",
         format = uenv_format,
         default = "*uenv*",
@@ -108,8 +113,7 @@ standard_variables = dict(
         default = "$USER",
     ),
     forcing_geometry   = dict(
-        help    = "Geometry of the forcing file(s). This must be a valid geometry tag in your"
-        "'$HOME/.vortexrc/geometries.ini' file.",
+        help    = "Geometry of the forcing file(s).",
         type  = "'str', 'list'",
         default = geometry_default,
     ),
@@ -207,8 +211,7 @@ standard_variables = dict(
         default = "The simulation's *vconf*",
     ),
     pgd_geometry   = dict(
-        help    = "Geometry of the PGD.nc file. This must be a valid geometry tag in your"
-        "'$HOME/.vortexrc/geometries.ini' file.",
+        help    = "Geometry of the PGD.nc file.",
         type  = "'str', 'list'",
         default = geometry_default,
     ),
@@ -227,9 +230,9 @@ standard_variables = dict(
         type = "str",
         default = "'pgd_[geometry::tag]'",
     ),
-    force_uenv = dict(
-        help = "Set this value to 'True' to search for a PGD.nc file only in the uenv and not in the cache or "
-               "archive.",
+    allow_path = dict(
+        help = "Set this value to 'True' to enable parsing inputs with an absolute path. "
+        "WARNING : never set 'allow_path=True' if you want your simulation to be reproducible",
         type = "bool",
         default = "False",
     ),
@@ -257,7 +260,7 @@ standard_variables = dict(
         metavar = True,
         help = "Footprint description of PREP.nc file(s)",
         values = ["prep_xpid", "prep_user", "prep_vapp", "prep_vconf", "prep_geometry", "prep_vortex1", "prep_member",
-            "prep_block", "prep_date"],
+            "prep_block", "prep_datevalidity"],
     ),
     prep_xpid   = dict(
         help = "Experiment identifier of the PREP file",
@@ -280,8 +283,7 @@ standard_variables = dict(
         default = "The simulation's *vconf*",
     ),
     prep_geometry   = dict(
-        help    = "Geometry of the PREP.nc file. This must be a valid geometry tag in your"
-        "'$HOME/.vortexrc/geometries.ini' file.",
+        help    = "Geometry of the PREP.nc file.",
         type  = "'str', 'list'",
         default = geometry_default,
     ),
@@ -300,7 +302,7 @@ standard_variables = dict(
         type = "str",
         default = "prep",
     ),
-    prep_date = dict(
+    prep_datevalidity = dict(
         help = "Validity date of the PREP file (if different from *datebegin*)",
         type = "str or Date",
         default = datebegin_default,
@@ -359,8 +361,7 @@ standard_variables = dict(
         default = "*vconf*",
     ),
     tg_geometry   = dict(
-        help    = "Geometry of the init_TG.nc file. This must be a valid geometry tag in your"
-        "'$HOME/.vortexrc/geometries.ini' file.",
+        help    = "Geometry of the init_TG.nc file.",
         type  = "'str', 'list'",
         default = geometry_default,
     ),
@@ -481,8 +482,7 @@ standard_variables = dict(
         type = "str",
     ),
     geometries   = dict(
-        help = "List of output geometries of the simulation (these must be valid geometry tags in your"
-        "'$HOME/.vortexrc/geometries.ini' file.",
+        help = "List of output geometries of the simulation.",
         type  = "'list'",
     ),
     diff_xpid = dict(

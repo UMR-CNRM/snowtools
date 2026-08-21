@@ -290,7 +290,7 @@ class ExtractDatesWorker(_CenTaylorVortexWorker):
 
     def _commons(self, rundir, thisdir, rdict, **kwargs):
         """
-        Method called by the main **vortex_task** method of the **_CenWorkerMixIn** class
+        Method called by the main **vortex_task** method of the **_CenMixIn** class
         """
         subdir = ''  # TODO : subdir should become optional in the extract_dates.execute method
         # Launch "core" algo
@@ -340,7 +340,7 @@ class SnowCoverDurationWorker(_CenTaylorVortexWorker):
 
     def _commons(self, rundir, thisdir, rdict, **kwargs):
         """
-        Method called by the main **vortex_task** method of the **_CenWorkerMixIn** class
+        Method called by the main **vortex_task** method of the **_CenMixIn** class
         """
         # Launch "core" algo
         scd.execute()

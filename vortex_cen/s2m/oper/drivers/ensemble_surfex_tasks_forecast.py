@@ -92,6 +92,7 @@ class Four_Seasons_Task(CENTaskMixIn, Task):
                 dateinit    = datebegin,
                 engine      = 's2m',
                 members     = footprints.util.rangex(members),
+                method      = self.conf.postprocess_method,  # 'emos'
             ),
             print(t.prompt, 'tb02 =', tb02)
             print()

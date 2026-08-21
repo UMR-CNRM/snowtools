@@ -19,7 +19,7 @@ import vortex
 from mkjob.nodes import Task
 from vortex_cen.tasks.oper_research_mixin import CENTaskMixIn
 from bronx.stdtypes.date import Date
-from footprints.stdtypes import FPDict, FPList
+from footprints.stdtypes import FPDict
 from footprints.util import rangex
 
 from vortex_cen.tools.monitoring import InputReportContext, OutputReportContext
@@ -186,6 +186,10 @@ class _CenResearchTask(Task, CENTaskMixIn):
         pass
 
     @property
+    def allow_path(self):
+        return self.conf.get("allow_path", False)
+
+    @property
     def debug(self):
         """
         Enter 'debug' mode to preserve the working directory even after a succesfull execution.
@@ -329,7 +333,12 @@ class _CenResearchTask(Task, CENTaskMixIn):
         :param algo: AlgoComponent object
         """
         executable = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
-        self.component_runner(algo, executable)
+        # Security : force following configuration variables to 1 because
+        # mkjob crashes in case of inconsistency
+        self.conf.nnodes = 1
+        self.conf.nprocs = 1
+        self.conf.ntasks = 1
+        self.component_runner(algo, executable, mpiopts=dict(nnodes=1, nprocs=1, ntasks=1))
 
     def launch_python_algo(self, algo, **kw):
         """
@@ -407,7 +416,8 @@ class _CenResearchTask(Task, CENTaskMixIn):
             # nmembers is the number of ensemble members (int)
             return rangex(1, self.conf.nmembers)
 
-    def get_forcing(self, localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc', namespace='vortex.multi.fr'):
+    def get_forcing(self, localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc', namespace='vortex.multi.fr',
+            fatal=True):
         """
         Method to get meteorological forcing file(s) covering the simulation period.
         Look for files covering sub-periods defined by the `io_duration` configuration variable (current values:
@@ -439,11 +449,6 @@ class _CenResearchTask(Task, CENTaskMixIn):
           type forcing_vconf: str
         * ``forcing_namespace`` *namespace* footprint, default "vortex.multi.fr" (hendrix + local cache)
           type forcing_namespace: str
-
-        * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
-          type forcing_date: str
-        * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
-          type forcing_model: str
 
         **Optional configuration variables:**
 
@@ -481,15 +486,12 @@ class _CenResearchTask(Task, CENTaskMixIn):
 
         forcing_datebegin = self.conf.get('forcing_datebegin', self.conf.get('datebegin', None))
         forcing_dateend = self.conf.get('forcing_dateend', self.conf.get('dateend', None))
-        forcing_date      = self.conf.get('forcing_date', forcing_dateend)
         forcing_xpid      = self.conf.get('forcing_xpid', self.conf.xpid)
         forcing_user      = self.conf.get('forcing_user', None)
         forcing_vapp      = self.conf.get('forcing_vapp', self.conf.vapp)
         forcing_vconf     = self.conf.get('forcing_vconf', self.conf.vconf)
         forcing_block     = self.conf.get('forcing_block', 'meteo')
         forcing_member    = self.conf.get('forcing_member', self.conf.get('member', None))
-        if forcing_member is not None and not isinstance(forcing_member, int):
-            forcing_member = FPList(forcing_member)
         # forcing_geometry value may depend on the task's output 'geometry' value
         if 'forcing_geometry' in self.conf:
             if isinstance(self.conf.forcing_geometry, dict):
@@ -500,8 +502,8 @@ class _CenResearchTask(Task, CENTaskMixIn):
             forcing_geometry = self.conf.geometry
         # Security : in case of an ensemble of forcing files, get the FORCING of each member in a
         # separate directory to avoid overwrinting files.
-        if (isinstance(forcing_member, list) and len(forcing_member) > 1 and '[member]' not in localname):
-            localname = f'mb[member]/{localname}'
+        if (isinstance(forcing_member, list) and len(forcing_member) > 1 and 'member' not in localname):
+            localname = f'mb[member%04d]/{localname}'
         # TODO : modifier le namebuilder par defaut lorsque le nouveau incluant la
         # géométrie sera disponible
         forcing_namebuild = self.conf.get('forcing_namebuild', 'flat@cen')
@@ -510,7 +512,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
         forcing_source_app  = self.conf.get('forcing_source_app', None)
         forcing_source_conf = self.conf.get('forcing_source_conf', None)
         forcing_cutoff = self.conf.get('forcing_cutoff', None)
-        vortex1        = self.conf.get('forcing_vortex1', False),
+        vortex1        = self.conf.get('forcing_vortex1', False)
 
         duration = self.conf.get('io_duration', 'yearly')
         list_dates_begin, list_dates_end, _, _ = get_list_dates_files(Date(forcing_datebegin),
@@ -518,8 +520,8 @@ class _CenResearchTask(Task, CENTaskMixIn):
         dict_dates_end = get_dic_dateend(list_dates_begin, list_dates_end)
 
         # Verrue pour gérer les footprints *source_app* et *source_conf* de la réanalyse S2M
-        if 'forcing_source' in self.conf:
-            if vortex1[0]:   # ça ne devrait pas être necessaire si les forcings ont été produit avec vortex 2, non ?
+        if 'forcing_source' in self.conf and forcing_source_app is None and forcing_source_conf is None:
+            if vortex1:  # pour la rétro-compatibilité
                 forcing_source_app, forcing_source_conf = \
                     self.get_safran_sources(list_dates_begin, era5=self.conf.forcing_source == 'era5')
             else:
@@ -548,7 +550,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
             source_app     = forcing_source_app,  # default = None (ne pas refaire l'erreur)
             source_conf    = forcing_source_conf,  # default = None (ne pas refaire l'erreur)
             cutoff         = forcing_cutoff,  # TODO : à supprimer dans le cas recherche
-            fatal          = True,
+            fatal          = fatal,
         ),
         print(t.prompt, 'FORCING =', forcing)
         print()

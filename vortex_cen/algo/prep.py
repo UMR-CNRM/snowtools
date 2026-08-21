@@ -20,11 +20,12 @@ from bronx.fancies import loggers
 from vortex.algo.components import Parallel
 from vortex.syntax.stdattrs import a_date
 from snowtools.tools.change_prep import prep_tomodify
+from vortex_cen.algo.deterministic import SurfexMixIn
 
 logger = loggers.getLogger(__name__)
 
 
-class Prep(Parallel):
+class Prep(Parallel, SurfexMixIn):
     _footprint = dict(
         info = 'AlgoComponent that runs the PREP executable',
         attr = dict(
@@ -34,6 +35,13 @@ class Prep(Parallel):
             date = a_date,
         )
     )
+
+    def execute(self, rh, opts):
+        firstforcing = self.context.sequence.effective_inputs(role='Forcing')[0]
+        # retrieve FORCING information for namelist pre-processing
+        forcingname = firstforcing.rh.container.basename
+        self.modify_namelist(self.date, self.date, forcingname)
+        super().execute(rh, opts)
 
     def postfix(self, rh, opts):
         """

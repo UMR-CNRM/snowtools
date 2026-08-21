@@ -10,10 +10,6 @@ import subprocess
 # TODO : Use a proper API of the venv package
 # see https://docs.python.org/3/library/venv.html
 
-# TODO : Fix script avec python3.12.12 sur HPC
-
-# TODO : Crash if any subprces crashed
-
 description = "Snowtools installation script for MF developpers"
 parser = argparse.ArgumentParser(description=description)
 
@@ -25,14 +21,13 @@ parser.add_argument('-v', '--venv', type=str, required=False, default=None,
                          "If this script is already called from a virtual environment,"
                          "this argument is ignored.")
 
-parser.add_argument('-o', '--optional', choices=['plot', 'sql', 'scores', 'all'], nargs='*', default=['all'],
+parser.add_argument('-o', '--optional', choices=['plot', 'sql', 'scores', 'all', 'vortex', 'doc'],
+                    nargs='*',
+                    default=['all'],
                     help="Install optional dependencies (this option is ignored on MF's HPC):\n" +
                          "* 'plot' install graphical tools\n" +
                          "* 'sql' install sql extraction tools\n" +
                          "* 'all' install all optional dependencies")
-
-parser.add_argument('--system-site-packages', help="Install system site packages (activate similar pip option)",
-                    action='store_true')
 
 args = parser.parse_args()
 
@@ -65,19 +60,15 @@ if sys.base_prefix == sys.prefix:
 
         venv = os.path.abspath(args.venv)
 
-        # Security: An editable install in a virtual environment within the snowtools repository leads meson to crash
-        # See related comment above
-        if args.editable and snowtools_dir in venv:
-            raise Exception("For an editable install, the virtual environment must not be created "
-                            "in the snowtools root directory.\n"
-                            "Please choose a different path for the creation of your virtual environment")
-
         if not os.path.isfile(os.path.join(venv, 'bin', 'pip')):
             # Create the virtual environment if it does not exist already
             from venv import create
             if 'hpc' in HOSTNAME:
-                # Do not create a virtual environment with system site packages on HPC
-                create(venv, with_pip=True)
+                # Do not create a virtual environment with system site packages on HPC.
+                # This leads to crashes when using the environment :
+                # ImportError: /lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found
+                raise ValueError("The use of the '-v' option on HPC leads to unexplained crashes")
+                # create(venv, with_pip=True)
             else:
                 create(venv, with_pip=True, system_site_packages=True)
             outstr = outstr + "Snowtools has been installed in a new virtual environment.\n" \
@@ -100,16 +91,11 @@ if sys.base_prefix == sys.prefix:
 
         raise SystemError('It looks like you are not in a virtual environment.\n'
                 'Please activate a virtual environment or create one with the -v/--venv argument.')
+
 else:
     # The script was called from within a virtual environment
     outstr = outstr + "Snowtools has been installed in the current virtual environment."
 
-    # Security : an editable install in a virtual environment within the snowtools repository leads meson to crash:
-    # ```
-    #      meson.build:38:9: ERROR: Tried to form an absolute path to a dir in the source tree.
-    #      You should not do that but use relative paths instead, for
-    #      directories that are part of your project.
-    # ```
     if args.editable and snowtools_dir in sys.executable:
         raise Exception("It looks like the current virtual environment is at the snowtools root directory.\n"
                         "An editable install is not possible in this case.\n"
@@ -137,11 +123,7 @@ else:
 # Ensure to use the latest available pip version
 print("Running command:")
 print(f"{pip} install --upgrade pip")
-subprocess.run([pip, 'install'] + pip_options + ['--upgrade', 'pip'])
-
-# Get a proper version of setuptools (more than 66 -> editable, less than 71 to avoir bug)
-print("Setuptools:")
-subprocess.run([pip, 'install'] + ['setuptools>=66.0.0,<71.0.0'])
+subprocess.run([pip, 'install'] + pip_options + ['--upgrade', 'pip'], check=True)
 
 # Snowtools installation
 # ----------------------
@@ -153,21 +135,13 @@ if args.editable:
     if sys.version_info < (3, 10, 1):
         raise SystemError('Editable install is not possible with python versions lower than 3.10')
 
-    # 'no-build-isolation' is required for an editable install in order to get a reproductible installation independent
-    # of the user's runtime environment.
-    # However, this suppose to ensure that the build environment is managed appropriately.
-    # In particular, for meson-based packages such as the snowtools_CRPS package, this impose to install meson-python,
-    # ninja, numpy and wheel manually.
-    if any([option in ['scores', 'all'] for option in args.optional]):
-        subprocess.run([pip, 'install', 'meson-python', 'ninja', 'numpy>=1.24.4', 'wheel'])
-    pip_options.extend(['--no-build-isolation', '-e'])
-
+    pip_options.extend(['-e'])
 
 # Install snowtools
 # pip install [--no-build-isolation -e] .
 print("Running command:")
 print(f"{pip} install {' '.join(pip_options)} .{optional}")
-subprocess.run([pip, 'install'] + pip_options + [f'.{optional}'])
+subprocess.run([pip, 'install'] + pip_options + [f'.{optional}'], check=True)
 
 # Write latest snowtools commit number into the virtual environment to keep a track of what has just been installed
 if os.path.isdir('.git'):
@@ -177,9 +151,20 @@ if os.path.isdir('.git'):
 elif os.path.exists('.git_info'):
     shutil.copyfile('.git_info', os.path.join(venv, '.snowtools_info'))
 
+# TEMPORARY step to install dev versions of mkjob, vortex-gco and vortex-olive on HPC while the access to nexus in
+# blocked
+if 'hpc' in HOSTNAME:
+    install_dir = "/home/cnrm_other/cen/mrns/vernaym/Projects/common"
+    for package in ["mkjob", "vortex-gco", "vortex-olive"]:
+        target = os.path.join(install_dir, package)
+        subprocess.run([pip, 'install', target], check=True)
+
 # Configure Vortex
 vortex_config = os.path.join(os.environ['HOME'], '.vortex.d', 'vortex.toml')
-if not (os.path.isfile(vortex_config) or os.path.islink(vortex_config)):
+if not os.path.exists(vortex_config):
+    if os.path.islink(vortex_config):
+        os.remove(vortex_config)
+    # TODO : utiliser https://gitlab.meteo.fr/cnrm-gmap/vortex-conf ?
     config_dir = os.path.join(os.environ['HOME'], '.vortex.d')
     if not os.path.exists(config_dir):
         os.makedirs(config_dir)

@@ -92,8 +92,8 @@ class OfflineCommonsMixin(SurfexCommonsMixin):
             default_gvar = "master_offline_nompi"
 
         self.sh.title("Input OFFLINE executable from uenv")
-        OFFLINE_tbx = vortex.executable(
-            role="Binary",
+        self.offline_exe = vortex.executable(
+            role="offline",
             kind="offline",
             local="OFFLINE",
             model="surfex",
@@ -101,7 +101,7 @@ class OfflineCommonsMixin(SurfexCommonsMixin):
             gvar=self.conf.get("offline_gvar", default_gvar),
             fatal=fatal,
         )
-        print(self.ticket.prompt, "OFFLINE_tbx =", OFFLINE_tbx)
+        print(self.ticket.prompt, "OFFLINE_tbx =", self.offline_exe)
         print()
 
     def get_executable_from_path(self, fatal=True):
@@ -118,15 +118,15 @@ class OfflineCommonsMixin(SurfexCommonsMixin):
 
         """
         self.sh.title("Input OFFLINE executable from local")
-        OFFLINE_tbx = vortex.executable(
-            role="Binary",
+        self.offline_exe = vortex.executable(
+            role="offline",
             kind="offline",
             local="OFFLINE",
             model="surfex",
             remote=self.conf.exesurfex + "/OFFLINE",
             fatal=fatal,
         )
-        print(self.ticket.prompt, "OFFLINE_tbx =", OFFLINE_tbx)
+        print(self.ticket.prompt, "OFFLINE_tbx =", self.offline_exe)
         print()
 
 
@@ -202,7 +202,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
       type: str
     * ``prep_vconf`` *vconf* of the PREP file, if different from the task's *vconf*
       type: str
-    * ``prep_date`` Validity date of the PREP file (if different from *datebegin*)
+    * ``prep_datevalidity`` Validity date of the PREP file (if different from *datebegin*)
       type: str
     * ``prep_block`` *block* of the PREP file (default 'prep', but can be different after an assimilation step)
       type: str
@@ -256,8 +256,6 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
       type forcing_namespace: str
     * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
       type forcing_date: str
-    * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
-      type forcing_model: str
 
     **Optional**
 
@@ -296,6 +294,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
             "xpid",
             "geometry",
             "consts_surfex_uenv|uenv",
+            "namelists_surfex_uenv|uenv",
             "surfex_uenv|uenv",
         ]
 
@@ -314,7 +313,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
             "august_threshold",
             "diff_xpid",
             "diff_user",
-            "diff_block+default=offline/prep",
+            "diff_block+default=offline",
         ]
 
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
@@ -324,10 +323,10 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
         self.get_forcing(localname="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc")
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
+        self.get_namelist()
         self.get_executable()
 
     def get_local_inputs(self):
-        self.get_namelist_from_cache()
         try:
             _ = self.get_prep_file_from_cache_or_archive(fatal=True, cache_only=True)
         except SectionFatalError as e:
@@ -352,7 +351,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
           if the mpi parameter is True and ``master_offline_nompi`` otherwise.
         * ``mpi`` If True, *mpi* executable is fetched, if False *nompi* executable. Default: True
         """
-        if hasattr(self.conf, "exesurfex"):
+        if self.allow_path and hasattr(self.conf, "exesurfex"):
             self.get_executable_from_path()
         else:
             mpi = self.conf.get("mpi", True)
@@ -371,7 +370,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
             datebegin=self.conf.datebegin,
             dateend=self.conf.dateend,
             # MV : *dateinit* correspond à la date de validité du fichier PREP
-            dateinit=self.ticket.context.sequence.effective_inputs(role="SnowpackInit")[0].rh.resource.date,
+            dateinit=self.ticket.context.sequence.effective_inputs(role="SnowpackInit")[0].rh.resource.datevalidity,
             # MV : la valeur par défaut de "threshold" dans la commande s2m est -999
             # TODO : cette valeur par défaut pourrait être codée directement dans l'algo
             threshold=self.conf.get("august_threshold", -999),
@@ -410,11 +409,11 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
                 datevalidity=self.list_dates_end_pro,
                 nativefmt="netcdf",
                 kind="PREP",
-                model="surfex",
                 namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block=self.conf.get("out_block", "prep"),
+                block="offline",
                 member=self.conf.get("member", None),
+                model="surfex",
             ),
         )
         print(self.ticket.prompt, "prep_tbo =", prep_tbo)
@@ -432,11 +431,11 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
                 dateend=self.dict_dates_end_pro,
                 nativefmt="netcdf",
                 kind="SnowpackSimulation",
-                model="surfex",
                 namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block=self.conf.get("out_block", "pro"),
+                block="offline",
                 member=self.conf.get("member", None),
+                model="surfex",
             ),
         )
         print(self.ticket.prompt, "pro_tbo =", pro_tbo)
@@ -454,11 +453,11 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
                 dateend=self.dict_dates_end_pro,
                 nativefmt="netcdf",
                 kind="SnowpackSimulation",
-                model="surfex",
                 namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block=self.conf.get("out_block", "cumul"),
+                block="offline",
                 member=self.conf.get("member", None),
+                model="surfex",
                 fatal=False,
             ),
         )
@@ -477,11 +476,11 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
                 dateend=self.dict_dates_end_pro,
                 nativefmt="netcdf",
                 kind="SnowpackSimulation",
-                model="surfex",
                 namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block=self.conf.get("out_block", "diag"),
+                block="offline",
                 member=self.conf.get("member", None),
+                model="surfex",
                 fatal=False,
             ),
         )
@@ -495,22 +494,20 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
         # Diff of PRO files always fails because netcdf can not properly read them.
         # --> check reproductibility on PREP file
         self.sh.title("Reproducibility check: PREP")
-        diff = (
-            vortex.diff(
-                local="PREP_[datevalidity:ymdh].nc",
-                role="SnowpackInit",
-                experiment=self.conf.diff_xpid,
-                username=self.conf.diff_user,
-                geometry=self.conf.geometry,
-                datevalidity=self.list_dates_end_pro,
-                nativefmt="netcdf",
-                kind="PREP",
-                model="surfex",
-                namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
-                namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block=self.conf.get("diff_block", "offline/prep"),
-                member=self.conf.get("member", None),
-            ),
+        diff = vortex.diff(
+            local="PREP_[datevalidity:ymdh].nc",
+            role="SnowpackInit",
+            experiment=self.conf.diff_xpid,
+            username=self.conf.diff_user,
+            geometry=self.conf.geometry,
+            datevalidity=self.list_dates_end_pro,
+            nativefmt="netcdf",
+            kind="PREP",
+            namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
+            namebuild="flat@cen",  # TODO : passer en variable de configuration
+            block="offline",
+            member=self.conf.get("member", None),
+            model="surfex",
         )
         print(self.ticket.prompt, "diff =", diff)
         print()
@@ -586,7 +583,7 @@ class OfflineMpi(_Offline):
       type: str
     * ``prep_vconf`` *vconf* of the PREP file, if different from the task's *vconf*
       type: str
-    * ``prep_date`` Validity date of the PREP file (if different from *datebegin*)
+    * ``prep_datevalidity`` Validity date of the PREP file (if different from *datebegin*)
       type: str
     * ``prep_block`` *block* of the PREP file (default 'prep', but can be different after an assimilation step)
       type: str
@@ -640,8 +637,6 @@ class OfflineMpi(_Offline):
       type forcing_namespace: str
     * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
       type forcing_date: str
-    * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
-      type forcing_model: str
 
     **Optional**
 
@@ -778,7 +773,7 @@ class OfflineXiosMpi(_Offline):
       type: str
     * ``prep_vconf`` *vconf* of the PREP file, if different from the task's *vconf*
       type: str
-    * ``prep_date`` Validity date of the PREP file (if different from *datebegin*)
+    * ``prep_datevalidity`` Validity date of the PREP file (if different from *datebegin*)
       type: str
     * ``prep_block`` *block* of the PREP file (default 'prep', but can be different after an assimilation step)
       type: str
@@ -832,8 +827,6 @@ class OfflineXiosMpi(_Offline):
       type forcing_namespace: str
     * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
       type forcing_date: str
-    * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
-      type forcing_model: str
 
     **Optional**
 
@@ -908,9 +901,8 @@ class OfflineXiosMpi(_Offline):
         print()
 
     def get_executable(self):
-        super().get_executable()
         self.sh.title("Input XIOS executable from uenv")
-        XIOS_tbx = vortex.executable(
+        self.xios_exe = vortex.executable(
             role="Binary",
             kind="xios",
             local="XIOS",
@@ -919,20 +911,25 @@ class OfflineXiosMpi(_Offline):
             genv=self.conf.get("surfex_uenv", self.conf.uenv),
             gvar=self.conf.get("xios_gvar", "MASTER_XIOS"),
         )
-        print(self.ticket.prompt, "XIOS_tbx =", XIOS_tbx)
+        print(self.ticket.prompt, "XIOS executable =", self.xios_exe)
         print()
+        super().get_executable()
 
     def algo(self):
         """
         Algo component to execute OFFLINE with XIOS
         """
-        # self.sh.title("Algo XIOS")
-        # xios_tba = vortex.task(
-        #    kind="ioserv",
-        #    tasks=6,
-        # )
-        # print(self.ticket.prompt, "Algo_xios =", xios_tba)
-        # print()
+        import footprints
+        self.sh.title("Algo XIOS")
+        xios = footprints.proxy.mpibinary(
+            kind="ioserv",
+            nodes=self.conf.io_nodes,
+            tasks=self.conf.io_tasks,
+        )
+        print(self.ticket.prompt, "Xios =", xios)
+        print()
+        #xios.master = self.xios_exe[0].container.localpath()
+        xios.master = self.xios_exe[0].container.abspath
 
         self.sh.title("Algo OFFLINE-XIOS-MPI")
         offline_tba = vortex.task(
@@ -942,7 +939,7 @@ class OfflineXiosMpi(_Offline):
             datebegin=self.conf.datebegin,
             dateend=self.conf.dateend,
             # MV : *dateinit* correspond à la date de validité du fichier PREP
-            dateinit=self.ticket.context.sequence.effective_inputs(role="SnowpackInit")[0].rh.resource.date,
+            dateinit=self.ticket.context.sequence.effective_inputs(role="SnowpackInit")[0].rh.resource.datevalidity,
             # MV : la valeur par défaut de "threshold" dans la commande s2m est -999
             # TODO : cette valeur par défaut pourrait être codée directement dans l'algo
             threshold=self.conf.get("august_threshold", -999),
@@ -952,7 +949,8 @@ class OfflineXiosMpi(_Offline):
             drhookprof=self.conf.get("drhook", False),
             # MV : on traitera les question de reproductibilité dans un 2nd temps.
             # reprod_info    = self.get_reprod_info,
-            # ioserver={"kind": "ioserv", "tasks": 6, "nodes": 1},
+            ioserver = xios,
+            iolocation = 0,
         )
         print(self.ticket.prompt, "Algo =", offline_tba)
         print()
@@ -965,9 +963,17 @@ class OfflineXiosMpi(_Offline):
         # Pour un exécution de binaire, il faut donner l'objet "exécutable" associé (récupéré par la commande
         # vortex.executable(...))
         # Il est possible de récupérer cet objet avec la ligne suivante :
-        executables = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
+        #executables = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
+        executables = self.offline_exe
 
-        self.component_runner(algo, executables)
+        self.component_runner(algo, executables,
+#            mpiopts={
+#                "nnodes": self.conf.nnodes,
+##                "nprocs": self.conf.nprocs,  # Redondant avec la valeur par défaut dans mkjob
+#                "ntasks": self.conf.ntasks - self.conf.io_tasks,
+#                "envelope": True,
+#            },
+        )
 
 
 class _Offline_NOMPI(_Offline):
@@ -1040,7 +1046,7 @@ class _Offline_NOMPI(_Offline):
       type: str
     * ``prep_vconf`` *vconf* of the PREP file, if different from the task's *vconf*
       type: str
-    * ``prep_date`` Validity date of the PREP file (if different from *datebegin*)
+    * ``prep_datevalidity`` Validity date of the PREP file (if different from *datebegin*)
       type: str
     * ``prep_block`` *block* of the PREP file (default 'prep', but can be different after an assimilation step)
       type: str
@@ -1088,8 +1094,6 @@ class _Offline_NOMPI(_Offline):
       type forcing_namespace: str
     * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
       type forcing_date: str
-    * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
-      type forcing_model: str
 
     **Optional**
 
@@ -1168,7 +1172,7 @@ class Offline_Mpi_Uenv(OfflineMpi):
 
 class OfflineMpiDailyPrep(OfflineMpi):
     """
-    Do a surfex simulation with daily prep file output
+    Do a surfex simulation with daily prep file output.
 
     **Inputs:**
 
@@ -1233,7 +1237,7 @@ class OfflineMpiDailyPrep(OfflineMpi):
       type: str
     * ``prep_vconf`` *vconf* of the PREP file, if different from the task's *vconf*
       type: str
-    * ``prep_date`` Validity date of the PREP file (if different from *datebegin*)
+    * ``prep_datevalidity`` Validity date of the PREP file (if different from *datebegin*)
       type: str
     * ``prep_block`` *block* of the PREP file (default 'prep', but can be different after an assimilation step)
       type: str
@@ -1287,8 +1291,6 @@ class OfflineMpiDailyPrep(OfflineMpi):
       type forcing_namespace: str
     * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
       type forcing_date: str
-    * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
-      type forcing_model: str
 
     **Optional**
 
@@ -1333,10 +1335,10 @@ class OfflineMpiDailyPrep(OfflineMpi):
             engine="parallel",
             binary="OFFLINE",
             kind="deterministic",
-            datebegin=self.conf.get("forcing_datebegin", self.conf.datebegin),
-            dateend=self.conf.get("forcing_dateend", self.conf.dateend),
+            datebegin=self.conf.datebegin,
+            dateend=self.conf.dateend,
             # MV : *dateinit* correspond à la date de validité du fichier PREP
-            dateinit=self.ticket.context.sequence.effective_inputs(role="SnowpackInit")[0].rh.resource.date,
+            dateinit=self.ticket.context.sequence.effective_inputs(role="SnowpackInit")[0].rh.resource.datevalidity,
             # MV : la valeur par défaut de "threshold" dans la commande s2m est -999
             # TODO : cette valeur par défaut pourrait être codée directement dans l'algo
             threshold=self.conf.get("threshold", -999),
@@ -1364,11 +1366,11 @@ class OfflineMpiDailyPrep(OfflineMpi):
                 dateend=list(daterange(tomorrow(base=self.conf.datebegin), self.conf.dateend)),
                 nativefmt="netcdf",
                 kind="SnowpackSimulation",
-                model="surfex",
                 namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block="cumul",
+                block="offline",
                 member=self.conf.get("member", None),
+                model="surfex",
                 fatal=False,
             ),
         )
@@ -1386,11 +1388,11 @@ class OfflineMpiDailyPrep(OfflineMpi):
                 dateend=list(daterange(tomorrow(base=self.conf.datebegin), self.conf.dateend)),
                 nativefmt="netcdf",
                 kind="SnowpackSimulation",
-                model="surfex",
                 namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block="diag",
+                block="offline",
                 member=self.conf.get("member", None),
+                model="surfex",
                 fatal=False,
             ),
         )
@@ -1408,11 +1410,11 @@ class OfflineMpiDailyPrep(OfflineMpi):
                 datevalidity=list(daterange(tomorrow(base=self.conf.datebegin), self.conf.dateend)),
                 nativefmt="netcdf",
                 kind="PREP",
-                model="surfex",
                 namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block="prep",
+                block="offline",
                 member=self.conf.get("member", None),
+                model="surfex",
             ),
         )
         print(self.ticket.prompt, "prep_tbo =", prep_tbo)
@@ -1429,11 +1431,11 @@ class OfflineMpiDailyPrep(OfflineMpi):
                 dateend=list(daterange(tomorrow(base=self.conf.datebegin), self.conf.dateend)),
                 nativefmt="netcdf",
                 kind="SnowpackSimulation",
-                model="surfex",
                 namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block="pro",
+                block="offline",
                 member=self.conf.get("member", None),
+                model="surfex",
             ),
         )
         print(self.ticket.prompt, "pro_tbo =", pro_tbo)
@@ -1467,21 +1469,20 @@ class OfflineAssim(OfflineMpi):
         self.get_forcing(localname="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc")
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
+        self.get_namelist()
         self.get_prep_file()  # TODO: check if this could be replaced by a suitable configuration
         #  of the FetchPrepFileOrCrash and OfflineMpi classes? In this case the
         #  corresponding drivers could simply use the OfflineMpi class.
         self.get_executable_from_uenv()
 
     def get_local_inputs(self):
-        self.get_namelist_from_cache()
         self.get_pgd_from_cache()
 
     def get_prep_file(self):
         """
         All members are initialised by a different PREP file coming from a SODA analysis
-        --> Force *block* value to "prep/an" and *member" to the associated member value.
+        --> Use default *block* "soda" and *member" to the associated member value.
         SR: Must *block* really be hard coded here? Can't this be configured?
-
         """
 
         self.sh.title("Input PREP")
@@ -1491,18 +1492,18 @@ class OfflineAssim(OfflineMpi):
                 role="SnowpackInit",
                 experiment=self.conf.get("prep_xpid", self.conf.xpid),
                 username=self.conf.get("prep_user", None),
-                date=self.conf.get("prep_date", self.conf.datebegin),
+                date=self.conf.get("prep_datevalidity", self.conf.datebegin),
                 vapp=self.conf.get("prep_vapp", self.conf.vapp),
                 vconf=self.conf.get("prep_vconf", self.conf.vconf),
                 geometry=self.conf.geometry,
                 nativefmt="netcdf",
                 kind="PREP",
-                model="surfex",
                 namespace="vortex.multi.fr",
                 vortex1=self.conf.get("prep_vortex1", False),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration ?
-                block=self.conf.get("prep_block", "soda/analysis"),
+                block=self.conf.get("prep_block", "soda"),
                 member=self.conf.member,  # TODO: where does the "member" configuration come from?
+                model="surfex",
                 intent="inout",
             ),
         )
@@ -1521,6 +1522,7 @@ class OfflineOpenloop(OfflineMpi):
         self.get_forcing(localname="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc")
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
+        self.get_namelist()
         self.get_prep_file()  # TODO: check if this could be replaced by a suitable configuration
         #  of the FetchPrepFileOrCrash and OfflineMpi classes? In this case the
         #  corresponding drivers could simply use the OfflineMpi class.
@@ -1528,7 +1530,6 @@ class OfflineOpenloop(OfflineMpi):
 
     def get_local_inputs(self):
 
-        self.get_namelist_from_cache()
         self.get_pgd_from_cache()
 
     def get_prep_file(self):
@@ -1546,17 +1547,17 @@ class OfflineOpenloop(OfflineMpi):
                 role="SnowpackInit",
                 experiment=self.conf.get("prep_xpid", self.conf.xpid),
                 username=self.conf.get("prep_user", None),
-                date=self.conf.get("prep_date", self.conf.datebegin),
+                date=self.conf.get("prep_datevalidity", self.conf.datebegin),
                 vapp=self.conf.get("prep_vapp", self.conf.vapp),
                 vconf=self.conf.get("prep_vconf", self.conf.vconf),
                 geometry=self.conf.geometry,
                 nativefmt="netcdf",
                 kind="PREP",
-                model="surfex",
                 namespace="vortex.multi.fr",
                 vortex1=self.conf.get("prep_vortex1", False),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration ?
                 block=self.conf.get("prep_block", "prep"),
+                model="surfex",
                 intent="inout",
             ),
         )
@@ -1565,7 +1566,7 @@ class OfflineOpenloop(OfflineMpi):
 
     def put_prep(self):
         """
-        Archive PREP files as "background" state --> force block value to "prep/bg"
+        Archive PREP files as "background" state
         """
 
         self.sh.title("Output PREP")
@@ -1582,11 +1583,11 @@ class OfflineOpenloop(OfflineMpi):
                 date=self.list_dates_end_pro,
                 nativefmt="netcdf",
                 kind="PREP",
-                model="surfex",
                 namespace=self.namespace_out,
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block="prep/background",
+                block="offline",
                 member=self.conf.get("member", None),
+                model="surfex",
             ),
         )
         print(self.ticket.prompt, "prep_tbo =", prep_tbo)
@@ -1632,13 +1633,13 @@ class OfflineLocalForcing(OfflineMpi):
 
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
+        self.get_namelist()
         self.get_executable()
+        self.get_forcing(localname="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc", fatal=False)
 
     def get_local_inputs(self):
         # Get PGD and PREP locally because they have been retrieved or produced by a previous task
         self.get_pgd_from_cache()
         _ = self.get_prep_file_from_cache_or_archive(fatal=True, cache_only=True)
-        # Get namelist from the preprocess task output
-        self.get_namelist_from_cache()
-        # Get FORCING locally because they have already been retrieved by the preprocess task
+        # Get FORCING locally in case they have been produced by a previous task
         self.get_forcing(localname="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc")
