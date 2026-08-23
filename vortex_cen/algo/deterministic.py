@@ -375,7 +375,7 @@ class Surfex_Parallel(Parallel, DrHookDecoMixin, SurfexMixIn):
 
         # Add massif natural risk diagnostics to output PRO files
         with xr.open_dataset("ISBA_PROGNOSTIC.OUT.nc", engine='snowtools') as pro:
-            pro.surfex.massif_natural_risk()
+            pro = pro.surfex.massif_natural_risk()
             pro.crocus.GlobalAttributes(**self.reprod_info)
             #pro.crocus.add_standard_names()  # Already called by GlobalAttributes
             pro.to_netcdf(f'PRO_{datebegin_this_run.ymdh}_{dateend_this_run.ymdh}.nc')

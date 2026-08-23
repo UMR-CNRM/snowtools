@@ -318,11 +318,16 @@ class SurfexAccessor(SnowtoolsAccessor):
         return self.ds
 
     def massif_natural_risk(self):
+        """
+        Add massif-scale natural risk index in S2M simulations.
+        This method can only be applyied to PRO files with 40° slopes and elevations between 1500m and 3000m.
+        """
 
         SurfexNatRiskName = 'NAT_LEV'
         MassifRiskName    = 'naturalIndex'
         massif_dim_name   = 'massif'
 
+        # Compute massif-scale natural risk index for semi-distributed geometries only
         if set([SurfexNatRiskName, 'massif_num']).issubset(self.ds.data_vars):
 
             self.ds = self.ds.squeeze()
@@ -401,6 +406,8 @@ class SurfexAccessor(SnowtoolsAccessor):
                         '_FillValue': fillvalue,
                     },
                 )
+
+        return self.ds
 
 
 @xr.register_dataset_accessor("semidistributed")

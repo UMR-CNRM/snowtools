@@ -158,8 +158,9 @@ class Test_SURFEX_accessor(unittest.TestCase):
         self.assertEqual(len(self.ds_2D.xx), 5, "Expect: 5 points in xx direction")
 
     def test_massif_natural_risk(self):
-        self.ds_pro_NAT_RISK.surfex.massif_natural_risk()
-        self.assertTrue('naturalIndex' in list(self.ds_pro_NAT_RISK.keys()))
+        tmp = self.ds_pro_NAT_RISK.drop_vars(["naturalIndex"])
+        tmp = tmp.surfex.massif_natural_risk()
+        self.assertTrue('naturalIndex' in list(tmp.keys()))
 
     @classmethod
     def tearDownClass(cls):

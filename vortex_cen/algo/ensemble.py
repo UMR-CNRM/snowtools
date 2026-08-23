@@ -413,7 +413,7 @@ class SurfexWorker(_CenWorkerBlindRun, SurfexMixIn):
 
             # Post-process
             pro = massif_simu("ISBA_PROGNOSTIC.OUT.nc", openmode='a')
-            pro.massif_natural_risk()
+            pro = pro.massif_natural_risk()
             pro.dataset.GlobalAttributes(**self.reprod_info)
             pro.dataset.add_standard_names()
             pro.close()
