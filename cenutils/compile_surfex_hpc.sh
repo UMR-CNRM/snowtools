@@ -11,7 +11,7 @@ usage()
 {
 echo
 echo "Usage:"
-echo "./compile_surfex_hpc.sh --surfex_dir=<path_to_SURFEX_dir> [options]"
+echo "./compile_surfex_hpc.sh --surfex_dir <path_to_SURFEX_dir> [options]"
 echo
 echo "Options:"
 echo "    --surfex_dir     : Absolute path to the local SURFEX repository"
@@ -60,6 +60,7 @@ while [[ $# -gt 0 ]]; do
                     echo "Invalid option for --ver_mpi: $2"
                     exit 1
             esac
+            shift 2
             ;;
         --optlevel)
             [[ -n "${2-}" ]] || { echo "ERROR: option --optlevel requires an argument"; exit 1; }
@@ -77,6 +78,7 @@ while [[ $# -gt 0 ]]; do
                     echo "Invalid option for --optlevel: $2"
                     exit 1
             esac
+            shift 2
             ;;
         -h|--help)  usage ; exit 0 ;;
         *)          echo "Unknown option: $1" ; exit 1 ;;
@@ -127,11 +129,12 @@ if git rev-parse --is-inside-work-tree ; then
     if ! git diff HEAD --quiet ; then
         # Un-tracked local changes : the commit may not ensure reproducibility
         # TODO : définir le comportement à adopter dans ce cas
-        surfex_commit="Unknown"
+        surfex_commit="$(git log -n 1 --pretty=format:'%h')_uncommitted_local_changes"
         outstr="WARNING : there are untracked local changes since last commit.
-                The compiled executables can not be associated to any git commit."
+                The commit associated to the compiled executables may not ensure reproducibility."
     else
         # Code up to date with last commit
+        # TODO : add an eventual tag ?
         surfex_commit=$(git log -n 1 --pretty=format:"%h")
         if [[ $(git branch -r --contains $surfex_commit) = "" ]]; then
             # Commit on local branch only --> must be pushed to ensure reproducibililty
@@ -155,7 +158,7 @@ else
     surfex_commit="Unknown"
 fi
 
-uenv=$HOME/.vortexrc/hack/uget/$USER/env/surfex_executables_${surfex_commit}
+uenv=$HOME/.vortexrc/hack/uget/$USER/env/surfex_executables_${VER_MPI,,}_${surfex_commit}
 
 if [[ -f $uenv ]]; then
     echo
@@ -222,7 +225,11 @@ echo
 echo $outstr
 echo
 echo The executables are available in the following uenv :
-echo surfex_executables_${surfex_commit}
+echo $(basename ${uenv})
+echo
+echo To use this uenv in your simulations, add the following variable
+echo in your configuration file:
+echo surfex_uenv=uenv:$(basename ${uenv})@${USER}
 echo "====================================================================="
 echo
 exit 0
