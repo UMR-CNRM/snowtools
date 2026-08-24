@@ -1,8 +1,8 @@
 Constant data managment with User Environments
 ==============================================
 
-A general documentation (in french) can be found in:
-   http://intra.cnrm.meteo.fr/algopy/sphinx/vortex/current/technical/uget.html
+The general documentation of the uenv/uget tool is available here:
+   https://cnrm-gmap.gitlab.meteo.fr/vortex-gco/index.html
 
 There is a list of useful commands at the end of this section.
 
@@ -16,9 +16,25 @@ The main motivations to use User Environments are :
 Install the vortex-gco plugin
 -----------------------------
 
+On MF HPC:
+
+.. code-block:: bash
+
+   pip install --find-links /home/verolive/wheels vortex-gco
+
+On any other MF server:
+
 .. code-block:: bash
 
    pip install vortex-gco
+
+
+Definition of a user environment
+--------------------------------
+
+User environments refer to user-managed collections of coherent static data files. A user environment is the combination of:
+* an ensemble of static data files, potentially owned by different users
+* a catalogue text file associating a unique key (named "gvar") to identify each file. This catalogue file is refered to as "uenv" in this documentation.
 
 .. _uenv_creation:
 
