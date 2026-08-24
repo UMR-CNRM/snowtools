@@ -25,26 +25,17 @@ class install_snowtools(unittest.TestCase):
         else:
             subprocess.run(shlex.split(cmd, ' '), check=True)
 
-    def test_without_venv(self):
-        print("WARNING : This test will crash if it is called from within a virtual environment")
-        print("--> Don't worry, this is the expected behavior !")
-        self.install_cmd(f"python3 {SNOWTOOLS_CEN}/cenutils/install_snowtools.py", assertFail=True)
-
-    def test_editable_install(self):
+    def test_editable_install_all(self):
         # WARNING : This test will crash on HPC with python 3.7.6 because editable installs are not possible with this
         # python version
-        self.install_cmd(f"python3 {SNOWTOOLS_CEN}/cenutils/install_snowtools.py -v {TESTBASE_DIR}/venv/editable -e")
+        self.install_cmd(f"python3 {SNOWTOOLS_CEN}/cenutils/install_snowtools.py -e")
 
     def test_non_editable_install(self):
-        self.install_cmd(f"python3 {SNOWTOOLS_CEN}/cenutils/install_snowtools.py -v {TESTBASE_DIR}/venv/non_editable")
-
-    def test_non_editable_install_all(self):
-        self.install_cmd(f"python3 {SNOWTOOLS_CEN}/cenutils/install_snowtools.py " +
-                f"-v {TESTBASE_DIR}/venv/non_editable_all -o all")
+        self.install_cmd(f"python3 {SNOWTOOLS_CEN}/cenutils/install_snowtools.py")
 
     def test_non_editable_install_plot_sql(self):
         self.install_cmd(f"python3 {SNOWTOOLS_CEN}/cenutils/install_snowtools.py " +
-            f"-v {TESTBASE_DIR}/venv/non_editable_plot_sql -o plot sql")
+            f"-v {TESTBASE_DIR}/venv/non_editable_plot_sql -o plot sql scores")
 
     @classmethod
     def tearDownClass(cls):
