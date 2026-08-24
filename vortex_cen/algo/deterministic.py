@@ -184,7 +184,7 @@ class SurfexMixIn(_CenMixIn):
             save_file_date(".", "SURFOUT", dateend_this_run, newprefix="PREP")
 
             # Post-process
-            self.surfex_postprocess(datebegin_this_run, dateend_this_run)
+            self.offline_postprocess(datebegin_this_run, dateend_this_run)
 
             if need_other_forcing:
                 # Remove the symbolic link for next iteration
@@ -298,6 +298,41 @@ class SurfexMixIn(_CenMixIn):
         else:
             print("DO NOT CHANGE THE PREP FILE.")
 
+    @property
+    def get_standard_metadata_section(self):
+        """
+        Return the section name to use in the Standard_Output_Metadata.ini configuration file
+        """
+        if self.reprod_info.get('vapp', None) == 's2m':
+            if self.reprod_info.get('vconf', None) == 'reanalysis':
+                product = "S2MReanalysis"
+            elif self.reprod_info.get('vconf', None) in ['alp', 'pyr', 'cor', 'mac', 'vog', 'jur', 'postes']:
+                product = "S2MOper"
+        else:
+            product = None
+        return product
+
+    def offline_postprocess(self, datebegin_this_run, dateend_this_run):
+        """
+        Post-processing of SURFEX output files.
+
+        Add standard and reproducibility onformation in output files attributes.
+        """
+
+        # Add massif natural risk diagnostics to output PRO files
+        with xr.open_dataset("ISBA_PROGNOSTIC.OUT.nc", engine='snowtools') as pro:
+            pro = pro.surfex.massif_natural_risk()
+            pro.crocus.GlobalAttributes(product=self.get_standard_metadata_section, **self.reprod_info)
+            #pro.crocus.add_standard_names()  # Already called by GlobalAttributes
+            pro.to_netcdf(f'PRO_{datebegin_this_run.ymdh}_{dateend_this_run.ymdh}.nc')
+
+        #save_file_period(".", "ISBA_PROGNOSTIC.OUT", datebegin_thisrun, dateend_this_run, newprefix="PRO")
+
+        if self.system.path.isfile("ISBA_DIAGNOSTICS.OUT.nc"):
+            save_file_period(".", "ISBA_DIAGNOSTICS.OUT", datebegin_this_run, dateend_this_run, newprefix="DIAG")
+        if self.system.path.isfile("ISBA_DIAG_CUMUL.OUT.nc"):
+            save_file_period(".", "ISBA_DIAG_CUMUL.OUT", datebegin_this_run, dateend_this_run, newprefix="CUMUL")
+
 
 class Pgd_Parallel_from_Forcing(Parallel, SurfexMixIn):
     """
@@ -368,25 +403,6 @@ class Surfex_Parallel(Parallel, DrHookDecoMixin, SurfexMixIn):
         ),
     )
 
-    def surfex_postprocess(self, datebegin_this_run, dateend_this_run):
-        """
-        Post-processing of SURFEX output files
-        """
-
-        # Add massif natural risk diagnostics to output PRO files
-        with xr.open_dataset("ISBA_PROGNOSTIC.OUT.nc", engine='snowtools') as pro:
-            pro = pro.surfex.massif_natural_risk()
-            pro.crocus.GlobalAttributes(**self.reprod_info)
-            #pro.crocus.add_standard_names()  # Already called by GlobalAttributes
-            pro.to_netcdf(f'PRO_{datebegin_this_run.ymdh}_{dateend_this_run.ymdh}.nc')
-
-        #save_file_period(".", "ISBA_PROGNOSTIC.OUT", datebegin_thisrun, dateend_this_run, newprefix="PRO")
-
-        if self.system.path.isfile("ISBA_DIAGNOSTICS.OUT.nc"):
-            save_file_period(".", "ISBA_DIAGNOSTICS.OUT", datebegin_this_run, dateend_this_run, newprefix="DIAG")
-        if self.system.path.isfile("ISBA_DIAG_CUMUL.OUT.nc"):
-            save_file_period(".", "ISBA_DIAG_CUMUL.OUT", datebegin_this_run, dateend_this_run, newprefix="CUMUL")
-
     def execute(self, rh, opts):
         self.execute_offline(rh, opts)
 
@@ -435,7 +451,7 @@ class Surfex_Xios_Parallel(Parallel, ParallelIoServerMixin, SurfexMixIn, DrHookD
         },
     }
 
-    def surfex_postprocess(self, datebegin_this_run, dateend_this_run):
+    def offline_postprocess(self, datebegin_this_run, dateend_this_run):
 
         save_file_period(".", "PRO_nosl.nc", datebegin_this_run, dateend_this_run, newprefix="PRO_nosl")
         save_file_period(".", "PRO_sl1.nc", datebegin_this_run, dateend_this_run, newprefix="PRO_sl1")

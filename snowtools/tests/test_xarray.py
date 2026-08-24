@@ -318,5 +318,27 @@ class Test_snowtools_preprocess(unittest.TestCase):
         xarray_snowtools.preprocess(ds_multi_year)
 
 
+@unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
+                                                 'pro_2018080306_2018080406.nc')),
+                 "input file not available")
+class Standard_Output_Metadata(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.path_pro = os.path.join(TESTBASE_DIR, "PRO", 'pro_2018080306_2018080406.nc')
+
+    def test_StandardNC(self):
+        ds = xr.open_dataset(self.path_pro, engine="snowtools")
+        ds.standard_nc.GlobalAttributes()
+
+    def test_StandardCROCUS(self):
+        ds = xr.open_dataset(self.path_pro, engine="snowtools")
+        ds.crocus.GlobalAttributes()
+
+    def test_StandardSAFRAN(self):
+        ds = xr.open_dataset(self.path_pro, engine="snowtools")
+        ds.safran.GlobalAttributes()
+
+
 if __name__ == "__main__":
     unittest.main()

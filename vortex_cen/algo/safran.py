@@ -30,6 +30,7 @@ from vortex.algo.components import ParaExpresso
 from vortex_cen.algo.components import _CenTaylorRun, _CenTaylorVortexWorker, _CenWorkerBlindRun
 from vortex.tools.systems import ExecutionError
 from vortex_cen.algo.ensemble import S2MExecutionError
+from snowtools.utils import xarray_snowtools  # noqa
 
 logger = loggers.getLogger(__name__)
 
@@ -738,12 +739,27 @@ class SytistWorker(_SafranWorker):
         )
     )
 
+    @property
+    def get_standard_metadata_section(self):
+        """
+        Return the section name to use in the Standard_Output_Metadata.ini configuration file
+        """
+        if self.reprod_info.get('vapp', None) == 's2m':
+            if self.reprod_info.get('vconf', None) == 'reanalysis':
+                product = "S2MReanalysis"
+            elif self.reprod_info.get('vconf', None) in ['alp', 'pyr', 'cor', 'mac', 'vog', 'jur', 'postes']:
+                product = "S2MOper"
+        else:
+            product = None
+        return product
+
     def postfix(self, rdict):
         if self.metadata:
             for forcing_name in ['FORCING_massif.nc', 'FORCING_postes.nc']:
                 if self.system.path.isfile(forcing_name):
+                    product = self.get_standard_metadata_section
                     with xr.open_dataset(forcing_name, engine='snowtools') as forcing:
-                        getattr(forcing, self.metadata).GlobalAttributes(**self.reprod_info)
+                        getattr(forcing, self.metadata).GlobalAttributes(product=product, **self.reprod_info)
                         #getattr(forcing, self.metadata).add_standard_names()  # Already called by GlobalAttributes
                         forcing.to_netcdf(forcing_name)
 

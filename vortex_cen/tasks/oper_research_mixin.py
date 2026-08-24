@@ -352,6 +352,9 @@ class CENTaskMixIn:
         t = vortex.ticket()
 
         reprod_info = dict()
+        reprod_info['vapp'] = self.conf.vapp
+        reprod_info['vconf'] = self.conf.vconf
+        reprod_info['geometry'] = self.conf.geometry.tag
         reprod_info['id'] = self.conf.xpid  # Standard version attribute name that can not be changed
         reprod_info['task'] = self.tag
         reprod_info['conf'] = ','.join([f'{k}={v}' for k, v in self.conf.items()])

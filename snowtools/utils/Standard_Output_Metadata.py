@@ -36,6 +36,7 @@ import xarray as xr
 import numpy as np
 
 from bronx.datagrip.namelist import NamelistParser
+from bronx.stdtypes.date import Date
 from snowtools.utils.infomassifs import infomassifs
 
 
@@ -65,41 +66,50 @@ class StandardNC:
         for key, value in self.conf.items(section):
             if isinstance(value, str):
                 value = " ".join(value.split())
-            self.ds.attrs[key] = value
+            # TODO : check what to do in case of an already set atrtibute (overwrite or extend ?)
+            if key in self.ds.attrs.keys():
+                self.ds.attrs[key] + value
+            else:
+                self.ds.attrs[key] = value
 
-    def GlobalAttributes(self, product='S2MReanalysis', **additionnal_attributes):
+    def GlobalAttributes(self, product=None, **additionnal_attributes):
         """
         Global attributes following ACDD conventions.
         The dataset must have a "time" attribute.
+
+        TODO : deal with the possible list of "product" values.
+        Currently :
+        * S2MReanalysis
+        * S2MOper
         """
         time = self.ds.time
 
-        if product == 'reanalysis':
-            self.read_constant_attributes("S2MReanalysis")
-            self.ds.attrs["date_created"] = datetime.datetime.now().replace(
-                second=0, microsecond=0
-            ).isoformat()
-        else:
-            self.read_constant_attributes("S2MOper")
-            self.ds.attrs["date_created"] = datetime.datetime.now().replace(
-                hour=12, minute=0, second=0, microsecond=0
-            ).isoformat()
+        self.ds.attrs["date_created"] = datetime.datetime.now().replace(
+            second=0, microsecond=0
+        ).isoformat()
+
+        # TODO : find a better way to set the preoduct-dependent constant_attributes to take into account
+        # the edelweiss products
+        if product is not None:
+            self.read_constant_attributes(product)
 
         try:
             login = os.getlogin()
-            self.ds.attrs['contributor_name'] = self.ds.attrs['contributor_name'] + f" {login}"
-            self.ds.attrs['contributor_role'] = self.ds.attrs['contributor_role'] + f" {login} ran this simulation"
+            self.ds.attrs['contributor_name'] = login
+            self.ds.attrs['contributor_role'] = f" {login} ran this simulation\n"
         except OSError:
             pass
 
-        # self.get_coord()
+        self.get_coord()
 
         # temporal coverage
         self.ds.attrs["time_coverage_start"] = time.data[0].astype(str)
         self.ds.attrs["time_coverage_end"] = time.data[-1].astype(str)
-        self.ds.attrs["time_coverage_duration"] = (time[-1] - time[0]).astype(str)
+        duration = Date(time.data[-1].astype(str)) - Date(time.data[0].astype(str))
+        self.ds.attrs["time_coverage_duration"] = duration.hms
         if len(time) > 1:
-            self.ds.attrs["time_coverage_resolution"] = (time[1] - time[0]).astype(str)
+            resolution = Date(time.data[1].astype(str)) - Date(time.data[0].astype(str))
+            self.ds.attrs["time_coverage_resolution"] = resolution.hms
 
         # system env
         self.ds.attrs["python_version"] = sys.version
@@ -118,15 +128,14 @@ class StandardNC:
     def standard_names():
         return dict(ZS="surface_altitude", time="time")
 
-    def special_long_names(self):
-        """
-        Return a massif-specific {variable_name: long_name} dictionary
-        """
-        massifname = self.getmassifname
-        longnames = dict()
-        longnames[massifname] = 'SAFRAN massif number. Metadata are provided in the associated shapefile.'
-
-        return longnames
+    def special_long_names(self, product=None):
+        # TODO : trouver une solution plus élégante pour gérer ça
+        if product is not None:
+            if "S2M" in product:
+                massifname = self.getmassifname
+                return StandardS2M.special_long_names(massifname)
+        else:
+            return dict()
 
     def add_standard_names(self):
         """
@@ -162,119 +171,16 @@ class StandardNC:
         pass
 
 
-@xr.register_dataset_accessor("crocus")
-class StandardCROCUS(StandardNC):
+class StandardS2M:
 
-    def GlobalAttributes(self, product='reanalysis', **additionnal_attributes):
-        super(StandardCROCUS, self).GlobalAttributes(product=product, **additionnal_attributes)
-        self.read_constant_attributes('StandardCROCUS')
-        self.ds.attrs['title'] = self.ds.attrs['title'] + ": snow variables"
-        self.ds.attrs['summary'] = self.ds.attrs['summary'] + ' This file provides the snowpack properties of the ' \
-            'Crocus model.'
-        self.ds.attrs['keywords'] = self.ds.attrs['keywords'] + ',SNOW WATER EQUIVALENT,SNOW,ALBEDO,AVALANCHE,' \
-            'FREEZE/THAW,SNOW COVER,SNOW DENSITY,SNOW DEPTH,SNOW ENERGY BALANCE,SNOW MELT,SNOW WATER EQUIVALENT,' \
-            'SNOW/ICE TEMPERATURE'
+    def special_long_names(self, massifname):
+        """
+        Return a massif-specific {variable_name: long_name} dictionary
+        """
+        longnames = dict()
+        longnames[massifname] = 'SAFRAN massif number. Metadata are provided in the associated shapefile.'
 
-        return self.ds
-
-        # self.get_coord()  # TODO : à mettre dans un accesseur spécifique ?
-
-    def getsoilgrid(self):
-        if os.path.isfile("OPTIONS.nam"):
-            n = NamelistParser()
-            N = n.parse("OPTIONS.nam")
-            if 'XSOILGRID' in N['NAM_ISBA']:
-                bottom = list(map(float, N['NAM_ISBA'].XSOILGRID))
-                top = [0] + bottom[:-1]
-                self.soilgrid = (np.array(top) + np.array(bottom)) / 2.
-
-        if not hasattr(self, 'soilgrid') and os.path.isfile("PGD.nc"):
-            pgd = xr.open_dataset("PGD.nc", engine="snowtools")
-            nlayers = pgd["GROUND_LAYER"].data
-            bottom = []
-            for layer in range(1, nlayers[0] + 1):
-                bottom.append(pgd["SOILGRID"] + str(layer)[0])
-            top = [0] + bottom[:-1]
-            self.soilgrid = (np.array(top) + np.array(bottom)) / 2.
-            pgd.close()
-
-    def soil_long_names(self, varname):
-        r = re.search(r'\d+', varname)
-        # r is None for varname without number: 'WGTOT_ISBA'
-        if r is None:
-            return ''
-        else:
-            layer = int(r.group()) - 1
-
-        if not hasattr(self, 'soilgrid'):
-            self.getsoilgrid()
-
-        if hasattr(self, 'soilgrid'):
-            return '(depth %.4f m)' % self.soilgrid[layer]
-        else:
-            return ''
-
-    def standard_names(self):
-
-        dicfather = super(StandardCROCUS, self).standard_names()
-
-        dicson = dict(WSN_T_ISBA = 'surface_snow_amount',
-                      DSN_T_ISBA = 'thickness_of_snowfall_amount',
-                      TS_ISBA    = 'surface_temperature',
-                      TALB_ISBA  = 'surface_albedo',
-                      RN_ISBA    = 'surface_net_downward_radiative_flux',
-                      H_ISBA     = 'surface_upward_sensible_heat_flux',
-                      LE_ISBA    = 'surface_upward_latent_heat_flux',
-                      RAINF_ISBA = 'rainfall_flux',
-                      SWD_ISBA   = 'surface_downwelling_shortwave_flux_in_air',
-                      SWU_ISBA   = 'surface_upwelling_shortwave_flux_in_air',
-                      LWD_ISBA   = 'surface_downwelling_longwave_flux_in_air',
-                      LWU_ISBA   = 'surface_upwelling_longwave_flux_in_air',
-                      RUNOFF_ISBA= 'surface_runoff_flux',
-                      DRAIN_ISBA = 'subsurface_runoff_flux',
-                      EVAP_ISBA  = 'surface_water_evaporation_flux',
-                      TG1        = 'soil_temperature',
-                      TG4        = 'soil_temperature',
-                      WG1        = 'liquid_water_content_of_soil_layer',
-                      WGI1       = 'frozen_water_content_of_soil_layer',
-                      latitude   = 'latitude',
-                      longitude  = 'longitude',
-                      )
-
-        dicfather.update(dicson)
-
-        return dicfather
-
-    def add_standard_names(self):
-        super(StandardCROCUS, self).add_standard_names()
-        if os.path.isfile("OPTIONS.nam"):
-            for varname in self.ds.keys():
-                if varname[0:2] in ['TG', 'WG']:
-                    if hasattr(self.ds[varname], 'long_name'):
-                        self.ds[varname].attrs['long_name'] = self.ds[varname].attrs['long_name'] + \
-                            self.soil_long_names(varname)
-
-        return self.ds
-
-    @property
-    def getlatname(self):
-        return 'latitude'
-
-    @property
-    def getlonname(self):
-        return 'longitude'
-
-    @property
-    def getcoordname(self):
-        return 'xx', 'yy'
-
-    @property
-    def getmassifname(self):
-        return 'massif_num'
-
-
-@xr.register_dataset_accessor("s2m")
-class StandardS2M(StandardNC):
+        return longnames
 
     def xy2latlon(self, xvar, yvar):
         """
@@ -404,17 +310,147 @@ class StandardS2M(StandardNC):
         return da_lat, da_lon
 
 
+@xr.register_dataset_accessor("crocus")
+class StandardCROCUS(StandardNC):
+
+    def GlobalAttributes(self, product=None, **additionnal_attributes):
+        super(StandardCROCUS, self).GlobalAttributes(product=product, **additionnal_attributes)
+        self.read_constant_attributes('StandardCROCUS')
+        if 'title' in self.ds.attrs.keys():
+            self.ds.attrs['title'] = self.ds.attrs['title'] + ": snow variables"
+        else:
+            self.ds.attrs['title'] = "SURFEX/Crocus snow variables"
+        if 'summary' in self.ds.attrs.keys():
+            self.ds.attrs['summary'] = self.ds.attrs['summary'] + ' This file provides the snowpack properties of the '\
+                'Crocus model.'
+        else:
+            self.ds.attrs['summary'] = 'This file provides the snowpack properties of the Crocus model.'
+        keywords = ',SNOW WATER EQUIVALENT,SNOW,ALBEDO,AVALANCHE,' \
+            'FREEZE/THAW,SNOW COVER,SNOW DENSITY,SNOW DEPTH,SNOW ENERGY BALANCE,SNOW MELT,SNOW WATER EQUIVALENT,' \
+            'SNOW/ICE TEMPERATURE'
+        if 'keywords' in self.ds.attrs.keys():
+            self.ds.attrs['keywords'] = self.ds.attrs['keywords'] + keywords
+        else:
+            self.ds.attrs['keywords'] = keywords
+
+        return self.ds
+
+    def getsoilgrid(self):
+        if os.path.isfile("OPTIONS.nam"):
+            n = NamelistParser()
+            N = n.parse("OPTIONS.nam")
+            if 'XSOILGRID' in N['NAM_ISBA']:
+                bottom = list(map(float, N['NAM_ISBA'].XSOILGRID))
+                top = [0] + bottom[:-1]
+                self.soilgrid = (np.array(top) + np.array(bottom)) / 2.
+
+        if not hasattr(self, 'soilgrid') and os.path.isfile("PGD.nc"):
+            pgd = xr.open_dataset("PGD.nc", engine="snowtools")
+            nlayers = pgd["GROUND_LAYER"].data
+            bottom = []
+            for layer in range(1, nlayers[0] + 1):
+                bottom.append(pgd["SOILGRID"] + str(layer)[0])
+            top = [0] + bottom[:-1]
+            self.soilgrid = (np.array(top) + np.array(bottom)) / 2.
+            pgd.close()
+
+    def soil_long_names(self, varname):
+        r = re.search(r'\d+', varname)
+        # r is None for varname without number: 'WGTOT_ISBA'
+        if r is None:
+            return ''
+        else:
+            layer = int(r.group()) - 1
+
+        if not hasattr(self, 'soilgrid'):
+            self.getsoilgrid()
+
+        if hasattr(self, 'soilgrid'):
+            return '(depth %.4f m)' % self.soilgrid[layer]
+        else:
+            return ''
+
+    def standard_names(self):
+
+        dicfather = super(StandardCROCUS, self).standard_names()
+
+        dicson = dict(WSN_T_ISBA = 'surface_snow_amount',
+                      DSN_T_ISBA = 'thickness_of_snowfall_amount',
+                      TS_ISBA    = 'surface_temperature',
+                      TALB_ISBA  = 'surface_albedo',
+                      RN_ISBA    = 'surface_net_downward_radiative_flux',
+                      H_ISBA     = 'surface_upward_sensible_heat_flux',
+                      LE_ISBA    = 'surface_upward_latent_heat_flux',
+                      RAINF_ISBA = 'rainfall_flux',
+                      SWD_ISBA   = 'surface_downwelling_shortwave_flux_in_air',
+                      SWU_ISBA   = 'surface_upwelling_shortwave_flux_in_air',
+                      LWD_ISBA   = 'surface_downwelling_longwave_flux_in_air',
+                      LWU_ISBA   = 'surface_upwelling_longwave_flux_in_air',
+                      RUNOFF_ISBA= 'surface_runoff_flux',
+                      DRAIN_ISBA = 'subsurface_runoff_flux',
+                      EVAP_ISBA  = 'surface_water_evaporation_flux',
+                      TG1        = 'soil_temperature',
+                      TG4        = 'soil_temperature',
+                      WG1        = 'liquid_water_content_of_soil_layer',
+                      WGI1       = 'frozen_water_content_of_soil_layer',
+                      latitude   = 'latitude',
+                      longitude  = 'longitude',
+                      )
+
+        dicfather.update(dicson)
+
+        return dicfather
+
+    def add_standard_names(self):
+        super(StandardCROCUS, self).add_standard_names()
+        if os.path.isfile("OPTIONS.nam"):
+            for varname in self.ds.keys():
+                if varname[0:2] in ['TG', 'WG']:
+                    if hasattr(self.ds[varname], 'long_name'):
+                        self.ds[varname].attrs['long_name'] = self.ds[varname].attrs['long_name'] + \
+                            self.soil_long_names(varname)
+
+        return self.ds
+
+    @property
+    def getlatname(self):
+        return 'latitude'
+
+    @property
+    def getlonname(self):
+        return 'longitude'
+
+    @property
+    def getcoordname(self):
+        return 'xx', 'yy'
+
+    @property
+    def getmassifname(self):
+        return 'massif_num'
+
+
+@xr.register_dataset_accessor("safran")
 class StandardSAFRAN(StandardNC):
 
-    def GlobalAttributes(self, **additionnal_attributes):
-        super(StandardSAFRAN, self).GlobalAttributes(**additionnal_attributes)
+    def GlobalAttributes(self, product=None, **additionnal_attributes):
+        super(StandardSAFRAN, self).GlobalAttributes(product=product, **additionnal_attributes)
         self.read_constant_attributes('StandardSAFRAN')
-        self.title = self.title + ": meteorological variables"
-        self.summary = self.summary + ' This file provides the SAFRAN meteorological fields'
-        self.keywords = self.keywords + ',INCOMING SOLAR RADIATION,LONGWAVE RADIATION,SHORTWAVE RADIATION,AIR' \
-                                        ' TEMPERATURE,SURFACE TEMPERATURE,ABSOLUTE HUMIDITY,RELATIVE HUMIDITY,' \
-                                        'WIND DIRECTION,WIND SPEED,SURFACE WINDS,RAIN,LIQUID PRECIPITATION,' \
-                                        'HOURLY PRECIPITATION AMOUNT,SOLID PRECIPITATION'
+        if hasattr(self, 'title'):
+            self.title = self.title + ": meteorological variables"
+        else:
+            self.title = "SAFRAN meteorological variables"
+        if hasattr(self, 'summary'):
+            self.summary = self.summary + ' This file provides the SAFRAN meteorological fields'
+        else:
+            self.summary = 'This file provides the SAFRAN meteorological fields'
+        keywords = ',INCOMING SOLAR RADIATION,LONGWAVE RADIATION,SHORTWAVE RADIATION,AIR' \
+            ' TEMPERATURE,SURFACE TEMPERATURE,ABSOLUTE HUMIDITY,RELATIVE HUMIDITY,' \
+            'WIND DIRECTION,WIND SPEED,SURFACE WINDS,RAIN,LIQUID PRECIPITATION,' \
+            'HOURLY PRECIPITATION AMOUNT,SOLID PRECIPITATION'
+        if hasattr(self, 'keywords'):
+            self.keywords = self.keywords + keywords
+        else:
+            self.keywords = keywords
 
         return self.ds
 

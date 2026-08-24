@@ -412,11 +412,7 @@ class SurfexWorker(_CenWorkerBlindRun, SurfexMixIn):
             self.system.cp("SURFOUT.nc", "PREP.nc")
 
             # Post-process
-            pro = massif_simu("ISBA_PROGNOSTIC.OUT.nc", openmode='a')
-            pro = pro.massif_natural_risk()
-            pro.dataset.GlobalAttributes(**self.reprod_info)
-            pro.dataset.add_standard_names()
-            pro.close()
+            self.offline_postprocess(datebegin_this_run, dateend_this_run)
 
             # Rename outputs with the dates
             save_file_date(".", "SURFOUT", dateend_this_run, newprefix="PREP")
