@@ -81,6 +81,7 @@ Optional dependecines of the snowtools package
 
 By default, we recommend external users use the ``plot`` optional dependencies and developers have all optional dependencies by using the ``all`` optional dependency. However a finer granularity is available if needed :
 
+- ``sql`` : extraction from MF databases
 - ``plot`` : tools for plotting, including plotting tools of simulation outputs
 - ``scores`` : CRPS score computation
 - ``vortex`` : Tools to work with vortex
