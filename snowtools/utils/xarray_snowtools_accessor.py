@@ -317,6 +317,98 @@ class SurfexAccessor(SnowtoolsAccessor):
 
         return self.ds
 
+    def massif_natural_risk(self):
+        """
+        Add massif-scale natural risk index in S2M simulations.
+        This method can only be applyied to PRO files with 40° slopes and elevations between 1500m and 3000m.
+        """
+
+        SurfexNatRiskName = 'NAT_LEV'
+        MassifRiskName    = 'naturalIndex'
+        massif_dim_name   = 'massif'
+
+        # Compute massif-scale natural risk index for semi-distributed geometries only
+        if set([SurfexNatRiskName, 'massif_num']).issubset(self.ds.data_vars):
+
+            self.ds = self.ds.squeeze()
+
+            slope = self.ds['slope']
+
+            if (slope == 40.).any():
+
+                print("Compute massif-scale natural avalanche hazard indexes")
+
+                slope_natural_risk = self.ds[SurfexNatRiskName].astype('int')
+                fillvalue = slope_natural_risk.attrs.get('_FillValue', np.nan)
+                aspect   = self.ds['aspect']
+                altitude = self.ds['ZS']
+                massif_number = self.ds['massif_num'].astype('int')
+                list_massifs = np.unique(massif_number.values)
+                list_aspects = np.unique(aspect.where(aspect >= 0, drop=True).values)
+                naspects = len(list_aspects)
+
+                def warnings(minaltitude, maxaltitude, minlevel, maxlevel):
+                    # Check if all elevations and aspects are present in the computation of
+                    # massif-scale natural hazard index
+                    if minaltitude > minlevel:
+                        print("WARNING: the massif-scale natural avalanche"
+                              " hazard index is not computed with all expected elevations ")
+                        print("Lowest available level: " + str(minaltitude))
+
+                    if maxaltitude < maxlevel:
+                        print("WARNING: the massif-scale natural avalanche"
+                              "hazard index is not computed with all expected elevations ")
+                        print("Highest available level: " + str(maxaltitude))
+
+                    if naspects != 8:
+                        print("WARNING: the massif-scale natural avalanche hazard index is not computed "
+                              "with 8 aspect classes")
+                        print("Available aspects: " + str(list_aspects))
+
+                minlevel, maxlevel, step = 1500., 3000., 300.
+                levels = np.arange(minlevel, maxlevel + step, step)   # [1500,1800,…,3000]
+                nlevels = len(levels)
+                warnings(np.min(altitude), np.max(altitude), minlevel, maxlevel)
+
+                if massif_dim_name not in self.ds.dims:
+                    self.ds = self.ds.assign_coords({massif_dim_name: list_massifs})
+
+                weights = np.array([0, 0, 1, 2, 4, 8, 0])
+
+                time_coord = slope_natural_risk.time.data
+
+                risk_array = xr.DataArray(
+                    np.zeros((len(time_coord), naspects, nlevels, len(list_massifs))),
+                    dims=('time', 'aspect', 'level', massif_dim_name),
+                    coords={
+                        'time': time_coord,
+                        'aspect': list_aspects,
+                        'level': levels,
+                        massif_dim_name: list_massifs
+                    },
+                )
+                for m, massif in enumerate(list_massifs):
+                    for L, level in enumerate(levels):
+                        indslopes = (massif_number == massif) & (slope == 40.) & (altitude == level)
+
+                        if np.sum(indslopes) > 1:
+                            risk_array.data[:, :, L, m] = np.take(weights, slope_natural_risk[:, indslopes])
+
+                risk_final = risk_array.mean(dim='level').max(dim='aspect')   # (time, massif)
+
+                self.ds[MassifRiskName] = xr.DataArray(
+                    risk_final,
+                    dims=('time', massif_dim_name),
+                    attrs={
+                        'long_name': ('Massif-scale index of natural avalanche hazard. '
+                                      'Definition provided in http://dx.doi.org/10.3189/172756401781819292'),
+                        'units': '0-8',
+                        '_FillValue': fillvalue,
+                    },
+                )
+
+        return self.ds
+
 
 @xr.register_dataset_accessor("semidistributed")
 @xr.register_dataarray_accessor("semidistributed")

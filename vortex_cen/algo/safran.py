@@ -19,10 +19,10 @@ import os
 import glob
 import tarfile
 from collections import defaultdict
+import xarray as xr
 
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, Period
-from bronx.syntax.externalcode import ExternalCodeImportChecker
 from vortex.util.helpers import InputCheckerError
 from footprints.stdtypes import FPList
 from vortex.syntax.stdattrs import a_date
@@ -30,10 +30,7 @@ from vortex.algo.components import ParaExpresso
 from vortex_cen.algo.components import _CenTaylorRun, _CenTaylorVortexWorker, _CenWorkerBlindRun
 from vortex.tools.systems import ExecutionError
 from vortex_cen.algo.ensemble import S2MExecutionError
-
-echecker = ExternalCodeImportChecker('snowtools')
-with echecker:
-    from snowtools.utils import S2M_standard_file
+from snowtools.utils import xarray_snowtools  # noqa
 
 logger = loggers.getLogger(__name__)
 
@@ -735,21 +732,37 @@ class SytistWorker(_SafranWorker):
             kind = dict(
                 values = ['sytist']
             ),
-            metadata = dict(
-                values   = ['StandardSAFRAN', 'StandardPROSNOW'],
-                optional = True,
-            ),
+            # Unused
+#            metadata = dict(
+#                values   = ['StandardSAFRAN', 'StandardPROSNOW'],
+#                optional = True,
+#            ),
         )
     )
 
+    @property
+    def get_standard_metadata_section(self):
+        """
+        Return the section name to use in the Standard_Output_Metadata.ini configuration file
+        """
+        if self.reprod_info.get('vapp', None) == 's2m':
+            if self.reprod_info.get('vconf', None) == 'reanalysis':
+                product = "S2MReanalysis"
+            elif self.reprod_info.get('vconf', None) in ['alp', 'pyr', 'cor', 'mac', 'vog', 'jur', 'postes']:
+                product = "S2MOper"
+        else:
+            product = None
+        return product
+
     def postfix(self, rdict):
-        if self.metadata:
-            for f in ['FORCING_massif.nc', 'FORCING_postes.nc']:
-                if self.system.path.isfile(f):
-                    forcing_to_modify = getattr(S2M_standard_file, self.metadata)(f, "a")
-                    forcing_to_modify.GlobalAttributes(**self.reprod_info)
-                    forcing_to_modify.add_standard_names()
-                    forcing_to_modify.close()
+        for forcing_name in ['FORCING_massif.nc', 'FORCING_postes.nc']:
+            self.mv_if_exists(forcing_name, 'TMP.nc')
+            if self.system.path.isfile('TMP.nc'):
+                product = self.get_standard_metadata_section
+                with xr.open_dataset('TMP.nc', engine='snowtools') as forcing:
+                    forcing.safran.GlobalAttributes(product=product, **self.reprod_info)
+                    forcing.to_netcdf(forcing_name)
+                self.system.remove('TMP.nc')
 
         if 'rc' in rdict.keys() and (isinstance(rdict['rc'], S2MExecutionError) or
                                      isinstance(rdict['rc'], InputCheckerError)):
