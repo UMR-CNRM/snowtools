@@ -732,10 +732,11 @@ class SytistWorker(_SafranWorker):
             kind = dict(
                 values = ['sytist']
             ),
-            metadata = dict(
-                values   = ['StandardSAFRAN', 'StandardPROSNOW'],
-                optional = True,
-            ),
+            # Unused
+#            metadata = dict(
+#                values   = ['StandardSAFRAN', 'StandardPROSNOW'],
+#                optional = True,
+#            ),
         )
     )
 
@@ -754,14 +755,14 @@ class SytistWorker(_SafranWorker):
         return product
 
     def postfix(self, rdict):
-        if self.metadata:
-            for forcing_name in ['FORCING_massif.nc', 'FORCING_postes.nc']:
-                if self.system.path.isfile(forcing_name):
-                    product = self.get_standard_metadata_section
-                    with xr.open_dataset(forcing_name, engine='snowtools') as forcing:
-                        getattr(forcing, self.metadata).GlobalAttributes(product=product, **self.reprod_info)
-                        #getattr(forcing, self.metadata).add_standard_names()  # Already called by GlobalAttributes
-                        forcing.to_netcdf(forcing_name)
+        for forcing_name in ['FORCING_massif.nc', 'FORCING_postes.nc']:
+            self.mv_if_exists(forcing_name, 'TMP.nc')
+            if self.system.path.isfile('TMP.nc'):
+                product = self.get_standard_metadata_section
+                with xr.open_dataset('TMP.nc', engine='snowtools') as forcing:
+                    forcing.safran.GlobalAttributes(product=product, **self.reprod_info)
+                    forcing.to_netcdf(forcing_name)
+                self.system.remove('TMP.nc')
 
         if 'rc' in rdict.keys() and (isinstance(rdict['rc'], S2MExecutionError) or
                                      isinstance(rdict['rc'], InputCheckerError)):

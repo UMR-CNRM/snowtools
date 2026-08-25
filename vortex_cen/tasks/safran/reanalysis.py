@@ -530,7 +530,7 @@ class SafranReanalysis(_CenResearchTask):
             dateend        = self.conf.dateend.ymd6h,
             ntasks         = self.conf.ntasks,
             execution      = self.conf.execution,
-            metadata       = 'StandardSAFRAN',
+            #metadata       = 'StandardSAFRAN',
         )
         print(t.prompt, 'tb26 =', tb26)
         print()

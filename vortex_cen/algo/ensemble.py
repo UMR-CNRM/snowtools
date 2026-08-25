@@ -576,10 +576,6 @@ class S2MComponent(_CenParaBlindRun):
                 values   = ['analysis', 'forecast'],
                 optional = True,
             ),
-            metadata = dict(
-                values   = ['StandardSAFRAN', 'StandardPROSNOW'],
-                optional = True,
-            ),
             reprod_info=dict(
                 info="Informations that must be stored in output files for reproductibility",
                 type=dict,

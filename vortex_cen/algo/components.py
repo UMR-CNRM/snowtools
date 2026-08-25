@@ -242,10 +242,6 @@ class _CenParaBlindRun(ParaBlindRun):
                 # and *_CenTaylorRun* algo components
                 values   = ['blind', 's2m']  # s2m for backward compatibility. TODO : remove the 's2m' engine
             ),
-            metadata = dict(
-                values   = ['StandardSAFRAN', 'StandardPROSNOW'],
-                optional = True,
-            ),
         )
     )
 
