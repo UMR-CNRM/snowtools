@@ -745,7 +745,7 @@ class EscrocResearch(Escroc):
 
     def get_local_inputs(self):
         # Get PGD and PREP locally because they have been retrieved or produced by a previous task
-        self.get_pgd_from_cache()
+        self.get_pgd_file_from_cache()
         self.get_prep_file_from_cache_or_archive(fatal=True, cache_only=True)
 
     def get_executable(self):

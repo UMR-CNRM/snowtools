@@ -223,10 +223,9 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
 
     def get_local_inputs(self):
         """
-        Get OPTIONS.nam which is always in cache and
         init_TG.nc and PGD that should be in cache as well at this point.
         """
-        self.get_pgd_from_cache()
+        self.get_pgd_file_from_cache()
         self.get_init_TG_from_cache_or_archive(fatal=True, cache_only=True)
 
     def get_prep_executable(self):

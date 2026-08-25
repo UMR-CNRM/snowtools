@@ -839,9 +839,6 @@ class FetchPgdOrCrash(FetchPgdOrMake):
     def launch_algo(self, algo, **kwargs):
         pass
 
-    def put_outputs(self):
-        pass
-
     def diff(self):
         # No file produced, no need for reproducibility check
         pass
