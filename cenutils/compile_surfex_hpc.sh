@@ -155,7 +155,7 @@ else
     # No information on the git commit
     # TODO : définir le comportement à adopter dans ce cas
     outstr="WARNING : no git commit found"
-    surfex_commit="Unknown"
+    surfex_commit="unknown_$(date '+%Y%m%d%H%M%S')"
 fi
 
 uenv=$HOME/.vortexrc/hack/uget/$USER/env/surfex_executables_${VER_MPI,,}_${surfex_commit}
