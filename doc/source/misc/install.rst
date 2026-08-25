@@ -73,6 +73,9 @@ That's all for snowtools.
 
 Each time you will need snowtools, you will have to activate the python virtual environment with ``source ~/my_envs/snowtools_env/bin/activate``. When you have finissed your work, you can leave the virtual environment by using the ``deactivate`` command.
 
+.. note::
+   It is possible to switch back to a "snowtools2" installation by sourcing the file cenutils/switch_to_snowtools2
+
 Additional optional dependencies and configuration
 --------------------------------------------------
 
