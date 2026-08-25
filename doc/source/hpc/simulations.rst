@@ -457,7 +457,7 @@ Equivalent command in snowtools3 :
 
 .. code-block:: bash
 
-    mkjob -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/s2m_reanalysis_testcase.ini -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -a datebegin=2022080106 dateend=2023080106 geometry=alp_allslopes
+    mkjob -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/s2m_reanalysis_testcase.ini -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -a datebegin=2022080106 dateend=2023080106 geometry=alp_allslopes test=True
 
 
 S2M ESCROC test case
@@ -473,7 +473,7 @@ Equivalent command in snowtools3:
 
 .. code-block:: bash
 
-    mkjob -c $SNOWTOOLS_CEN/vortex_cen/Crocus/escroc/conf/s2m_escroc_testcase.ini -f $SNOWTOOLS_CEN/vortex_cen/Crocus/escroc/jobs/escroc.job -a datebegin=1994100101 dateend=2014100100 geometry=cdp
+    mkjob -c $SNOWTOOLS_CEN/vortex_cen/Crocus/escroc/conf/s2m_escroc_testcase.ini -f $SNOWTOOLS_CEN/vortex_cen/Crocus/escroc/jobs/escroc.job -a datebegin=1994100101 dateend=2014100100 geometry=cdp test=True
 
 Stochastic perturbations test case
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -488,7 +488,7 @@ Equivalent command in snowtools3:
 
 .. code-block:: bash
 
-    mkjob -c $SNOWTOOLS_CEN/vortex_cen/meteo/semidistributed/conf/s2m_stochastic_perturbation_test_case.ini -f $SNOWTOOLS_CEN/vortex_cen/meteo/semidistributed/jobs/perturbations.jobs -a datebegin=2020080106 dateend=2021080106 geometry=cor_flat
+    mkjob -c $SNOWTOOLS_CEN/vortex_cen/meteo/semidistributed/conf/s2m_stochastic_perturbation_test_case.ini -f $SNOWTOOLS_CEN/vortex_cen/meteo/semidistributed/jobs/perturbations.jobs -a datebegin=2020080106 dateend=2021080106 geometry=cor_flat test=True
 
 
 Croco openloop test case
@@ -515,7 +515,7 @@ Equivalent command in snowtools3:
 
 .. code-block:: bash
 
-   mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/assim/jobs/croco_openloop.job -c /home/cnrm_other/cen/mrns/vernaym/snowtools/vortex_cen/Crocus/assim/conf/s2m_croco_test_case.ini -a datebegin=2019080106 dateend=2020080106 geometry=grandesrousses
+   mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/assim/jobs/croco_openloop.job -c /home/cnrm_other/cen/mrns/vernaym/snowtools/vortex_cen/Crocus/assim/conf/s2m_croco_test_case.ini -a datebegin=2019080106 dateend=2020080106 geometry=grandesrousses test=True
 
 .. note::
 
@@ -546,7 +546,7 @@ Croco-assim command in snowtools3 :
 
 .. code-block::
 
-   mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/assim/jobs/croco_assim.job -c /home/cnrm_other/cen/mrns/vernaym/snowtools/vortex_cen/Crocus/assim/conf/s2m_croco_test_case.ini -a datebegin=2019080106 dateend=2020080106 geometry=grandesrousses
+   mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/assim/jobs/croco_assim.job -c /home/cnrm_other/cen/mrns/vernaym/snowtools/vortex_cen/Crocus/assim/conf/s2m_croco_test_case.ini -a datebegin=2019080106 dateend=2020080106 geometry=grandesrousses test=True
 
 ..
   Croco-assim equivalent with MPI parallelisation for OFFLINE (TODO : à tester quand Hendrix sera à nouveau accessible)
