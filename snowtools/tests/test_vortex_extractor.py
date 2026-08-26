@@ -60,6 +60,13 @@ class Test_vortex_extractor(unittest.TestCase):
         cmd = f"{self.basecmd} --configfile={self.test_ensemble_conf}"
         self.launch_cmd(cmd)
 
+# TODO : trouver un moyen de tester get_vortex_data en VPN
+#    def test_get_vortex_data(self):
+#        from snowtools.utils.xarray_snowtools import open_vortex_data
+#        with open_vortex_data(configfile=self.s2m_reanalysis_conf, configsection="SafranFlatReanalysis",
+#                datebegin='2022080106', dateend='2023080106', geometry='cor2_flat') as ds:
+#            print(ds)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -17,8 +17,10 @@ import xarray as xr
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 from bronx.fancies.loggers import getLogger
 
-import vortex
-from vortex_cen.tools.vortex_extractor import get_data
+vortex_echecker = ExternalCodeImportChecker('vortex')
+with vortex_echecker:
+    import vortex
+    from vortex_cen.tools.vortex_extractor import get_data
 
 # Prevent from showing the error log in case of unavailability of external code
 # (the unavailabilty is still mentionned at WARNING level)
@@ -36,6 +38,7 @@ __all__ = ['preprocess', 'xsb', 'xsa', 'som']
 
 
 @contextmanager
+@vortex_echecker.disabled_if_unavailable
 def open_vortex_data(configfile, configsection=None, **kw) -> xr.Dataset:
     """
     A wrapper for manipulating data archived with Vortex in a research context.
@@ -75,7 +78,7 @@ def open_vortex_data(configfile, configsection=None, **kw) -> xr.Dataset:
         # At this point all files have been removed from the working directory
 
     * With a custom configuration file, provide the absolute or relative path to the target file.
-      If this target file contains only the "DEFAULT" section or a single name section, simply do :
+      If this target file contains only the "DEFAULT" section or a single named section, simply do :
 
     .. code-block:: python
 
@@ -141,6 +144,7 @@ def open_vortex_data(configfile, configsection=None, **kw) -> xr.Dataset:
         print("No file matching the provided description")
     else:
         # Open files with the 'snowtools' backend
+        # TODO : gérer les cas ensemblistes
         with xr.open_mfdataset(listfiles, engine='snowtools') as ds:
             try:
                 # yield dataset to caller
