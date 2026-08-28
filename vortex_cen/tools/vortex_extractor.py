@@ -115,7 +115,7 @@ def get_data(configfile=None, configsection=None, **kw):
     description = read_configuration_file(description, configfile, configsection)
 
     # Update description with command-line arguments
-    for key in ["kind", "vapp", "vconf", "experiment", "username", "geometry", "block", "member"]:
+    for key in ["kind", "vapp", "vconf", "experiment", "username", "geometry", "block", "member", "duration"]:
         if kw.get(key, False):
             description.update({key: kw.get(key)})
 
@@ -248,7 +248,7 @@ def set_time_info(description, **kw):
             dateend = kw.get('dateend', None) or description.get('dateend', None)
             if datebegin is not None and dateend is not None:
                 list_dates_begin, list_dates_end, _, _ = \
-                    get_list_dates_files(Date(datebegin), Date(dateend), kw.get('duration', 'yearly') or 'yearly')
+                    get_list_dates_files(Date(datebegin), Date(dateend), description.pop('duration', 'yearly'))
                 dict_dates_end = get_dic_dateend(list_dates_begin, list_dates_end)
                 filename = '[kind]_[datebegin:ymdh]_[dateend:ymdh].nc'
                 description.update(dict(
