@@ -665,7 +665,7 @@ def pp_plots(c):
     dict_chaine['OPER'] = ' (oper)'
     dict_chaine['DBLE'] = ' (double)'
     dict_chaine['MIRR'] = ' (miroir)'
-    dict_chaine['OPER@lafaysse'] = ' (dev)'
+    dict_chaine['DEV'] = ' (dev)'
     dict_chaine['nouveaux_guess@lafaysse'] = ' (dev)'
 
     locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')

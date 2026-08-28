@@ -37,7 +37,7 @@ if len(os.listdir(c.diroutput_maps)) > 0 and len(os.listdir(c.diroutput_plots)) 
 else:
     print("no output plots. retry...")
     # import postprocess as pp
-    import snowtools.plots.pearps2m.postprocess_plot as pp
+    import snowtools.plots.pearps2m.oper_diags_plot as pp
 
     pp.main(c)
     if OPTIONS.dev:
