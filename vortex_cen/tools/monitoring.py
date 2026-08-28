@@ -88,7 +88,7 @@ class TestReportContext(_ReportContext):
 
     def _report(self, t, try_ok=True, **kw):
         """Report status of the session (test review)."""
-        outdir = t.sh.path.join(self._task.conf.test_report_dir, t.env['USER'])
+        outdir = t.sh.path.join(self._task.conf.get('test_report_dir', default_report_dir), t.env['USER'])
         if try_ok:
             t.sh.header('Test informations: everything is ok')
             with open(t.sh.path.join(outdir, 'OKTests.txt'), 'a') as f:
