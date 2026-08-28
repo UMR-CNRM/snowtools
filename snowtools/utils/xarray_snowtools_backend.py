@@ -196,14 +196,19 @@ class SnowtoolsBackendEntrypoint(BackendEntrypoint):
 
         """
         if isinstance(filename_or_obj, list):
-            return xarray.open_mfdataset(filename_or_obj, engine='snowtools', mapping=mapping, **kw)
-        else:
-            ds = xarray.open_dataset(filename_or_obj, engine='netcdf4', decode_times=False, **kw)
-            close = ds._close
-            ds = preprocess(ds, mapping=mapping)
-            ds.set_close(close)
+            if len(filename_or_obj) == 1:
+                filename_or_obj = filename_or_obj[0]
+            elif len(filename_or_obj) > 1:
+                return xarray.open_mfdataset(filename_or_obj, engine='snowtools', mapping=mapping, **kw)
+            else:
+                raise ValueError("open_dataset got an empty list as argument")
 
-            return ds
+        ds = xarray.open_dataset(filename_or_obj, engine='netcdf4', decode_times=False, **kw)
+        close = ds._close
+        ds = preprocess(ds, mapping=mapping)
+        ds.set_close(close)
+
+        return ds
 
     open_dataset_parameters = ["filename_or_obj"]
 

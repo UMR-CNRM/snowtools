@@ -88,6 +88,16 @@ def open_vortex_data(configfile, configsection=None, **kw) -> xr.Dataset:
             print(ds)
             # Your own code or call to external functions here
 
+    * With an ensemble simulation:
+
+    .. code-block:: python
+
+        from snowtools.utils.xarray_snowtools import open_vortex_data
+
+        with open_vortex_data(configfile='conf.ini', concat_dim='member', combine='nested', chunks='auto') as ds:
+            print(ds)
+            # your own code or call to external functions here
+
     **Arguments:**
 
     :param configfile: Absolute path to the configuration file or filename of an existing configuration file under
@@ -98,6 +108,15 @@ def open_vortex_data(configfile, configsection=None, **kw) -> xr.Dataset:
                           If the configuration file has no section at all besides 'DEFAULT', a dummy section is
                           created to read the variables provided in 'DEFAULT'.
     :type configsection: str
+
+    **Usefull keyword arguments**
+
+    :param chunks: xarray open_mfdataset *chunks* keyword argument
+    :type chunks: int, dict, 'auto' or None, optional
+    :param concat_dim: xarray open_mfdataset *concat_dim* keyword argument
+    :type concat_dim: str, DataArray, Index or a Sequence of these or None, optional
+    :param combine: xarray open_mfdataset *combine* keyword argument
+    :type combine:  {"by_coords", "nested"}, optional
 
     Standard keyword arguments for the description of CEN resources include :
 
@@ -139,18 +158,17 @@ def open_vortex_data(configfile, configsection=None, **kw) -> xr.Dataset:
 
     # Get list of retrieved files
     listfiles = [file.rh.container.filename for file in vortex.toolbox.inputs()]
+    listdir = [file.rh.container.dirname for file in vortex.toolbox.inputs()]
 
     if len(listfiles) == 0:
-        print("No file matching the provided description")
+        raise ValueError("No file matching the provided description")
     else:
-        # Open files with the 'snowtools' backend
-        # TODO : gérer les cas ensemblistes
-        with xr.open_mfdataset(listfiles, engine='snowtools') as ds:
-            try:
-                # yield dataset to caller
-                yield ds
-            finally:
-                # The dataset is automatically closed at exit of `with` statement,
-                # the files can now be deleted
-                for fic in listfiles:
-                    vortex.ticket().sh.rm(fic)
+        with xr.open_dataset(listfiles, engine='snowtools', **kw) as ds:
+            # yield dataset to caller
+            yield ds
+            # The dataset is automatically closed at exit of `with` statement,
+            # the files can now be deleted
+            for fic in listfiles:
+                vortex.ticket().sh.remove(fic)
+            for subdir in listdir:
+                vortex.ticket().sh.remove(subdir)

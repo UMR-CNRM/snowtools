@@ -142,6 +142,14 @@ def get_data(configfile=None, configsection=None, **kw):
     # Actual get
     rh = vortex.input(**description)
 
+    # Clean all extration-related files or directories
+    sh = vortex.ticket().sh
+    if sh.path.isfile("spawn_dump.sh"):
+        sh.rm("spawn_dump.sh")
+
+    for tmpdir in sh.glob("dactions_staging_area*"):
+        sh.remove(tmpdir)
+
     return rh
 
 
