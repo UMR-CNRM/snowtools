@@ -143,20 +143,24 @@ class _CenResearchTask(Task, CENTaskMixIn):
         # Le nombre de process et de tâches peut être associé à la géométrie via un dictionnaire, on récupère
         # maintenant la bonne valeur
         # TODO : Sortir ce qui suit de research_task_base et essayer de simplifier
-        if 'ntasks' in self.conf and isinstance(self.conf.ntasks, dict):
-            if self.conf.geometry.tag in self.conf.ntasks.keys():
-                self.conf.ntasks = self.conf.ntasks[self.conf.geometry.tag]
-            else:
-                # Default value from s2m.
-                # Maybe it would be better to crash and ask the user to set an explicit value ?
-                self.conf.ntasks = 80
-        if 'nprocs' in self.conf and isinstance(self.conf.nprocs, dict):
-            if self.conf.geometry.tag in self.conf.nprocs.keys():
-                self.conf.nprocs = self.conf.nprocs[self.conf.geometry.tag]
-            else:
-                # Default value from s2m.
-                # Maybe it would be better to crash and ask the user to set an explicit value ?
-                self.conf.nprocs = 80
+        if ('ntasks' in self.conf and isinstance(self.conf.ntasks, dict) and
+                self.conf.geometry.tag in self.conf.ntasks.keys()):
+            self.conf.ntasks = self.conf.ntasks[self.conf.geometry.tag]
+        else:
+            # Default value from s2m.
+            # Maybe it would be better to crash and ask the user to set an explicit value ?
+            self.conf.ntasks = 80
+        if ('nprocs' in self.conf and isinstance(self.conf.nprocs, dict) and
+                self.conf.geometry.tag in self.conf.nprocs.keys()):
+            self.conf.nprocs = self.conf.nprocs[self.conf.geometry.tag]
+        else:
+            # No hyperthreading
+            self.conf.nprocs = self.conf.ntasks
+        if ('nnodes' in self.conf and isinstance(self.conf.nnodes, dict) and
+                self.conf.geometry.tag in self.conf.nnodes.keys()):
+            self.conf.nnodes = self.conf.nnodes[self.conf.geometry.tag]
+        else:
+            self.conf.nnodes = 1
 
         # Format uenv properly : "uenv:{uenv_name}@user" in cas only {uenv_name} is provided
         for key, value in self.conf.items():
