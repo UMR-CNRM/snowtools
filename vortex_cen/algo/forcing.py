@@ -108,7 +108,12 @@ class ExtractMassifsWorker(_CenTaylorVortexWorker):
         """
         Method called by the main **vortex_task** method of the **_CenMixIn** class
         """
-        extract_forcing.extract(massif_num=self.massifs, ZS=self.elevations, aspect=self.aspects, slope=self.slopes)
+        try:
+            extract_forcing.extract(massif_num=self.massifs, ZS=self.elevations, aspect=self.aspects, slope=self.slopes)
+        except Exception as e:
+            rdict['rc'] = e
+        finally:
+            return rdict
 
 
 class ConcatForcings(_CenTaylorRun):
@@ -139,7 +144,7 @@ class ConcatForcings(_CenTaylorRun):
         """Create a common instruction dictionary that will be used by the workers."""
         ddict = super()._default_common_instructions(rh, opts)
         avail_forcings = self.context.sequence.effective_inputs(role=self.role_members)
-        list_forcings = [forcing.rh.container.basename for forcing in avail_forcings]
+        list_forcings = list(set([forcing.rh.container.basename for forcing in avail_forcings]))
         ddict['list_forcings'] = list_forcings
         return ddict
 
@@ -169,12 +174,11 @@ class ConcatForcingsWorker(_CenTaylorVortexWorker):
         """
         Method called by the main **vortex_task** method of the **_CenMixIn** class
         """
-        ds = xr.open_mfdataset(
-            self.list_forcings,
-            combine='nested',
-            concat_dim=self.concat_dim,
-            chunks='auto',  # Activates dask for automatic data slicing
-            # parallel=True,  # multi-threads  --> crash (TODO : understand and fix)
-            engine='snowtools',  # Apply snowtools-specific pre-processing
-        )
-        ds.to_netcdf("FORCING_OUT.nc")
+        try:
+            with xr.open_dataset(self.list_forcings, combine='nested', concat_dim=self.concat_dim,
+                    engine='snowtools') as ds:
+                ds.to_netcdf("FORCING_OUT.nc")
+        except Exception as e:
+            rdict['rc'] = e
+        finally:
+            return rdict
