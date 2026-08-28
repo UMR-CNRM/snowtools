@@ -21,23 +21,19 @@ Workflow :
 
 2. SAFRAN
 
-    * safran_analyse_ensemble : Ensemble (runs 3H, 6H, 9H) or detterministic (run 12H) SAFRAN analyses
-    (generation of "flat" FORCING files)
+    * safran_analyse_ensemble : Ensemble (runs 3H, 6H, 9H) or detterministic (run 12H) SAFRAN analyses (generation of "flat" FORCING files)
 
     * safran_analysei_prevision : Ensemble SAFRAN forecasts (generation of "flat" FORCING files)
 
 3. SURFEX
 
-    * ensemble_surfex_tasks_analysis : Update raw SAFRAN forcing files (add slopes and solar masks) + ensemble
-    SURFEX/Crocus snowpack simulations
+    * ensemble_surfex_tasks_analysis : Update raw SAFRAN forcing files (add slopes and solar masks) + ensemble SURFEX/Crocus snowpack simulations
 
-    * ensemble_surfex_tasks_forecast : Update raw SAFRAN forcing files (add slopes and solar masks) + ensemble
-    SURFEX/Crocus snowpack simulations
+    * ensemble_surfex_tasks_forecast : Update raw SAFRAN forcing files (add slopes and solar masks) + ensemble SURFEX/Crocus snowpack simulations
 
     * monthly_surfex_reanalysis : Deterministic SURFEX/Crocus snowpack simulation from the previous 01/08
 
-    * monthly_surfex_reanalysis_sytron : Deterministic SURFEX/Crocus snowpack simulation from the previous 01/08 with
-    the SYTRON snow drift module activated
+    * monthly_surfex_reanalysis_sytron : Deterministic SURFEX/Crocus snowpack simulation from the previous 01/08 with the SYTRON snow drift module activated
 
 4. Post-processing
 

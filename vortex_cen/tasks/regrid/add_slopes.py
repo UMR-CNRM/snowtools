@@ -118,6 +118,8 @@ class AddSlopes(_CenResearchTask):
         # TODO : Passer directement les objets "geometry" !
         if isinstance(self.conf.forcing_geometry, list):
             list_geometry = self.conf.forcing_geometry.tag
+        elif isinstance(self.conf.forcing_geometry, dict):
+            list_geometry = [self.conf.forcing_geometry[self.conf.geometry.tag].tag]
         else:
             list_geometry = [self.conf.forcing_geometry.tag]
 

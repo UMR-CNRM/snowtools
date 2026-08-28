@@ -16,8 +16,7 @@ Workflow :
 
 2. SURFEX inputs
 
-    * safran : Generation of "raw" SAFRAN meteorological forcing files ("flat" geometry and 1 "postes" FORCING file
-    per domain)
+    * safran : Generation of "raw" SAFRAN meteorological forcing files ("flat" geometry and 1 "postes" FORCING file per domain)
 
     * [init_TG] : Generation of an initial ground temperature]
 
@@ -29,8 +28,7 @@ Workflow :
 
     * add_slopes : Add slopes and aspects to the raw "flat" SAFRAN meteorological forcing files
 
-    * concatenation_postes : Concatenate "postes" forcing files from all domains into a single FORCING file and add
-    solar masks
+    * concatenation_postes : Concatenate "postes" forcing files from all domains into a single FORCING file and add solar masks
 
 4. SURFEX
 

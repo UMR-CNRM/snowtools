@@ -701,8 +701,8 @@ class OfflineMpi(_Offline):
             algo,
             executable,
             mpiopts={
-                "nnodes": self.conf.nnodes,  # Redondant avec la valeur par défaut dans mkjob
-                "nprocs": self.conf.nprocs,  # Redondant avec la valeur par défaut dans mkjob
+                "nnodes": self.conf.get('nnodes', 1),  # Redondant avec la valeur par défaut dans mkjob
+                "nprocs": self.conf.ntasks,  # Redondant avec la valeur par défaut dans mkjob
                 "ntasks": self.conf.ntasks,  # Redondant avec la valeur par défaut dans mkjob
             },
         )
@@ -1183,6 +1183,7 @@ class Spinup(Offline_Mpi_Uenv):
     **Task: Spinup**
 
     Run a spinup simulation to produce more realistic initial conditions for the actual simulation.
+    This task only produces PREP.nc file(s) in a *spinup* block.
     """
 
     def put_outputs(self):
@@ -1190,6 +1191,31 @@ class Spinup(Offline_Mpi_Uenv):
         Save PREP.nc files only
         """
         self.put_prep()
+
+    def put_prep(self):
+
+        self.sh.title("Output PREP")
+        prep_tbo = (
+            vortex.output(
+                local="PREP_[datevalidity:ymdh].nc",
+                role="SnowpackInit",
+                experiment=self.conf.xpid,
+                geometry=self.conf.geometry,
+                # TODO : faire une tâche spécifique "reforecast" pour la production de PREP quotidiens
+                # date           = list_dates_end_pro if not self.conf.dailyprep else
+                #                       list(daterange(tomorrow(base=datebegin), dateend)),
+                datevalidity=self.list_dates_end_pro,
+                nativefmt="netcdf",
+                kind="PREP",
+                namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
+                namebuild="flat@cen",  # TODO : passer en variable de configuration
+                block="spinup",
+                member=self.conf.get("member", None),
+                model="surfex",
+            ),
+        )
+        print(self.ticket.prompt, "prep_tbo =", prep_tbo)
+        print()
 
 
 class OfflineMpiDailyPrep(OfflineMpi):
