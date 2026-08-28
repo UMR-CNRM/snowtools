@@ -1,0 +1,7 @@
+name=spinup_alp package=drivers task=surfex_massifs profile=rd-belenos-mt geometry=alp27_allslopes
+name=spinup_pyr package=drivers task=surfex_massifs profile=rd-belenos-mt geometry=pyr24_allslopes
+name=spinup_cor package=drivers task=surfex_massifs profile=rd-belenos-mt geometry=cor2_allslopes
+name=spinup_mac package=drivers task=surfex_massifs profile=rd-belenos-mt geometry=mac11_allslopes
+name=spinup_jur package=drivers task=surfex_massifs profile=rd-belenos-mt geometry=jur4_allslopes
+name=spinup_vog package=drivers task=surfex_massifs profile=rd-belenos-mt geometry=vog3_allslopes
+name=spinup_postes package=drivers task=surfex_postes profile=rd-belenos-mt geometry=postes
