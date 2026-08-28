@@ -1178,6 +1178,20 @@ class Offline_Mpi_Uenv(OfflineMpi):
         self.get_executable_from_uenv(mpi=True)
 
 
+class Spinup(Offline_Mpi_Uenv):
+    """
+    **Task: Spinup**
+
+    Run a spinup simulation to produce more realistic initial conditions for the actual simulation.
+    """
+
+    def put_outputs(self):
+        """
+        Save PREP.nc files only
+        """
+        self.put_prep()
+
+
 class OfflineMpiDailyPrep(OfflineMpi):
     """
     Do a surfex simulation with daily prep file output.
