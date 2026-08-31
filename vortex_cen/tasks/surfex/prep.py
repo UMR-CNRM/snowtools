@@ -207,6 +207,10 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
                 overwrite=overwrite)
 
     @property
+    def datevalidity(self):
+        return self.conf.get('prep_datevalidity', self.conf.datebegin)
+
+    @property
     def namespace_out(self):
         """Namespace for output files"""
         return "vortex.cache.fr"
@@ -224,10 +228,8 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
 
     def get_local_inputs(self):
         """
-        Get OPTIONS.nam which is always in cache and
         init_TG.nc and PGD that should be in cache as well at this point.
         """
-        self.get_namelist_from_cache()
         self.get_pgd_file_from_cache()
         self.get_init_TG_from_cache_or_archive(fatal=True, cache_only=True)
 
@@ -276,7 +278,7 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
             model        = 'surfex',
             namespace    = self.namespace_out,
             namebuild    = 'flat@cen',  # TODO : passer en variable de configuration
-            block        = "prep", # finally output blocks should be fixed and input blocks configurable. self.conf.get('prep_block', 'prep'),
+            block        = 'prep',
             member       = self.conf.get('member', None),
         ),
         print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
@@ -398,7 +400,7 @@ class FetchPrepFileOrMake(_PrepConstruct):
         * ``prep_gvar`` specify the name of the PREP executable in the uenv. Default is ``master_prep_mpi``
           if the mpi parameter is True and ``master_prep_nompi`` otherwise.
         """
-        if hasattr(self.conf, 'exesurfex'):
+        if self.allow_path and hasattr(self.conf, 'exesurfex'):
             self.get_prep_exe_from_path()
         else:
             self.get_prep_exe_from_uenv()
@@ -444,7 +446,7 @@ class FetchPrepFileOrMake(_PrepConstruct):
             model       = 'surfex',
             namespace   = self.namespace_out,
             namebuild   = 'flat@cen',  # TODO : passer en variable de configuration
-            block       = "prep", # after discussion, output blocks should be fixed and input blocks configurable. self.conf.get('prep_block', 'prep'),
+            block       = 'prep',
             member      = self.conf.get('prep_member', self.conf.get('member', None)),
         ),
         print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
@@ -707,7 +709,7 @@ class MakePrepFile(_PrepConstruct):
           if the mpi parameter is True and ``master_prep_nompi`` otherwise.
         * ``mpi`` If True, *mpi* executable is fetched, if False *nompi* executable. Default: True
         """
-        if hasattr(self.conf, 'exesurfex'):
+        if self.allow_path and hasattr(self.conf, 'exesurfex'):
             self.get_prep_exe_from_path()
         else:
             mpi = self.conf.get("mpi", True)

@@ -1,4 +1,25 @@
 # -*- coding: utf-8 -*
+"""
+This script is designed to launch the real-time S2M chain.
+
+It takes the following arguments :
+    * The simulation's rundate (wich entirely defines the simulation period)
+    * The target job description file
+
+Additional arguments are available for development use only :
+    * The simulation's region (which defines both the "geometry" and the "vconf").
+      By default, simulations are launched for all operationnal regions.
+    * A "-a" argument to parse additional command-line arguments as in mkjob
+
+Standard usage example:
+
+s2m_oper -j surfex_ana -d 2026081306
+
+Usage example in a development context (simulation over one region only):
+
+s2m_oper -j surfex_ana -d 2026081306 -r cor
+
+"""
 
 import vortex
 import vortex_cen
@@ -13,7 +34,7 @@ rootdir = t.sh.path.join(vortex_cen.__path__[0], 's2m')
 
 def parse_command_line():
 
-    parser = argparse.ArgumentParser(description='mkjob command line helper')
+    parser = argparse.ArgumentParser(description='Real-time S2M simulations launcher')
 
     parser.add_argument(
         "-j",
@@ -35,6 +56,8 @@ def parse_command_line():
     parser.add_argument(
         "-r",
         "--region",
+        "--vconf",
+        dest = "region",
         help = "vconf of the operational run",
         choices = ['alp', 'pyr', 'cor', 'mac', 'vog', 'jur', 'postes'],
         type = str,
@@ -54,10 +77,10 @@ def parse_command_line():
 
 
 def execute(job, conf, rundate, additional, domain=None):
-    job_name = t.sh.path.basename(job)
+    log_name = t.sh.path.basename(job)
     if domain is not None:
-        job_name = f'{job_name}_{domain}'
-    cmd = f"mkjob -f {job}.job -c {conf} -a rundate={rundate} {additional} >> {log}/{job_name}_{rundate} 2>&1"
+        log_name = f'{log_name}_{domain}'
+    cmd = f"mkjob -f {job}.job -c {conf} -a rundate={rundate} {additional} >> {log}/{log_name}_{rundate} 2>&1"
     # print(cmd)
     t.sh.spawn(cmd, output=False, shell=True)
 

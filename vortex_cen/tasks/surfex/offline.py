@@ -351,7 +351,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
           if the mpi parameter is True and ``master_offline_nompi`` otherwise.
         * ``mpi`` If True, *mpi* executable is fetched, if False *nompi* executable. Default: True
         """
-        if hasattr(self.conf, "exesurfex"):
+        if self.allow_path and hasattr(self.conf, "exesurfex"):
             self.get_executable_from_path()
         else:
             mpi = self.conf.get("mpi", True)
@@ -379,7 +379,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
             # TODO : cette valeur par défaut pourrait être codée directement dans l'algo
             drhookprof=self.conf.get("drhook", False),
             # MV : on traitera les question de reproductibilité dans un 2nd temps.
-            # reprod_info    = self.get_reprod_info,
+            reprod_info    = self.get_reprod_info,
         )
         print(self.ticket.prompt, "Algo =", offline_tba)
         print()
@@ -409,11 +409,11 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
                 datevalidity=self.list_dates_end_pro,
                 nativefmt="netcdf",
                 kind="PREP",
-                model="surfex",
-                namespace=self.namespace_out,
+                namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block="offline",
                 member=self.conf.get("member", None),
+                model="surfex",
             ),
         )
         print(self.ticket.prompt, "prep_tbo =", prep_tbo)
@@ -431,11 +431,13 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
                 dateend=self.dict_dates_end_pro,
                 nativefmt="netcdf",
                 kind="SnowpackSimulation",
+                namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
                 model="surfex",
                 namespace=self.namespace_out,
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block="offline",
                 member=self.conf.get("member", None),
+                model="surfex",
             ),
         )
         print(self.ticket.prompt, "pro_tbo =", pro_tbo)
@@ -443,49 +445,57 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
 
     def put_cumul(self):
 
-        self.sh.title("Output CUMUL")
-        cumul_tbo = (
-            vortex.output(
-                local="CUMUL_[datebegin:ymdh]_[dateend:ymdh].nc",
-                experiment=self.conf.xpid,
-                geometry=self.conf.geometry,
-                datebegin=self.list_dates_begin_pro,
-                dateend=self.dict_dates_end_pro,
-                nativefmt="netcdf",
-                kind="SnowpackSimulation",
-                model="surfex",
-                namespace=self.namespace_out,
-                namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block="offline",
-                member=self.conf.get("member", None),
-                fatal=False,
-            ),
-        )
-        print(self.ticket.prompt, "cumul_tbo =", cumul_tbo)
-        print()
+        # WARNING : "CUMUL" resources do not differ from "PRO" resources
+        # The following toolbox will overwrites the PRO files already archived
+
+#        self.sh.title("Output CUMUL")
+#        cumul_tbo = (
+#            vortex.output(
+#                local="CUMUL_[datebegin:ymdh]_[dateend:ymdh].nc",
+#                experiment=self.conf.xpid,
+#                geometry=self.conf.geometry,
+#                datebegin=self.list_dates_begin_pro,
+#                dateend=self.dict_dates_end_pro,
+#                nativefmt="netcdf",
+#                kind="SnowpackSimulation",
+#                namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
+#                namebuild="flat@cen",  # TODO : passer en variable de configuration
+#                block="offline",
+#                member=self.conf.get("member", None),
+#                model="surfex",
+#                fatal=False,
+#            ),
+#        )
+#        print(self.ticket.prompt, "cumul_tbo =", cumul_tbo)
+#        print()
+        pass
 
     def put_diag(self):
 
-        self.sh.title("Output DIAG")
-        diag_tbo = (
-            vortex.output(
-                local="DIAG_[datebegin:ymdh]_[dateend:ymdh].nc",
-                experiment=self.conf.xpid,
-                geometry=self.conf.geometry,
-                datebegin=self.list_dates_begin_pro,
-                dateend=self.dict_dates_end_pro,
-                nativefmt="netcdf",
-                kind="SnowpackSimulation",
-                model="surfex",
-                namespace=self.namespace_out,
-                namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block="offline",
-                member=self.conf.get("member", None),
-                fatal=False,
-            ),
-        )
-        print(self.ticket.prompt, "diag_tbo =", diag_tbo)
-        print()
+        # WARNING : "CUMUL" resources do not differ from "PRO" resources
+        # The following toolbox will overwrites the PRO files already archived
+
+#        self.sh.title("Output DIAG")
+#        diag_tbo = (
+#            vortex.output(
+#                local="DIAG_[datebegin:ymdh]_[dateend:ymdh].nc",
+#                experiment=self.conf.xpid,
+#                geometry=self.conf.geometry,
+#                datebegin=self.list_dates_begin_pro,
+#                dateend=self.dict_dates_end_pro,
+#                nativefmt="netcdf",
+#                kind="SnowpackSimulation",
+#                namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
+#                namebuild="flat@cen",  # TODO : passer en variable de configuration
+#                block="offline",
+#                member=self.conf.get("member", None),
+#                model="surfex",
+#                fatal=False,
+#            ),
+#        )
+#        print(self.ticket.prompt, "diag_tbo =", diag_tbo)
+#        print()
+        pass
 
     def diff(self):
         """
@@ -1370,11 +1380,11 @@ class OfflineMpiDailyPrep(OfflineMpi):
                 datevalidity=list(daterange(tomorrow(base=self.conf.datebegin), self.conf.dateend)),
                 nativefmt="netcdf",
                 kind="PREP",
-                model="surfex",
-                namespace=self.namespace_out,
+                namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block="offline",
                 member=self.conf.get("member", None),
+                model="surfex",
             ),
         )
         print(self.ticket.prompt, "prep_tbo =", prep_tbo)
@@ -1418,7 +1428,6 @@ class OfflineAssim(OfflineMpi):
         self.get_executable_from_uenv()
 
     def get_local_inputs(self):
-        self.get_namelist_from_cache()
         self.get_pgd_file_from_cache()
 
     def get_prep_file(self):
@@ -1473,7 +1482,6 @@ class OfflineOpenloop(OfflineMpi):
 
     def get_local_inputs(self):
 
-        self.get_namelist_from_cache()
         self.get_pgd_file_from_cache()
 
     def get_prep_file(self):
@@ -1579,11 +1587,10 @@ class OfflineLocalForcing(OfflineMpi):
         self.get_drdt_bst_fit()
         self.get_namelist()
         self.get_executable()
+        self.get_forcing(localname="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc", fatal=False)
 
     def get_local_inputs(self):
         # Get PGD and PREP locally because they have been retrieved or produced by a previous task
         self.get_pgd_file_from_cache()
-        _ = self.get_prep_file_from_cache_or_archive(fatal=True, cache_only=True)
-        # Get namelist from the preprocess task output
-        # Get FORCING locally because they have already been retrieved by the preprocess task
+        # Get FORCING locally in case they have been produced by a previous task
         self.get_forcing(localname="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc")

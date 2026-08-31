@@ -5,7 +5,6 @@ This "pgd" driver allows to force the generation of a PGD.nc file (ground physio
 """
 
 from mkjob.nodes import Driver
-from vortex_cen.tasks.surfex.pre_process import PreprocessNamelist
 from vortex_cen.tasks.surfex.pgd import MakePgd
 
 
@@ -14,7 +13,6 @@ def setup(t, **kw):
         tag='pgd',
         ticket=t,
         nodes=[
-            PreprocessNamelist(tag='preprocess', ticket=t, **kw),
             MakePgd(tag='makepgd', ticket=t, **kw),
         ],
         options=kw,

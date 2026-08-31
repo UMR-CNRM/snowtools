@@ -73,6 +73,9 @@ That's all for snowtools.
 
 Each time you will need snowtools, you will have to activate the python virtual environment with ``source ~/my_envs/snowtools_env/bin/activate``. When you have finissed your work, you can leave the virtual environment by using the ``deactivate`` command.
 
+.. note::
+   It is possible to switch back to a "snowtools2" installation by sourcing the file cenutils/switch_to_snowtools2
+
 Additional optional dependencies and configuration
 --------------------------------------------------
 
@@ -81,6 +84,7 @@ Optional dependecines of the snowtools package
 
 By default, we recommend external users use the ``plot`` optional dependencies and developers have all optional dependencies by using the ``all`` optional dependency. However a finer granularity is available if needed :
 
+- ``sql`` : extraction from MF databases
 - ``plot`` : tools for plotting, including plotting tools of simulation outputs
 - ``scores`` : CRPS score computation
 - ``vortex`` : Tools to work with vortex
@@ -91,7 +95,7 @@ By default, we recommend external users use the ``plot`` optional dependencies a
 Additional dependencies that have to be installed manually
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**GDAL** is a dependency for some geopsatial processings. You first need to install gdal binaries (e.g. on Ubuntu, run ``sudo apt install libgdal libgdal-dev``, already installed on Meteo-France machines). Then, you need to install the python binding manually to be consistently with your installed ``libgdal-dev`` version by running: ``pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="$(gdal-config --cflags)"``.
+**GDAL** is a dependency for some geopsatial processings. You first need to install gdal binaries (e.g. on Ubuntu, run ``sudo apt install libgdal libgdal-dev``, already installed on Meteo-France machines). Then, you need to install the python binding manually to be consistently with your installed ``libgdal-dev`` version by running: ``pip install --no-cache gdal[numpy]=="$(gdal-config --version).*"`` (please make sure ``numpy``, ``wheel`` and ``setuptools>=67`` are installed beforehand).
 
 Optional additional denpendencies on nexus
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

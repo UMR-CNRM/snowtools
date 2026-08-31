@@ -423,7 +423,8 @@ class _CenResearchTask(Task, CENTaskMixIn):
             # nmembers is the number of ensemble members (int)
             return rangex(1, self.conf.nmembers)
 
-    def get_forcing(self, localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc', namespace='vortex.multi.fr'):
+    def get_forcing(self, localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc', namespace='vortex.multi.fr',
+            fatal=True):
         """
         Method to get meteorological forcing file(s) covering the simulation period.
         Look for files covering sub-periods defined by the `io_duration` configuration variable (current values:
@@ -491,8 +492,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
         t = self.ticket
 
         forcing_datebegin = self.conf.get('forcing_datebegin', self.conf.get('datebegin', None))
-        forcing_dateend   = self.conf.get('forcing_dateend', self.conf.get('dateend', None))
-        forcing_date      = self.conf.get('forcing_date', self.conf.get('dateend', None))  # oper only
+        forcing_dateend = self.conf.get('forcing_dateend', self.conf.get('dateend', None))
         forcing_xpid      = self.conf.get('forcing_xpid', self.conf.xpid)
         forcing_user      = self.conf.get('forcing_user', None)
         forcing_vapp      = self.conf.get('forcing_vapp', self.conf.vapp)
@@ -553,11 +553,11 @@ class _CenResearchTask(Task, CENTaskMixIn):
             namespace      = namespace,  # default : 'vortex.multi.fr',
             namebuild      = forcing_namebuild,  # default recherche : 'flat@cen', defaut oper : None
             vortex1        = vortex1,
-            date           = forcing_date,  # oper only
+            date           = '[dateend]',  # TODO : à supprimer (cas recherche uniquement)
             source_app     = forcing_source_app,  # default = None (ne pas refaire l'erreur)
             source_conf    = forcing_source_conf,  # default = None (ne pas refaire l'erreur)
             cutoff         = forcing_cutoff,  # TODO : à supprimer dans le cas recherche
-            fatal          = True,
+            fatal          = fatal,
         ),
         print(t.prompt, 'FORCING =', forcing)
         print()

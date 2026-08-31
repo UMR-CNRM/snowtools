@@ -226,7 +226,7 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
     def get_local_inputs(self):
         # TODO : Make a "FetchBackgroundOrCrash" class to put the driver in other situations (ex : unit tests)
         self.get_background()
-        self.get_pgd_from_cache()
+        self.get_pgd_file_from_cache()
 
     def algo(self):
 
@@ -244,15 +244,8 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
         return algo
 
     def launch_algo(self, algo, **kwargs):
-
-        executable = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
-        self.component_runner(algo, executable,
-            mpiopts=dict(
-                nnodes=self.conf.get('nnodes', 1),
-                nprocs=self.conf.get('nprocs', 1),
-                ntasks=self.conf.get('ntasks', 1)
-            )
-        )
+        # Launch without MPI parallelisation
+        self.launch_executable(algo)
 
     def put_outputs(self):
 

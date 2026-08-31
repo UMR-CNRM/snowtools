@@ -211,25 +211,61 @@ Reproductible simulations with a user-controlled SURFEX/Crocus configuration
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 The default SURFEX/Crocus simulations described on the sections above are based on reference SURFEX/Crocus executables and namelists.
-
+You can use your own SURFEX executables, either by adding them in an existing uenv (:ref:`uenv_modification`), either in a separate user environment as described bellow.
 
 In order to produce reproducible simulations, it is recomended to compile SURFEX with the "compile_surfex_hpc.sh" script (under cenutils).
 This script compiles the SURFEX binaries and put them in a proper, ready-to-use User Environment.
 The only mandatory argument is the target SURFEX repository (--surfex_dir).
 The MPI compilation option and the optimisation level can additionaly be provided with the --ver_mpi ("MPI" by default, or "NOMPI") and --optlevel ("O2" by default or "DEBUG") arguments respectively.
 
-A proper, ready-to-use User Environment containing the compiled binaries is automatically created with a standard name "surfex_executables_${VER_MPI}_${surfex_commit}".
+A proper, ready-to-use User Environment containing the compiled binaries is automatically created with a standard name "surfex_executables_${VER_MPI}_${surfex_commit}" (which is displayed on screen at the end of the comilation script). You can use this uenv in your simulations by adding the following configuration variable in your configuration file:
 
-When possible, the associated SURFEX commit number is added directly into the binaries and uenv names with the following rules:
+.. code-block::
 
-* Compiling directly from a Git repository ensures that the compiled binaries can be associated with a SURFEX commit, and checks whether this commit is present in the remote Git repository. Uncommitted local changes are signaled with an additional "uncommitted_local_changes" suffix.
+   surfex_uenv=uenv:<new_env_name>@<your_username>
 
-* Compiling from a 'mirror' directory synchronised with a Git repository using the 'cenutils/put' script enables tracking of the most recent SURFEX commit. However, uncommitted local changes cannot be detected, so the commit will be tagged as 'uncertain'.
+.. note::
 
-* Compiling from a directory with no information on the SURFEX commit will produce executables tagged as "Unknown"
+   The "compile_surfex_hpc.sh" final message specify the configuration variables to add to your configuration file to use the produced executables.
 
-The "compile_surfex_hpc.sh" final message specify the configuration variables to add to your configuration file to use the produced executables.
+   When possible, the associated SURFEX commit number is added directly into the binaries and uenv names with the following rules:
 
+   * Compiling directly from a Git repository ensures that the compiled binaries can be associated with a SURFEX commit, and checks whether this commit is present in the remote Git repository. Uncommitted local changes are signaled with an additional "uncommitted_local_changes" suffix.
+
+   * Compiling from a 'mirror' directory synchronised with a Git repository using the 'cenutils/put' script enables tracking of the most recent SURFEX commit. However, uncommitted local changes cannot be detected, so the commit will be tagged as 'uncertain'.
+
+   * Compiling from a directory with no information on the SURFEX commit will produce executables tagged as "Unknown"
+
+If you want to add these executables to an existing uenv named <new_uenv>, first create the <new_uenv> from an existing <old_uenv> one owen by user <uenv_owner>:
+
+.. code-block::
+
+   uget hack <old_uenv>@<uenv_owner> into <new_uenv>
+
+Then remove the lines refering to SURFEX executables in your <new_uenv> (if any):
+
+.. code-block::bash
+
+   cd $HOME/.vortexrc/hack/uget/<username>/env
+   sed -i -E '/MASTER_OFFLINE|MASTER_PGD|MASTER_PREP|MASTER_SODA/d' <new_uenv>
+
+Finaly, copy the lines from file file surfex_executables_${VER_MPI}_${surfex_commit} into the file <new_uenv>:
+
+.. code-block::bash
+
+   cat surfex_executables_${VER_MPI}_${surfex_commit} >> <new_uenv>
+
+Your uenv <new_uenv> is now ready to use in your simulations with the following configuration variable in your configuration file:
+
+.. code-block::
+
+   uenv=uenv:<new_uenv>@<username>
+
+Once your uenv is comlete, archive it with:
+
+.. code-block::
+
+   uget push env <new_uenv>
 
 ..
   To create a new UEnv, open a file in $HOME/.vortexrc/hack/uget/<your_username>/env with the name of your choice (for example "new_env_name").
@@ -259,7 +295,7 @@ Reproductible simulations with custom SURFEX namelists
 
 You can use your own namelists by creating a new user environment from an existing one (:ref:`uenv_modification`).
 
-To do so, put your SURFEX namelists in the $HOME/.vortexrc/hack/uget/<your_username>/data/namelists_surfex_vXX directory, and replace the following line starting with "NAMELIST_SURFEX" in the file $HOME/.vortexrc/hack/uget/<your_username>/env/<new_env_name> with :
+To do so, put your SURFEX namelists in the $HOME/.vortexrc/hack/uget/<your_username>/data/namelists_surfex_vXX directory, and replace the line starting with "NAMELIST_SURFEX" in the file $HOME/.vortexrc/hack/uget/<your_username>/env/<new_env_name> with :
 
 .. code-block::
 
@@ -267,7 +303,7 @@ To do so, put your SURFEX namelists in the $HOME/.vortexrc/hack/uget/<your_usern
 
 You can now use your own namelists by adding the "namelist_surfex_uenv=uenv:<new_env_name>@<your_username>" configuration variable to your configuration file.
 Specify the name of your target namelist from your pool of namelists with the *namelist_source* variable.
-For example if your $HOME/.vortexrc/hack/uget/<your_username>/data/namelists_surfex_vXX directory contains two namelists named "OPTIONS_PAPPUS.nam" and "OPTIONS_NO_PAPPUS.nam", you can choose to use the "OPTIONS_PAPPUS.nam" namelist with the following block in a "first_test.ini" configuration file deriving from the "default_conf.ini" configuration file :
+For example if your $HOME/.vortexrc/hack/uget/<your_username>/data/namelists_surfex_vXX directory contains two namelists named "OPTIONS_PAPPUS.nam" and "OPTIONS_NO_PAPPUS.nam", you can choose to use the "OPTIONS_PAPPUS.nam" namelist with the following lines in your configuration file "first_test.ini":
 
 .. code-block::
 
@@ -421,7 +457,7 @@ Equivalent command in snowtools3 :
 
 .. code-block:: bash
 
-    mkjob -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/s2m_reanalysis_testcase.ini -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -a datebegin=2022080106 dateend=2023080106 geometry=alp_allslopes
+    mkjob -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/s2m_reanalysis_testcase.ini -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -a datebegin=2022080106 dateend=2023080106 geometry=alp_allslopes test=True
 
 
 S2M ESCROC test case
@@ -437,7 +473,7 @@ Equivalent command in snowtools3:
 
 .. code-block:: bash
 
-    mkjob -c $SNOWTOOLS_CEN/vortex_cen/Crocus/escroc/conf/s2m_escroc_testcase.ini -f $SNOWTOOLS_CEN/vortex_cen/Crocus/escroc/jobs/escroc.job -a datebegin=1994100101 dateend=2014100100 geometry=cdp
+    mkjob -c $SNOWTOOLS_CEN/vortex_cen/Crocus/escroc/conf/s2m_escroc_testcase.ini -f $SNOWTOOLS_CEN/vortex_cen/Crocus/escroc/jobs/escroc.job -a datebegin=1994100101 dateend=2014100100 geometry=cdp test=True
 
 Stochastic perturbations test case
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -452,7 +488,7 @@ Equivalent command in snowtools3:
 
 .. code-block:: bash
 
-    mkjob -c $SNOWTOOLS_CEN/vortex_cen/meteo/semidistributed/conf/s2m_stochastic_perturbation_test_case.ini -f $SNOWTOOLS_CEN/vortex_cen/meteo/semidistributed/jobs/perturbations.jobs -a datebegin=2020080106 dateend=2021080106 geometry=cor_flat
+    mkjob -c $SNOWTOOLS_CEN/vortex_cen/meteo/semidistributed/conf/s2m_stochastic_perturbation_test_case.ini -f $SNOWTOOLS_CEN/vortex_cen/meteo/semidistributed/jobs/perturbations.jobs -a datebegin=2020080106 dateend=2021080106 geometry=cor_flat test=True
 
 
 Croco openloop test case
@@ -479,7 +515,7 @@ Equivalent command in snowtools3:
 
 .. code-block:: bash
 
-   mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/assim/jobs/croco_openloop.job -c /home/cnrm_other/cen/mrns/vernaym/snowtools/vortex_cen/Crocus/assim/conf/s2m_croco_test_case.ini -a datebegin=2019080106 dateend=2020080106 geometry=grandesrousses
+   mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/assim/jobs/croco_openloop.job -c /home/cnrm_other/cen/mrns/vernaym/snowtools/vortex_cen/Crocus/assim/conf/s2m_croco_test_case.ini -a datebegin=2019080106 dateend=2020080106 geometry=grandesrousses test=True
 
 .. note::
 
@@ -510,7 +546,7 @@ Croco-assim command in snowtools3 :
 
 .. code-block::
 
-   mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/assim/jobs/croco_assim.job -c /home/cnrm_other/cen/mrns/vernaym/snowtools/vortex_cen/Crocus/assim/conf/s2m_croco_test_case.ini -a datebegin=2019080106 dateend=2020080106 geometry=grandesrousses
+   mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/assim/jobs/croco_assim.job -c /home/cnrm_other/cen/mrns/vernaym/snowtools/vortex_cen/Crocus/assim/conf/s2m_croco_test_case.ini -a datebegin=2019080106 dateend=2020080106 geometry=grandesrousses test=True
 
 ..
   Croco-assim equivalent with MPI parallelisation for OFFLINE (TODO : à tester quand Hendrix sera à nouveau accessible)
@@ -562,4 +598,25 @@ s2m unit test:
 Equivalent command in snowtools3:
 TODO : voir avec Sabine quand ça sera prêt
 
+Specific launchers
+------------------
 
+The s2m_reanalysis launcher
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: vortex_cen.scripts.s2m_reanalysis
+
+The s2m_oper launcher
+^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: vortex_cen.scripts.s2m_oper
+
+.. note::
+
+   The s2m_oper script is used to operate the S2M real time chain.
+   The scheduling of the different elements of the chain can be done by installing the cron provided in the file vortex_cen/s2m/oper/cron.txt
+
+The assim launcher
+^^^^^^^^^^^^^^^^^^
+
+.. automodule:: vortex_cen.scripts.assim

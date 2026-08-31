@@ -555,7 +555,7 @@ class MakePgd(_PgdConstruct):
         """
         get PGD executable either from local path or from a UEnv
         """
-        if hasattr(self.conf, "exesurfex"):
+        if self.allow_path and hasattr(self.conf, "exesurfex"):
             self.get_pgd_exe_from_local_path()
         else:
             self.get_pgd_exe_from_uenv()
@@ -725,7 +725,7 @@ class FetchPgdFileOrMake(_PgdConstruct):
         """
         get PGD executable from uenv or local path
         """
-        if hasattr(self.conf, "exesurfex"):
+        if self.allow_path and hasattr(self.conf, "exesurfex"):
             self.get_pgd_exe_from_local_path()
         else:
             self.get_pgd_exe_from_uenv()
@@ -754,6 +754,10 @@ class FetchPgdFileOrMake(_PgdConstruct):
             pass
         else:
             super().launch_algo(algo)
+
+    def diff(self):
+        # This is a non-reproducible task anyway
+        pass
 
 
 class FetchPgdFileOrCrash(FetchPgdFileOrMake):

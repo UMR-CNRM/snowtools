@@ -117,14 +117,15 @@ if '-sidev' in HOSTNAME:
     # On SOPRANO servers, the following pip arguments are required to enable the connexion to PyPI
     pip_options = ['--trusted-host', 'pypi.org', '--trusted-host', 'pypi.python.org', '--trusted-host',
             'files.pythonhosted.org']
+elif 'hpc' in HOSTNAME:
+    pip_options = ['--find-links', '/home/verolive/wheels']
 else:
     pip_options = list()
 
 # Ensure to use the latest available pip version
-# print("Running command:")
-# print(f"{pip} install --upgrade pip")
-# subprocess.run([pip, 'install'] + pip_options + ['--upgrade', 'pip'], check=True)
-
+print("Running command:")
+print(f"{pip} install --upgrade pip")
+subprocess.run([pip, 'install'] + pip_options + ['--upgrade', 'pip'], check=True)
 
 # Snowtools installation
 # ----------------------
@@ -154,11 +155,11 @@ elif os.path.exists('.git_info'):
 
 # TEMPORARY step to install dev versions of mkjob, vortex-gco and vortex-olive on HPC while the access to nexus in
 # blocked
-if 'hpc' in HOSTNAME:
-    install_dir = "/home/cnrm_other/cen/mrns/vernaym/Projects/common"
-    for package in ["mkjob", "vortex-gco", "vortex-olive"]:
-        target = os.path.join(install_dir, package)
-        subprocess.run([pip, 'install', target], check=True)
+#if 'hpc' in HOSTNAME:
+#    install_dir = "/home/cnrm_other/cen/mrns/vernaym/Projects/common"
+#    for package in ["mkjob", "vortex-gco", "vortex-olive"]:
+#        target = os.path.join(install_dir, package)
+#        subprocess.run([pip, 'install', target], check=True)
 
 # Configure Vortex
 vortex_config = os.path.join(os.environ['HOME'], '.vortex.d', 'vortex.toml')

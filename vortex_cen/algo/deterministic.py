@@ -38,6 +38,7 @@ Algo Components for deterministic Surfex simulations.
 """
 
 import numpy as np
+import xarray as xr
 
 import footprints
 from bronx.fancies import loggers
@@ -53,10 +54,10 @@ echecker = ExternalCodeImportChecker("snowtools")
 with echecker:
     from snowtools.tools.change_prep import prep_tomodify
     from snowtools.tools.initTG import generate_clim
-    from snowtools.tools.massif_diags import massif_simu
+    from snowtools.utils import xarray_snowtools  # noqa
+    from snowtools.utils.FileException import MultipleValueException
     from snowtools.tools.update_namelist import update_surfex_namelist_object
     from snowtools.utils.resources import save_file_date, save_file_period
-    from snowtools.utils.FileException import MultipleValueException
 
 
 @echecker.disabled_if_unavailable
@@ -113,10 +114,7 @@ class Surfex_PreProcess(AlgoComponent):
             first_forcing = self.context.sequence.effective_inputs(kind="FORCING")[0].rh
             forcingname = first_forcing.container.localpath()
             newcontent = update_surfex_namelist_object(
-                namelist.contents,
-                self.datebegin,
-                forcing=self.forcingname,
-                dateend=self.dateend
+                namelist.contents, self.datebegin, forcing=forcingname, dateend=self.dateend
             )
             # Save input namelist for comparison
             self.system.cp(namelist.container.basename, namelist.container.basename.rstrip(".nam") + "_IN.nam")
@@ -148,39 +146,12 @@ class Generate_Clim_TG(AlgoComponent):
 
 class SurfexMixIn(_CenMixIn):
 
-    _footprint = dict(
-        info="AlgoComponent designed to run SURFEX experiments over large domains with MPI parallelization.",
-        attr=dict(
-            # Unused ?
-            # binary = dict(
-            #     values = ['OFFLINE'],
-            # ),
-            datebegin=dict(info="The first date of the simulation.", type=Date, optional=False),
-            dateend=dict(info="The final date of the simulation.", type=Date, optional=False),
-            dateinit=dict(
-                info="The initialization date if different from the starting date.",
-                type=Date,
-                optional=True,
-                default="[datebegin]",
-            ),
-            threshold=dict(info="Threshold on snow water equivalent on August 1st.", type=int,
-                           optional=True, default=-999),
-            daily=dict(
-                info="If True, split simulations in daily runs",
-                type=bool,
-                optional=True,
-                default=False,
-            ),
-            reprod_info=dict(
-                info="Informations that must be stored in output files for reproductibility",
-                type=dict,
-                optional=True,
-                default=dict(),
-            ),
-        ),
-    )
-
-    def execute(self, rh, opts):
+    def execute_offline(self, rh, opts):
+        """
+        This should become the main methdo to execute OFFLINE.
+        Application-specific methods should be called beforehand to ensure that
+        the current working directory contains all necessary input files.
+        """
 
         need_other_run = True
         need_other_forcing = True
@@ -212,7 +183,8 @@ class SurfexMixIn(_CenMixIn):
             # Rename outputs with the dates
             save_file_date(".", "SURFOUT", dateend_this_run, newprefix="PREP")
 
-            self.surfex_postprocess(datebegin_this_run, dateend_this_run)
+            # Post-process
+            self.offline_postprocess(datebegin_this_run, dateend_this_run)
 
             if need_other_forcing:
                 # Remove the symbolic link for next iteration
@@ -326,6 +298,41 @@ class SurfexMixIn(_CenMixIn):
         else:
             print("DO NOT CHANGE THE PREP FILE.")
 
+    @property
+    def get_standard_metadata_section(self):
+        """
+        Return the section name to use in the Standard_Output_Metadata.ini configuration file
+        """
+        if self.reprod_info.get('vapp', None) == 's2m':
+            if self.reprod_info.get('vconf', None) == 'reanalysis':
+                product = "S2MReanalysis"
+            elif self.reprod_info.get('vconf', None) in ['alp', 'pyr', 'cor', 'mac', 'vog', 'jur', 'postes']:
+                product = "S2MOper"
+        else:
+            product = None
+        return product
+
+    def offline_postprocess(self, datebegin_this_run, dateend_this_run):
+        """
+        Post-processing of SURFEX output files.
+
+        Add standard and reproducibility onformation in output files attributes.
+        """
+
+        # Add massif natural risk diagnostics to output PRO files
+        with xr.open_dataset("ISBA_PROGNOSTIC.OUT.nc", engine='snowtools') as pro:
+            pro = pro.surfex.massif_natural_risk()
+            pro.crocus.GlobalAttributes(product=self.get_standard_metadata_section, **self.reprod_info)
+            #pro.crocus.add_standard_names()  # Already called by GlobalAttributes
+            pro.to_netcdf(f'PRO_{datebegin_this_run.ymdh}_{dateend_this_run.ymdh}.nc')
+
+        #save_file_period(".", "ISBA_PROGNOSTIC.OUT", datebegin_thisrun, dateend_this_run, newprefix="PRO")
+
+        if self.system.path.isfile("ISBA_DIAGNOSTICS.OUT.nc"):
+            save_file_period(".", "ISBA_DIAGNOSTICS.OUT", datebegin_this_run, dateend_this_run, newprefix="DIAG")
+        if self.system.path.isfile("ISBA_DIAG_CUMUL.OUT.nc"):
+            save_file_period(".", "ISBA_DIAG_CUMUL.OUT", datebegin_this_run, dateend_this_run, newprefix="CUMUL")
+
 
 class Pgd_Parallel_from_Forcing(Parallel, SurfexMixIn):
     """
@@ -396,21 +403,6 @@ class Surfex_Parallel(Parallel, DrHookDecoMixin, SurfexMixIn):
         ),
     )
 
-    def surfex_postprocess(self, datebegin_this_run, dateend_this_run):
-        # Post-process
-        pro = massif_simu("ISBA_PROGNOSTIC.OUT.nc", openmode="a")
-        pro.massif_natural_risk()
-        pro.dataset.GlobalAttributes(**self.reprod_info)
-        pro.dataset.add_standard_names()
-        pro.close()
-
-        save_file_period(".", "ISBA_PROGNOSTIC.OUT", datebegin_this_run, dateend_this_run, newprefix="PRO")
-
-        if self.system.path.isfile("ISBA_DIAGNOSTICS.OUT.nc"):
-            save_file_period(".", "ISBA_DIAGNOSTICS.OUT", datebegin_this_run, dateend_this_run, newprefix="DIAG")
-        if self.system.path.isfile("ISBA_DIAG_CUMUL.OUT.nc"):
-            save_file_period(".", "ISBA_DIAG_CUMUL.OUT", datebegin_this_run, dateend_this_run, newprefix="CUMUL")
-
     def execute(self, rh, opts):
         self.execute_offline(rh, opts)
 
@@ -459,7 +451,7 @@ class Surfex_Xios_Parallel(Parallel, ParallelIoServerMixin, SurfexMixIn, DrHookD
         },
     }
 
-    def surfex_postprocess(self, datebegin_this_run, dateend_this_run):
+    def offline_postprocess(self, datebegin_this_run, dateend_this_run):
 
         save_file_period(".", "PRO_nosl.nc", datebegin_this_run, dateend_this_run, newprefix="PRO_nosl")
         save_file_period(".", "PRO_sl1.nc", datebegin_this_run, dateend_this_run, newprefix="PRO_sl1")
