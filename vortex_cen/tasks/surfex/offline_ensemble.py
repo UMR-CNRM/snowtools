@@ -102,7 +102,7 @@ class Escroc(_Offline):
       type: str
     * ``prep_vconf`` *vconf* of the PREP file, if different from the task's *vconf*
       type: str
-    * ``prep_date`` Validity date of the PREP file (if different from *datebegin*)
+    * ``prep_datevalidity`` Validity date of the PREP file (if different from *datebegin*)
       type: str
     * ``prep_block`` *block* of the PREP file (default 'prep', but can be different after an assimilation step)
       type: str
@@ -158,8 +158,6 @@ class Escroc(_Offline):
       type forcing_namespace: str
     * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
       type forcing_date: str
-    * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
-      type forcing_model: str
 
     **Optional**
 
@@ -216,6 +214,9 @@ class Escroc(_Offline):
         """
         Algo component to execute OFFLINE several time in parallel with different namelists.
         """
+
+        ctx = self.ticket.context
+
         self.sh.title('Algo OFFLINE-ESCROC')
         algo = vortex.task(
             kind           = "escroc",
@@ -225,7 +226,7 @@ class Escroc(_Offline):
             # MV TODO : gérer la conversion en Date dans l'algo
             datebegin      = Date(self.conf.datebegin),
             dateend        = Date(self.conf.dateend),
-            dateinit       = Date(self.conf.get('prep_date', self.conf.datebegin)),
+            dateinit       = ctx.sequence.effective_inputs(role="SnowpackInit")[0].rh.resource.datevalidity,
             # MV TODO :  La valeur par défaut de "threshold" est à sortir de la tâche
             threshold      = self.conf.get('august_threshold', -999),
             members        = self.get_list_members(),
@@ -258,13 +259,13 @@ class Escroc(_Offline):
             dateend        = self.dict_dates_end_pro,
             nativefmt      = 'netcdf',
             kind           = 'SnowpackSimulation',
-            # model          = 'surfex',
             # TODO : le storage de sortie devrait être traité à plus haut niveau, en créant une variable de conf
             # dans la methode "defaults" 'research_task_base'
             storage        = self.conf.get('output_storage', None),
             namespace      = self.namespace_out,
             namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
             block          = 'pro',
+            model          = 'surfex',
             member         = self.get_list_members(),
         ),
         print(self.ticket.prompt, 'pro =', pro)
@@ -281,10 +282,10 @@ class Escroc(_Offline):
             datevalidity   = self.list_dates_end_pro,
             nativefmt      = 'netcdf',
             kind           = 'PREP',
-            model          = 'surfex',
             namespace      = self.namespace_out,
             namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
             block          = 'prep',
+            model          = 'surfex',
             member         = self.get_list_members(),
         ),
         print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
@@ -300,6 +301,15 @@ class CrocO(Escroc):
 
     Multiple executions of an OFFLINE binary with an ensemble of FORCING files
     and potentially different Crocus physics (namelists).
+
+    This task is strongly linked to the croco driver (vortex_cen/Crocus/assim/drivers/croco.py).
+
+    In particular, some configuration variables derived from the list of assimilation dates
+    (configuration variable "assimdates" provided in the configuration file by the user) come
+    from the internal loop within the croco driver :
+    * ``assimdate_prev`` refers to the assimilation date of the last interation
+    * ``assimdate`` (singular !) refers to the assimilation date of the current iteration
+    * ``assimdate_next`` refers to the assimilation date of the next iteration
 
     **Mandatory configuration variables:**
 
@@ -346,7 +356,7 @@ class CrocO(Escroc):
       type: str
     * ``prep_vconf`` *vconf* of the PREP file, if different from the task's *vconf*
       type: str
-    * ``prep_date`` Validity date of the PREP file (if different from *datebegin*)
+    * ``prep_datevalidity`` Validity date of the PREP file (if different from *datebegin*)
       type: str
     * ``prep_block`` *block* of the PREP file (default 'prep', but can be different after an assimilation step)
       type: str
@@ -402,8 +412,6 @@ class CrocO(Escroc):
       type forcing_namespace: str
     * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
       type forcing_date: str
-    * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
-      type forcing_model: str
 
     **Optional**
 
@@ -433,25 +441,74 @@ class CrocO(Escroc):
 
     """
 
-    # TODO (MV) : Clarifier la distinction entre les algos "escroc" (multi-physiue uniquement) et "croco"
-    # (ensemble météo + multiphysique optionelle).
-    # --> Faire des algos distincts
+    def get_prep_file_from_cache_or_archive(self, fatal=True, cache_only=False, local="PREP.nc"):
+        """
+        The input PREP depends on the iteration in the crocO task:
+        * the first iteration fethes the single PREP file as defined by the user in the configuration file
+        * the next iteration are the output of a SODA execution
+        """
+
+        if self.conf.get('assimdate_prev', None) is None:
+            # First iteration
+            super().get_prep_file_from_cache_or_archive()
+        else:
+            # Get a SODA analysis
+            prep = vortex.input(
+                role           = 'Analysis',
+                local          = local,
+                experiment     = self.conf.xpid,
+                datevalidity   = self.conf.assimdate,
+                vapp           = self.conf.vapp,
+                vconf          = self.conf.vconf,
+                geometry       = self.conf.geometry,
+                nativefmt      = 'netcdf',
+                kind           = 'PREP',
+                model          = 'surfex',
+                namespace      = 'vortex.cache.fr',
+                namebuild      = 'flat@cen',
+                block          = 'analysis',
+                member         = self.get_list_members(),
+                intent         = 'inout',
+                fatal          = True,
+            ),
+            print(self.ticket.prompt, 'Analysis =', prep)
+            print()
+
+    def get_executable(self):
+        self.get_executable_from_uenv(mpi=True)
+
+    def next_datebegin(self):
+        if self.conf.get('assimdate_prev', None) is None:
+            return self.conf.datebegin
+        else:
+            return Date(self.conf.assimdate_prev)
+
+    def next_dateend(self):
+        if self.conf.get('assimdate', None) is None:
+            return self.conf.dateend
+        else:
+            return Date(self.conf.assimdate)
 
     def algo(self):
         """
         Algo component to execute OFFLINE several times in parallel
         """
 
-        self.sh.title('Algo Offline-CorcO')
+        ctx = self.ticket.context
+
+        # TODO (MV) : Clarifier la distinction entre les algos "escroc" (multi-physiue uniquement) et "croco"
+        # (ensemble météo + multiphysique optionelle).
+        # --> Faire des algos distincts
+        self.sh.title('Algo Offline-CrocO')
         croco_tba = vortex.task(
             engine         = 'blind',
             kind           = "croco",
             # binary         = 'OFFLINE',  # unused
             verbose        = True,
             # MV TODO : gérer la conversion en Date dans l'algo
-            datebegin      = Date(self.conf.datebegin),
-            dateend        = Date(self.conf.dateend),
-            dateinit       = Date(self.conf.get('prep_date', self.conf.datebegin)),
+            datebegin      = self.next_datebegin(),
+            dateend        = self.next_dateend(),
+            dateinit       = ctx.sequence.effective_inputs(role="SnowpackInit")[0].rh.resource.datevalidity,
             # MV TODO :  La valeur par défaut de "threshold" est à sortir de la tâche
             threshold      = self.conf.get('august_threshold', -999),
             members        = self.get_list_members(),
@@ -467,6 +524,51 @@ class CrocO(Escroc):
         print(self.ticket.prompt, 'Algo =', croco_tba)
         print()
         return croco_tba
+
+    def put_pro(self):
+
+        # TODO : Gérer les différentes sous-période avec la loopvariable "dateassim"
+
+        self.sh.title('Output PRO')
+        pro = vortex.output(
+            local          = 'mb[member%04d]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+            experiment     = self.conf.xpid,
+            geometry       = self.conf.geometry,
+            datebegin      = self.next_datebegin(),
+            dateend        = self.next_dateend(),
+            nativefmt      = 'netcdf',
+            kind           = 'SnowpackSimulation',
+            # TODO : le storage de sortie devrait être traité à plus haut niveau, en créant une variable de conf
+            # dans la methode "defaults" 'research_task_base'
+            storage        = self.conf.get('output_storage', None),
+            namespace      = self.namespace_out,
+            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
+            block          = 'pro',
+            model          = 'surfex',
+            member         = self.get_list_members(),
+        ),
+        print(self.ticket.prompt, 'pro =', pro)
+        print()
+
+    def put_prep(self):
+
+        self.sh.title('Output PREP')
+        prep_tbo = vortex.output(
+            local          = 'mb[member%04d]/PREP_[datevalidity:ymdh].nc',
+            role           = 'SnowpackInit',
+            experiment     = self.conf.xpid,
+            geometry       = self.conf.geometry,
+            datevalidity   = self.next_dateend(),
+            nativefmt      = 'netcdf',
+            kind           = 'PREP',
+            namespace      = self.namespace_out,
+            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
+            block          = 'offline',
+            model          = 'surfex',
+            member         = self.get_list_members(),
+        ),
+        print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
+        print()
 
 
 class EscrocResearch(Escroc):
@@ -534,7 +636,7 @@ class EscrocResearch(Escroc):
       type: str
     * ``prep_vconf`` *vconf* of the PREP file, if different from the task's *vconf*
       type: str
-    * ``prep_date`` Validity date of the PREP file (if different from *datebegin*)
+    * ``prep_datevalidity`` Validity date of the PREP file (if different from *datebegin*)
       type: str
     * ``prep_block`` *block* of the PREP file (default 'prep', but can be different after an assimilation step)
       type: str
@@ -590,8 +692,6 @@ class EscrocResearch(Escroc):
       type forcing_namespace: str
     * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
       type forcing_date: str
-    * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
-      type forcing_model: str
 
     **Optional**
 
@@ -643,10 +743,10 @@ class EscrocResearch(Escroc):
 
     def get_local_inputs(self):
         # Get PGD and PREP locally because they have been retrieved or produced by a previous task
-        self.get_pgd()
-        self.get_prep()
+        self.get_pgd_from_cache()
+        self.get_prep_file_from_cache_or_archive(fatal=True, cache_only=True)
         # Get namelist from the preprocess task output
-        self.get_namelist_from_cache()
+        self.get_namelist()
         # Get FORCING locally because they have already been retrieved by the preprocess task
         self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
 

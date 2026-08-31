@@ -21,6 +21,8 @@ class Test_vortex_extractor(unittest.TestCase):
                 'vortex_extractor_one_section.ini')
         self.test_ensemble_conf = os.path.join(SNOWTOOLS_CEN, 'snowtools', 'tests', 'conf',
                 'vortex_extractor_ensemble.ini')
+        self.test_default_block_pro_files = os.path.join(SNOWTOOLS_CEN, 'snowtools', 'tests', 'conf',
+                'vortex_extractor_default_pro_files_with_no_block.ini')
 
     def launch_cmd(self, cmd, assertFail=False):
         if assertFail:
@@ -48,6 +50,10 @@ class Test_vortex_extractor(unittest.TestCase):
 
     def test_no_section_in_conf_file_without_sections(self):
         cmd = f"{self.basecmd} --configfile={self.test_no_section_conf}"
+        self.launch_cmd(cmd)
+
+    def test_block_pro_files_default(self):
+        cmd = f"{self.basecmd} --configfile={self.test_default_block_pro_files}"
         self.launch_cmd(cmd)
 
     def test_ensemble(self):

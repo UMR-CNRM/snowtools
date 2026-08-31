@@ -117,7 +117,7 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
       type diff_xpid: str
     * ``diff_user`` *user name* associated with the reference file (only if different from current user). Default: None
       type diff_user: str
-    * ``diff_block`` *block* part of the vortex path of the reference file. Default: "init_tg/prep"
+    * ``diff_block`` *block* part of the vortex path of the reference file. Default: "init_tg"
       type diff_block: str
     """
 
@@ -134,7 +134,7 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
             "namespace_out+default=vortex.multi.fr",
             "diff_xpid",
             "diff_user",
-            "diff_block+default=init_tg/prep",
+            "diff_block+default=init_tg",
         ]
 
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
@@ -196,7 +196,7 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
             model      = "surfex",
             namespace  = self.namespace_out,
             namebuild  = "flat@cen",
-            block      = self.conf.get("out_block", "prep"),
+            block      = self.conf.get("out_block", "init_tg"),
         )
         print(self.ticket.prompt, "Output init ground temperature =", init_ground_temperature_out)
         print()
@@ -218,7 +218,7 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
             model      = "surfex",
             namespace  = "vortex.multi.fr",
             namebuild  = "flat@cen",
-            block      = self.conf.get("diff_block", "init_tg/prep"),
+            block      = self.conf.get("diff_block", "init_tg"),
         )
         print(self.ticket.prompt, "diff init_tg =", init_tg_diff)
         print()
@@ -271,8 +271,6 @@ class FetchClimGroundTemperatureOrMake(InitClimGroundTemperature):
       type forcing_vconf: str
     * ``forcing_namespace`` *namespace* footprint, default "vortex.multi.fr" (hendrix + local cache)
       type forcing_namespace: str
-    * ``forcing_date`` *date* footprint (unsed with the research namebuilders), default to [dateend]
-      type forcing_date: str
     * ``forcing_model`` *model* footprint (to be made optional for SurfaceIO objects), default None
       type forcing_model: str
     * ``xpid`` experiment id of the current experiment. Used to store the output.
@@ -314,7 +312,7 @@ class FetchClimGroundTemperatureOrMake(InitClimGroundTemperature):
       type diff_xpid: str
     * ``diff_user`` *user name* associated with the reference file (only if different from current user). Default: None
       type diff_user: str
-    * ``diff_block`` *block* part of the vortex path of the reference file. Default: "init_tg/prep"
+    * ``diff_block`` *block* part of the vortex path of the reference file. Default: "init_tg"
       type diff_block: str
 
     """
@@ -366,6 +364,10 @@ class FetchClimGroundTemperatureOrMake(InitClimGroundTemperature):
         else:
             pass
 
+    def diff(self):
+        # This is a non-reproducible task anyway
+        pass
+
 
 class MakeClimGroundTemperatureIfNoPrep(FetchClimGroundTemperatureOrMake):
     """
@@ -395,7 +397,7 @@ class MakeClimGroundTemperatureIfNoPrep(FetchClimGroundTemperatureOrMake):
 
     * ``prep_xpid`` or ``xpid`` Experiment id the prep file should be searched for or put in cache.
     * ``prep_user`` name of the user who produced the PREP file. Default: None.
-    * ``prep_date`` or ``datebegin`` Validity date of the prep file. Default is ``datebegin`` but can be any date.
+    * ``prep_datevalidity`` Validity date of the prep file.
     * ``prep_vapp`` or ``vapp`` Application name to search the PREP.nc file.
     * ``prep_vconf`` or ``vconf`` Configuration name to search the PREP.nc file.
     * ``prep_vortex1`` type: bool. *True* if the requested PREP.nc file was produced with vortex 1 and thus uses
@@ -550,10 +552,27 @@ class FetchClimGroundTemperatureOrCrash(InitClimGroundTemperature, _CenResearchT
         return "vortex.cache.fr"
 
     def get_remote_inputs(self):
-        force_uenv = self.conf.get("force_uenv", False)
+        force_uenv = self.conf.get("force_uenv", True)
         initg = self.get_init_TG_from_uenv(fatal=force_uenv)
-        if not initg[0]:
+        if not initg[0] and not force_uenv:
             _ = self.get_init_TG_from_cache_or_archive(fatal=True, cache_only=False)
+
+        # Place the retrieved file in th cache where the next task will look for it
+        self.sh.title("Refill local cache with retrieved initial values of ground temperature")
+        init_ground_temperature_out = vortex.output(
+            role       = "InitialValuesOfGroundTemperature",
+            kind       = "climTG",
+            nativefmt  = "netcdf",
+            local      = "init_TG.nc",
+            experiment = self.conf.xpid,
+            geometry   = self.conf.geometry,
+            model      = "surfex",
+            namespace  = "vortex.cache.fr",
+            namebuild  = "flat@cen",
+            block      = self.conf.get("out_block", "prep"),
+        )
+        print(self.ticket.prompt, "Output init ground temperature =", init_ground_temperature_out)
+        print()
 
     def get_local_inputs(self):
         pass
@@ -562,4 +581,11 @@ class FetchClimGroundTemperatureOrCrash(InitClimGroundTemperature, _CenResearchT
         pass
 
     def launch_algo(self, algo, **kwargs):
+        pass
+
+    def put_outputs(self):
+        pass
+
+    def diff(self):
+        # No file produced, no need for reproducibility check
         pass

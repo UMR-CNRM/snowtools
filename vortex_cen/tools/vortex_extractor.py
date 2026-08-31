@@ -46,13 +46,7 @@ from bronx.stdtypes.date import Date
 from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
 from vortex.util.config import GenericConfigParser
 
-
-# Default footprints for research data
-vortex.defaults(
-    nativefmt = 'netcdf',
-    namespace = 'vortex.multi.fr',
-    namebuild = 'flat@cen',
-)
+# TODO : Use a Vortex's "temporary_dir_context" to keep current working directory clean
 
 
 def get_data(configfile=None, configsection=None, **kw):
@@ -113,6 +107,8 @@ def get_data(configfile=None, configsection=None, **kw):
 
     """
 
+    set_default_footprints()
+
     description = dict()
 
     # Read configuration file
@@ -122,6 +118,8 @@ def get_data(configfile=None, configsection=None, **kw):
     for key in ["kind", "vapp", "vconf", "experiment", "username", "geometry", "block", "member"]:
         if kw.get(key, False):
             description.update({key: kw.get(key)})
+
+    description = set_default_block(description)
 
     # Set time information depending on the kind of resource to extract
     description = set_time_info(description, **kw)
@@ -145,6 +143,31 @@ def get_data(configfile=None, configsection=None, **kw):
     rh = vortex.input(**description)
 
     return rh
+
+
+def set_default_footprints():
+    """
+    Set default footprints for research data
+    """
+    vortex.defaults(
+        nativefmt = 'netcdf',
+        namespace = 'vortex.multi.fr',
+        namebuild = 'flat@cen',
+    )
+
+
+def set_default_block(description):
+    """
+    Set the default block value for PRO files (only one possibility in this case)
+    """
+
+    if "kind" not in description.keys():
+        raise ValueError("Missing the *kind* footprint")
+    else:
+        if "block" not in description.keys() and description["kind"] in ["PRO", "SnowpackSimulation"]:
+            description["block"] = "offline"
+
+        return description
 
 
 def read_configuration_file(description, configfile, configsection):

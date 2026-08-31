@@ -28,7 +28,8 @@ class SurfexCommonsMixin:
 
         **Configuration Variables used:**
 
-        * ``surfex_uenv`` or if not present ``uenv`` User Environment in which the following resources are to be retrieved :
+        * ``surfex_uenv`` or if not present ``uenv`` User Environment in which the following resources are to be
+          retrieved :
           - ecoclimapI_covers_param.bin
           - ecoclimapII_eu_covers_param.bin
 
@@ -74,7 +75,8 @@ class SurfexCommonsMixin:
 
         **Configuration Variables used:**
 
-        * ``surfex_uenv`` or if not present ``uenv`` User Environment in which the following resources are to be retrieved :
+        * ``consts_surfex_uenv`` or if not present ``uenv`` User Environment in which the following resources are to be
+          retrieved :
           - ecoclimapI_covers_param.bin
           - ecoclimapII_eu_covers_param.bin
 
@@ -147,7 +149,8 @@ class SurfexCommonsMixin:
         Method to be used in tasks that fetch or try to fetch the pgd file from the cache or archive.
 
         :param fatal: If True, the method raises a fatal error if the file could not be fetched. Default: True.
-            Should be False only in tasks that implement a second option for fetching a pgd file, for example from an uenv.
+            Should be False only in tasks that implement a second option for fetching a pgd file, for example from an
+            uenv.
         :type fatal: bool
         :return: pgd toolbox
 
@@ -222,82 +225,46 @@ class SurfexCommonsMixin:
         print()
         return pgd
 
-    def get_namelist_from_cache(self):
+    def get_namelist(self):
         """
-        get OPTIONS.nam from the local cache usually produced by
-        a previous execution of a "pre_process" task.
-
-        **Configuration Variables used:**
-
-        * ``xpid`` experiment identifier
+        Get the OPTIONS.nam namelist.
+        If an ``allow_path=True`` AND a ``namelist_path`` configuration variables are provided,
+        fetch the user-provided target file (WARNING : non-reproducible case).
+        In any other case, fetch the namelist from a uenv.
         """
-        # Namelist mandatory to run OFFLINE and taken from the cache
-        self.sh.title('Input SURFEX-ready namelist')
-        namelist_tbi = vortex.input(
-            role         = 'Nam_surfex',
-            kind         = 'namelist',
-            model        = 'surfex',
-            local        = 'OPTIONS.nam',
-            experiment   = self.conf.xpid,
-            namespace    = 'vortex.cache.fr',
-            block        = 'namelist',
-            nativefmt    = 'nam',
-            intent = 'inout', # needed for dailyprep
-        ),
-        print(self.ticket.prompt, 'namelist =', namelist_tbi)
-        print()
 
-    def get_namelist_from_uenv(self):
-        """
-        Get namelist from UEnv. To be used typically by the preprocess_namelist task.
+        if (self.allow_path and self.conf.get('namelist_path', False)):
 
-        **Configuration Variables used:**
+            self.sh.title('Input Namelist from absolute path (non-reproducible)')
+            namelist_tbi = vortex.input(
+                role     = 'Nam_surfex',
+                remote   = self.conf.namelist_path,
+                kind     = 'namelist',
+                model    = 'surfex',
+                local    = 'OPTIONS.nam',
+                # la nameliste va être modifiée, il faut s'assurer du droit d'écriture (<==> intent='inout')
+                intent   = 'inout',
+            )
+            print(self.ticket.prompt, 'namelist_tbi =', namelist_tbi)
+            print()
 
-        * ``surfex_uenv`` or if not present ``uenv`` User Environment from which the namelist file should be fetched.
-                 Format : uenv:{uenv_name}@{user}
-        * ``namelist_source`` In an UEnv, several namelistes can be present in an *.tar* archive,
-          the *source*  footprint allows to define the exact name of the nameliste to fetch.
-          For example, *OPTIONS_default.nam*.
-        """
-        self.sh.title('Input Namelist')
-        namelist_tbi = vortex.input(
-            role     = 'Nam_surfex',
-            # Dans un UEnv, plusieurs namelistes peuvent être stockées dans une archive ".tar",
-            # le footprint *source* permet de définir le nom exact de la nameliste à récupérer.
-            source   = self.conf.namelist_source,  # ex : OPTIONS_default.nam
-            genv     = self.conf.get('surfex_uenv', self.conf.uenv),
-            kind     = 'namelist',
-            model    = 'surfex',
-            local    = 'OPTIONS.nam',
-            # la nameliste va être modifiée, il faut s'assurer du droit d'écriture (<==> intent='inout')
-            intent   = 'inout',
-        )
-        print(self.ticket.prompt, 'namelist_tbi =', namelist_tbi)
-        print()
+        else:
 
-    def get_namelist_from_path(self):
-        """
-        Get namelist from a user-defined local path.
-        A quick and dirty solution while experimenting
-        with namelist parameters without properly archiving the experiments.
-        Be aware that using uenvs with versioning is considered a better practice leading to more reproducible results.
-
-        **Configuration Variables used:**
-
-        * ``namelist_path`` absolute path to the namelist file
-        """
-        self.sh.title('Input Namelist')
-        namelist_tbi = vortex.input(
-            role     = 'Nam_surfex',
-            remote   = self.conf.namelist_path,
-            kind     = 'namelist',
-            model    = 'surfex',
-            local    = 'OPTIONS.nam',
-            # la nameliste va être modifiée, il faut s'assurer du droit d'écriture (<==> intent='inout')
-            intent   = 'inout',
-        )
-        print(self.ticket.prompt, 'namelist_tbi =', namelist_tbi)
-        print()
+            self.sh.title('Input Namelist')
+            namelist_tbi = vortex.input(
+                role     = 'Nam_surfex',
+                # Dans un UEnv, plusieurs namelistes peuvent être stockées dans une archive ".tar",
+                # le footprint *source* permet de définir le nom exact de la nameliste à récupérer.
+                source   = self.conf.namelist_source,  # ex : OPTIONS_default.nam
+                genv     = self.conf.get('namelists_surfex_uenv', self.conf.uenv),
+                kind     = 'namelist',
+                model    = 'surfex',
+                local    = 'OPTIONS.nam',
+                # la nameliste va être modifiée, il faut s'assurer du droit d'écriture (<==> intent='inout')
+                intent   = 'inout',
+            )
+            print(self.ticket.prompt, 'namelist_tbi =', namelist_tbi)
+            print()
 
     def get_prep_file_from_cache_or_archive(self, fatal=True, cache_only=False, local="PREP.nc"):
         """
@@ -306,7 +273,8 @@ class SurfexCommonsMixin:
 
 
         :param fatal: If *True*, the method raises a fatal error if the file could not be fetched. Default: *True*.
-            Should be False only in tasks that implement a second option for fetching a pgd file, for example from an uenv.
+            Should be False only in tasks that implement a second option for fetching a pgd file, for example from an
+            uenv.
         :type fatal: bool
         :param cache_only: If *True*, the method gets the PREP file from the cache only. Default: *False*.
             *cache_only=False* should be used in tasks that are supposed to fetch a PREP file as a remote input,
@@ -321,7 +289,7 @@ class SurfexCommonsMixin:
 
         * ``prep_xpid`` or ``xpid`` Experiment id the prep file should be searched for or put in cache.
         * ``prep_user`` name of the user who produced the PREP file. Default: None.
-        * ``prep_date`` or ``datebegin`` Validity date of the prep file. Default is ``datebegin`` but can be any date.
+        * ``prep_datevalidity`` or ``datebegin`` Validity date of the prep file. Default is ``datebegin``.
         * ``prep_vapp`` or ``vapp`` Application name to search the PREP.nc file.
         * ``prep_vconf`` or ``vconf`` Configuration name to search the PREP.nc file.
         * ``prep_vortex1`` type: bool. *True* if the requested PREP.nc file was produced with vortex 1 and thus uses
@@ -350,7 +318,7 @@ class SurfexCommonsMixin:
             username       = self.conf.get('prep_user', None),
             # MV : il faut définir la date de validité du fichier PREP qui par défaut
             # est la *datebegin* de simulation mais peut être arbitraire si 'date_prep' est renseigné
-            datevalidity   = self.conf.get('prep_date', self.conf.datebegin),
+            datevalidity   = self.conf.get('prep_datevalidity', self.conf.datebegin),
             # MV : Pour prévoir les cas où le PREP vient d'un vapp / vconf différent
             # de ceux de la tâche
             vapp           = self.conf.get('prep_vapp', self.conf.vapp),
@@ -437,8 +405,6 @@ class SurfexCommonsMixin:
                   'corresponding configuration sections match. ')
             raise e
         return init_tg
-
-
 
     def get_init_TG_from_uenv(self, fatal=True):
         """

@@ -9,6 +9,7 @@ import vortex
 from vortex.util.config import GenericConfigParser
 
 # TODO : Have a look at mkjob "subjobs" tool
+# TODO : Launch this script as a job to avoid waiting on a login node
 
 
 def parse_command_line():
@@ -50,11 +51,11 @@ def parse_command_line():
     parser.add_argument("--keep_existing_prep", action='store_true', default=False,
             help="Do not remove existing PREP files to avoid waiting (DBUG mode only)", required=False)
 
+    parser.add_argument("-g", "--geometry",
+            help="Simulation's geometry", type=str, required=False)
+#
 #    parser.add_argument("-x", "--xpid",
 #            help="Experiment identifier", type=str, required=False)
-#
-#    parser.add_argument("-g", "--geometry",
-#            help="Simulation's geometry", type=str, required=False)
 #
 #    parser.add_argument("-n", "--nmembers",
 #            help="Number of simulation members", type=int, required=False)
@@ -67,14 +68,14 @@ def parse_command_line():
     return args
 
 
-def wait_mandatory_input(block, assimdate, nmembers, walltime):
+def wait_mandatory_input(vapp, vconf, xpid, block, geometry, assimdate, nmembers, walltime, keep_existing_prep=False):
     launch = False
     start = Date.now()
     timer = Date.now()
     prep = vortex.input(
         kind           = 'PREP',
-        vapp           = args.vapp,
-        vconf          = args.vconf,
+        vapp           = vapp,
+        vconf          = vconf,
         date           = assimdate,
         experiment     = xpid,
         geometry       = geometry,
@@ -88,7 +89,7 @@ def wait_mandatory_input(block, assimdate, nmembers, walltime):
         local          = 'PREP.nc',
         now            = False,
     )
-    if not args.keep_existing_prep:
+    if not keep_existing_prep:
         for fic in prep:
             fic.delete()
     time.sleep(1)
@@ -106,7 +107,7 @@ def wait_mandatory_input(block, assimdate, nmembers, walltime):
     return launch
 
 
-def mkjob_command(jobname, taskname, datebegin=None, dateend=None, date=None):
+def mkjob_command(jobname, taskname, conf, datebegin=None, dateend=None, date=None):
     """
     Build a valid mkjob command line.
 
@@ -118,18 +119,15 @@ def mkjob_command(jobname, taskname, datebegin=None, dateend=None, date=None):
         dateinfo = f"date={date}"
     else:
         dateinfo = f"datebegin={datebegin} dateend={dateend}"
-        # Verrue pour gérer le journée manquante du 20220801
-        if datebegin == '2021080206':
-            dateinfo = f"{dateinfo} prep_date=2021080106"
 
-    confinfo = f"-c {args.conf}"
+    confinfo = f"-c {conf}"
 
     cmd = " ".join([base, dateinfo, confinfo])
 
     return cmd
 
 
-def mkjob_list_commands(taskname, njobs=17, mb0=0, datebegin=None, dateend=None, date=None):
+def mkjob_list_commands(taskname, conf, njobs=17, mb0=0, datebegin=None, dateend=None, date=None):
     """
     Method to construct the actual list of job creation commands.
 
@@ -155,23 +153,22 @@ def mkjob_list_commands(taskname, njobs=17, mb0=0, datebegin=None, dateend=None,
 
     mkjob_list = []
     if njobs == 1:
-        mkjob_list.append(mkjob_command(jobname=jobname, taskname=taskname,
+        mkjob_list.append(mkjob_command(jobname=jobname, taskname=taskname, conf=conf,
             datebegin=datebegin, dateend=dateend, date=date))
     else:
         for job_number in range(mb0, mb0 + njobs):
-            mkjob_list.append(mkjob_command(jobname=f'{jobname}_mb{str(job_number)}', taskname=taskname,
+            mkjob_list.append(mkjob_command(jobname=f'{jobname}_mb{str(job_number)}', taskname=taskname, conf=conf,
                 datebegin=datebegin, dateend=dateend, date=date))
 
     return mkjob_list
 
 
-if __name__ == '__main__':
+def main():
 
     args = parse_command_line()
     iniparser = GenericConfigParser(inifile=args.conf)
 
     nmembers = int(iniparser.get('DEFAULT', 'nmembers'))
-    geometry = iniparser.get('DEFAULT', 'geometry')
     xpid = iniparser.get('DEFAULT', 'xpid')
     # walltime tells the method "wait_mandatory_input" how long it has to wait before crashing
     walltime = Time(iniparser.get('offline_openloop_job', 'time'))
@@ -185,12 +182,15 @@ if __name__ == '__main__':
         if first_run:
             # This is the first run:
             # launch a set of offline_MPI tasks with a single PREP file as initial conditions
-            offline = mkjob_list_commands('offline_openloop', datebegin=datebegin, dateend=dateend)
+            offline = mkjob_list_commands('offline_openloop', conf=args.conf, njobs=nmembers, datebegin=datebegin,
+                    dateend=dateend)
             first_run = False
-        elif wait_mandatory_input(block='analysis', assimdate=datebegin, nmembers=nmembers, walltime=walltime):
+        elif wait_mandatory_input(vapp=args.vapp, vconf=args.vconf, xpid=xpid, geometry=args.geometry, block='analysis',
+                assimdate=datebegin, nmembers=nmembers, walltime=walltime, keep_existing_prep=args.keep_existing_prep):
             # This is a run after an assimilation step:
             # aunch a set of offline_MPI tasks with an ensemble of PREP files as initial conditions
-            offline = mkjob_list_commands('offline_assim', datebegin=datebegin, dateend=dateend)
+            offline = mkjob_list_commands('offline_assim', conf=args.conf, njobs=nmembers, datebegin=datebegin,
+                    dateend=dateend)
             walltime = Time(iniparser.get('offline_assim_job', 'time'))
 
         for mkjob in offline:
@@ -199,9 +199,16 @@ if __name__ == '__main__':
 
         # 2. Launch a SODA assimilation (except if end of simulation reached)
         if dateend != args.dateend:
-            if wait_mandatory_input(block='background', assimdate=date, nmembers=nmembers, walltime=walltime):
+            if wait_mandatory_input(vapp=args.vapp, vconf=args.vconf, xpid=xpid, block='background',
+                    geometry=args.geometry, assimdate=date, nmembers=nmembers, walltime=walltime,
+                    keep_existing_prep=args.keep_existing_prep):
                 soda = mkjob_command(jobname='soda_job', taskname='soda', date=date)
                 print("Run command: " + soda + "\n")
                 callSystemOrDie(soda)
                 walltime = Time(iniparser.get('soda_job', 'time'))
                 datebegin = date
+
+
+if __name__ == '__main__':
+
+    main()

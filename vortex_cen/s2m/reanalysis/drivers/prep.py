@@ -3,9 +3,11 @@
 Generation of SURFEX initial conditions file (PREP.nc)
 """
 
-import vortex
 from mkjob.nodes import Driver
-from vortex_cen.tasks.surfex.prep import _PrepConstruct
+from vortex_cen.tasks.surfex.pre_process import PreprocessUenvNamelist
+from vortex_cen.tasks.surfex.prep import MakePrepFile
+from vortex_cen.tasks.surfex.init_clim_ground_temperature import FetchClimGroundTemperatureOrCrash
+from vortex_cen.tasks.surfex.pgd import FetchPgdFileOrCrash
 
 
 def setup(t, **kw):
@@ -13,81 +15,11 @@ def setup(t, **kw):
         tag='prep',
         ticket=t,
         nodes=[
-            MakePrep(tag='makeprep', ticket=t, **kw),
+            PreprocessUenvNamelist(tag='preprocess_uenv_namelist_prep', ticket=t, **kw),
+            FetchClimGroundTemperatureOrCrash(tag='fetchClimGroundTemperature', ticket=t, **kw),
+            FetchPgdFileOrCrash(tag="fetchpgd", ticket=t, **kw),
+            MakePrepFile(tag='make_prep', ticket=t, **kw),
         ],
         options=kw,
     )
 
-# TODO: This class should not be necessary here. I'd suggest to:
-#  - Add PreprocessUenvNamelist node to the driver. If no path is given in the configuration file, the namelist is
-#    fetched from the unev.
-#  - Add FetchClimGroundTemperatureOrCrash node to the driver. With the configuration variable force_uenv = True
-#    the init_TG.nc file is fetched from the uenv only.
-#  - Use the MakePrepFile class from from vortex_cen.tasks.surfex.prep
-class MakePrep(_PrepConstruct):
-    """
-    Task : MakePrep
-    ===============
-
-    Force generation of initial conditions (PREP.nc file).
-    All input file come from a UEnv, so that they must have been properly generated and archived.
-
-    Inputs:
-    -------
-
-    * ``OPTIONS.nam`` SURFEX namelist
-    * ``ecoclimapI_covers_param.bin`` and ``ecoclimapII_eu_covers_param.bin`` (binaries for vegetation generation)
-    * ``drdt_bst_fit_60.nc`` (Crocus metamorphism parameters)
-    * ``Init_TG.nc`` Initial values of ground temperature
-    * ``PGD.nc`` Ground physiography
-
-    Outputs:
-    --------
-    - PREP.nc (initial conditions)
-
-    """
-
-    def __init__(self, **kw):
-
-        MANDATORY_CONFIGURATION_VARIABLES = [
-            "geometry",
-            "surfex_uenv|uenv",
-            "consts_surfex_uenv|uenv",
-        ]
-
-        OPTIONAL_CONFIGURATION_VARIABLES = [
-            "namelist_source",
-        ]
-        overwrite = [
-            "pgd_cache",
-        ]
-        super().__init__(**kw)
-        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES,
-                overwrite=overwrite)
-
-    def get_init_TG(self):
-        self.get_init_TG_from_uenv()
-
-    def get_namelist(self):
-        self.get_namelist_from_uenv()
-
-    def get_prep_executable(self):
-        self.get_prep_exe_from_uenv()
-
-    def get_pgd(self):
-        """
-        Get PGD file from a User Environment (reanalysis case only !)
-        """
-        self.sh.title('Input PGD')
-        pgd = vortex.input(
-            role           = 'SurfexClim',
-            kind           = 'pgdnc',
-            nativefmt      = 'netcdf',
-            model          = 'surfex',
-            local          = 'PGD.nc',
-            geometry       = self.conf.geometry,
-            genv           = self.conf.get('consts_surfex_uenv', self.conf.uenv),
-            gvar           = 'PGD_[geometry:tag]',
-        ),
-        print(self.ticket.prompt, 'PGD =', pgd)
-        print()

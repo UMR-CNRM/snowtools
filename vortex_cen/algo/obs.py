@@ -65,7 +65,7 @@ class ReconstructObservationsWorker(_CenTaylorVortexWorker):
 
     def _commons(self, rundir, thisdir, rdict, **kwargs):
         """
-        Method called by the main **vortex_task** method of the **_CenWorkerMixIn** class
+        Method called by the main **vortex_task** method of the **_CenMixIn** class
         """
         self.link_in('../listeo_reanalyse', 'listeo_reanalyse')
         replace_obs_tar('OBSERVATIONS.tar')

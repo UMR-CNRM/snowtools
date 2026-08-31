@@ -52,7 +52,7 @@ Here is the full inheritance diagram of the available meta classes :
    :no-members:
    :show-inheritance:
 
-.. autoclass:: _CenWorkerMixIn
+.. autoclass:: _CenMixIn
    :no-members:
    :show-inheritance:
 
@@ -73,7 +73,7 @@ from vortex.tools.parallelism import VortexWorkerBlindRun, TaylorVortexWorker
 logger = loggers.getLogger(__name__)
 
 
-class _CenWorkerMixIn(object):
+class _CenMixIn(object):
 
     def vortex_task(self, **kwargs):
         # TODO : find a better name for this method ?
@@ -101,6 +101,10 @@ class _CenWorkerMixIn(object):
 
         rdict = dict(rc=True)
         rundir = self.system.getcwd()
+        # Retrieve the list of available forcings now because it will no longer be available in the
+        # worker's subcontexts.
+        # TODO : do that in a specific "preprocess" method ?
+        self.avail_forcings = [x.rh for x in self.context.sequence.effective_inputs(role='Forcing')]
         if self.subdir is not self.system.path.dirname(rundir):
             thisdir = self.system.path.join(rundir, self.subdir)
             with self.system.cdcontext(self.subdir, create=True):
@@ -160,7 +164,7 @@ class _CenWorkerMixIn(object):
         self.system.subtitle('{:s} : directory listing (post-run)'.format(self.kind))
 
 
-class _CenWorkerBlindRun(_CenWorkerMixIn, VortexWorkerBlindRun):
+class _CenWorkerBlindRun(_CenMixIn, VortexWorkerBlindRun):
     """
     This abstract worker is designed to drive the launch of any script or executable
     without MPI parallelization (deterministic or ensemble-like simulations) in
@@ -195,7 +199,7 @@ class _CenWorkerBlindRun(_CenWorkerMixIn, VortexWorkerBlindRun):
     )
 
 
-class _CenTaylorVortexWorker(_CenWorkerMixIn, TaylorVortexWorker):
+class _CenTaylorVortexWorker(_CenMixIn, TaylorVortexWorker):
     """
     This abstract worker is designed to drive the launch a python program.
     The parallelisation is typically over the simulation members or

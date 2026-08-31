@@ -24,12 +24,12 @@ Tasks designed to launch the PGD executable.
    :class-doc-from: class
    :show-inheritance:
 
-.. autoclass:: FetchPgdOrMake
+.. autoclass:: FetchPgdFileOrMake
    :no-members:
    :class-doc-from: class
    :show-inheritance:
 
-.. autoclass:: FetchPgdOrCrash
+.. autoclass:: FetchPgdFileOrCrash
    :no-members:
    :class-doc-from: class
    :show-inheritance:
@@ -37,7 +37,6 @@ Tasks designed to launch the PGD executable.
 """
 
 import vortex
-from vortex.util.helpers import InputCheckerError
 
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
@@ -339,6 +338,7 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
             # In 2d case, get 2d mask for land and water in order to reduce the simulation domain
             if self.conf.get("mask_2d", False):
                 self.get_mask_files()
+        self.get_namelist()
         self.get_pgd_executable()
 
     def get_pgd_executable(self):
@@ -355,23 +355,21 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
         Get OPTIONS.nam which is always in the user's local cache because it comes
         from a namelist pre-processing task.
         """
-        self.get_namelist_from_cache()
+        pass
 
     def algo(self):
         """
         Algo component to produce the PGD file
         """
-        avail_forcings = self.ticket.context.sequence.effective_inputs(role="Forcing")
-        if len(avail_forcings) > 0:
-            firstforcing = avail_forcings[0]
-        else:
-            raise InputCheckerError("No FORCING file present, the task can not run properly")
+#        avail_forcings = self.ticket.context.sequence.effective_inputs(role="Forcing")
+#        if len(avail_forcings) > 0:
+#            firstforcing = avail_forcings[0]
+#        else:
+#            raise InputCheckerError("No FORCING file present, the task can not run properly")
 
         self.sh.title("Toolbox algo PGD")
         pgd_tba = vortex.task(
             kind="pgd_from_forcing",
-            # Le nom local de la ressource est fourni par le "container"
-            forcingname=firstforcing.rh.container.basename,
         )
         print(self.ticket.prompt, "Toolbox algo pgd=", pgd_tba)
         print()
@@ -384,24 +382,7 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
         :param algo: algo component to launch (pgd_tba)
         :param kwargs: not used
         """
-        # Pour un exécution de binaire, il faut donner l'objet "exécutable" associé (récupéré par la commande
-        # vortex.executable(...))
-        executable = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
-        #
-        # MV : Il faudra également pouvoir fournir le nombre de process et le nombre de tâches via le fichier de conf
-        # TODO : réfléchir à la procédure pour définir des valeurs par défaut en fonction du domaine comme c'est
-        # le cas actuellement
-        # TODO : S'assurer que ce qui suit fonctionne avec un executable compilé sans MPI,
-        # ou prévoir un switch MPI / NOMPI
-        self.component_runner(
-            algo,
-            executable,
-            mpiopts={
-                "nnodes": self.conf.get("nnodes", 1),
-                "nprocs": self.conf.get("nprocs", 1),
-                "ntasks": self.conf.get("ntasks", 1),
-            },
-        )
+        self.launch_executable(algo)
 
     def put_outputs(self):
         """
@@ -437,20 +418,18 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
         else:
             block = "pgd"
         self.sh.title("Reproductibility check : PGD")
-        diff = (
-            vortex.diff(
-                local="PGD.nc",
-                role="SurfexClim",
-                experiment=self.conf.diff_xpid,
-                username=self.conf.get("diff_user", None),
-                geometry=self.conf.geometry,
-                nativefmt="netcdf",
-                kind="pgdnc",
-                model="surfex",
-                namespace="vortex.multi.fr",
-                namebuild="flat@cen",
-                block=block,
-            ),
+        diff = vortex.diff(
+            local="PGD.nc",
+            role="SurfexClim",
+            experiment=self.conf.diff_xpid,
+            username=self.conf.get("diff_user", None),
+            geometry=self.conf.geometry,
+            nativefmt="netcdf",
+            kind="pgdnc",
+            model="surfex",
+            namespace="vortex.multi.fr",
+            namebuild="flat@cen",
+            block=block,
         )
         print(self.ticket.prompt, "diff =", diff)
         print()
@@ -584,7 +563,7 @@ class MakePgd(_PgdConstruct):
 
 class FetchPgdFileOrMake(_PgdConstruct):
     """
-    **Task: FetchPgdOrMake**
+    **Task: FetchPgdFileOrMake**
 
     Generation of ground physiography (PGD.nc file).
     If PGD.nc is available in cache or archive for the current experiment fetch it.
@@ -828,8 +807,8 @@ class FetchPgdFileOrCrash(FetchPgdFileOrMake):
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
 
     def get_remote_inputs(self):
-        force_uenv = self.conf.get("force_uenv", False)
-        pgd = self.get_pgd_file_from_uenv(fatal=force_uenv)
+        force_uenv = self.conf.get("force_uenv", True)
+        self.get_pgd_file_from_uenv(fatal=force_uenv)
         if len(self.ctx.sequence.effective_inputs(role="SurfexClim")) == 0:
             _ = self.get_pgd_file_from_cache_or_archive(fatal=True)
 
@@ -840,4 +819,11 @@ class FetchPgdFileOrCrash(FetchPgdFileOrMake):
         pass
 
     def launch_algo(self, algo, **kwargs):
+        pass
+
+    def put_outputs(self):
+        pass
+
+    def diff(self):
+        # No file produced, no need for reproducibility check
         pass

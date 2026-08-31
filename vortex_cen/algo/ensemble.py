@@ -68,13 +68,14 @@ logger = loggers.getLogger(__name__)
 echecker = ExternalCodeImportChecker('snowtools')
 with echecker:
     from snowtools.tools.change_prep import prep_tomodify
-    from snowtools.utils.resources import get_file_period, save_file_period, save_file_date
+    from snowtools.utils.resources import save_file_period, save_file_date
     from snowtools.tools.update_namelist import update_surfex_namelist_object
     from snowtools.tools.change_forcing import forcinput_select, forcinput_applymask
     from snowtools.utils.infomassifs import infomassifs
     from snowtools.tools.massif_diags import massif_simu
     from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
-    from snowtools.utils.FileException import TimeListException, FileNameException
+    from snowtools.utils.FileException import TimeListException, MultipleValueException
+    from vortex_cen.algo.deterministic import SurfexMixIn
 
 
 class S2MExecutionError(ExecutionError):
@@ -119,7 +120,7 @@ class S2MMissingDeterministicError(DelayedAlgoComponentError):
 
 
 @echecker.disabled_if_unavailable
-class SurfexWorker(_CenWorkerBlindRun):
+class SurfexWorker(_CenWorkerBlindRun, SurfexMixIn):
     """
     This algo component is designed to run a SURFEX experiment without
     MPI parallelization.
@@ -209,6 +210,8 @@ class SurfexWorker(_CenWorkerBlindRun):
 
     def _commons(self, rundir, thisdir, rdict, **kwargs):
 
+        # TODO : tout cela pourrait être géré plus proprement à partir des inputs du contexte
+
         if len(self.dailynamelist) > 1:
             list_files_copy = self.dailynamelist
         else:
@@ -249,7 +252,7 @@ class SurfexWorker(_CenWorkerBlindRun):
         # Determinstic cases : the namelist is prepared in the preprocess algo component in order to allow
         # to build PGD and PREP
         # MV : Cela justifierai de faire des algos distincts...
-        namelist_ready = self.kind == 'deterministic'
+        namelist_ready = self.kind == 'deterministic'  # Cas oper uniquement
         need_other_run = True
         need_other_forcing = True
         need_save_forcing = False
@@ -292,16 +295,15 @@ class SurfexWorker(_CenWorkerBlindRun):
                     # --> utiliser la tâche d'aggrégation
                     for massif in self.geometry_in:
                         try:
-                            dateforcbegin, dateforcend = get_file_period(
-                                "FORCING",
-                                forcingdir + "/" + massif,
-                                datebegin_this_run,
-                                self.dateend)
-                        except FileNameException:
-                            deterministic = self.subdir == "mb035"
-                            rdict['rc'] = S2MExecutionError("missing forcing file in directory " + forcingdir + "/" +
-                                                            massif, deterministic, self.subdir, datebegin_this_run,
-                                                            self.dateend)
+                            dateforcbegin, dateforcend, forcingname = self.find_forcing(datebegin_this_run,
+                                    self.dateend)
+                            self.link_in(self.system.path.join(forcingdir, massif, forcingname), 'FORCING.nc')
+                        except (FileNotFoundError, MultipleValueException) as e:
+#                            deterministic = self.subdir == "mb035"
+#                            rdict['rc'] = S2MExecutionError("missing forcing file in directory " + forcingdir + "/" +
+#                                                            massif, deterministic, self.subdir, datebegin_this_run,
+#                                                            self.dateend)
+                            rdict['rc'] = e
                             return rdict  # Note than in the other case return rdict is at the end
                         forcingname = "FORCING_" + massif + ".nc"
                         self.system.mv("FORCING.nc", forcingname)
@@ -329,16 +331,14 @@ class SurfexWorker(_CenWorkerBlindRun):
                     # 3. Boucler sur cette liste
                     print("LOOK FOR FORCING")
                     try:
-                        dateforcbegin, dateforcend = get_file_period(
-                            "FORCING",
-                            forcingdir,
-                            datebegin_this_run,
-                            self.dateend)
-                    except FileNameException:
-                        deterministic = self.subdir == "mb035"  # MV : S2M-spécifique, à externaliser
-                        rdict['rc'] = S2MExecutionError("missing forcing file in directory " + forcingdir,
-                                                        deterministic, self.subdir, datebegin_this_run,
-                                                        self.dateend)
+                        dateforcbegin, dateforcend, forcingname = self.find_forcing(datebegin_this_run, self.dateend)
+                        self.link_in(self.system.path.join(forcingdir, forcingname), 'FORCING.nc')
+                    except (FileNotFoundError, MultipleValueException) as e:
+#                        deterministic = self.subdir == "mb035"  # MV : S2M-spécifique, à externaliser
+#                        rdict['rc'] = S2MExecutionError("missing forcing file in directory " + forcingdir,
+#                                                        deterministic, self.subdir, datebegin_this_run,
+#                                                        self.dateend)
+                        rdict['rc'] = e
                         return rdict
                     print("FORCING FOUND")
 

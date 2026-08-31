@@ -18,6 +18,11 @@ Tasks designed to launch the SODA executable.
    :no-members:
    :class-doc-from: class
    :show-inheritance:
+
+.. autoclass:: FetchBackgroundOrCrash
+   :no-members:
+   :class-doc-from: class
+   :show-inheritance:
 """
 
 import vortex
@@ -40,8 +45,8 @@ class SodaCommonsMixin(SurfexCommonsMixin):
             nativefmt       = 'netcdf',
             vapp            = self.conf.get('observation_vapp', self.conf.vapp),
             vconf           = self.conf.get('observation_vconf', self.conf.vconf),
-            date            = self.conf.date,  # TODO : autoriser une date =/= ? de la date de run ?
-            block           = self.conf.get('sensor', None),
+            date            = self.conf.get('assimdate', self.conf.get('date', None)),
+            block           = self.conf.get('observation_block', None),
             scope           = self.conf.get('scope', None),
             namespace       = 'vortex.multi.fr',
             namebuild       = 'flat@cen',
@@ -81,20 +86,20 @@ class SodaCommonsMixin(SurfexCommonsMixin):
             member         = self.get_list_members(),
             vapp           = self.conf.get('prep_vapp', self.conf.vapp),
             vconf          = self.conf.get('prep_vconf', self.conf.vconf),
-            local          = 'mb[member]/PREP_[datevalidity:ymdh].nc',
+            local          = 'mb[member%04d]/PREP_[datevalidity:ymdh].nc',
             experiment     = self.conf.get('prep_xpid', self.conf.xpid),
             username       = self.conf.get('prep_user', None),
             geometry       = self.conf.geometry,
-            datevalidity   = self.conf.get('datevalidity', self.conf.date),
+            datevalidity   = self.conf.get('assimdate', self.conf.get('date', None)),
             nativefmt      = 'netcdf',
             kind           = 'PREP',
             model          = 'surfex',
             namespace      = self.conf.get('prep_namespace', 'vortex.multi.fr'),
             namebuild      = 'flat@cen',
-            block          = self.conf.get("prep_block", 'prep/background'),
+            block          = self.conf.get("prep_block", 'offline'),
             vortex1        = self.conf.get('prep_vortex1', None),
             fatal          = True,
-        ),
+        )
         print(self.ticket.prompt, 'Background PREP =', prep)
         print()
 
@@ -120,7 +125,7 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
 
     **Mandatory configuration variables**
 
-    * ``date`` *date* of the analysis
+    * ``date`` or ``assimdate`` Analysis date
       type: str, Date
     * ``geometry`` *geometry* of the PREP files
       type: str, footprints.stdtypes.FPList
@@ -129,7 +134,7 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
     * ``uenv`` User Environment in which the following resources are to be retrieved:
       Format : uenv:{uenv_name}@{user}
       type: str
-    * ``sensor`` Sensor used for the observation (ex: MODIS, PLEIADES, VIIRS)
+    * ``observation_block`` By convention, the sensor used for the observation (ex: MODIS, PLEIADES, VIIRS)
       type: str
     * ``members`` Ensemble members
       type: footprints.stdtypes.FPList
@@ -172,13 +177,11 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
 
         super().__init__(**kw)
         MANDATORY_CONFIGURATION_VARIABLES = [
-            "datebegin",
-            "dateend",
             "xpid",
             "geometry",
             "surfex_uenv|uenv",
             "members",
-            "date",
+            "assimdate|date",
         ]
 
         OPTIONAL_CONFIGURATION_VARIABLES = [
@@ -187,7 +190,8 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
             "observation_xpid+help=Experiment identifier of the snow observation to assimilate;type=str;default=*xpid*",
             "observation_user+help=Name of the user who owns the snow observation file to assimilate;" +
             "type=str;default=$USER",
-            "sensor+help=Sensor used for the snow observation to assimilate (ex MODIS, PLEIADES, VIIRS,...);type=str",
+            "observation_block+help=Sensor used for the snow observation to assimilate " +
+            "(ex MODIS, PLEIADES, VIIRS,...);type=str",
             "scope+help=Type of the snow observation to assimilate;type=str",
             "soda_gvar",
             "prep",
@@ -197,23 +201,32 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
             "pgd",
             "diff_xpid",
             "diff_user",
-            "datevalidity",
         ]
 
-        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
+        overwrite = [
+            "datebegin",
+            "dateend",
+        ]
+
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES,
+                overwrite=overwrite)
+
+    @property
+    def nmembers(self):
+        return len(self.get_list_members())
 
     def get_remote_inputs(self):
 
-        self.get_pgd_file_from_cache_or_archive()
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
         self.get_snow_observation()
+        self.get_namelist()
         self.get_soda_exe_from_uenv()
-        self.get_background()
 
     def get_local_inputs(self):
-
-        self.get_namelist_from_cache()
+        # TODO : Make a "FetchBackgroundOrCrash" class to put the driver in other situations (ex : unit tests)
+        self.get_background()
+        self.get_pgd_from_cache()
 
     def algo(self):
 
@@ -222,7 +235,8 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
             engine         = 'parallel',
             binary         = 'SODA',
             kind           = "s2m_soda",
-            dateassim      = self.conf.date,
+            dateassim      = self.conf.get('assimdate', self.conf.get('date', None)),
+            nmembers       = self.nmembers,
         )
         print(self.ticket.prompt, 'Algo =', algo)
         print()
@@ -246,18 +260,18 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
 
         self.sh.title('Output PREP (analysis)')
         prep = vortex.output(
-            local          = 'mb[member]/PREP_[datevalidity:ymdh].nc',
+            local          = 'mb[member%04d]/PREP_[datevalidity:ymdh].nc',
             role           = 'SnowpackInit',
             experiment     = self.conf.xpid,
             geometry       = self.conf.geometry,
-            datevalidity   = self.conf.date,
+            datevalidity   = self.conf.get('assimdate', self.conf.get('date', None)),
             member         = self.get_list_members(),
             nativefmt      = 'netcdf',
             kind           = 'PREP',
             model          = 'surfex',
             namespace      = self.namespace_out,
             namebuild      = 'flat@cen',
-            block          = 'soda/analysis',
+            block          = 'soda',
             fatal          = True
         ),
         print(t.prompt, 'SODA analysis =', prep)
@@ -271,7 +285,7 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
             namebuild      = 'flat@cen',
             geometry       = self.conf.geometry,
             namespace      = 'vortex.multi.fr',
-            dateassim      = self.conf.date,
+            dateassim      = self.conf.get('assimdate', self.conf.get('date', None)),
             experiment     = self.conf.xpid,
             local          = '[kind]',
             fatal          = False,  # TODO : cela pourrait dépendre du "kind" pour plus de felxibilité
@@ -280,25 +294,66 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
         print()
 
     def diff(self):
-        """
-        Test output reproductibility [OPTIONAL]
-        """
-        self.sh.title("Reproductibility check : PREP")
-        diff = vortex.diff(
-            local          = 'mb[member]/PREP_[datevalidity:ymdh].nc',
-            role           = 'SnowpackInit',
-            experiment     = self.conf.diff_xpid,
-            username       = self.conf.get('diff_user', None),
-            geometry       = self.conf.geometry,
-            datevalidity   = self.conf.date,
-            member         = self.get_list_members(),
-            nativefmt      = 'netcdf',
-            kind           = 'PREP',
-            model          = 'surfex',
-            namespace      = 'vortex.multi.fr',
-            namebuild      = 'flat@cen',
-            block          = 'soda/analysis',
-            fatal          = True
-        ),
-        print(self.ticket.prompt, 'diff =', diff)
-        print()
+        # The "random" selection of particles in SODA makes reproducibility tests pointless
+        pass
+
+
+class FetchBackgroundOrCrash(SodaCommonsMixin, _CenResearchTask):
+    """
+    Fetch an ensemble of PREP files from the archive as background for a SODA execution and put it in
+    the cache of the current experiment.
+
+    **Mandatory configuration variables:**
+
+    * ``geometry`` *geometry* of the forcing file(s)
+      type: str, footprints.stdtypes.FPList
+    * ``xpid`` Experiment identifier
+      type: str
+    * ``date`` or ``assimdate`` Analysis date
+      type: str or Date
+
+    **Optional configuraiton variables**
+
+    * ``prep_xpid`` or ``xpid`` Experiment id the prep file should be searched for or put in cache.
+    * ``prep_user`` name of the user who produced the PREP file. Default: None.
+    * ``prep_vapp`` or ``vapp`` Application name to search the PREP.nc file.
+    * ``prep_vconf`` or ``vconf`` Configuration name to search the PREP.nc file.
+    * ``prep_vortex1`` type: bool. *True* if the requested PREP.nc file was produced with vortex 1 and thus uses
+      vortex 1 naming conventions. Default is *False*.
+
+    """
+
+    def __init__(self, **kw):
+        MANDATORY_CONFIGURATION_VARIABLES = [
+            "xpid",
+            "geometry",
+            "date|assimdate",
+            "prep",
+            "member|members|nmembers+help=Ensemble members",
+        ]
+        OPTIONAL_CONFIGURATION_VARIABLES = [
+            'prep_xpid',
+            'prep_user',
+            'prep_vapp',
+            'prep_vconf',
+            'prep_namespace',
+            'prep_block',
+            'prep_vortex1',
+        ]
+        super().__init__(**kw)
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
+
+    def get_remote_inputs(self):
+        self.get_background()
+
+    def get_local_inputs(self):
+        pass
+
+    def algo(self):
+        pass
+
+    def launch_algo(self, algo, **kwargs):
+        pass
+
+    def put_outputs(self):
+        pass
