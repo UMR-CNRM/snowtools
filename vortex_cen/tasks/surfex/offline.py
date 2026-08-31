@@ -1354,50 +1354,10 @@ class OfflineMpiDailyPrep(OfflineMpi):
         return offline_tba
 
     def put_cumul(self):
-        self.sh.title("Output CUMUL")
-        cumul_tbo = (
-            vortex.output(
-                local="CUMUL_[datebegin:ymdh]_[dateend:ymdh].nc",
-                experiment=self.conf.xpid,
-                geometry=self.conf.geometry,
-                # MV : comprendre avec Matthieu L les cas d'usages avec "dailyprep" (reforecast ?)
-                # et faire une tâche spécifique à ces cas là.
-                datebegin="[dateend]/-PT24H",
-                dateend=list(daterange(tomorrow(base=self.conf.datebegin), self.conf.dateend)),
-                nativefmt="netcdf",
-                kind="SnowpackSimulation",
-                model="surfex",
-                namespace=self.namespace_out,
-                namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block="offline",
-                member=self.conf.get("member", None),
-                fatal=False,
-            ),
-        )
-        print(self.ticket.prompt, "cumul_tbo =", cumul_tbo)
-        print()
+        pass
 
     def put_diag(self):
-        self.sh.title("Output DIAG")
-        diag_tbo = (
-            vortex.output(
-                local="DIAG_[datebegin:ymdh]_[dateend:ymdh].nc",
-                experiment=self.conf.xpid,
-                geometry=self.conf.geometry,
-                datebegin="[dateend]/-PT24H",
-                dateend=list(daterange(tomorrow(base=self.conf.datebegin), self.conf.dateend)),
-                nativefmt="netcdf",
-                kind="SnowpackSimulation",
-                model="surfex",
-                namespace=self.namespace_out,
-                namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block="offline",
-                member=self.conf.get("member", None),
-                fatal=False,
-            ),
-        )
-        print(self.ticket.prompt, "diag_tbo =", diag_tbo)
-        print()
+        pass
 
     def put_prep(self):
         self.sh.title("Output PREP")
@@ -1421,25 +1381,7 @@ class OfflineMpiDailyPrep(OfflineMpi):
         print()
 
     def put_pro(self):
-        self.sh.title("Output PRO")
-        pro_tbo = (
-            vortex.output(
-                local="PRO_[datebegin:ymdh]_[dateend:ymdh].nc",
-                experiment=self.conf.xpid,
-                geometry=self.conf.geometry,
-                datebegin="[dateend]/-PT24H",
-                dateend=list(daterange(tomorrow(base=self.conf.datebegin), self.conf.dateend)),
-                nativefmt="netcdf",
-                kind="SnowpackSimulation",
-                model="surfex",
-                namespace=self.namespace_out,
-                namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block="offline",
-                member=self.conf.get("member", None),
-            ),
-        )
-        print(self.ticket.prompt, "pro_tbo =", pro_tbo)
-        print()
+        pass
 
     def diff(self):
         """
