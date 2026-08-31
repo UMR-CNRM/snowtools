@@ -208,7 +208,6 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
     - FORCING file
     - OPTIONS.nam ready-to-use SURFEX namelist (coming from an execution of a "Preprocess_Task")
     - ecoclimapI_covers_param.bin and ecoclimapII_eu_covers_param.bin (binaries for vegetation generation)
-    - drdt_bst_fit_60.nc (Crocus metamorphism parameters)
     - PGD executable
 
     **Outputs:**
@@ -224,7 +223,6 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
     * ``surfex_unev`` or ``uenv`` User Environment in which the following resources are to be retrieved:
         - ecoclimapI_covers_param.bin
         - ecoclimapII_eu_covers_param.bin
-        - drdt_bst_fit_60.nc
         - PGD executable (unless supplied locally using the ``exesurfex`` variable).
 
       Format : uenv:{uenv_name}@{user}
@@ -326,12 +324,10 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
     def get_remote_inputs(self):
         """
         Get forcing file(s), ecoclimapI_covers_param.bin, ecoclimapII_eu_covers_param.bin,
-        drdt_bst_fit_60.nc
         """
         simulation2d = self.conf.get("pgd_2d", False)
         self.get_forcing(localname="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc")
         self.get_ecoclimap()
-        self.get_drdt_bst_fit()
         # In 2d case, get others physio files: ClayDB, SandDB, EcoclimapII_Europ
         if simulation2d:
             self.get_2D_databases()
@@ -447,7 +443,6 @@ class MakePgd(_PgdConstruct):
     - FORCING file
     - OPTIONS.nam ready-to-use SURFEX namelist (coming from an execution of a "Preprocess_Task")
     - ecoclimapI_covers_param.bin and ecoclimapII_eu_covers_param.bin (binaries for vegetation generation)
-    - drdt_bst_fit_60.nc (Crocus metamorphism parameters)
     - PGD executable
 
     **Outputs:**
@@ -463,7 +458,6 @@ class MakePgd(_PgdConstruct):
     * ``surfex_unev`` or ``uenv`` User Environment in which the following resources are to be retrieved :
         - ecoclimapI_covers_param.bin
         - ecoclimapII_eu_covers_param.bin
-        - drdt_bst_fit_60.nc
         - PGD executable (unless supplied locally using the ``exesurfex`` variable).
 
       Format : uenv:{uenv_name}@{user}
@@ -578,7 +572,6 @@ class FetchPgdOrMake(_PgdConstruct):
     - FORCING file
     - OPTIONS.nam ready-to-use SURFEX namelist (coming from an execution of a "Preprocess_Task")
     - ecoclimapI_covers_param.bin and ecoclimapII_eu_covers_param.bin (binaries for vegetation generation)
-    - drdt_bst_fit_60.nc (Crocus metamorphism parameters)
     - PGD executable
 
     **Outputs:**
@@ -594,7 +587,6 @@ class FetchPgdOrMake(_PgdConstruct):
     * ``surfex_unev`` or ``uenv`` User Environment in which the following resources are to be retrieved :
         - ecoclimapI_covers_param.bin
         - ecoclimapII_eu_covers_param.bin
-        - drdt_bst_fit_60.nc
         - PGD executable (unless supplied locally using the ``exesurfex`` variable).
 
       Format : uenv:{uenv_name}@{user}
