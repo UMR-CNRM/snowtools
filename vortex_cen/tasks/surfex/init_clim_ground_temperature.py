@@ -196,7 +196,7 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
             model      = "surfex",
             namespace  = self.namespace_out,
             namebuild  = "flat@cen",
-            block      = self.conf.get("out_block", "init_tg"),
+            block      = self.conf.get("block", "init_tg"),
         )
         print(self.ticket.prompt, "Output init ground temperature =", init_ground_temperature_out)
         print()
