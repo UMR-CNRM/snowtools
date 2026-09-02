@@ -184,7 +184,7 @@ class SurfexCommonsMixin:
             model      = 'surfex',
             namespace  = 'vortex.multi.fr',
             namebuild  = 'flat@cen',  # TODO : passer en variable de configuration
-            block      = 'pgd',
+            block      = self.conf.get("pgd_block", 'pgd'),
             vortex1    = self.conf.get('pgd_vortex1', None),
             fatal      = fatal,
         ),

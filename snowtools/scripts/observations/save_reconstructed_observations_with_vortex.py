@@ -2,14 +2,14 @@
 import argparse
 import os
 
-from vortex import toolbox
+import vortex
 
 from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
 from bronx.stdtypes.date import Date
 
-from snowtools.data import obs  # noqa
+from vortex_cen.data import obs  # noqa
 
-toolbox.active_now = True
+vortex.toolbox.active_now = True
 
 description = "Archive reconstructed observation dataset for SAFRAN reanalysis"
 parser = argparse.ArgumentParser(description=description)
@@ -35,7 +35,7 @@ else:
     user = os.environ['USER']
     xpid = args.xpid + '@' + user
 
-toolbox.output(
+vortex.output(
     kind       = 'SurfaceObservation',
     nativefmt  = 'netcdf',
     model      = 'safran',

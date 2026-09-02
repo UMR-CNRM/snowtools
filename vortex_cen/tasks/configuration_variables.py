@@ -147,7 +147,7 @@ standard_variables = dict(
         help = "The forcing namebuilder (operational use only)",
         type = str,
         default = "flat@cen",
-        choices = "None, 'flat@cen'",
+        choices = "None, 'flat@cen', 'date@cen', 'date@std'",
     ),
     forcing_intent = dict(
         help = "Intent use of the forcing file(s), defines the forcing file(s) rights (read-write or read-only) "

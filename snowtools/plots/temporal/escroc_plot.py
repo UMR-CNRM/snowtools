@@ -13,9 +13,10 @@ import numpy as np
 import os
 
 from snowtools.plots.temporal.chrono import prettyensemble
-from snowtools.plots.pearps2m.postprocess import EnsembleDiags
+from snowtools.data.ensemble_classes import EnsembleDiags
 from snowtools.utils.prosimu import prosimu
 from snowtools.DATA import LUSTRE_NOSAVE_DIR
+
 
 class EnsembleEscrocDiags(EnsembleDiags):
 

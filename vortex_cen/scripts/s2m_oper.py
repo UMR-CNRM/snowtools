@@ -41,7 +41,8 @@ def parse_command_line():
         "--jobname",
         help = "Target job name",
         type = str,
-        choices = ['prepsafran_ana', 'prepsafran_prv', 'safran_ana', 'safran_prv', 'surfex_ana', 'surfex_prv'],
+        choices = ['prepsafran_ana', 'prepsafran_prv', 'safran_ana', 'safran_prv', 'surfex_ana', 'surfex_prv',
+            'prepsafran_reana', 'surfex_monthly_reanalysis'],
         required = True,
     )
 
@@ -96,7 +97,7 @@ def main():
         conf = t.sh.path.join(rootdir, 'oper/conf/s2m_common.ini')
         execute(job, conf, rundate, additional)
 
-    elif jobname in ['safran_ana', 'safran_prv']:
+    elif jobname in ['safran_ana', 'safran_prv', 'prepsafran_reana']:
         if args.region is None:
             args.region = ['alp', 'pyr', 'cor', 'mac', 'vog', 'jur']
         for dom in args.region:
@@ -104,7 +105,7 @@ def main():
             conf = t.sh.path.join(rootdir, dom, 'conf', f's2m_{dom}.ini')
             execute(job, conf, rundate, additional, domain=dom)
 
-    elif jobname in ['surfex_ana', 'surfex_prv']:
+    elif jobname in ['surfex_ana', 'surfex_prv', 'surfex_monthly_reanalysis']:
         if args.region is None:
             args.region = ['alp', 'pyr', 'cor', 'mac', 'vog', 'jur', 'postes']
         for dom in args.region:

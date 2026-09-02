@@ -175,11 +175,18 @@ class _CenResearchTask(Task, CENTaskMixIn):
 
         # Define a namespace_out variable to apply to all outputs set as the *namespace_out*
         # configuration variable if provided by the user or 'vortex.multi.fr' by default
-        self.namespace_out = self.conf.get('namespace_out', 'vortex.multi.fr')
+        # self.namespace = self.namespace_out
 
         vortex.defaults(**extras)
         self.header('Toolbox defaults')
         vortex.defaults.show()
+
+    @property
+    def namespace_out(self):
+        """
+        Namespace for output toolboxes
+        """
+        return self.conf.get('namespace_out', 'vortex.multi.fr')
 
     def force_configuration_variables(self):
         """
@@ -459,7 +466,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
         * ``forcing_member`` *member* footprint, default None (or *member* if provided)
           type forcing_member: int, footprints.stdtypes.FPList
         * ``forcing_namebuild`` *namebuild* footprint, default "flat@cen" (will change soon)
-          type forcing_namebuild: str
+          type forcing_namebuild: str, values: "flat@cen", "date@cen", "date@std"
         * ``forcing_intent`` *intent* footprint (local file permissions), default "in"
           Possible values : "in" (read-only), "inout" (read-write)
           type forcing_intent: str

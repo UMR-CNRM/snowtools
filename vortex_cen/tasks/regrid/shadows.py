@@ -137,6 +137,7 @@ class Shadows(_CenResearchTask):
             namebuild      = 'flat@cen',
             local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
             block          = self.conf.get('out_block', 'shadows'),
+            namespace = self.namespace_out
         ),
         print(self.ticket.prompt, 'Output forcing =', forcing_out)
         print()
@@ -154,6 +155,7 @@ class Shadows(_CenResearchTask):
             experiment     = self.conf.diff_xpid,
             username       = self.conf.get('diff_user', None),
             namebuild      = 'flat@cen',
+            namespace = "vortex.multi.fr",
             local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
             block          = self.conf.get('diff_block', 'shadows'),
         ),

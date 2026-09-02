@@ -1,7 +1,7 @@
 # -*- coding:Utf-8 -*-
 
 from mkjob.nodes import Driver
-from vortex_cen.tasks.surfex.pgd import FetchPgdOrCrash
+from vortex_cen.tasks.surfex.pgd import FetchPgdFileOrCrash
 from vortex_cen.tasks.surfex.prep import FetchPrepFileOrCrash
 from vortex_cen.tasks.surfex.offline import OfflineAssim
 

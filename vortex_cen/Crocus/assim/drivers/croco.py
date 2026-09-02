@@ -7,7 +7,7 @@ The ensemble members can combine an ensemble of meteorological forcings and diff
 
 from mkjob.nodes import Driver, WorkshareFamily, LoopFamily
 from vortex_cen.tasks.surfex.offline_ensemble import CrocO
-from vortex_cen.tasks.surfex.pgd import FetchPgdOrCrash
+from vortex_cen.tasks.surfex.pgd import FetchPgdFileOrCrash
 from vortex_cen.tasks.surfex.prep import PrepRefill
 from vortex_cen.tasks.surfex.soda import Soda
 

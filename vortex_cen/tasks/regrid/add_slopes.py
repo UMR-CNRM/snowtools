@@ -173,6 +173,7 @@ class AddSlopes(_CenResearchTask):
             namebuild      = 'flat@cen',
             local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_OUT.nc',
             block          = 'addslopes',
+            namespace = self.namespace_out,
         ),
         print(self.ticket.prompt, 'Output forcing =', forcing_out)
         print()
@@ -192,6 +193,7 @@ class AddSlopes(_CenResearchTask):
             namebuild      = 'flat@cen',
             local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_OUT.nc',
             block          = self.conf.get('diff_block', 'addslopes'),
+            namespace = self.namespace_out,
         ),
         print(self.ticket.prompt, 'diff =', diff)
         print()

@@ -11,7 +11,7 @@ enventually be generated if necessary and possible.
 
 from mkjob.nodes import Driver
 from vortex_cen.tasks.surfex.offline_ensemble import EscrocResearch
-from vortex_cen.tasks.surfex.pgd import FetchPgdOrMake
+from vortex_cen.tasks.surfex.pgd import FetchPgdFileOrMake
 from vortex_cen.tasks.surfex.prep import FetchPrepFileOrMake
 from vortex_cen.tasks.surfex.init_clim_ground_temperature import MakeClimGroundTemperatureIfNoPrep
 
@@ -22,7 +22,7 @@ def setup(t, **kw):
         ticket=t,
         nodes=[
             MakeClimGroundTemperatureIfNoPrep(tag='inittg', ticket=t, **kw),
-            FetchPgdOrMake(tag='pgd', ticket=t, **kw),
+            FetchPgdFileOrMake(tag='pgd', ticket=t, **kw),
             FetchPrepFileOrMake(tag='prep', ticket=t, **kw),
             EscrocResearch(tag='escroc_task', ticket=t, **kw),
         ],

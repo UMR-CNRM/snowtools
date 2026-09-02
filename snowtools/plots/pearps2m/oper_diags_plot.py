@@ -9,15 +9,14 @@ import os
 from collections import Counter, defaultdict
 
 import numpy as np
-import matplotlib
 import matplotlib.style
 
 from snowtools.utils.prosimu import prosimu
 from snowtools.utils.dates import check_and_convert_date, pretty_date
 from snowtools.plots.temporal.chrono import spaghettis_with_det, spaghettis
-#from snowtools.plots.pearps2m.postprocess import _EnsembleMassif
-#from snowtools.plots.pearps2m.postprocess import EnsembleFlatMassif, EnsembleNorthSouthMassif
-#from snowtools.plots.pearps2m.postprocess import EnsembleStation, EnsembleDiags
+from snowtools.data.ensemble_classes import _EnsembleMassif
+from snowtools.data.ensemble_classes import EnsembleFlatMassif, EnsembleNorthSouthMassif
+from snowtools.data.ensemble_classes import EnsembleStation, EnsembleDiags
 
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 
@@ -45,6 +44,7 @@ class Config:
     """
     previ = True  #: False for analysis, True for forecast
     xpid = "oper"  #: Operational chain
+    username = None
     alternate_xpid = ["OPER@lafaysse"]  #: Alternative experiment id
     # alternate_xpid = ["oper"]
     #: List of geometries
@@ -59,6 +59,8 @@ class Config:
     # list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']
     #: 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
     list_members = list(range(0, 36))
+    namespace = "vortex.multi.fr"
+    namebuild = "date@std"
 
     def __init__(self, OPTIONS):
         """
@@ -84,7 +86,8 @@ class Config:
 
         self.dev = OPTIONS.dev
         if OPTIONS.dev:
-            self.xpid = "OPER@lafaysse"
+            self.xpid = "DEV"
+            self.username = "lafaysse"
             delattr(Config, 'alternate_xpid')
             self.list_geometry = ['jur', 'mac', 'vog', 'cor', 'alp', 'pyr', 'postes']
         self.dble = OPTIONS.dble
@@ -94,7 +97,8 @@ class Config:
             self.list_geometry = ['alp', 'pyr', 'cor', 'jur', 'mac', 'vog', 'postes']
         self.reforecast = OPTIONS.reforecast
         if OPTIONS.reforecast:
-            self.xpid = "reforecast_double2021@vernaym"
+            self.xpid = "reforecast_double2021"
+            self.username = "vernaym"
             delattr(Config, 'alternate_xpid')
             self.list_geometry = ['jur4_allslopes_reforecast', 'mac11_allslopes_reforecast',
                                   'vog3_allslopes_reforecast', 'alp27_allslopes',
@@ -661,7 +665,7 @@ def pp_plots(c):
     dict_chaine['OPER'] = ' (oper)'
     dict_chaine['DBLE'] = ' (double)'
     dict_chaine['MIRR'] = ' (miroir)'
-    dict_chaine['OPER@lafaysse'] = ' (dev)'
+    dict_chaine['DEV'] = ' (dev)'
     dict_chaine['nouveaux_guess@lafaysse'] = ' (dev)'
 
     locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')
@@ -688,7 +692,7 @@ def main(c):
     :param c: config
     """
     # The following class has a vortex-dependence
-    # Should not import than above to avoid problems when importing the module from vortex
+    # Should not import that above to avoid problems when importing the module from vortex
     from snowtools.tasks.oper.get_oper_files import FutureS2MExtractor
 
     os.chdir(c.diroutput)
@@ -706,7 +710,7 @@ def main(c):
     dict_chaine['OPER'] = ' (oper)'
     dict_chaine['DBLE'] = ' (double)'
     dict_chaine['MIRR'] = ' (miroir)'
-    dict_chaine['OPER@lafaysse'] = ' (dev)'
+    dict_chaine['DEV'] = ' (dev)'
     dict_chaine['nouveaux_guess@lafaysse'] = ' (dev)'
     # undefined xpid is possible because it is allowed by defaultdict
 

@@ -210,6 +210,11 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
     def datevalidity(self):
         return self.conf.get('prep_datevalidity', self.conf.datebegin)
 
+    @property
+    def namespace_out(self):
+        """Namespace for output files"""
+        return "vortex.cache.fr"
+
     def get_remote_inputs(self):
         """
         Get ecoclimapI_covers_param.bin, ecoclimapII_eu_covers_param.bin,
@@ -271,7 +276,7 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
             nativefmt    = 'netcdf',
             kind         = 'PREP',
             model        = 'surfex',
-            namespace    = self.conf.get('namespace_out', 'vortex.multi.fr'),
+            namespace    = self.namespace_out,
             namebuild    = 'flat@cen',  # TODO : passer en variable de configuration
             block        = 'prep',
             member       = self.conf.get('member', None),
@@ -439,7 +444,7 @@ class FetchPrepFileOrMake(_PrepConstruct):
             nativefmt   = 'netcdf',
             kind        = 'PREP',
             model       = 'surfex',
-            namespace   = 'vortex.cache.fr',
+            namespace   = self.namespace_out,
             namebuild   = 'flat@cen',  # TODO : passer en variable de configuration
             block       = 'prep',
             member      = self.conf.get('prep_member', self.conf.get('member', None)),

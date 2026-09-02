@@ -24,12 +24,12 @@ Tasks designed to launch the PGD executable.
    :class-doc-from: class
    :show-inheritance:
 
-.. autoclass:: FetchPgdOrMake
+.. autoclass:: FetchPgdFileOrMake
    :no-members:
    :class-doc-from: class
    :show-inheritance:
 
-.. autoclass:: FetchPgdOrCrash
+.. autoclass:: FetchPgdFileOrCrash
    :no-members:
    :class-doc-from: class
    :show-inheritance:
@@ -394,7 +394,7 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
                 nativefmt="netcdf",
                 kind="pgdnc",
                 model="surfex",
-                namespace="vortex.multi.fr",
+                namespace=self.namespace_out,
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block="pgd",
             ),
@@ -555,9 +555,9 @@ class MakePgd(_PgdConstruct):
             self.get_pgd_exe_from_uenv()
 
 
-class FetchPgdOrMake(_PgdConstruct):
+class FetchPgdFileOrMake(_PgdConstruct):
     """
-    **Task: FetchPgdOrMake**
+    **Task: FetchPgdFileOrMake**
 
     Generation of ground physiography (PGD.nc file).
     If PGD.nc is available in cache or archive for the current experiment fetch it.
@@ -693,6 +693,11 @@ class FetchPgdOrMake(_PgdConstruct):
         super().__init__(**kw)
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
 
+    @property
+    def namespace_out(self):
+        """Namespace for output files"""
+        return "vortex.cache.fr"
+
     def pgd_avail(self):
         """
         Try to get PGD.nc from cache or archive. If not available try to get PGD.nc from uenv.
@@ -742,31 +747,12 @@ class FetchPgdOrMake(_PgdConstruct):
         else:
             super().launch_algo(algo)
 
-    def put_outputs(self):
-        self.sh.title("Toolbox Output PGD")
-        pgd_tbo = (
-            vortex.output(
-                local="PGD.nc",
-                role="SurfexClim",
-                experiment=self.conf.xpid,
-                geometry=self.conf.geometry,
-                nativefmt="netcdf",
-                kind="pgdnc",
-                model="surfex",
-                namespace="vortex.cache.fr",
-                namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block="pgd",
-            ),
-        )
-        print(self.ticket.prompt, "pgd_tbo =", pgd_tbo)
-        print()
-
     def diff(self):
         # This is a non-reproducible task anyway
         pass
 
 
-class FetchPgdOrCrash(FetchPgdOrMake):
+class FetchPgdFileOrCrash(FetchPgdFileOrMake):
     """
     Get a PGD.nc file from an uenv or vortex cache/archive. And put it in the cache of the current experiment.
     Crash if the file does not exist. The ``force_uenv`` configuration variable allows to look for the
@@ -829,6 +815,9 @@ class FetchPgdOrCrash(FetchPgdOrMake):
         pass
 
     def launch_algo(self, algo, **kwargs):
+        pass
+
+    def put_outputs(self):
         pass
 
     def diff(self):

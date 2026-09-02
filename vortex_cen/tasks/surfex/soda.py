@@ -243,7 +243,7 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
 
         return algo
 
-    def launch_algo(self, algo):
+    def launch_algo(self, algo, **kwargs):
         # Launch without MPI parallelisation
         self.launch_executable(algo)
 
@@ -262,7 +262,7 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
             nativefmt      = 'netcdf',
             kind           = 'PREP',
             model          = 'surfex',
-            namespace      = 'vortex.multi.fr',
+            namespace      = self.namespace_out,
             namebuild      = 'flat@cen',
             block          = 'soda',
             fatal          = True

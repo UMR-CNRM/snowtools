@@ -194,9 +194,9 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
             experiment = self.conf.xpid,
             geometry   = self.conf.geometry,
             model      = "surfex",
-            namespace  = self.conf.get("namespace_out", "vortex.multi.fr"),
+            namespace  = self.namespace_out,
             namebuild  = "flat@cen",
-            block      = self.conf.get("out_block", "init_tg"),
+            block      = self.conf.get("block", "init_tg"),
         )
         print(self.ticket.prompt, "Output init ground temperature =", init_ground_temperature_out)
         print()
@@ -303,8 +303,6 @@ class FetchClimGroundTemperatureOrMake(InitClimGroundTemperature):
       type forcing_vortex1: bool
     * ``out_block``: *block* part of the vortex output path. Default: "prep"
       type out_block: str
-    * ``namespace_out`` Force specific namespace for output files (default: 'vortex.multi.fr')
-      type: str
 
     **Configuration variables for reproducibility test**
 
@@ -334,6 +332,11 @@ class FetchClimGroundTemperatureOrMake(InitClimGroundTemperature):
         ]
 
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
+
+    @property
+    def namespace_out(self):
+        """Namespace for output files."""
+        return "vortex.cache.fr"
 
     def get_remote_inputs(self):
         # First try to get an init_TG file from the local cache or the archive
@@ -475,8 +478,6 @@ class MakeClimGroundTemperatureIfNoPrep(FetchClimGroundTemperatureOrMake):
       type forcing_vortex1: bool
     * ``out_block``: *block* part of the vortex output path. Default: "prep"
       type out_block: str
-    * ``namespace_out`` Force specific namespace for output files (default: 'vortex.multi.fr')
-      type: str
 
     """
 
@@ -528,10 +529,6 @@ class FetchClimGroundTemperatureOrCrash(InitClimGroundTemperature, _CenResearchT
     **Optional configuration variables:**
 
     * ``force_uenv`` If *True* the Init_TG.nc file must come from an uenv. Default: *False*
-    * ``namespace_out`` Force specific namespace for output files (default: 'vortex.multi.fr') For this
-      task you would probably not want to archive the Init_TG.nc file.
-      In this case set ``namespace_out`` to "vortex.cache.fr".
-      type: str
 
     """
     def __init__(self, **kw):
@@ -548,6 +545,11 @@ class FetchClimGroundTemperatureOrCrash(InitClimGroundTemperature, _CenResearchT
         ]
         super().__init__(**kw)
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
+
+    @property
+    def namespace_out(self):
+        """Namespace for output files."""
+        return "vortex.cache.fr"
 
     def get_remote_inputs(self):
         force_uenv = self.conf.get("force_uenv", True)

@@ -19,12 +19,12 @@ Specific CEN providers for DATA STORED OUTSIDE THE VORTEX DATA TREE only.
 """
 
 import importlib
-
+import footprints
 from bronx.fancies import loggers
 
 from vortex.util.config import GenericConfigParser
-from vortex.data.providers import Provider
-from vortex.syntax.stdattrs import namespacefp
+from vortex.data.providers import Provider, Vortex
+from vortex.syntax.stdattrs import namespacefp, block, member, scenario, FmtInt
 
 #: No automatic export
 __all__ = []
@@ -205,3 +205,88 @@ class CenSopranoDevProvider(Provider):
 
         self._config.setall(info)
         return self._config.resolvedpath(resource, self.vapp, self.vconf, self.storage)
+
+
+# class CenDevProvider(Vortex):
+#     """
+#     Provider for real-time simulations run by local user
+#     """
+#     _SPECIAL_EXPS = ()
+#
+#     _footprint = [
+#         block,
+#         member,
+#         namespacefp,
+#         dict(
+#             info="Vortex Cen Dev provider",
+#             attr=dict(
+#                 experiment=dict(
+#                     info="Provider experiment id",
+#                     values=["OPER"],
+#                     type=str,
+#                     optional=False,
+#                     access="rwx",
+#                 ),
+#                 username = dict(
+#                     info="Provider username",
+#                     values=["lafaysse"],
+#                     type=str,
+#                     optional=False,
+#                 ),
+#                 # vapp = dict(
+#                 #     values=["s2m"]
+#                 # ),
+#                 member=dict(
+#                     type=FmtInt,
+#                     args=dict(fmt="03"),
+#                 ),
+#                 namespace=dict(
+#                     values=[
+#                         "vortex.archive-legacy.fr",
+#                         "vortex.cache.fr",
+#                         "vortex.archive.fr",
+#                         "vortex.multi.fr",
+#                         "vortex.stack.fr",
+#                     ],
+#                     optional=True,
+#                     default=None,
+#                     access="rwx",
+#                 ),
+#                 cache=dict(
+#                     info="Whether or not to use the cache",
+#                     type=bool,
+#                     optional=True,
+#                     default=None,
+#                 ),
+#                 archive=dict(
+#                     info="Whether or not to use the archive",
+#                     type=bool,
+#                     optional=True,
+#                     default=None,
+#                 ),
+#                 namebuild=dict(
+#                     info="The object responsible for building filenames.",
+#                     optional=True,
+#                     doc_visibility=footprints.doc.visibility.ADVANCED,
+#                 ),
+#                 expected=dict(
+#                     info="Is the resource expected ?",
+#                     alias=("promised",),
+#                     type=bool,
+#                     optional=True,
+#                     default=False,
+#                     doc_zorder=-5,
+#                 ),
+#             ),
+#             fastkeys={"block", "experiment"},
+#         ),
+#     ]
+#
+#     @property
+#     def realkind(self):
+#         return "vortex"
+#
+#     def netloc(self, resource):
+#         """Returns the current ``namespace``."""
+#         return self.namespace.netloc
+#

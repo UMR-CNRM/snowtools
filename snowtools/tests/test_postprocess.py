@@ -7,8 +7,8 @@ import os
 import numpy as np
 
 from snowtools.DATA import TESTBASE_DIR, SNOWTOOLS_DATA
-from snowtools.plots.pearps2m.postprocess import (EnsemblePostproc, EnsembleOperDiagsFlatMassif, EnsembleMassifPoint,
-                                                  EnsembleStation)
+from snowtools.data.ensemble_classes import EnsemblePostproc, EnsembleMassifPoint, EnsembleStation
+from snowtools.plots.pearps2m.oper_diags_plot import EnsembleOperDiagsFlatMassif
 from snowtools.tools.emosCSG import postprocess_massif
 from snowtools.tests.tempfolder import TestWithTempFolderWithLog
 from bronx.stdtypes.date import Date
