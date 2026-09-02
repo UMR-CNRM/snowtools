@@ -51,6 +51,7 @@ from vortex.algo.components import AlgoComponent, TaylorRun
 from vortex.tools.parallelism import TaylorVortexWorker
 from vortex.syntax.stdattrs import a_date
 
+from snowtools.DATA import SNOWTOOLS_DATA
 from vortex_cen.algo.components import _CenTaylorRun, _CenTaylorVortexWorker
 
 logger = loggers.getLogger(__name__)
@@ -58,6 +59,7 @@ logger = loggers.getLogger(__name__)
 echecker = ExternalCodeImportChecker('snowtools')
 with echecker:
     from snowtools.data.ensemble_classes import EnsemblePostproc, EnsembleHydro
+    from snowtools.DATA import SNOWTOOLS_DATA
     from snowtools.tools.hydro import hydro
     from snowtools.scripts.post_processing import extract_dates
     from snowtools.scripts.post_processing import compute_scd as scd
@@ -101,7 +103,7 @@ class S2m_ensemble_postprocessing(AlgoComponent):
         # get list of file names
         listforcing = [am.rh.container.filename for am in avail_forecasts]
         # init ensemble postprocessing object
-        ens = EnsemblePostproc(self.varnames, listforcing, emosmethod=self.method)
+        ens = EnsemblePostproc(self.varnames, listforcing, emosmethod=self.method, emosdatapath=".")
         # do postprocessing
         ens.postprocess()
 

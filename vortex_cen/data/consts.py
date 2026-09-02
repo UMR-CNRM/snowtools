@@ -220,3 +220,23 @@ class Prosnow_SetUp_Resort(GenvModelResource):
     @property
     def realkind(self):
         return self.kind
+
+
+class EmosCoeffs(GenvModelResource):
+    """
+    Class of a .csv file of emos coefficients. A Genvkey can be given.
+    """
+
+    _footprint = dict(
+        info="Set of EMOS  coefficients",
+        attr=dict(
+            kind=dict(values=["emos_pars", "emos_pars_clim"]),
+            nativefmt=dict(
+                values=['ascii'],
+            ),
+        ),
+    )
+
+    @property
+    def realkind(self):
+        return self.kind
