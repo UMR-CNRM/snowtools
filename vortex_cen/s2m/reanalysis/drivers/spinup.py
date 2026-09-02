@@ -5,7 +5,7 @@ than a simple execution of the PREP executable.
 """
 
 from mkjob.nodes import Driver
-from vortex_cen.tasks.surfex.pgd import FetchPgdOrCrash
+from vortex_cen.tasks.surfex.pgd import FetchPgdFileOrCrash
 from vortex_cen.tasks.surfex.prep import FetchPrepFileOrCrash
 from vortex_cen.tasks.surfex.offline import Spinup
 
@@ -15,7 +15,7 @@ def setup(t, **kw):
         tag='surfex',
         ticket=t,
         nodes=[
-            FetchPgdOrCrash(tag='getpgd', ticket=t, **kw),
+            FetchPgdFileOrCrash(tag='getpgd', ticket=t, **kw),
             FetchPrepFileOrCrash(tag='getprep', ticket=t, **kw),
             Spinup(tag='spinup', ticket=t, **kw),
         ],

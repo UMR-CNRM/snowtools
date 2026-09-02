@@ -11,7 +11,7 @@ def setup(t, **kw):
         tag='offline_assim',
         ticket=t,
         nodes=[
-            FetchPgdOrCrash(tag='fetch_pgd', ticket=t, **kw),
+            FetchPgdFileOrCrash(tag='fetch_pgd', ticket=t, **kw),
             FetchPrepFileOrCrash(tag='fetch_prep_file', ticket=t, **kw),
             OfflineAssim(tag='offline_assim', ticket=t, **kw),
         ],

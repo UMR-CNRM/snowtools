@@ -18,7 +18,7 @@ def setup(t, **kw):
         ticket = t,
         nodes = [
             # Common namelist pre-processing
-            FetchPgdOrCrash(tag='fetch_pgd', ticket=t, **kw),
+            FetchPgdFileOrCrash(tag='fetch_pgd', ticket=t, **kw),
             PrepRefill(tag='prep_refill', ticket=t, **kw),
             # assim sequence
             LoopFamily(

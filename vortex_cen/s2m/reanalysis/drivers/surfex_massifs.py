@@ -5,7 +5,7 @@ Add slopes to the SAFRAN "flat massif" FORCING files and launch the OFFLINE exec
 """
 
 from mkjob.nodes import Driver
-from vortex_cen.tasks.surfex.pgd import FetchPgdOrCrash
+from vortex_cen.tasks.surfex.pgd import FetchPgdFileOrCrash
 from vortex_cen.tasks.surfex.prep import FetchPrepFileOrCrash
 from vortex_cen.tasks.surfex.offline import Offline_Mpi_Uenv
 
@@ -15,7 +15,7 @@ def setup(t, **kw):
         tag='surfex',
         ticket=t,
         nodes=[
-            FetchPgdOrCrash(tag='getpgd', ticket=t, **kw),
+            FetchPgdFileOrCrash(tag='getpgd', ticket=t, **kw),
             FetchPrepFileOrCrash(tag='getprep', ticket=t, **kw),
             Offline_Mpi_Uenv(tag='offline', ticket=t, **kw),
         ],
