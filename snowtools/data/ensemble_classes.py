@@ -229,8 +229,13 @@ class Ensemble:
         # robj = robjects.r.load(filename)  # pylint: disable=possibly-unused-variable
         # reg_coef = np.array(robjects.r[robj[0]])
         # clim_par = np.array(robjects.r[robj[1]])
-        reg_coef = pd.read_csv(os.path.join(SNOWTOOLS_DATA, "matEmosPars.csv"), index_col=0).values
-        clim_par = pd.read_csv(os.path.join(SNOWTOOLS_DATA, "matEmosParsClim.csv"), index_col=0).values
+        if hasattr(self, "emosdatapath"):
+            param_data_path = self.emosdatapath
+        else:
+            param_data_path = SNOWTOOLS_DATA
+        # print("Emos path: ", os.path.join(param_data_path, "matEmosPars.csv"))
+        reg_coef = pd.read_csv(os.path.join(param_data_path, "matEmosPars.csv"), index_col=0).values
+        clim_par = pd.read_csv(os.path.join(param_data_path, "matEmosParsClim.csv"), index_col=0).values
 
         ndays_leadtime = 4
 
@@ -727,7 +732,7 @@ class EnsemblePostproc(_EnsembleMassif):
     Class for ensemble post-processing.
     """
     def __init__(self, variables, inputfiles, decile=np.arange(10, 100, 10), outdir='.',
-                 outfilename='PRO_post.nc', emosmethod=None):
+                 outfilename='PRO_post.nc', emosmethod=None, emosdatapath=SNOWTOOLS_DATA):
         """
         :param variables: list of variables to process
         :param inputfiles: list of input files
@@ -753,6 +758,7 @@ class EnsemblePostproc(_EnsembleMassif):
         if emosmethod:
             if emosmethod == 'emos':
                 self.emosmethod = Ensemble.emos_csg_nonorm_allstations_newsnow
+                self.emosdatapath = emosdatapath
             elif emosmethod == 'quantiles':
                 self.emosmethod = Ensemble.quantile
             else:

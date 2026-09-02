@@ -24,7 +24,7 @@ def setup(t, **kw):
 
 class Four_Seasons_Task(CENTaskMixIn, Task):
     """
-    Task : Four_Seasons_Task
+    Task: Four_Seasons_Task
     ========================
 
     Post-processing task for the 4 seasons bulletin. Uses S2m ensemble forecasts based on PEARP.
@@ -33,6 +33,8 @@ class Four_Seasons_Task(CENTaskMixIn, Task):
     Inputs
     ------
     - PRO.nc : Crocus forecast
+    - matEmosPars.csv
+    - matEmosParsClim.csv
 
     Outputs
     -------
@@ -47,6 +49,8 @@ class Four_Seasons_Task(CENTaskMixIn, Task):
         "previ+help=Activate forecast mode;type=bool",  # used in the "get_period" method
         "namespace_in+help=Where to look for nwp files;type=str",
         "namespace_out+help=Where to store output guess files;type=str",
+        "nmembers", # used in the get_list_members method
+        "postprocess_method", # used in algo
     ]
     OPTIONAL_CONFIGURATION_VARIABLES = [
     ]
@@ -58,15 +62,50 @@ class Four_Seasons_Task(CENTaskMixIn, Task):
         datebegin, dateend = self.get_period()
         pearpmembers, members = self.get_list_members(sytron=False)
 
-        if 'fetch' in self.steps:
+
+        if 'early-fetch' in self.steps:
+
+            if True:
+                self.sh.title('Toolbox input EMOS Pars')
+                tbi_emos_par = vortex.input(
+                    role='EmosPars',
+                    kind='emos_pars',
+                    nativefmt='ascii',
+                    local='matEmosPars.csv',
+                    #genv=self.conf.uenv,
+                    model="surfex",
+                    genv=self.conf.cycle,
+                    gvar='EMOS_PARS',
+                )
+                print(t.prompt, 'tbi_emos_par =', tbi_emos_par)
+                print()
+
+                self.sh.title('Toolbox input EMOS Pars Clim')
+                tbi_emos_par_clim = vortex.input(
+                    role='EmosParsClim',
+                    kind='emos_pars_clim',
+                    nativefmt='ascii',
+                    local='matEmosParsClim.csv',
+                    #genv=self.conf.uenv,
+                    model="surfex",
+                    genv=self.conf.cycle,
+                    gvar='EMOS_PARS_CLIM',
+                )
+                print(t.prompt, 'tbi_emos_par_clim =', tbi_emos_par_clim)
+                print()
+
+        #if 'fetch' in self.steps:
 
             if True:  # In order to have an indentation and facilitate the comparison with IGA Task
 
-                self.sh.title('Toolbox input tb01')
+                self.sh.title('Toolbox input PRO')
                 tb01 = vortex.input(
                     role        = 'CrocusForecast',
                     local       = 'mb[member]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
                     experiment  = self.conf.xpid,
+                    username = self.conf.get("username", None),
+                    vapp = self.conf.get("pro_vapp", self.conf.vapp),
+                    vconf = self.conf.get("pro_vconf", self.conf.vconf),
                     block       = 'pro',
                     geometry    = self.conf.geometry,
                     date        = self.conf.rundate,
@@ -78,10 +117,12 @@ class Four_Seasons_Task(CENTaskMixIn, Task):
                     model       = 'surfex',
                     namespace   = self.conf.namespace_in,
                     cutoff      = 'production',
-                    fatal       = False
+                    vortex1     = self.conf.get("pro_vortex1", False),
+                    fatal       = False,
                 ),
                 print(t.prompt, 'tb01 =', tb01)
                 print()
+
 
         if 'compute' in self.steps:
             self.sh.title('Toolbox algo tb02 = Postprocessing')
@@ -99,10 +140,10 @@ class Four_Seasons_Task(CENTaskMixIn, Task):
 
             self.component_runner(tbalgo1[0])
 
-        if 'backup' in self.steps:
-            pass
+        # if 'backup' in self.steps:
+        #     pass
 
-        if 'late-backup' in self.steps:
+        if 'backup' in self.steps or 'late-backup' in self.steps:
 
             if True:  # In order to have an indentation and facilitate the comparison with IGA Task
 

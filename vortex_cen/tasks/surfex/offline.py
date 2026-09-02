@@ -431,13 +431,11 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
                 dateend=self.dict_dates_end_pro,
                 nativefmt="netcdf",
                 kind="SnowpackSimulation",
-                namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
                 model="surfex",
                 namespace=self.namespace_out,
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block="offline",
                 member=self.conf.get("member", None),
-                model="surfex",
             ),
         )
         print(self.ticket.prompt, "pro_tbo =", pro_tbo)
