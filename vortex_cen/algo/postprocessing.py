@@ -51,7 +51,6 @@ from vortex.algo.components import AlgoComponent, TaylorRun
 from vortex.tools.parallelism import TaylorVortexWorker
 from vortex.syntax.stdattrs import a_date
 
-from snowtools.DATA import SNOWTOOLS_DATA
 from vortex_cen.algo.components import _CenTaylorRun, _CenTaylorVortexWorker
 
 logger = loggers.getLogger(__name__)
@@ -59,7 +58,6 @@ logger = loggers.getLogger(__name__)
 echecker = ExternalCodeImportChecker('snowtools')
 with echecker:
     from snowtools.data.ensemble_classes import EnsemblePostproc, EnsembleHydro
-    from snowtools.DATA import SNOWTOOLS_DATA
     from snowtools.tools.hydro import hydro
     from snowtools.scripts.post_processing import extract_dates
     from snowtools.scripts.post_processing import compute_scd as scd

@@ -15,9 +15,10 @@ def setup(t, **kw):
         tag='Surfex_Parallel',
         ticket=t,
         nodes=[
-                Ensemble_Surfex_Task(tag='Ensemble_Surfex_Task', ticket=t, **kw, delay_component_errors=True, on_error='delayed_fail'),
-                Four_Seasons_Task(tag='S2m_pp_Task', ticket=t, **kw, delay_component_errors=True, on_error='delayed_fail'),
-                Hydro_Task(tag='S2M_Hydro_Task', ticket=t, **kw, delay_component_errors=True, on_error='delayed_fail')],
+            Ensemble_Surfex_Task(tag='Ensemble_Surfex_Task', ticket=t, **kw, delay_component_errors=True,
+                on_error='delayed_fail'),
+            Four_Seasons_Task(tag='S2m_pp_Task', ticket=t, **kw, delay_component_errors=True, on_error='delayed_fail'),
+            Hydro_Task(tag='S2M_Hydro_Task', ticket=t, **kw, delay_component_errors=True, on_error='delayed_fail')],
         options=kw
     )
 
@@ -49,8 +50,8 @@ class Four_Seasons_Task(CENTaskMixIn, Task):
         "previ+help=Activate forecast mode;type=bool",  # used in the "get_period" method
         "namespace_in+help=Where to look for nwp files;type=str",
         "namespace_out+help=Where to store output guess files;type=str",
-        "nmembers", # used in the get_list_members method
-        "postprocess_method", # used in algo
+        "nmembers",  # used in the get_list_members method
+        "postprocess_method",  # used in algo
     ]
     OPTIONAL_CONFIGURATION_VARIABLES = [
     ]
@@ -62,17 +63,16 @@ class Four_Seasons_Task(CENTaskMixIn, Task):
         datebegin, dateend = self.get_period()
         pearpmembers, members = self.get_list_members(sytron=False)
 
-
         if 'early-fetch' in self.steps:
 
-            if True:
+            if True:  # In order to have an indentation and facilitate the comparison with IGA Task
+
                 self.sh.title('Toolbox input EMOS Pars')
                 tbi_emos_par = vortex.input(
                     role='EmosPars',
                     kind='emos_pars',
                     nativefmt='ascii',
                     local='matEmosPars.csv',
-                    #genv=self.conf.uenv,
                     model="surfex",
                     genv=self.conf.cycle,
                     gvar='EMOS_PARS',
@@ -86,17 +86,12 @@ class Four_Seasons_Task(CENTaskMixIn, Task):
                     kind='emos_pars_clim',
                     nativefmt='ascii',
                     local='matEmosParsClim.csv',
-                    #genv=self.conf.uenv,
                     model="surfex",
                     genv=self.conf.cycle,
                     gvar='EMOS_PARS_CLIM',
                 )
                 print(t.prompt, 'tbi_emos_par_clim =', tbi_emos_par_clim)
                 print()
-
-        #if 'fetch' in self.steps:
-
-            if True:  # In order to have an indentation and facilitate the comparison with IGA Task
 
                 self.sh.title('Toolbox input PRO')
                 tb01 = vortex.input(
@@ -122,7 +117,6 @@ class Four_Seasons_Task(CENTaskMixIn, Task):
                 ),
                 print(t.prompt, 'tb01 =', tb01)
                 print()
-
 
         if 'compute' in self.steps:
             self.sh.title('Toolbox algo tb02 = Postprocessing')
