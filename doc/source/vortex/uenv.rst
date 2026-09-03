@@ -226,7 +226,7 @@ If you detect a mistake in one of the files associated to your uenv at this poin
 
 .. code-block::
 
-    uget hack env <former_uenv_name>@<username> into <new_uenv_name>
+    uget hack env <former_uenv_name>@<username> into <new_uenv_name>@<your_username>
 
 .. note::
 
@@ -236,7 +236,7 @@ and create the new version of the faulty file, if necessary by "hacking" the pre
 
 .. code-block::
 
-    uget hack data <faulty_data_name>@<username> into <new_data_name>
+    uget hack data <faulty_data_name>@<username> into <new_data_name>@<your_username>
 
 Do not forget to change the line corresponding to the faulty data file in the <new_uenv_name> catalogue :
 
@@ -343,13 +343,13 @@ Cloning an existing uenv catalogue file:
 
 .. code-block::
 
-    uget hack env <target_uenv_name>@<username> into <new_uenv_name>
+    uget hack env <target_uenv_name>@<username> into <new_uenv_name>@<your_username>
 
 Cloning an existing genv catalogue file:
 
 .. code-block::
 
-    uget hack genv <target_genv_name> into <new_uenv_name>
+    uget hack genv <target_genv_name> into <new_uenv_name>@<your_username>
 
 .. note::
 
@@ -359,13 +359,13 @@ Cloning an existing data file:
 
 .. code-block::
 
-    uget hack data <target_data_name>@<username> into <new_data_name>
+    uget hack data <target_data_name>@<username> into <new_data_name>@<your_username>
 
 Cloning an existing operational data file:
 
 .. code-block::
 
-    uget hack gdata <target_data_name> into <new_data_name>
+    uget hack gdata <target_data_name> into <new_data_name>@<your_username>
 
 Commit / push a uenv and all its associated data files :
 
