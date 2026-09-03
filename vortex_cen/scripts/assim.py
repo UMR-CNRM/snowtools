@@ -75,7 +75,7 @@ def fetch_prep_footprints(block: str, assimdate: str, nmembers: int):
         geometry=geometry,
         member=[mb for mb in range(nmembers)],
         namebuild="flat@cen",
-        block="prep/" + block,
+        block=block,
         # stage          = '_bg' if task == 'soda' else '_an',
         model="surfex",
         namespace="vortex.cache.fr",
@@ -102,17 +102,21 @@ def wait_mandatory_input(block, assimdate, nmembers, walltime):
     #     for fic in prep:
     #         fic.delete()
     time.sleep(1)
-    while (timer - start < walltime * 1.1) and not launch:
-        if all(fic.get() for fic in prep):
+    while timer - start < walltime * 1.1:
+        if all(fic.get() for fic in prep) and not launch:
             print("==================================================================")
             print(f"{block} PREP files present, launching the next simulation step.")
             print("==================================================================")
             launch = True
+            return launch
         else:
             print(f"Waiting for {block} PREP files")
             time.sleep(10)
             timer = Date.now()
     # TODO : gérer proprement les "timeouts"
+    print("==================================================================")
+    print(f"{block} PREP files not present and walltime reached. Stopping exection.")
+    print("==================================================================")
     return launch
 
 
@@ -196,15 +200,17 @@ if __name__ == "__main__":
         if first_run:
             # This is the first run:
             # launch a set of offline_MPI tasks with a single PREP file as initial conditions
-            clear_preps(block="background", assimdate=date, nmembers=nmembers)
-            clear_preps(block="analysis", assimdate=date, nmembers=nmembers)
+            clear_preps(block="prep/background", assimdate=date, nmembers=nmembers)
+            clear_preps(block="soda/analysis", assimdate=date, nmembers=nmembers)
             offline = mkjob_list_commands("offline_openloop", datebegin=datebegin, dateend=dateend)
             first_run = False
-        elif wait_mandatory_input(block="analysis", assimdate=datebegin, nmembers=nmembers, walltime=walltime):
+        elif wait_mandatory_input(block="soda/analysis", assimdate=datebegin, nmembers=nmembers, walltime=walltime):
             # This is a run after an assimilation step:
-            # aunch a set of offline_MPI tasks with an ensemble of PREP files as initial conditions
+            # Launch a set of offline_MPI tasks with an ensemble of PREP files as initial conditions
             offline = mkjob_list_commands("offline_assim", datebegin=datebegin, dateend=dateend)
             walltime = Time(iniparser.get("offline_assim_job", "time"))
+        else:
+            break
 
         for mkjob in offline:
             print("Run command: " + mkjob + "\n")
@@ -212,10 +218,12 @@ if __name__ == "__main__":
 
         # 2. Launch a SODA assimilation (except if end of simulation reached)
         if dateend != args.dateend and wait_mandatory_input(
-            block="background", assimdate=date, nmembers=nmembers, walltime=walltime
+            block="prep/background", assimdate=date, nmembers=nmembers, walltime=walltime
         ):
             soda = mkjob_command(jobname="soda_job", taskname="soda", date=date)
             print("Run command: " + soda + "\n")
             callSystemOrDie(soda)
             walltime = Time(iniparser.get("soda_job", "time"))
             datebegin = date
+        else:
+            break

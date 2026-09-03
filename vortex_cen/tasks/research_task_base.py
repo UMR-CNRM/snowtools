@@ -14,17 +14,16 @@ Main class used for all CEN HPC research tasks.
    :members:
    :show-inheritance:
 """
+
 import vortex
-from mkjob.nodes import Task
-from vortex_cen.tasks.oper_research_mixin import CENTaskMixIn
 from bronx.stdtypes.date import Date
 from footprints.stdtypes import FPDict, FPList
 from footprints.util import rangex
+from mkjob.nodes import Task
 
-from vortex_cen.tools.monitoring import InputReportContext, OutputReportContext
-from vortex_cen.tools.monitoring import AlgoReportContext, TestReportContext
-
-from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
+from snowtools.utils.dates import get_dic_dateend, get_list_dates_files
+from vortex_cen.tasks.oper_research_mixin import CENTaskMixIn
+from vortex_cen.tools.monitoring import AlgoReportContext, InputReportContext, OutputReportContext, TestReportContext
 
 
 class _CenResearchTask(Task, CENTaskMixIn):
@@ -99,9 +98,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
         self.MANDATORY_CONFIGURATION_VARIABLES.extend(
             [x for x in mandatory if x not in self.MANDATORY_CONFIGURATION_VARIABLES]
         )
-        self.OPTIONAL_CONFIGURATION_VARIABLES.extend(
-            [x for x in optional if x not in self.OPTIONAL_CONFIGURATION_VARIABLES]
-        )
+        self.OPTIONAL_CONFIGURATION_VARIABLES.extend([x for x in optional if x not in self.OPTIONAL_CONFIGURATION_VARIABLES])
 
     def defaults(self, extras):
         """
@@ -110,7 +107,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
 
         t = vortex.ticket()
 
-        if 'localtest' in self.conf:
+        if "localtest" in self.conf:
             vortex.active_now = False
 
         vortex.defaults(
@@ -127,7 +124,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
             # nativefmt      = 'netcdf',
         )
 
-        for optk in ('cutoff', 'geometry', 'cycle', 'vortex_set_aside'):
+        for optk in ("cutoff", "geometry", "cycle", "vortex_set_aside"):
             if optk in self.conf:
                 value = self.conf.get(optk)
                 if isinstance(value, dict):
@@ -137,14 +134,14 @@ class _CenResearchTask(Task, CENTaskMixIn):
         # Le nombre de process et de tâches peut être associé à la géométrie via un dictionnaire, on récupère
         # maintenant la bonne valeur
         # TODO : Sortir ce qui suit de research_task_base et essayer de simplifier
-        if 'ntasks' in self.conf and isinstance(self.conf.ntasks, dict):
+        if "ntasks" in self.conf and isinstance(self.conf.ntasks, dict):
             if self.conf.geometry.tag in self.conf.ntasks.keys():
                 self.conf.ntasks = self.conf.ntasks[self.conf.geometry.tag]
             else:
                 # Default value from s2m.
                 # Maybe it would be better to crash and ask the user to set an explicit value ?
                 self.conf.ntasks = 80
-        if 'nprocs' in self.conf and isinstance(self.conf.nprocs, dict):
+        if "nprocs" in self.conf and isinstance(self.conf.nprocs, dict):
             if self.conf.geometry.tag in self.conf.nprocs.keys():
                 self.conf.nprocs = self.conf.nprocs[self.conf.geometry.tag]
             else:
@@ -155,19 +152,19 @@ class _CenResearchTask(Task, CENTaskMixIn):
         # Format uenv properly : "uenv:{uenv_name}@user" in cas only {uenv_name} is provided
         for key, value in self.conf.items():
             if "uenv" in key:
-                if ':' not in value:
+                if ":" not in value:
                     value = f"uenv:{value}"
-                if '@' not in value:
-                    value = f'{value}@{t.env()["USER"]}'
+                if "@" not in value:
+                    value = f"{value}@{t.env()['USER']}"
 
                 self.conf[key] = value
 
         # Define a namespace_out variable to apply to all outputs set as the *namespace_out*
         # configuration variable if provided by the user or 'vortex.multi.fr' by default
-        self.namespace_out = self.conf.get('namespace_out', 'vortex.multi.fr')
+        self.namespace_out = self.conf.get("namespace_out", "vortex.multi.fr")
 
         vortex.defaults(**extras)
-        self.header('Toolbox defaults')
+        self.header("Toolbox defaults")
         vortex.defaults.show()
 
     def force_configuration_variables(self):
@@ -188,7 +185,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
         :type debug: bool
 
         """
-        if 'debug' in self.conf:
+        if "debug" in self.conf:
             return self.conf.debug
         else:
             return False
@@ -205,9 +202,9 @@ class _CenResearchTask(Task, CENTaskMixIn):
                             Possible values : "yearly", "monthly" or "full"
         :type io_duration: str
         """
-        self.get_list_dates(duration=self.conf.get('io_duration', 'yearly'))
+        self.get_list_dates(duration=self.conf.get("io_duration", "yearly"))
 
-        self.force_configuration_variables(self)
+        self.force_configuration_variables()
 
     def process(self):
         """
@@ -218,7 +215,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
 
         self.preprocess()
 
-        if 'early-fetch' in self.steps:
+        if "early-fetch" in self.steps:
             # In a multi step job (MTOOL, ...), this step will be run on a TRANSFER NODE.
             # Consequently, data that may be missing from the local cache must be fetched here.
             # e.g. GCO's genv, data from the mass archive system, ...
@@ -226,7 +223,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
             with InputReportContext(self, t):
                 self.get_remote_inputs()
 
-        if 'fetch' in self.steps:
+        if "fetch" in self.steps:
             # In a multi step job (MTOOL, ...), this step will be run, on a COMPUTE NODE,
             # just before the beginning of computations. It is the appropriate place to fetch data produced
             # by a previous task (the so-called previous task will have to use the 'backup' step
@@ -234,33 +231,33 @@ class _CenResearchTask(Task, CENTaskMixIn):
             with InputReportContext(self, t):
                 self.get_local_inputs()
 
-        if 'compute' in self.steps:
+        if "compute" in self.steps:
             # The actual computations... (usually a call to the run method of an AlgoComponent)
             # This is executed on a COMPUTE NODE.
             with AlgoReportContext(self, t):
                 algo = self.algo()
-                if 'localtest' not in self.conf:
+                if "localtest" not in self.conf:
                     self.launch_algo(algo)
 
-        if 'backup' in self.steps or 'late-backup' in self.steps:
+        if "backup" in self.steps or "late-backup" in self.steps:
             # In a multi step job (MTOOL, ...), this step will be run on a TRANSFER NODE.
             # Consequently, most of the data should be archived here.
             with OutputReportContext(self, t):
                 self.put_outputs()
 
-        if 'late-backup' in self.steps:
+        if "late-backup" in self.steps:
             # Reproductibility check with reference output (retrieved from the archive on a transfer node only)
-            if 'test' in self.conf and 'localtest' not in self.conf:
+            if "test" in self.conf and "localtest" not in self.conf:
                 with TestReportContext(self, t):
                     self.unittest()
-            elif 'diff_xpid' in self.conf:
+            elif "diff_xpid" in self.conf:
                 self.diff()
 
             if self.debug:
                 # Debug mode : make the job crash at the end to preserve the working directory
-                print('============================================================================')
-                print('============================================================================')
-                raise Exception('INFO :The execution went well, do not take into account the following error')
+                print("============================================================================")
+                print("============================================================================")
+                raise Exception("INFO :The execution went well, do not take into account the following error")
 
     def get_remote_inputs(self):
         """
@@ -283,8 +280,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
         Implement this method to call your task's algo component.
         This method should return a valid AlgoComponent object.
         """
-        raise NotImplementedError("method 'algo' returning a valid AlgoComponent object should be"
-                "implemented in child class.")
+        raise NotImplementedError("method 'algo' returning a valid AlgoComponent object should beimplemented in child class.")
 
     def launch_algo(self, algo, **kw):
         """
@@ -294,8 +290,10 @@ class _CenResearchTask(Task, CENTaskMixIn):
         :param algo: AlgoComponent object
         :param kw:
         """
-        raise NotImplementedError("the method 'launch_algo' should be implemented in child class and might call "
-                                  "'launch_MPI_executable()' or 'launch_python_algo()' if appropriate.")
+        raise NotImplementedError(
+            "the method 'launch_algo' should be implemented in child class and might call "
+            "'launch_MPI_executable()' or 'launch_python_algo()' if appropriate."
+        )
 
     def launch_MPI_executable(self, algo, mpiopts=None):
         """
@@ -341,7 +339,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
         """
         Implement this method in unittest tasks to monitor the test results.
         """
-        if 'diff_xpid' in self.conf and self.conf.diff_xpid:
+        if "diff_xpid" in self.conf and self.conf.diff_xpid:
             self.diff()
 
     def diff(self):
@@ -350,7 +348,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
         """
         pass
 
-    def get_list_dates(self, duration='yearly'):
+    def get_list_dates(self, duration="yearly"):
         """
         Get the list of datebegin/dateend corresponding to the different time periods covered by IO files
         from the actual simulation's datebegin/dateend arguments.
@@ -358,15 +356,16 @@ class _CenResearchTask(Task, CENTaskMixIn):
         :param duration: Time period covered by individual files.
 
         """
-        if 'datebegin' in self.conf and 'dateend' in self.conf:
+        if "datebegin" in self.conf and "dateend" in self.conf:
             # Get FORCING input dates
-            self.list_dates_begin, list_dates_end, self.list_dates_begin_pro, self.list_dates_end_pro  = \
-                get_list_dates_files(Date(self.conf.datebegin), Date(self.conf.dateend), duration)
+            self.list_dates_begin, list_dates_end, self.list_dates_begin_pro, self.list_dates_end_pro = get_list_dates_files(
+                Date(self.conf.datebegin), Date(self.conf.dateend), duration
+            )
             self.dict_dates_end = get_dic_dateend(self.list_dates_begin, list_dates_end)
             self.dict_dates_end_pro = get_dic_dateend(self.list_dates_begin_pro, self.list_dates_end_pro)
-        elif 'date' in self.conf:  # Real-time only --> make a specific default class ?
+        elif "date" in self.conf:  # Real-time only --> make a specific default class ?
             self.list_dates_begin = [self.conf.date]
-            self.dict_dates_end   = {self.conf.date: self.conf.date}
+            self.dict_dates_end = {self.conf.date: self.conf.date}
         else:
             # TODO
             pass
@@ -380,14 +379,14 @@ class _CenResearchTask(Task, CENTaskMixIn):
         """
         if self.conf.member is not None:
             return rangex(self.conf.member)
-        elif 'members' in self.conf:
+        elif "members" in self.conf:
             # members is the list of ensemble members, ex : range(35), '0-35-1', [1, 2, 3]
             return rangex(self.conf.members)
-        elif 'nmembers' in self.conf:
+        elif "nmembers" in self.conf:
             # nmembers is the number of ensemble members (int)
             return rangex(1, self.conf.nmembers)
 
-    def get_forcing(self, localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc', namespace='vortex.multi.fr'):
+    def get_forcing(self, localname="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc", namespace="vortex.multi.fr"):
         """
         Method to get meteorological forcing file(s) covering the simulation period.
         Look for files covering sub-periods defined by the `io_duration` configuration variable (current values:
@@ -457,18 +456,18 @@ class _CenResearchTask(Task, CENTaskMixIn):
 
         t = self.ticket
 
-        forcing_datebegin = self.conf.get('forcing_datebegin', self.conf.get('datebegin', None))
-        forcing_dateend   = self.conf.get('forcing_dateend', self.conf.get('dateend', None))
-        forcing_xpid      = self.conf.get('forcing_xpid', self.conf.xpid)
-        forcing_user      = self.conf.get('forcing_user', None)
-        forcing_vapp      = self.conf.get('forcing_vapp', self.conf.vapp)
-        forcing_vconf     = self.conf.get('forcing_vconf', self.conf.vconf)
-        forcing_block     = self.conf.get('forcing_block', 'meteo')
-        forcing_member    = self.conf.get('forcing_member', self.conf.get('member', None))
+        forcing_datebegin = self.conf.get("forcing_datebegin", self.conf.get("datebegin", None))
+        forcing_dateend = self.conf.get("forcing_dateend", self.conf.get("dateend", None))
+        forcing_xpid = self.conf.get("forcing_xpid", self.conf.xpid)
+        forcing_user = self.conf.get("forcing_user", None)
+        forcing_vapp = self.conf.get("forcing_vapp", self.conf.vapp)
+        forcing_vconf = self.conf.get("forcing_vconf", self.conf.vconf)
+        forcing_block = self.conf.get("forcing_block", "meteo")
+        forcing_member = self.conf.get("forcing_member", self.conf.get("member", None))
         if forcing_member is not None and not isinstance(forcing_member, int):
             forcing_member = FPList(forcing_member)
         # forcing_geometry value may depend on the task's output 'geometry' value
-        if 'forcing_geometry' in self.conf:
+        if "forcing_geometry" in self.conf:
             if isinstance(self.conf.forcing_geometry, dict):
                 forcing_geometry = self.conf.forcing_geometry[self.conf.geometry.tag]
             else:
@@ -477,52 +476,54 @@ class _CenResearchTask(Task, CENTaskMixIn):
             forcing_geometry = self.conf.geometry
         # Security : in case of an ensemble of forcing files, get the FORCING of each member in a
         # separate directory to avoid overwrinting files.
-        if (isinstance(forcing_member, list) and len(forcing_member) > 1 and '[member]' not in localname):
-            localname = f'mb[member]/{localname}'
+        if isinstance(forcing_member, list) and len(forcing_member) > 1 and "[member]" not in localname:
+            localname = f"mb[member]/{localname}"
         # TODO : modifier le namebuilder par defaut lorsque le nouveau incluant la
         # géométrie sera disponible
-        forcing_namebuild = self.conf.get('forcing_namebuild', 'flat@cen')
-        forcing_intent    = self.conf.get('forcing_intent', 'in')
+        forcing_namebuild = self.conf.get("forcing_namebuild", "flat@cen")
+        forcing_intent = self.conf.get("forcing_intent", "in")
         # TODO : ne pas utiliser de source_app / source_conf à l'avenir
-        forcing_source_app  = self.conf.get('forcing_source_app', None)
-        forcing_source_conf = self.conf.get('forcing_source_conf', None)
-        forcing_cutoff = self.conf.get('forcing_cutoff', None)
-        vortex1        = self.conf.get('forcing_vortex1', False),
+        forcing_source_app = self.conf.get("forcing_source_app", None)
+        forcing_source_conf = self.conf.get("forcing_source_conf", None)
+        forcing_cutoff = self.conf.get("forcing_cutoff", None)
+        vortex1 = (self.conf.get("forcing_vortex1", False),)
 
-        duration = self.conf.get('io_duration', 'yearly')
-        list_dates_begin, list_dates_end, _, _ = get_list_dates_files(Date(forcing_datebegin),
-                Date(forcing_dateend), duration)
+        duration = self.conf.get("io_duration", "yearly")
+        list_dates_begin, list_dates_end, _, _ = get_list_dates_files(Date(forcing_datebegin), Date(forcing_dateend), duration)
         dict_dates_end = get_dic_dateend(list_dates_begin, list_dates_end)
 
         # Verrue pour gérer les footprints *source_app* et *source_conf* de la réanalyse S2M
-        if 'forcing_source' in self.conf:
-            forcing_source_app, forcing_source_conf = \
-                self.get_safran_sources(list_dates_begin, era5=self.conf.forcing_source == 'era5')
+        if "forcing_source" in self.conf:
+            forcing_source_app, forcing_source_conf = self.get_safran_sources(
+                list_dates_begin, era5=self.conf.forcing_source == "era5"
+            )
 
-        self.sh.title(f'Input forcing ({duration} duration)')
-        forcing = vortex.input(
-            role           = 'Forcing',  # Used for parallelisation and alternates only
-            kind           = 'MeteorologicalForcing',
-            nativefmt      = 'netcdf',
-            datebegin      = list_dates_begin,
-            dateend        = dict_dates_end,
-            experiment     = forcing_xpid,  # default : self.conf.xpid
-            username       = forcing_user,
-            geometry       = forcing_geometry,  # default : self.conf.geometry
-            local          = localname,
-            vapp           = forcing_vapp,  # default : self.conf.vapp
-            vconf          = forcing_vconf,  # default : self.conf.vconf
-            block          = forcing_block,  # default : 'meteo' ?
-            member         = forcing_member,  # default : None
-            intent         = forcing_intent,  # default : 'in' ?
-            namespace      = namespace,  # default : 'vortex.multi.fr',
-            namebuild      = forcing_namebuild,  # default recherche : 'flat@cen', defaut oper : None
-            vortex1        = vortex1,
-            date           = '[dateend]',  # TODO : à supprimer (cas recherche uniquement)
-            source_app     = forcing_source_app,  # default = None (ne pas refaire l'erreur)
-            source_conf    = forcing_source_conf,  # default = None (ne pas refaire l'erreur)
-            cutoff         = forcing_cutoff,  # TODO : à supprimer dans le cas recherche
-            fatal          = True,
-        ),
-        print(t.prompt, 'FORCING =', forcing)
+        self.sh.title(f"Input forcing ({duration} duration)")
+        forcing = (
+            vortex.input(
+                role="Forcing",  # Used for parallelisation and alternates only
+                kind="MeteorologicalForcing",
+                nativefmt="netcdf",
+                datebegin=list_dates_begin,
+                dateend=dict_dates_end,
+                experiment=forcing_xpid,  # default : self.conf.xpid
+                username=forcing_user,
+                geometry=forcing_geometry,  # default : self.conf.geometry
+                local=localname,
+                vapp=forcing_vapp,  # default : self.conf.vapp
+                vconf=forcing_vconf,  # default : self.conf.vconf
+                block=forcing_block,  # default : 'meteo' ?
+                member=forcing_member,  # default : None
+                intent=forcing_intent,  # default : 'in' ?
+                namespace=namespace,  # default : 'vortex.multi.fr',
+                namebuild=forcing_namebuild,  # default recherche : 'flat@cen', defaut oper : None
+                vortex1=vortex1,
+                date="[dateend]",  # TODO : à supprimer (cas recherche uniquement)
+                source_app=forcing_source_app,  # default = None (ne pas refaire l'erreur)
+                source_conf=forcing_source_conf,  # default = None (ne pas refaire l'erreur)
+                cutoff=forcing_cutoff,  # TODO : à supprimer dans le cas recherche
+                fatal=True,
+            ),
+        )
+        print(t.prompt, "FORCING =", forcing)
         print()
