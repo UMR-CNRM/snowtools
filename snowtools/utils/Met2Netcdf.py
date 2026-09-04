@@ -32,7 +32,7 @@ EXAMPLES OF USE
 .. code-block:: bash
 
    python3 Met2Netcdf.py -b 2000080106 -e 2001080106
-   python3 Met2Netcdf.py -b 1993080106 -e 2023080106 -o MAJ_MetInsitu.nc
+   python3 Met2Netcdf.py -b 1993080106 -e 2023080106 -o CRYOBSCLIM.CDP.2018.MetInsitu.nc
    python3 Met2Netcdf.py -b 2000080106 -e 2001080106 --one_file -p partial_MET.txt
    python3 Met2Netcdf.py -b 2023080106 -e 2024080106 -c --one_file -p /rd/cenfic3/cenobs/mesure_data/col_de_porte/met/MET_2023_2024_fmt
 
@@ -48,23 +48,23 @@ Options:
 
 """
 
-import sys
-import datetime
 import argparse
+import datetime
+import sys
 from datetime import timedelta
 
-import psycopg2
-import numpy as np
 import netCDF4
+import numpy as np
+import psycopg2
 import xarray as xr
+from bronx.meteo.constants import T0
+from bronx.meteo.thermo import Thermo
 
-from snowtools.utils.S2M_standard_file import StandardCDP
-from snowtools.utils.resources import get_file_period
-from snowtools.utils.prosimu import prosimu
 from snowtools.utils.dates import check_and_convert_date, get_list_dates_files
 from snowtools.utils.infomassifs import infomassifs
-from bronx.meteo.thermo import Thermo
-from bronx.meteo.constants import T0
+from snowtools.utils.prosimu import prosimu
+from snowtools.utils.resources import get_file_period
+from snowtools.utils.S2M_standard_file import StandardCDP
 
 ###########################################################################
 # MUST CHANGE EACH YEAR:
@@ -651,7 +651,7 @@ def compilation_ttes_periodes(date_entree_debut, date_entree_fin, site, option_r
             xr_loop = recup_safran(list_date_debut[i], list_date_fin[i], site)
         xr_out = xr.concat([xr_out, xr_loop], dim="time")
 
-    xr_out.drop_duplicates(dim="time")
+    xr_out = xr_out.drop_duplicates(dim="time")
 
     return xr_out
 
@@ -800,31 +800,13 @@ def parseArguments():
     parser = argparse.ArgumentParser()
 
     # Optional arguments
-    parser.add_argument(
-        "-o",
-        "--output",
-        help="Name for output file",
-        type=str,
-        default="out_met2netcdf.nc",
-    )
+    parser.add_argument("-o", "--output", help="Name for output file", type=str, default="out_met2netcdf.nc")
     parser.add_argument("-c", "--constant", help="PSurf and Wind_DIR are constant", action="store_true")
-    parser.add_argument(
-        "-b",
-        "--begin",
-        help="Beginning date for nc file",
-        type=str,
-        default="1993080106",
-    )
+    parser.add_argument("-b", "--begin", help="Beginning date for nc file", type=str, default="1993080106")
     parser.add_argument("-e", "--end", help="Ending date for nc file", type=str, default="2023080106")
     parser.add_argument("-s", "--site", help="Site location", type=str, default="38472401")
     parser.add_argument("--one_file", help="Create forcing for one MET file", action="store_true")
-    parser.add_argument(
-        "-p",
-        "--path_MET",
-        required="--one_file" in sys.argv,
-        help="Path of the only MET",
-        type=str,
-    )
+    parser.add_argument("-p", "--path_MET", required="--one_file" in sys.argv, help="Path of the only MET", type=str)
 
     # Print version
     parser.add_argument("--version", action="version", version="%(prog)s - Version 1.0")
