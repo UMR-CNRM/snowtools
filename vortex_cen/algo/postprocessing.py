@@ -101,7 +101,7 @@ class S2m_ensemble_postprocessing(AlgoComponent):
         # get list of file names
         listforcing = [am.rh.container.filename for am in avail_forecasts]
         # init ensemble postprocessing object
-        ens = EnsemblePostproc(self.varnames, listforcing, emosmethod=self.method)
+        ens = EnsemblePostproc(self.varnames, listforcing, emosmethod=self.method, emosdatapath=".")
         # do postprocessing
         ens.postprocess()
 

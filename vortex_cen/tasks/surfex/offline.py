@@ -431,13 +431,11 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
                 dateend=self.dict_dates_end_pro,
                 nativefmt="netcdf",
                 kind="SnowpackSimulation",
-                namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
                 model="surfex",
                 namespace=self.namespace_out,
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block="offline",
                 member=self.conf.get("member", None),
-                model="surfex",
             ),
         )
         print(self.ticket.prompt, "pro_tbo =", pro_tbo)
@@ -1380,7 +1378,7 @@ class OfflineMpiDailyPrep(OfflineMpi):
                 datevalidity=list(daterange(tomorrow(base=self.conf.datebegin), self.conf.dateend)),
                 nativefmt="netcdf",
                 kind="PREP",
-                namespace=self.conf.get("namespace_out", "vortex.multi.fr"),
+                namespace=self.namespace_out,
                 namebuild="flat@cen",  # TODO : passer en variable de configuration
                 block="offline",
                 member=self.conf.get("member", None),
@@ -1528,10 +1526,6 @@ class OfflineOpenloop(OfflineMpi):
                 role="SnowpackInit",
                 experiment=self.conf.xpid,
                 geometry=self.conf.geometry,
-                # MV : comprendre avec Matthieu L les cas d'usages avec "dailyprep" (reforecast ?)
-                # et faire une tâche spécifique à ces cas là.
-                #            date           = list_dates_end_pro if not self.conf.dailyprep else
-                #                                list(daterange(tomorrow(base=datebegin), dateend)),
                 date=self.list_dates_end_pro,
                 nativefmt="netcdf",
                 kind="PREP",

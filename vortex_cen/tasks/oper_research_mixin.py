@@ -128,7 +128,7 @@ class CENTaskMixIn:
         else:
             dateendanalysis = self.conf.rundate.replace(hour=6)
 
-        if self.conf.previ:
+        if self.conf.get('previ', False):
             datebegin = dateendanalysis
             if self.conf.rundate.hour == self.nightruntime.hour:
                 dateend = dateendanalysis + Period(days=5)
@@ -154,7 +154,7 @@ class CENTaskMixIn:
     def get_rundate_forcing(self):
         # WARNING : oper-only, ne pas utiliser en recherche !
 
-        if self.conf.previ:
+        if self.conf.get('previ', False):
             # SAFRAN only generates new forecasts once a day during the night run
             rundate_forcing = self.conf.rundate.replace(hour=self.nightruntime.hour)
         else:
@@ -177,7 +177,7 @@ class CENTaskMixIn:
             alternates.append((rundate_prep - Period(days=2), "assimilation"))
             alternates.append((rundate_prep - Period(days=3), "assimilation"))
 
-        elif self.conf.previ:
+        elif self.conf.get('previ', False):
             # Standard case: use the analysis of the same runtime
             rundate_prep = self.conf.rundate
             if self.conf.rundate.hour > self.firstassimruntime.hour:
@@ -292,13 +292,11 @@ class CENTaskMixIn:
                 return meteo, self.conf.blockin
 
         elif meteo == "safran":
-            if not hasattr(self.conf, "previ"):
-                self.conf.previ = False
 
             if not hasattr(self.conf, 'rundate'):
                 return meteo, self.get_block_safran_from_geometry()
 
-            if self.conf.rundate.hour != self.nightruntime.hour and self.conf.previ:
+            if self.conf.rundate.hour != self.nightruntime.hour and self.conf.get('previ', False):
                 return "s2m", "meteo"
             else:
                 return "safran", self.get_block_safran_from_geometry()

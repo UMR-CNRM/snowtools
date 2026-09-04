@@ -180,7 +180,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
     @property
     def namespace_out(self):
         """
-        Namespace for autput toolboxes
+        Namespace for output toolboxes
         """
         return self.conf.get('namespace_out', 'vortex.multi.fr')
 

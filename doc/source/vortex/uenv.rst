@@ -195,6 +195,85 @@ Using UEnv ``TargetUEnv.X`` owned by another user
    toolbox.input(genv='uenv:TargetUEnv.X@the_other_user', gvar='Key_from_TargetUEnv.X', unknown=True, filename='...')
 
 
+Archiving a User Environment
+----------------------------
+
+Once you uenv is ready, check that all associated data files exist with :
+
+.. code-block::
+
+    uget check env <target_uenv_name>@<username>
+
+The archive your uenv with :
+
+.. code-block::
+
+    uget push env <target_uenv_name>@<username>
+
+**NB** : This "freezes" your uenv and makes it available to other users (just as a "git push"), from now on you should not modify anything from this uenv !
+You should also remove the local copies to avoid inconsistencies between local and archived versions:
+
+.. code-block::
+
+    uget clean_hack
+
+.. note::
+
+   To ensure that archived files are not modified, their archive location is voluntarily "encrypted"
+
+
+If you detect a mistake in one of the files associated to your uenv at this point, create a new version of your uenv with :
+
+.. code-block::
+
+    uget hack env <former_uenv_name>@<username> into <new_uenv_name>@<your_username>
+
+.. note::
+
+   A coment line at the begining of the <new_uenv_name> catalogue file is added to track its provenance
+
+and create the new version of the faulty file, if necessary by "hacking" the previous one :
+
+.. code-block::
+
+    uget hack data <faulty_data_name>@<username> into <new_data_name>@<your_username>
+
+Do not forget to change the line corresponding to the faulty data file in the <new_uenv_name> catalogue :
+
+.. code-block::
+
+    FAULTY_DATA_KEY="uget:<new_data_name>@<username>"
+
+instead of :
+
+.. code-block::
+
+    FAULTY_DATA_KEY="uget:<faulty_data_name>@<username>"
+
+.. note::
+
+   * The "FAULTY_DATA_KEY" remains unchanged between the two versions
+
+   * No need to change anything else, all other data files remain properly identified in the <new_uenv_name>
+
+
+Data tree
+---------
+
+When retrieved with Vortex, data from a uenv can come from :
+
+* The 'hack' data tree under $HOME/.vortexrc/hack/uget/<username>. This data tree should be used only during the creation and test of a new uenv.
+
+* The 'Archive' date tree. This is the data tree from which valid and shared uenv data are retrieved, potentially from different users.
+
+* The 'local' data tree. This is a local copy of the 'Archive' date tree, which is created when data is first fetched in order to act as a cache for future use.
+
+.. note::
+
+    Fetching data from the "Archive" or "Local" data trees is transparent to the user in most cases.
+    The only exceptions are linked to issues with transfers from the archive (passord updates, call from a login or compute nodes on HPC,...).
+
+
 Examples of available User Environments (UEnv)
 ----------------------------------------------
 
@@ -219,6 +298,110 @@ Shapefiles availables in "uenv:shapefiles.1@vernaym"::
 Uenv to reproduce simulations from M.Vernay PhD : "edelweiss_gr250_pappus.2@vernaym"
 
 Uenv for latest version of the ANTILOPE post-processing algorithm : "edelweiss.3@vernaym"
+
+UEnv vs GEnv
+------------
+
+Constant files used in operationnal simulations are managed by the GCO team with the "genv" equivalent of user environments.
+To access data from an operationnal "genv", simply provide the name of the genv without the 'uenv:' prefix nor the '@<username>' suffix:
+
+.. code-block::
+
+   uenv = cen01_cen@s2m-op2.13
+
+identifies an opertional genv, whereas
+
+.. code-block::
+
+   uenv = uenv:cen01_cen@s2m-op2.13@vernaym
+
+identifies the uenv of user "vernaym".
+
+Usefull commands
+----------------
+
+List available user environments for a given user :
+
+.. code-block::
+
+    uget list env from <username>
+
+
+Check data availability for a specific uenv :
+
+.. code-block::
+
+    uget check env <uenv_name>@<username>
+
+This returns the location of the catalogue file ("Hack" and/or "Archive"), as well as the list of associated files and their location.
+
+.. note::
+
+    The location can be "Hack" (developments in progress) and/or Archive (target already pushed).
+
+Cloning an existing uenv catalogue file:
+
+.. code-block::
+
+    uget hack env <target_uenv_name>@<username> into <new_uenv_name>@<your_username>
+
+Cloning an existing genv catalogue file:
+
+.. code-block::
+
+    uget hack genv <target_genv_name> into <new_uenv_name>@<your_username>
+
+.. note::
+
+    It is recommended to clone an existing uenv / genv rather than to create a new one from scratch whenever possible because it adds a comment to track its provenance.
+
+Cloning an existing data file:
+
+.. code-block::
+
+    uget hack data <target_data_name>@<username> into <new_data_name>@<your_username>
+
+Cloning an existing operational data file:
+
+.. code-block::
+
+    uget hack gdata <target_data_name> into <new_data_name>@<your_username>
+
+Commit / push a uenv and all its associated data files :
+
+.. code-block::
+
+    uget push env <target_uenv_name>@<username>
+
+**NB** : once a uenv catalogue file and its associated data files have been pushed, remove the local copies to avoid inconsistencies between local and archived versions:
+
+.. code-block::
+
+    uget clean_hack
+
+Commit / push a specific data file :
+
+.. code-block::
+
+    uget push data <target_data_name>@<username>
+
+**NB** : 
+
+Compare two catalogues (uenv and/or genv alike), or a uenv catalogue with its "parent" in case it has been properly "hacked" :
+
+.. code-block::
+
+    uget diff env <first_uenv_name>@<username> wrt env <second_uenv_name>@<username>
+    uget diff env <uenv_name>@<username> wrt genv <genv_name>
+    uget diff env <uenv_name>@<username> wrt parent
+
+Get the list of data files that differ between two catalogues:
+
+.. code-block::
+
+    uget export env <first_uenv_name>@<username> wrt env <second_uenv_name>@<username>
+    uget export env <uenv_name>@<username> wrt genv <genv_name>
+
 
 FAQ - Frequent issues
 ---------------------
@@ -254,4 +437,3 @@ raises the following error :
     # [2026/08/17-12:36:48][vortex.data.abstractstores][incacheget:1180][INFO]: incacheget on uget://uget.hack.fr//data/namelists_surfex9_0_crocus3_0_2_std (to: namelists_surfex9_0_crocus3_0_2_std)
     # [2026/08/17-12:36:48][vortex.data.abstractstores][incacheget:1199][INFO]: incacheget retrieve rc=True location=/home/cnrm_other/cen/mrns/vernaym/.vortexrc/hack/uget/vernaym/data/namelists_surfex9_0_crocus3_0_2_std
     # [2026/08/17-12:36:48][vortex_gco.data.stores][ugetget:1664][ERROR]: 'namelists_surfex9_0_crocus3_0_2_std' should be a tarfile
-
