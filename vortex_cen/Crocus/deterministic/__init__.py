@@ -16,6 +16,7 @@ Workflow:
 3. Generation of a PREP.nc file with prep.job
 
 4. Generation of a spinup with spinup.job. If necessary, the PGD.nc and PREP.nc files will be created.
+:wq
 
 5. Launch a SURFEX/Crocus simulation with surfex.job. If necessary, the PGD.nc and PREP.nc files will be created.
 

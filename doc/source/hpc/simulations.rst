@@ -7,6 +7,8 @@ This section contains all necessary information to launch simulations on HPC.
 Code organisation in applications and configurations
 ----------------------------------------------------
 
+.. _surfex:
+
 .. automodule:: vortex_cen.Crocus
    :members:
 
@@ -113,6 +115,7 @@ Then you can choose a subset of jobs to launch with the "-n" option :
 
    mkjob -f $SNOWTOOLS_CEN/vortex_cen/s2m/reanalysis/safran.jobs -c $SNOWTOOLS_CEN/vortex_cen/s2m/reanalysis/conf/s2m_reanalysis.ini -n safran_reanalysis_alp safran_reanalysis_pyr safran_reanalysis_cor -a datebegin=... dateend=... xpid=...
 
+.. _configuration_files:
 
 Configuration files
 ^^^^^^^^^^^^^^^^^^^
@@ -150,12 +153,20 @@ Then you can choose a subset of jobs to launch with the "-n" option :
     A configuration file should contain all configuration variables associated to a given scientific experiment. It is strongly recomended to name your configuration files after the associated experiment identifier (*xpid*).
 
     The only command-line configuration variables that can be parsed to the "-a" argument of mkjob are:
+
     * The *datebegin* and *dateend* of the simulation
+
     * The *geometry* of the simulation
+
     * *debug=True* to ensure that the working directory is preserved at the end of the job
+
     * *test=True* to get a quick report on the job execution status under /scratch/mtool/<username> without having to dig in the log
+
     * *allow_path=True* to allow parsing absolute path for the surfex namelist and executables input
-    * The job's sbatch information (*walltime*, *nnodes*, *partition*)
+
+    * *diff_xpid*, *diff_user*, *diff_block* and *diff_vortex1* for reproducibility checks with reference data
+
+    * The job's sbatch information (*walltime*, *nnodes*, *partition*). However it is recomended to leave that information in the configuration file whenever possible.
 
 
 The mkjob helper
@@ -187,12 +198,6 @@ Two additionnal arguments allow to refine the information to display :
    * If only the target application ("-a" argument) and configuration ("-c" argument) are provided, the general documentation of this specific configuration is displayed
 
 
-The "assim" launcher
-^^^^^^^^^^^^^^^^^^^^
-..
-  TODO:
-  * "assim" script
-
 Tutorial (user)
 ---------------
 
@@ -205,20 +210,22 @@ Deterministic SURFEX/Crocus simulations can be launched with the following job d
 
     If they do not exists, the PGD.nc and/or the PREP.nc files will be created.
     It is possible to force the generation of these files with the job description files 'pgd.job' and 'init_TG.job' + 'prep.job'.
-    A spinup for more realistic initial conditions can be run with the 'spinup.job' job description file.
+    For more realistic initial conditions, a spinup can be run with the 'spinup.job' job description file.
+
+    For more information, see :ref:`surfex`
 
 
 Default SAFRAN-based simulations
 """"""""""""""""""""""""""""""""
 
-A default configuration file is also available ("-c" argument of the mkjob command : $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini
+A default configuration file is available ("-c" argument of the mkjob command : $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini)
 This default SURFEX/Crocus simulation use FORCING files from the S2M-reanalysis dataset and the minimum information to provide is:
 
 * the simulation's experiment identifier : *xpid* can be any string of length different from 4
 * the simulation's period : *datebegin* and *dateend* must be between 01/08/1940 and 01/08/2025 in case default S2M reanalysis FORCING files are used
 * the simulation's *geometry* must be a valid S2M-reanalysis geometry in case default S2M reanalysis FORCING files are used
 
-**NB** it is recomended to add all your configuration variables other than *datebegin*, *dateend* and *geometry* in a configuration file (in the "conf" directory of the configuration) named after your experiment identifier (*xpid*).
+**NB** it is recomended to add all your configuration variables other than *datebegin*, *dateend* and *geometry* in a configuration file (in the "conf" directory of the configuration) named after your experiment identifier (*xpid*). See section `ref:configuration_files`.
 
 .. code-block::
 
@@ -232,11 +239,11 @@ The default SURFEX/Crocus simulations described on the sections above are based 
 You can use your own SURFEX executables, either by adding them in an existing uenv (:ref:`uenv_modification`), either in a separate user environment as described bellow.
 
 In order to produce reproducible simulations, it is recomended to compile SURFEX with the "compile_surfex_hpc.sh" script (under cenutils).
-This script compiles the SURFEX binaries and put them in a proper, ready-to-use User Environment.
+This script compiles the SURFEX binaries and put them in a proper, ready-to-use User Environment (uenv).
 The only mandatory argument is the target SURFEX repository (--surfex_dir).
 The MPI compilation option and the optimisation level can additionaly be provided with the --ver_mpi ("MPI" by default, or "NOMPI") and --optlevel ("O2" by default or "DEBUG") arguments respectively.
 
-A proper, ready-to-use User Environment containing the compiled binaries is automatically created with a standard name "surfex_executables_${VER_MPI}_${surfex_commit}" (which is displayed on screen at the end of the comilation script). You can use this uenv in your simulations by adding the following configuration variable in your configuration file:
+The uenv containing the compiled binaries is automatically created with a standard name "surfex_executables_${VER_MPI}_${surfex_commit}" (which is displayed on screen at the end of the comilation script). You can use this uenv in your simulations by adding the following configuration variable in your configuration file:
 
 .. code-block::
 

@@ -6,4 +6,5 @@ The Crocus 'assim' configuration
 SURFEX/Crocus simulations based on an ensemble of meteorological forcing from any origin, and optionaly different
 physics, with the assimilation of snow observations.
 
+
 """

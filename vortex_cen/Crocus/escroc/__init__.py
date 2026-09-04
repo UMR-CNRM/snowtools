@@ -3,6 +3,8 @@
 The Crocus 'escroc' configuration
 =================================
 
-Crocus multiphysics simulations based on a single or an ensemble of meteorological forcing(s).
+Crocus multiphysics simulations based on a single or an ensemble of meteorological forcing file(s).
+
+Currently, the generation of PGD.nc and PREP.nc files is done in the "deterministic" configuration.
 
 """
