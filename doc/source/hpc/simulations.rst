@@ -591,7 +591,7 @@ Croco-assim command in snowtools3 :
 
   .. code-block:: bash
 
-     assim -b 2021080206 -e 2022080106 --vapp=Crocus --vconf=assim -c $SNOWTOOLS_CEN/vortex_cen/Crocus/assim/conf/assim_example.ini -a 2022022612
+     assim -b 2021080206 -e 2022080106 -g GrandesRousses250m --vapp=Crocus --vconf=assim -c $SNOWTOOLS_CEN/vortex_cen/Crocus/assim/conf/assim_example.ini -a 2022022612
 
 
 Replay operational analysis and forecast

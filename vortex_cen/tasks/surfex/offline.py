@@ -1439,69 +1439,6 @@ class OfflineMpiDailyPrep(OfflineMpi):
         pass
 
 
-class OfflineAssim(OfflineMpi):
-    """
-    This is the task for an OFFLINE-MPI execution after a snow data assimilation step.
-    Each simulaiton member is initialised by a different PREP file identified by its *member* value.
-    """
-
-    def __init__(self, **kw):
-
-        super().__init__(**kw)
-
-        MANDATORY_CONFIGURATION_VARIABLES = []
-
-        OPTIONAL_CONFIGURATION_VARIABLES = []
-
-        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
-
-    def get_remote_inputs(self):
-
-        self.get_forcing(localname="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc")
-        self.get_ecoclimap()
-        self.get_drdt_bst_fit()
-        self.get_namelist()
-        self.get_prep_file()  # TODO: check if this could be replaced by a suitable configuration
-        #  of the FetchPrepFileOrCrash and OfflineMpi classes? In this case the
-        #  corresponding drivers could simply use the OfflineMpi class.
-        self.get_executable_from_uenv()
-
-    def get_local_inputs(self):
-        self.get_pgd_file_from_cache()
-
-    def get_prep_file(self):
-        """
-        All members are initialised by a different PREP file coming from a SODA analysis
-        --> Use default *block* "soda" and *member" to the associated member value.
-        SR: Must *block* really be hard coded here? Can't this be configured?
-        """
-
-        self.sh.title("Input PREP")
-        prep_tbi = (
-            vortex.input(
-                local="PREP.nc",
-                role="SnowpackInit",
-                experiment=self.conf.get("prep_xpid", self.conf.xpid),
-                username=self.conf.get("prep_user", None),
-                date=self.conf.get("prep_datevalidity", self.conf.datebegin),
-                vapp=self.conf.get("prep_vapp", self.conf.vapp),
-                vconf=self.conf.get("prep_vconf", self.conf.vconf),
-                geometry=self.conf.geometry,
-                nativefmt="netcdf",
-                kind="PREP",
-                namespace="vortex.multi.fr",
-                vortex1=self.conf.get("prep_vortex1", False),
-                namebuild="flat@cen",  # TODO : passer en variable de configuration ?
-                block=self.conf.get("prep_block", "soda"),
-                member=self.conf.member,  # TODO: where does the "member" configuration come from?
-                model="surfex",
-                intent="inout",
-            ),
-        )
-        print(self.ticket.prompt, "prep_tbi =", prep_tbi)
-        print()
-
-
 class OfflineOpenloop(OfflineMpi):
     """
     This is the task for an OFFLINE-MPI execution before any data assimilation.
@@ -1538,7 +1475,7 @@ class OfflineOpenloop(OfflineMpi):
                 role="SnowpackInit",
                 experiment=self.conf.get("prep_xpid", self.conf.xpid),
                 username=self.conf.get("prep_user", None),
-                date=self.conf.get("prep_datevalidity", self.conf.datebegin),
+                datevalidity=self.conf.get("prep_datevalidity", self.conf.datebegin),
                 vapp=self.conf.get("prep_vapp", self.conf.vapp),
                 vconf=self.conf.get("prep_vconf", self.conf.vconf),
                 geometry=self.conf.geometry,
@@ -1563,11 +1500,11 @@ class OfflineOpenloop(OfflineMpi):
         self.sh.title("Output PREP")
         prep_tbo = (
             vortex.output(
-                local="PREP_[date:ymdh].nc",
+                local="PREP_[datevalidity:ymdh].nc",
                 role="SnowpackInit",
                 experiment=self.conf.xpid,
                 geometry=self.conf.geometry,
-                date=self.list_dates_end_pro,
+                datevalidity=self.list_dates_end_pro,
                 nativefmt="netcdf",
                 kind="PREP",
                 namespace=self.namespace_out,
@@ -1578,6 +1515,55 @@ class OfflineOpenloop(OfflineMpi):
             ),
         )
         print(self.ticket.prompt, "prep_tbo =", prep_tbo)
+        print()
+
+
+class OfflineAssim(OfflineOpenloop):
+    """
+    This is the task for an OFFLINE-MPI execution after a snow data assimilation step.
+    Each simulaiton member is initialised by a different PREP file identified by its *member* value.
+    """
+
+    def __init__(self, **kw):
+
+        super().__init__(**kw)
+
+        MANDATORY_CONFIGURATION_VARIABLES = []
+
+        OPTIONAL_CONFIGURATION_VARIABLES = []
+
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
+
+    def get_prep_file(self):
+        """
+        All members are initialised by a different PREP file coming from a SODA analysis
+        --> Use default *block* "soda" and *member" to the associated member value.
+        SR: Must *block* really be hard coded here? Can't this be configured?
+        """
+
+        self.sh.title("Input PREP")
+        prep_tbi = (
+            vortex.input(
+                local="PREP.nc",
+                role="SnowpackInit",
+                experiment=self.conf.get("prep_xpid", self.conf.xpid),
+                username=self.conf.get("prep_user", None),
+                datevalidity=self.conf.get("prep_datevalidity", self.conf.datebegin),
+                vapp=self.conf.get("prep_vapp", self.conf.vapp),
+                vconf=self.conf.get("prep_vconf", self.conf.vconf),
+                geometry=self.conf.geometry,
+                nativefmt="netcdf",
+                kind="PREP",
+                namespace="vortex.multi.fr",
+                vortex1=self.conf.get("prep_vortex1", False),
+                namebuild="flat@cen",  # TODO : passer en variable de configuration ?
+                block="soda",
+                member=self.conf.member,  # TODO: where does the "member" configuration come from?
+                model="surfex",
+                intent="inout",
+            ),
+        )
+        print(self.ticket.prompt, "prep_tbi =", prep_tbi)
         print()
 
 

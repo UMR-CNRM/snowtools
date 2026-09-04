@@ -46,7 +46,7 @@ class SodaCommonsMixin(SurfexCommonsMixin):
             vapp            = self.conf.get('observation_vapp', self.conf.vapp),
             vconf           = self.conf.get('observation_vconf', self.conf.vconf),
             date            = self.conf.get('assimdate', self.conf.get('date', None)),
-            block           = self.conf.get('observation_block', None),
+            block           = self.conf.get('observation_block', ''),
             scope           = self.conf.get('scope', None),
             namespace       = 'vortex.multi.fr',
             namebuild       = 'flat@cen',

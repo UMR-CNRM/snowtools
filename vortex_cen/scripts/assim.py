@@ -11,7 +11,7 @@ Such an experiment is a loop over the following sequence of actions over a set o
 
     3. Run an ensemble of SURFEX/Crocus simulations (OFFLINE executable) with an MPI parallelisation from
        the last assimilation date, until the next assimilaiton date (or the date of end simiulation).
-       The difference with the execution of step 1 is that this time, each simuaiton member is initialised by
+       The difference with the execution of step 1 is that this time, each simulation member is initialised by
        specific initial conditions (PREP file) coming from step 2 (SODA analysis).
        --> Associated task : "offline_assim"
 """
@@ -61,7 +61,7 @@ def parse_command_line():
             help="Path to the simulation's configuration file", type=str, required=True)
 
     parser.add_argument("-a", "--assimdates", nargs="+",
-            help="List of assimilation dates", type=str, required=False)
+            help="List of assimilation dates", required=False, default=list())
 
     # Temporary argument for script debuging
     parser.add_argument("--keep_existing_prep", action='store_true', default=False,
@@ -92,12 +92,12 @@ def wait_mandatory_input(vapp, vconf, xpid, block, geometry, assimdate, nmembers
         kind           = 'PREP',
         vapp           = vapp,
         vconf          = vconf,
-        date           = assimdate,
+        datevalidity   = assimdate,
         experiment     = xpid,
         geometry       = geometry,
         member         = [mb for mb in range(nmembers)],
         namebuild      = 'flat@cen',
-        block          = f'prep/{block}',
+        block          = 'offline',
         # stage          = '_bg' if task == 'soda' else '_an',
         model          = 'surfex',
         namespace      = 'vortex.cache.fr',
@@ -129,7 +129,7 @@ def mkjob_command(jobname, taskname, conf, datebegin=None, dateend=None, date=No
 
     One of *date* or (*datebegin* and *dateend*) argument must be provided
     """
-    base = f"mkjob -j name={jobname} task={taskname} profile=rd-belenos-mt jobassistant=cen"
+    base = f"mkjob -j name={jobname} task={taskname} profile=rd-belenos-mt package=drivers jobassistant=cen"
     # TODO : ajouter la période pour éviter d'avoir à mettre datebegin / dateend dans le fichier de conf
     if date is not None:
         dateinfo = f"date={date}"
@@ -218,7 +218,7 @@ def main():
             if wait_mandatory_input(vapp=args.vapp, vconf=args.vconf, xpid=xpid, block='background',
                     geometry=args.geometry, assimdate=date, nmembers=nmembers, walltime=walltime,
                     keep_existing_prep=args.keep_existing_prep):
-                soda = mkjob_command(jobname='soda_job', taskname='soda', date=date)
+                soda = mkjob_command(jobname='soda_job', taskname='soda', date=date, conf=args.conf)
                 print("Run command: " + soda + "\n")
                 callSystemOrDie(soda)
                 walltime = Time(iniparser.get('soda_job', 'time'))
