@@ -189,23 +189,29 @@ Launch a SURFEX/Crocus experiment
 
 Deterministic SURFEX/Crocus simulations can be launched with the following job description file ("-f" argument of the mkjob launcher) : $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job
 
+.. note::
+
+    If they do not exists, the PGD.nc and/or the PREP.nc files will be created.
+    It is possible to force the generation of these files with the job description files 'pgd.job' and 'init_TG.job' + 'prep.job'.
+    A spinup for more realistic initial conditions can be run with the 'spinup.job' job description file.
+
+
 Default SAFRAN-based simulations
 """"""""""""""""""""""""""""""""
 
 A default configuration file is also available ("-c" argument of the mkjob command : $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini
-By default, SURFEX/Crocus simulations use FORCING files from the S2M-reanalysis dataset and the minimum information to provide is:
+This default SURFEX/Crocus simulation use FORCING files from the S2M-reanalysis dataset and the minimum information to provide is:
 
 * the simulation's experiment identifier : *xpid* can be any string of length different from 4
 * the simulation's period : *datebegin* and *dateend* must be between 01/08/1940 and 01/08/2025 in case default S2M reanalysis FORCING files are used
 * the simulation's *geometry* must be a valid S2M-reanalysis geometry in case default S2M reanalysis FORCING files are used
-
-These arguments can either be added in the configuration file, or be provided to the mkjob command line through the "-a" option :
 
 **NB** it is recomended to add all your configuration variables other than *datebegin*, *dateend* and *geometry* in a configuration file (in the "conf" directory of the configuration) named after your experiment identifier (*xpid*).
 
 .. code-block::
 
    mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2020080106 dateend=2021080106 geometry=cor2_allslopes
+
 
 Reproductible simulations with a user-controlled SURFEX/Crocus configuration
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -236,11 +242,11 @@ A proper, ready-to-use User Environment containing the compiled binaries is auto
 
    * Compiling from a directory with no information on the SURFEX commit will produce executables tagged as "Unknown"
 
-If you want to add these executables to an existing uenv named <new_uenv>, first create the <new_uenv> from an existing <old_uenv> one owen by user <uenv_owner>:
+If you want to add these executables to a uenv <new_uenv> containing other constant files, first create the <new_uenv> from an existing <old_uenv> owen by user <uenv_owner>:
 
 .. code-block::
 
-   uget hack <old_uenv>@<uenv_owner> into <new_uenv>
+   uget hack <old_uenv>@<uenv_owner> into <new_uenv>@<your_username>
 
 Then remove the lines refering to SURFEX executables in your <new_uenv> (if any):
 
@@ -265,7 +271,7 @@ Once your uenv is comlete, archive it with:
 
 .. code-block::
 
-   uget push env <new_uenv>
+   uget push env <new_uenv>@<your_username>
 
 ..
   To create a new UEnv, open a file in $HOME/.vortexrc/hack/uget/<your_username>/env with the name of your choice (for example "new_env_name").
@@ -439,6 +445,20 @@ In this case, simply provide the reference experiment identifier in the "diff_xp
 .. note::
 
    the `diff_*` variables can be parsed directly in the mkjob command line since they don't affect the simulation's output
+
+
+Debug mode
+----------
+
+In certain situations, you may wish to check the state of your simulation's working directory, even if your simulation did not crash (in this case the working directory is removed at the end).
+To do so, you can add "debug=True" to the '-a' option of your mkjob command line :
+
+.. code-block::
+
+   mkjob -f $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/jobs/surfex.job -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/default_conf.ini -a xpid=first_test datebegin=2020080106
+   dateend=2021080106 geometry=cor2_allslopes debug=True
+
+This will force the simulation to crash at the very end to ennsure that the working directory is preserved under /scratch/mtool/<username>/abort.
 
 
 Reproduce s2m test cases

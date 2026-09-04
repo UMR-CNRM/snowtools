@@ -1624,7 +1624,6 @@ class OfflineLocalForcing(OfflineMpi):
         self.get_forcing(localname="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc", fatal=False)
 
     def get_local_inputs(self):
-        # Get PGD and PREP locally because they have been retrieved or produced by a previous task
-        self.get_pgd_file_from_cache()
+        super().get_local_inputs()
         # Get FORCING locally in case they have been produced by a previous task
         self.get_forcing(localname="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc")
