@@ -516,6 +516,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
             block="offline",
             member=self.conf.get("member", None),
             model="surfex",
+            vortex1=self.conf.get("diff_vortex1", False),
         )
         print(self.ticket.prompt, "diff =", diff)
         print()

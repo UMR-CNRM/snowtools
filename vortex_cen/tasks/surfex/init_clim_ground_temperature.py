@@ -218,6 +218,7 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
             model      = "surfex",
             namespace  = "vortex.multi.fr",
             namebuild  = "flat@cen",
+            vortex1    = self.conf.get("diff_vortex1", False),
             block      = self.conf.get("diff_block", "init_tg"),
         )
         print(self.ticket.prompt, "diff init_tg =", init_tg_diff)

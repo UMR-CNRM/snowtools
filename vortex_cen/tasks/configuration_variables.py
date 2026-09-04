@@ -485,6 +485,11 @@ standard_variables = dict(
         help = "List of output geometries of the simulation.",
         type  = "'list'",
     ),
+    diff = dict(
+        metavar = True,
+        help = "Footprint description of a reference file for reproducibility checks",
+        values = ["diff_xpid", "diff_user", "diff_block"],
+    ),
     diff_xpid = dict(
         help = "Experiment identifier of the reference file for reproductibility check",
         type = "str",
@@ -498,5 +503,11 @@ standard_variables = dict(
     diff_block = dict(
         help = "The reference's block for reproductibiliy check",
         type = "str",
+    ),
+    diff_vortex1 = dict(
+        help = "Set this value to 'True' if the target reference file(s) have been produced "
+        "with a version of vortex <2",
+        type = "bool",
+        default = "False",
     ),
 )

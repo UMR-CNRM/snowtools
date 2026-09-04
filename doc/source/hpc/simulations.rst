@@ -145,6 +145,18 @@ Then you can choose a subset of jobs to launch with the "-n" option :
 
    mkjob -f safran.jobs -c $SNOWTOOLS_CEN/vortex_cen/s2m/reanalysis/conf/s2m_reanalysis.ini -n safran_reanalysis_alp safran_reanalysis_pyr safran_reanalysis_cor -a datebegin=... dateend=... xpid=...
 
+.. note::
+
+    A configuration file should contain all configuration variables associated to a given scientific experiment. It is strongly recomended to name your configuration files after the associated experiment identifier (*xpid*).
+
+    The only command-line configuration variables that can be parsed to the "-a" argument of mkjob are:
+    * The *datebegin* and *dateend* of the simulation
+    * The *geometry* of the simulation
+    * *debug=True* to ensure that the working directory is preserved at the end of the job
+    * *test=True* to get a quick report on the job execution status under /scratch/mtool/<username> without having to dig in the log
+    * *allow_path=True* to allow parsing absolute path for the surfex namelist and executables input
+    * The job's sbatch information (*walltime*, *nnodes*, *partition*)
+
 
 The mkjob helper
 ^^^^^^^^^^^^^^^^
@@ -323,8 +335,7 @@ and the associated mkjob command line would be :
 
    mkjob -f surfex.job -c $SNOWTOOLS_CEN/vortex_cen/Crocus/deterministic/conf/first_test.ini -a xpid=first_test datebegin=2020080106 dateend=2021080106 geometry=cor2_allslopes
 
-This allows you to clearly identify the specific SURFEX configuration associated with your *xpid*, and to keep a written and traceable record of your different simulations (in addition to shorten the
-mkjob command lines).
+This allows you to clearly identify the specific SURFEX configuration associated with your *xpid*, and to keep a written and traceable record of your different simulations.
 
 .. note::
 
@@ -367,7 +378,7 @@ If you want to use a FORCING file not coming from the S2M reanalysis, you have t
 You can also provide additional information, such as:
 
 * the *forcing_member* providing a specific member value if the target FORCING file is part of an ensemble
-* the *forcing_source_app* and/or *forcing_source_app*, if relevant
+* the *forcing_source_app* and/or *forcing_source_conf*, if relevant
 
 .. note::
    The geometry of the FORCING file should be the same as the simulation's geometry, but you can make this explicit by setting the *forcing_geometry* variable.

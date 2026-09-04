@@ -83,6 +83,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
             "debug",
             "io_duration",
             "namespace_out",
+            "diff",
         ]
 
     def update_attributes(self, mandatory, optional, overwrite=None):

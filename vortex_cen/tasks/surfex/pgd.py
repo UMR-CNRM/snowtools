@@ -426,6 +426,7 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
             namespace="vortex.multi.fr",
             namebuild="flat@cen",
             block=block,
+            vortex1=self.conf.get("diff_vortex1", False),
         )
         print(self.ticket.prompt, "diff =", diff)
         print()

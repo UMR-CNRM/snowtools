@@ -305,6 +305,7 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
             namebuild    = 'flat@cen',  # TODO : passer en variable de configuration
             block        = 'prep',
             member       = self.conf.get('member', None),
+            vortex1      = self.conf.get("diff_vortex1", False),
         ),
         print(self.ticket.prompt, 'diff =', diff)
         print()

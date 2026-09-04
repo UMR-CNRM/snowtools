@@ -643,10 +643,11 @@ class SafranReanalysis(_CenResearchTask):
                 dateend        = dateend,
                 geometry       = geometry,
                 experiment     = self.conf.diff_xpid,
-                username       = self.conf.get('diff_username', None),
+                username       = self.conf.get('diff_user', None),
                 block          = 'safran/massifs',
                 namebuild      = 'flat@cen',
                 local          = filename,
+                vortex1        = self.conf.get("diff_vortex1", False),
             ),
             print(self.ticket.prompt, 'diff =', diff)
             print()
