@@ -761,6 +761,9 @@ class SytistWorker(_SafranWorker):
                 product = self.get_standard_metadata_section
                 with xr.open_dataset('TMP.nc', engine='snowtools') as forcing:
                     forcing.safran.GlobalAttributes(product=product, **self.reprod_info)
+                    # Do not rename 'massif_number' variable into 'massif_num' because SURFEX
+                    # expects 'massif_number'.
+                    forcing = forcing.snowtools.backtrack_preprocess()
                     forcing.to_netcdf(forcing_name)
                 self.system.remove('TMP.nc')
 

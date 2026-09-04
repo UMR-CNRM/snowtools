@@ -244,7 +244,7 @@ class SnowtoolsAccessor:
 
         """
         if 'original_name' in self.ds.attrs.keys():
-            backtrack = self.ds.attrs['original_name']
+            backtrack = self.ds.attrs.pop('original_name')
             mapping = {k.strip(): v.strip() for k, v in [item.split(':') for item in backtrack.split(',')]}
             self.ds = self.ds.rename(mapping)
         return self.ds
