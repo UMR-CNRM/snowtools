@@ -1,0 +1,5 @@
+#MAIL=matthieu.vernay@meteo.fr
+/home/vernaym/s2m/*/guess/era5/*
+/home/vernaym/s2m/*/obs/rs*
+/home/monteirod/vortex/safran/reanalysis/GRIN_2700E_1940-2026_SELECT/observations/*
+
