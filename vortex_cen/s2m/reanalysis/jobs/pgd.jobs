@@ -4,4 +4,4 @@ name=pgd_cor package=drivers task=pgd profile=rd-belenos-mt geometry=cor2_allslo
 name=pgd_mac package=drivers task=pgd profile=rd-belenos-mt geometry=mac11_allslopes
 name=pgd_jur package=drivers task=pgd profile=rd-belenos-mt geometry=jur4_allslopes
 name=pgd_vog package=drivers task=pgd profile=rd-belenos-mt geometry=vog3_allslopes
-name=pgd_postes package=drivers task=pgd profile=rd-belenos-mt geometry=postes
+name=pgd_postes package=drivers task=pgd profile=rd-belenos-mt geometry=postes_2026

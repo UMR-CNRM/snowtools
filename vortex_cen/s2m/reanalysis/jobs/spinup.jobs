@@ -4,4 +4,4 @@ name=spinup_cor package=drivers task=spinup profile=rd-belenos-mt geometry=cor2_
 name=spinup_mac package=drivers task=spinup profile=rd-belenos-mt geometry=mac11_allslopes
 name=spinup_jur package=drivers task=spinup profile=rd-belenos-mt geometry=jur4_allslopes
 name=spinup_vog package=drivers task=spinup profile=rd-belenos-mt geometry=vog3_allslopes
-name=spinup_postes package=drivers task=spinup profile=rd-belenos-mt geometry=postes
+name=spinup_postes package=drivers task=spinup profile=rd-belenos-mt geometry=postes_2026

@@ -4,4 +4,4 @@ name=init_tg_cor package=drivers task=init_TG profile=rd-belenos-mt geometry=cor
 name=init_tg_mac package=drivers task=init_TG profile=rd-belenos-mt geometry=mac11_allslopes
 name=init_tg_jur package=drivers task=init_TG profile=rd-belenos-mt geometry=jur4_allslopes
 name=init_tg_vog package=drivers task=init_TG profile=rd-belenos-mt geometry=vog3_allslopes
-name=init_tg_postes package=drivers task=init_TG profile=rd-belenos-mt geometry=postes
+name=init_tg_postes package=drivers task=init_TG profile=rd-belenos-mt geometry=postes_2026
