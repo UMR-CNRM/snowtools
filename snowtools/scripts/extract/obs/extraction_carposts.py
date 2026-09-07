@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import argparse
 import os
 import numpy as np
 import pandas as pd
@@ -10,12 +9,13 @@ import shapefile
 from shapely.geometry import Point, Polygon
 
 from snowtools.scripts.extract.obs.bdquery import question
-from snowtools.DATA import SNOWTOOLS_CEN
 
 
-departements = ["04", "05", "06", "26", "38", "73", "74", "09", "31", "64", "65", "66", "99", "20", "07", "11", "15", "30", "34", "42", "43", "48", "63", "81", "54", "57", "67", "68", "70", "88", "90", "01", "25", "39"]
+departements = ["04", "05", "06", "26", "38", "73", "74", "09", "31", "64", "65", "66", "99", "20", "07", "11", "15",
+        "30", "34", "42", "43", "48", "63", "81", "54", "57", "67", "68", "70", "88", "90", "01", "25", "39"]
 departements_etrangers = ["204", "205", "203"]
-carpost_fields = ["num_poste", "alti", "massif_nivo", "nom_usuel", "lat_dg", "lon_dg", "datferm", "exposition_nivo", "pente_nivo", "type_nivo"]
+carpost_fields = ["num_poste", "alti", "massif_nivo", "nom_usuel", "lat_dg", "lon_dg", "datferm", "exposition_nivo",
+        "pente_nivo", "type_nivo"]
 
 
 def extraction():
@@ -26,37 +26,47 @@ def extraction():
 
     # Liste "num_poste" stations françaises
     postes_france = question(
-            listvar=[f"{table}.{field}" for field in fields],
-            table=table,
-            listjoin=[f"CATALOGUE_MESURE on {table}.num_poste=CATALOGUE_MESURE.num_poste"],
-            # Selection des stations si :
-            # - dans un département contenant des massifs de montagne
-            # - passant des HTN
-            # - altitude > 600m
-            listconditions=["(num_dep in (" + ",".join(departements) + ") and  mesure_donnee = 1 and CATALOGUE_MESURE.parametre in ('H_NEIGETOT','Q_NEIGETOT06') and alti > 600)"],
-            )
+        listvar=[f"{table}.{field}" for field in fields],
+        table=table,
+        listjoin=[f"CATALOGUE_MESURE on {table}.num_poste=CATALOGUE_MESURE.num_poste"],
+        # Selection des stations si :
+        # - dans un département contenant des massifs de montagne
+        # - passant des HTN
+        # - altitude > 600m
+        listconditions=["num_dep in (" + ",".join(departements) + ")", "mesure_donnee = 1",
+            "CATALOGUE_MESURE.parametre in ('H_NEIGETOT','Q_NEIGETOT06')", "alti > 600"],
+    )
     out = postes_france.get()
     listpostes.extend(set([str(poste[0]) for poste in out]))
 
     # Liste "num_poste" stations étrangères
     postes_etranger = question(
-            listvar=[f"{table}.{field}" for field in fields],
-            table=table,
-            listconditions=["(num_dep in (" + ",".join(departements_etrangers) + ") and mesure_donnee=1)"],
-            )
+        listvar=[f"{table}.{field}" for field in fields],
+        table=table,
+        listconditions=["(num_dep in (" + ",".join(departements_etrangers) + ") and mesure_donnee=1)"],
+    )
     out = postes_etranger.get()
+    listpostes.extend(set([str(poste[0]) for poste in out]))
+
+    # Liste postes nivo
+    postes_nivo = question(
+        listvar=["num_poste"],
+        table="poste_nivo",
+        listconditions=["type_nivo=2", "num_dep in (" + ",".join(departements) + ")", "datferm is null"],
+    )
+    out = postes_nivo.get()
     listpostes.extend(set([str(poste[0]) for poste in out]))
 
     table = "poste_nivo"
     # METADONNEES stations "CARPOSTS"
     carposts = question(
-            listvar=[f"{table}.{field}" for field in carpost_fields],
-            table=table,
-            listconditions=[f"{table}.num_poste in ({','.join(listpostes)})"],
-            listorder=['num_poste'],
-            )
-    #carposts.get(outputfile=f'carposts.csv', sep=' ', header=True)
-    df=pd.DataFrame(carposts.get(), columns=carpost_fields)
+        listvar=[f"{table}.{field}" for field in carpost_fields],
+        table=table,
+        listconditions=[f"{table}.num_poste in ({','.join(listpostes)})"],
+        listorder=['num_poste'],
+    )
+    # carposts.get(outputfile=f'carposts.csv', sep=' ', header=True)
+    df = pd.DataFrame(carposts.get(), columns=carpost_fields)
 
     return df
 
@@ -65,10 +75,11 @@ def check_massif_number(df):
 
     # Sécurité : si le poste n'est associé à aucun massif, on cherche à lui associer le massif dans lequel il se trouve
     # WARNING le shapefile dans snowtools n'est pas dans la projection lat/lon des postes
-    #shapefile_path = os.path.join(SNOWTOOLS_CEN, 'snowtools', 'DATA')
+    # shapefile_path = os.path.join(SNOWTOOLS_CEN, 'snowtools', 'DATA')
     shapefile_path = '/home/vernaym/safran/ctes'
     filename = 'massifs_safran.shp'
     shp = shapefile.Reader(os.path.join(shapefile_path, filename))
+
     def set_massif_number(row):
         if pd.isna(row["massif_nivo"]) or row["massif_nivo"] == 99:
             print('Trying to find massif number for poste ', row["nom_usuel"])
@@ -123,7 +134,7 @@ def make_carposts(df):
     df["exposition_nivo"] = df.apply(check_exposition, axis=1)
     df["num_poste"] = df['num_poste'].astype(int)
 
-    fields = ["num_poste", "alti", "massif_nivo", "nom_usuel", "lat_dg", "lon_dg", "datferm"]
+    # fields = ["num_poste", "alti", "massif_nivo", "nom_usuel", "lat_dg", "lon_dg", "datferm"]
     massif_map = dict(
         alp = [*range(1, 28)],
         pyr = [*range(64, 76), *range(80, 92)],
@@ -142,17 +153,18 @@ def make_carposts(df):
         tmp = df[df.massif_nivo.isin(massif_map[dom])].reset_index(drop=True)[[key for key in col_fmt.keys()]]
 
         for key, fmt in col_fmt.items():
-            tmp[key] = tmp[key].apply(lambda x : f"{x:{fmt}}")
+            tmp[key] = tmp[key].apply(lambda x: f"{x:{fmt}}")
         for index, row in tmp.iterrows():
             write_carpost(index, row)
 
         os.chdir(rundir)
 
+
 def write_carpost(index, row):
 
     carname = "CARPOST{0:0=3d}".format(index)
     with open(carname, 'w') as c:
-        c.write(','.join(row[:7].values.tolist() + ['1.00'] + ["00"]*36 + ['0', row[-1] + '\n']))
+        c.write(','.join(row[:7].values.tolist() + ['1.00'] + ["00"] * 36 + ['0', row[-1] + '\n']))
 
 
 def main():
@@ -165,6 +177,7 @@ def main():
     df.to_csv('carposts_info.csv', sep=' ', header=True, index=False)
     # Write carposts
     make_carposts(df)
+
 
 if __name__ == "__main__":
     main()
