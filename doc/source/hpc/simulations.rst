@@ -4,10 +4,11 @@ Launching simulations on MF HPC
 This section contains all necessary information to launch simulations on HPC.
 
 
+.. _surfex:
+
 Code organisation in applications and configurations
 ----------------------------------------------------
 
-.. _surfex:
 
 .. automodule:: vortex_cen.Crocus
    :members:

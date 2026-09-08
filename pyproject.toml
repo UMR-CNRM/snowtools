@@ -82,12 +82,20 @@ doc = [
     'sphinx-fortran@git+https://github.com/VACUMM/sphinx-fortran.git',
     'sphinx-toolbox',
     'graphviz',
-    'mkjob@git+http://gitlab.meteo.fr/cnrm-gmap/mkjob.git',
-    'vortex-gco@git+https://gitlab.meteo.fr/cnrm-gmap/vortex-gco.git'
+    'mkjob',
+    'vortex-gco'
 ]
 
-# For a full installation
+# For a full installation : all for external users and allmf for MF users
 all = [
+    'vortex-nwp>=2.4.2',
+    'psycopg2',
+    'matplotlib',
+    'cartopy',
+    'rioxarray',
+    'snowtools-crps@git+https://github.com/UMR-CNRM/snowtools-crps.git',
+]
+allmf = [
     'vortex-nwp>=2.4.2',
     'vortex-gco',
     'psycopg2',
@@ -95,6 +103,11 @@ all = [
     'cartopy',
     'rioxarray',
     'snowtools-crps@git+https://github.com/UMR-CNRM/snowtools-crps.git',
+    'sphinx>=4.3',
+    'sphinx-fortran@git+https://github.com/VACUMM/sphinx-fortran.git',
+    'sphinx-toolbox',
+    'graphviz',
+    'mkjob',
 ]
 
 [project.urls]

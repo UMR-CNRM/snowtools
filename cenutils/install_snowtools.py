@@ -21,13 +21,13 @@ parser.add_argument('-v', '--venv', type=str, required=False, default=None,
                          "If this script is already called from a virtual environment,"
                          "this argument is ignored.")
 
-parser.add_argument('-o', '--optional', choices=['plot', 'sql', 'scores', 'all', 'vortex', 'doc'],
+parser.add_argument('-o', '--optional', choices=['plot', 'sql', 'scores', 'all', 'vortex', 'doc', 'allmf'],
                     nargs='*',
-                    default=['all'],
+                    default=['allmf'],
                     help="Install optional dependencies (this option is ignored on MF's HPC):\n" +
                          "* 'plot' install graphical tools\n" +
                          "* 'sql' install sql extraction tools\n" +
-                         "* 'all' install all optional dependencies")
+                         "* 'allmf' install all optional dependencies for Meteo-France computers")
 
 args = parser.parse_args()
 
