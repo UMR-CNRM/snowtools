@@ -4,6 +4,14 @@ Install Snowtools
 =================
 The snowtools project is mainly designed for a Linux environment.
 
+Please refer to the section corresponding to your case :
+
+- `You are a simple user of snowtools <sec-install-user_>`_
+- `You are a developper outside of Meteo-France network <sec-install-dev_>`_
+- `You are a developper from Meteo-France/CEN staff <sec-install-mf_>`_
+
+.. _sec-install-user:
+
 Snowtools install for users
 ---------------------------
 
@@ -20,8 +28,45 @@ If you are only a user of snowtools, you can install the package easily with pip
 
 5. Once you have finished working with snowtools, you can leave the virtual environment by typing ``deactivate``. You can come back to the environment later by calling again ``source <name_of_your_virtual_env>/bin/activate``.
 
-Snowtools install for developers and Meteo-France staff
--------------------------------------------------------
+
+.. _sec-install-dev:
+
+Snowtools install for developers
+--------------------------------
+
+Get the code
+^^^^^^^^^^^^
+
+Make sure you have a github account and that you have a SSH key attached to your github account [#footnote1]_. Do not hesitate to ask an access to the snowtools code and tickets repository (send a mail to crocus at meteo dot fr). You can then clone the git repository on your computer with:
+
+.. code-block:: bash
+
+   git clone git@github.com:UMR-CNRM/snowtools.git
+
+.. warning::
+   If you had a previous verison of snowtools installed as a developper, you first need to uninstall the previous version.
+
+   .. toctree::
+      :maxdepth: 1
+
+      uninstall-snowtools2.rst
+
+Installation
+^^^^^^^^^^^^
+
+1. Choose a location where to store your virtual environments (e.g. ``~/my_envs``, if you do not have a dedicated folder, create it with ``mkdir ~/my_envs``).
+2. Create a virtual environment :  ``python3 -m venv --system-site-packages ~/my_envs/snowtools_env``.
+3. Enter in the virtual environment:  ``source ~/my_envs/snowtools_env/bin/activate``.
+4. Install snowtools and all its dependencies available outside of Meteo-France in editable mode : ``pip install .[all] -e``
+
+That's all for snowtools.
+
+Each time you will need snowtools, you will have to activate the python virtual environment with ``source ~/my_envs/snowtools_env/bin/activate``. When you have finissed your work, you can leave the virtual environment by using the ``deactivate`` command.
+
+.. _sec-install-mf:
+
+Snowtools install for Meteo-France/CEN staff
+--------------------------------------------
 
 Get the code
 ^^^^^^^^^^^^
@@ -35,15 +80,15 @@ Make sure you have a github account and that you have a SSH key attached to your
 
 .. admonition:: Special case of insallation on Meteo-France sxcen and HPC machines
 
-   For CEN staff, on sxcen and HPC, we recommend you not to clone the repository directly but to synchronize with the code already present on your PC by using the ``put`` tool. To do so, run this command **on your PC** : 
+   On sxcen and HPC, we recommend you not to clone the repository directly but to synchronize with the code already present on your PC by using the ``put`` tool. To do so, run this command **on your PC** : 
 
     .. code-block:: bash
 
         # For Belenos
-        $SNOWTOOLS_CEN/cenutils/put snowtools belenos
+        cenutils/put snowtools belenos
 
         # For SXCEN
-        $SNOWTOOLS_CEN/cenutils/put snowtools sxcen
+        cenutils/put snowtools sxcen
 
 
 .. warning::
@@ -59,6 +104,17 @@ Prerequisites on Meteo-France computers
 
 - On HPC you first have to set the correct python version and compiler to use by running : ``module load python/3.12.12 gcc/15.2.0`` (``module load python/3.10.12 gcc/15.2.0`` on taranis)
 - On all Meteo-Frace machines, if you intend to deal with data stored on Meteo-France archive (hendrix), you will have to configure connecton creedentials as explained on page :ref:`vortex-file-transfer`.
+- You have to configure pip to have an access to the internal repository (nexus) that allow to get internal packages such as ``vortex-gco``. To do so, add the following lines to ``~/.config/pip/pip.conf``:
+
+.. code-block:: ini
+
+    [global]
+    index = https://nexus-sidev.meteo.fr/repository/pypi-group/pypi
+    index-url = https://nexus-sidev.meteo.fr/repository/pypi-group/simple
+    extra-index-url = https://nexus.meteo.fr/pypi-vortex-releases/simple
+
+Note that this is not required on HPC because the access to Nexus from HPC is currently blocked.
+
 
 Installation
 ^^^^^^^^^^^^
@@ -66,15 +122,12 @@ Installation
 1. Choose a location where to store your virtual environments (e.g. ``~/my_envs``, if you do not have a dedicated folder, create it with ``mkdir ~/my_envs``).
 2. Create a virtual environment :  ``python3 -m venv --system-site-packages ~/my_envs/snowtools_env``.
 3. Enter in the virtual environment:  ``source ~/my_envs/snowtools_env/bin/activate``.
-4. Use the script dedicated to installation of snowtools on Meteo-France machines : ``python3 cenutils/install_snowtools.py -o all -e``
+4. Use the script dedicated to installation of snowtools on Meteo-France machines : ``python3 cenutils/install_snowtools.py -o allmf -e``
    (This command will run ``pip install`` of snowtools, as an editable install and prepare necessary configuration for vortex).
 
 That's all for snowtools.
 
 Each time you will need snowtools, you will have to activate the python virtual environment with ``source ~/my_envs/snowtools_env/bin/activate``. When you have finissed your work, you can leave the virtual environment by using the ``deactivate`` command.
-
-.. note::
-   It is possible to switch back to a "snowtools2" installation by sourcing the file cenutils/switch_to_snowtools2
 
 Additional optional dependencies and configuration
 --------------------------------------------------
@@ -90,37 +143,13 @@ By default, we recommend external users use the ``plot`` optional dependencies a
 - ``vortex`` : Tools to work with vortex
 - ``all`` gather previous dependencies
 - ``doc`` : Dependencies for documentation generation (in addition to ``all`` dependency), only available at Meteo-France for the moment.
+- ``allmf`` gather previous dependencies and tools to get access to Meteo-France HPC simualtion outputs(``vortex-gco``) and doc, only available at Meteo-France.
 - ``hpc``: only used on Meteo-France HPC, to run simulations on these machines, do not try to install elsewhere.
 
 Additional dependencies that have to be installed manually
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **GDAL** is a dependency for some geopsatial processings. You first need to install gdal binaries (e.g. on Ubuntu, run ``sudo apt install libgdal libgdal-dev``, already installed on Meteo-France machines). Then, you need to install the python binding manually to be consistently with your installed ``libgdal-dev`` version by running: ``pip install --no-cache gdal[numpy]=="$(gdal-config --version).*"`` (please make sure ``numpy``, ``wheel`` and ``setuptools>=67`` are installed beforehand).
-
-Optional additional denpendencies on nexus
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-By default, Pip fetches package distributions from the global Python package registry, pypi.org. The MF's internal Nexus package registry provides additional packages that can be usefull (for example vortex-gco, which enables the use of "Uenv" tools). It is thus recommended to configure Pip so that it can access Nexus. To do so, add the following lines to ~/.config/pip/pip.conf containaing:
-
-.. code-block:: ini
-
-    [global]
-    index = https://nexus-sidev.meteo.fr/repository/pypi-group/pypi
-    index-url = https://nexus-sidev.meteo.fr/repository/pypi-group/simple
-    extra-index-url = https://nexus.meteo.fr/pypi-vortex-releases/simple
-
-Note that this is not required on HPC because the access to Nexus from HPC is currently blocked.
-
-
-[Optional] Install UEnv tools
-"""""""""""""""""""""""""""""
-Install UEnv tools (already installed by default on Belenos):
-
-.. code-block:: bash
-
-    source ~/my_envs/snowtools_env/bin/activate
-    pip install vortex-gco
-    deactivate
 
 
 Spatial interpolator for SAFRAN
