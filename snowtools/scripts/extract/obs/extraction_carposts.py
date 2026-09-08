@@ -7,6 +7,7 @@ import pandas as pd
 import shutil
 import shapefile
 from shapely.geometry import Point, Polygon
+import vortex
 
 from snowtools.scripts.extract.obs.bdquery import question
 
@@ -76,9 +77,22 @@ def check_massif_number(df):
     # Sécurité : si le poste n'est associé à aucun massif, on cherche à lui associer le massif dans lequel il se trouve
     # WARNING le shapefile dans snowtools n'est pas dans la projection lat/lon des postes
     # shapefile_path = os.path.join(SNOWTOOLS_CEN, 'snowtools', 'DATA')
-    shapefile_path = '/home/vernaym/safran/ctes'
-    filename = 'massifs_safran.shp'
-    shp = shapefile.Reader(os.path.join(shapefile_path, filename))
+    t = vortex.ticket()
+    t.sh.title('Toolbox input shapefile')
+    tbshp = vortex.input(
+        role            = 'Shapefile',
+        genv            = 'uget:s2m_oper_2026.1@vernaym',
+        gdomain         = 'all_massifs',
+        geometry        = '[gdomain]',
+        kind            = 'shapefile',
+        model           = 'safran',
+        local           = 'massifs_safran.tar',
+        now             = True,
+    )
+    print(t.prompt, 'tbshp =', tbshp)
+    print()
+    # shapefile_path = '/home/vernaym/safran/ctes'
+    shp = shapefile.Reader('massifs_safran.shp')
 
     def set_massif_number(row):
         if pd.isna(row["massif_nivo"]) or row["massif_nivo"] == 99:
