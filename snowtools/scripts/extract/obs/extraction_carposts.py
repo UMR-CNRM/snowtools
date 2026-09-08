@@ -123,7 +123,7 @@ def make_carposts(df):
 
     col_fmt = dict(
         massif_nivo = "02d",
-        nom_usuel = "",
+        nom_usuel = "<22.22",
         lat_dg = "9.6f",
         lon_dg = "9.6f",
         alti = "04d",
