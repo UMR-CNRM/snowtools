@@ -42,7 +42,7 @@ def parse_command_line():
         help = "Target job name",
         type = str,
         choices = ['prepsafran_ana', 'prepsafran_prv', 'safran_ana', 'safran_prv', 'surfex_ana', 'surfex_prv',
-            'prepsafran_reana', 'surfex_monthly_reanalysis'],
+            'prepsafran_reana', 'surfex_monthly_reanalysis', 'refill_guess_safran'],
         required = True,
     )
 
@@ -92,7 +92,7 @@ def main():
     rundate = args.rundate
     additional = ' '.join(args.add)
 
-    if jobname in ['prepsafran_ana', 'prepsafran_prv']:
+    if jobname in ['prepsafran_ana', 'prepsafran_prv', 'refill_guess_safran']:
         job = t.sh.path.join(rootdir, f'oper/jobs/{jobname}')
         conf = t.sh.path.join(rootdir, 'oper/conf/s2m_common.ini')
         execute(job, conf, rundate, additional)

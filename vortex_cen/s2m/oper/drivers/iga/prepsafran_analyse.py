@@ -5,11 +5,14 @@ Prepare analysis SAFRAN guess files
 
 __all__ = []
 
+from vortex_iga.tools.op import InputReportContext, OutputReportContext
+from vortex_iga.tools.apps import OpTask
+from vortex.tools.actions import actiond as ad
+
 from vortex_cen.tasks.oper_research_mixin import CENTaskMixIn
-from vortex_cen.tools.monitoring import InputReportContext, OutputReportContext
 import footprints
 import vortex
-from mkjob.nodes import Driver, Task
+from mkjob.nodes import Driver
 
 logger = footprints.loggers.getLogger(__name__)
 
@@ -25,7 +28,7 @@ def setup(t, **kw):
     )
 
 
-class PrepSafran(Task, CENTaskMixIn):
+class PrepSafran(OpTask, CENTaskMixIn):
     """
     Task : PrepSafran
     =================
@@ -74,9 +77,9 @@ class PrepSafran(Task, CENTaskMixIn):
     # Filter of errors to be applied in both oper and dev cases
     filter_execution_error = CENTaskMixIn.s2moper_filter_execution_error
     # Report execution warnings with CEN's method
-    report_execution_warning = CENTaskMixIn.s2moper_report_execution_warning
+    # report_execution_warning = CENTaskMixIn.s2moper_report_execution_warning
     # Report execution errors with CEN's method
-    report_execution_error = CENTaskMixIn.s2moper_report_execution_error  # TO MODIFY for operationnal transfer
+    report_execution_error = OpTask.s2moper_report_execution_error  # TO MODIFY for operationnal transfer
 
     def process(self):
         """Preparation of SAFRAN input files"""
@@ -373,6 +376,8 @@ class PrepSafran(Task, CENTaskMixIn):
                     print(t.prompt, 'tb06 =', tb06)
                     print()
 
+                    ad.phase(tb05, tb06)
+
                 else:
 
                     self.sh.title('Toolbox output tb05 = guess arpege assim')
@@ -395,3 +400,5 @@ class PrepSafran(Task, CENTaskMixIn):
                     ),
                     print(t.prompt, 'tb05 =', tb05)
                     print()
+
+                    ad.phase(tb05)

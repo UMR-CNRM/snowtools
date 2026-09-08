@@ -2,15 +2,17 @@
 """
 """
 
-from mkjob.nodes import Task
+from vortex_iga.tools.op import InputReportContext, OutputReportContext
+from vortex_iga.tools.apps import OpTask
+from vortex.tools.actions import actiond as ad
+
 from vortex_cen.tasks.oper_research_mixin import CENTaskMixIn
-from vortex_cen.tools.monitoring import InputReportContext, OutputReportContext
 import vortex
 from bronx.stdtypes.date import daterange, yesterday, tomorrow
 import footprints
 
 
-class Ensemble_Surfex_Task(CENTaskMixIn, Task):
+class Ensemble_Surfex_Task(CENTaskMixIn, OpTask):
     """
     **Task : Ensemble_Surfex_Task**
 
@@ -57,7 +59,8 @@ class Ensemble_Surfex_Task(CENTaskMixIn, Task):
     # only in dev for CEN, to be defined for IGA
     report_execution_warning = CENTaskMixIn.s2moper_report_execution_warning
     # only in dev for CEN, keep IGA method for oper
-    report_execution_error = CENTaskMixIn.s2moper_report_execution_error
+    # TODO : find a better way to switch without having to change the task
+    # report_execution_error = CENTaskMixIn.s2moper_report_execution_error
 
     def process(self):
 
@@ -96,7 +99,7 @@ class Ensemble_Surfex_Task(CENTaskMixIn, Task):
                     dateend        = dateend,
                     nativefmt      = 'netcdf',
                     kind           = 'MeteorologicalForcing',
-                    namespace      = 'vortex.multi.fr',
+                    namespace      = self.conf.namespace_in,
                     model          = source_safran,
                     cutoff         = 'production' if self.conf.previ else 'assimilation',
                     fatal          = False
@@ -508,7 +511,7 @@ class Ensemble_Surfex_Task(CENTaskMixIn, Task):
                 daily          = not self.conf.previ,
                 taskset        = "numapacked_taskset",
                 verbose        = True,
-                reprod_info    = self.get_reprod_info,
+                # reprod_info    = self.get_reprod_info,
             )
             print(t.prompt, 'tb09 =', tb09)
             print()
@@ -535,6 +538,7 @@ class Ensemble_Surfex_Task(CENTaskMixIn, Task):
                     namespace   = self.conf.namespace_out,
                     cutoff      = 'production' if self.conf.previ else 'assimilation',
                     fatal       = False
+                    delayed     = True,
                 ),
                 print(t.prompt, 'tb11 =', tb11)
                 print()
@@ -555,10 +559,12 @@ class Ensemble_Surfex_Task(CENTaskMixIn, Task):
                         model          = 's2m',
                         namespace      = self.conf.namespace_out,
                         cutoff         = 'production' if self.conf.previ else 'assimilation',
+                        delayed        = True,
                         fatal          = False
                     ),
                     print(t.prompt, 'tb10 =', tb10)
                     print()
+                    ad.phase(tb10)
 
                 self.sh.title('Toolbox output tb12')
                 tb12 = vortex.output(
@@ -575,7 +581,15 @@ class Ensemble_Surfex_Task(CENTaskMixIn, Task):
                     model          = 'surfex',
                     namespace      = self.conf.namespace_out,
                     cutoff         = 'production' if self.conf.previ else 'assimilation',
+                    delayed        = True,
                     fatal          = False
                 ),
                 print(t.prompt, 'tb12 =', tb12)
                 print()
+
+                ad.phase(tb11,tb12)
+
+                #INTRODUIRE_AVIS_DE_DISPO
+                ad.dmt_status()
+                ad.dmt(resource_name='r_{0:s}_{1:s}_{2:s}'.format(self.conf.disp_name, self.conf.cutoff, self.conf.xpid_gad),soprano_host=self.conf.soprano_host[self.conf.xpid])
+

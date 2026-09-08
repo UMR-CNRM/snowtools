@@ -2,10 +2,13 @@
 '''
 '''
 
-from mkjob.nodes import Driver, Task
+from vortex_iga.tools.op import InputReportContext, OutputReportContext
+from vortex_iga.tools.apps import OpTask
+from vortex.tools.actions import actiond as ad
+
+from mkjob.nodes import Driver
 from vortex_cen.tasks.oper_research_mixin import CENTaskMixIn
 import vortex
-from vortex_cen.tools.monitoring import InputReportContext, OutputReportContext
 
 
 def setup(t, **kw):
@@ -19,7 +22,7 @@ def setup(t, **kw):
     )
 
 
-class Monthly_Surfex_Reanalysis(CENTaskMixIn, Task):
+class Monthly_Surfex_Reanalysis(CENTaskMixIn, OpTask):
     '''
 
     '''
@@ -171,7 +174,8 @@ class Monthly_Surfex_Reanalysis(CENTaskMixIn, Task):
                 experiment     = self.conf.xpid,
                 geometry       = self.conf.geometry,
                 datevalidity   = datebegin,
-                date           = rundate_prep,
+                #  Difference between oper and research: in oper use date of the current task (because refill)
+                # date           = rundate_prep,
                 member         = 35,
                 namespace      = self.conf.namespace_in,
                 intent         = 'inout',
@@ -309,7 +313,7 @@ class Monthly_Surfex_Reanalysis(CENTaskMixIn, Task):
                 ntasks       = 1,
                 geometry_in  = list_geometry,
                 geometry_out = self.conf.geometry.tag,
-                reprod_info  = self.get_reprod_info,
+                # reprod_info  = self.get_reprod_info,
             )
             print((t.prompt, 'tb09a =', tb09))
             print()
@@ -338,7 +342,7 @@ class Monthly_Surfex_Reanalysis(CENTaskMixIn, Task):
                 dateinit       = datebegin,
                 threshold      = self.conf.threshold,
                 daily          = False,
-                reprod_info=self.get_reprod_info,
+                # reprod_info=self.get_reprod_info,
             )
             print((t.prompt, 'tb11 =', tb11))
             print()
@@ -346,9 +350,6 @@ class Monthly_Surfex_Reanalysis(CENTaskMixIn, Task):
             self.component_runner(tbalgo3, tbx1)
 
         if 'backup' in self.steps:
-            pass
-
-        if 'late-backup' in self.steps:
 
             with OutputReportContext(self, t):
 
@@ -365,6 +366,7 @@ class Monthly_Surfex_Reanalysis(CENTaskMixIn, Task):
                         nativefmt      = 'netcdf',
                         kind           = 'MeteorologicalForcing',
                         model          = 's2m',
+                        delayed        = True,
                         namespace      = self.conf.namespace_out,
                         cutoff         = 'assimilation',
                         fatal          = False
@@ -384,6 +386,7 @@ class Monthly_Surfex_Reanalysis(CENTaskMixIn, Task):
                     nativefmt      = 'netcdf',
                     kind           = 'SnowpackSimulation',
                     model          = 'surfex',
+                    delayed        = True,
                     namespace      = self.conf.namespace_out,
                     cutoff         = 'assimilation',
                     fatal          = False
@@ -405,6 +408,7 @@ class Monthly_Surfex_Reanalysis(CENTaskMixIn, Task):
                     member         = 35,
                     nativefmt      = 'netcdf',
                     kind           = 'PREP',
+                    delayed        = True,
                     model          = 'surfex',
                     namespace      = self.conf.namespace_out,
                     cutoff         = 'assimilation',

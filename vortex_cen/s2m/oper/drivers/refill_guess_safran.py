@@ -229,10 +229,11 @@ class PrepSafran(Task, CENTaskMixIn):
                 role           = 'Metadata',
                 format         = 'grib',
                 genv            = self.conf.cycle,
-                geometry       = self.conf.arpege_geometry,  #EURAT01
-                gdomain        = '[geometry:domain]',
+                geometry       = self.conf.nwp_geometry,  #EURAT01
+                gdomain        = '[geometry:area]',
                 kind           = 'relief',
                 local          = 'METADATA.grib',
+                model          = 'safran',
                 fatal          = True,
             )
             print(t.prompt, 'tbmeta =', tbmeta)

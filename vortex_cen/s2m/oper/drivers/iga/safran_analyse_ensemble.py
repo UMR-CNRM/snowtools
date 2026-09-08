@@ -6,14 +6,16 @@ SAFRAN analysis
 
 __all__ = []
 
+from vortex_iga.tools.op import InputReportContext, OutputReportContext
+from vortex_iga.tools.apps import OpTask
+from vortex.tools.actions import actiond as ad
+
 import footprints
 
 import vortex
 from vortex_cen.tasks.oper_research_mixin import CENTaskMixIn
 from vortex_cen.tasks.safran.common import SafranMixIn
-from vortex_cen.tools.monitoring import InputReportContext, OutputReportContext
 from mkjob.nodes import Driver
-from mkjob.nodes import Task
 
 logger = footprints.loggers.getLogger(__name__)
 
@@ -29,7 +31,7 @@ def setup(t, **kw):
     )
 
 
-class Safran(Task, CENTaskMixIn, SafranMixIn):
+class Safran(OpTask, CENTaskMixIn, SafranMixIn):
     """
     Task : Safran
     =============
@@ -87,9 +89,9 @@ class Safran(Task, CENTaskMixIn, SafranMixIn):
     # Filter of errors to be applied in both oper and dev cases
     filter_execution_error = CENTaskMixIn.s2moper_filter_execution_error
     # Report execution warnings with CEN's method
-    report_execution_warning = CENTaskMixIn.s2moper_report_execution_warning
+    # report_execution_warning = CENTaskMixIn.s2moper_report_execution_warning
     # Report execution errors with CEN's method
-    report_execution_error = CENTaskMixIn.s2moper_report_execution_error  # TO MODIFY for operationnal transfer
+    report_execution_error = OpTask.s2moper_report_execution_error  # TO MODIFY for operationnal transfer
 
     def refill(self):
         """Safran analysis"""
@@ -108,7 +110,7 @@ class Safran(Task, CENTaskMixIn, SafranMixIn):
                     block          = 'observations',
                     experiment     = self.conf.xpid,
                     vapp           = 's2m',
-                    geometry       = self.conf.geometry[self.conf.vconf],  # Distinction entre géométrie SAFRAN et Surfex spécifique aux taches oper
+                    geometry       = self.conf.geometry[self.conf.vconf],
                     kind           = 'packedobs',
                     date           = self.conf.rundate.ymdh,
                     datebegin      = '{0:s}/-PT24H'.format(datebegin.ymd6h) if self.conf.rundate.hour == 12 else datebegin.ymd6h,
@@ -130,7 +132,7 @@ class Safran(Task, CENTaskMixIn, SafranMixIn):
                     experiment     = self.conf.xpid,
                     vapp           = 's2m',
                     fatal          = False,
-                    geometry       = self.conf.geometry[self.conf.vconf],   # Distinction entre géométrie SAFRAN et Surfex spécifique aux taches oper
+                    geometry       = self.conf.geometry[self.conf.vconf],
                     kind           = 'packedobs',
                     date           = self.conf.rundate.ymdh,
                     datebegin      = '{0:s}/-PT24H'.format(datebegin.ymd6h),
@@ -169,29 +171,6 @@ class Safran(Task, CENTaskMixIn, SafranMixIn):
                 self.sh.title('Toolbox input tb01 (Observations)')
                 tb01 = vortex.input(
                     role           = 'Observations',
-                    geometry       = self.conf.geometry[self.conf.vconf],
-                    kind           = 'packedobs',
-                    date           = self.conf.rundate.ymdh,
-                    datebegin      = '{0:s}/-PT24H'.format(datebegin.ymd6h) if self.conf.rundate.hour == 12 else datebegin.ymd6h,
-                    dateend        = dateend.ymd6h,
-                    local          = 'RST_[datebegin::ymdh]_[dateend::ymdh]_[geometry:domain].tar',
-                    model          = 'safran',
-                    hostname       = 'sotrtm35-sidev.meteo.fr',
-                    username       = 'vernaym',
-                    tube           = 'ftp',
-                    remote         = '/home/mrns/vernaym/extraction_obs/oper/rep_[geometry:domain]/observations_safran_[vconf]_[date::ymdh].tar',
-                    cutoff         = 'assimilation',
-                    now            = True,
-                    hook_autohook1 = (tb01_generic_hook1, ),
-                )
-                print((t.prompt, 'tb01 =', tb01))
-                print()
-
-                # Dans le cas d'une execution sur une date ancienne le cache de guppy est nettoyé,
-                # il faut donc aller chercher les obs sur hendrix (cache oper)
-                self.sh.title('Toolbox input tb01_b')
-                tb01 = vortex.input(
-                    alternate      = 'Observations',
                     block          = 'observations',
                     experiment     = self.conf.xpid,
                     vapp           = 's2m',
@@ -202,11 +181,11 @@ class Safran(Task, CENTaskMixIn, SafranMixIn):
                     dateend        = dateend.ymd6h,
                     local          = 'RST_[datebegin::ymdh]_[dateend::ymdh]_[geometry:domain].tar',
                     model          = 'safran',
-                    namespace      = self.conf.namespace_in,
+                    suite          = self.conf.suite,
                     cutoff         = 'assimilation',
                     hook_autohook1 = (tb01_generic_hook1, ),
                 )
-                print(t.prompt, 'tb01 =', tb01)
+                print((t.prompt, 'tb01 =', tb01))
                 print()
 
                 # ##########    End of differences    ###########
@@ -546,9 +525,12 @@ class Safran(Task, CENTaskMixIn, SafranMixIn):
                     datebegin      = datebegin.ymd6h,
                     dateend        = dateend.ymd6h,
                     namespace      = self.conf.namespace_out,
+                    delayed        = True,
                 ),
                 print(t.prompt, 'tb27 =', tb27)
                 print()
+
+                ad.phase(tb27)
 
                 if 'diff_xpid' in self.conf:
                     self.sh.title('Toolbox output tb27_diff')
@@ -588,9 +570,12 @@ class Safran(Task, CENTaskMixIn, SafranMixIn):
                     datebegin      = datebegin.ymd6h,
                     dateend        = dateend.ymd6h,
                     namespace      = self.conf.namespace_out,
+                    delayed        = True,
                 ),
                 print(t.prompt, 'tb28 =', tb28)
                 print()
+
+                ad.phase(tb28)
 
                 if self.conf.rundate.hour != 12:
 
@@ -612,9 +597,12 @@ class Safran(Task, CENTaskMixIn, SafranMixIn):
                         namespace      = self.conf.namespace_out,
                         member         = footprints.util.rangex(self.conf.pearp_members),
                         fatal          = False,
+                        delayed        = True,
                     ),
                     print(t.prompt, 'tb29 =', tb29)
                     print()
+
+                    ad.phase(tb29)
 
                     if 'diff_xpid' in self.conf:
                         self.sh.title('Toolbox output tb29_diff')
@@ -657,9 +645,12 @@ class Safran(Task, CENTaskMixIn, SafranMixIn):
                         namespace      = self.conf.namespace_out,
                         member         = footprints.util.rangex(self.conf.pearp_members),
                         fatal          = False,
+                        delayed        = True,
                     ),
                     print(t.prompt, 'tb30 =', tb30)
                     print()
+
+                    ad.phase(tb30)
 
                 self.sh.title('Toolbox output listings execution')
                 tb31 = vortex.output(
@@ -675,6 +666,7 @@ class Safran(Task, CENTaskMixIn, SafranMixIn):
                     format         = 'tar',
                     model          = 'safran',
                     namespace      = self.conf.namespace_out,
+                    delayed        = True,
                 )
                 print(t.prompt, 'tb31 =', tb31)
                 print()
@@ -693,10 +685,7 @@ class Safran(Task, CENTaskMixIn, SafranMixIn):
                     format         = 'tar',
                     model          = 'safran',
                     namespace      = self.conf.namespace_out,
+                    delayed        = True,
                 )
                 print(t.prompt, 'tb32 =', tb32)
                 print()
-
-#            print('==================================================================================================')
-#            print('==================================================================================================')
-#            raise Exception('INFO :The execution went well, do not take into account the following error')
