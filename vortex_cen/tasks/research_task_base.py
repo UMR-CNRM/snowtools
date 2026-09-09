@@ -471,6 +471,8 @@ class _CenResearchTask(Task, CENTaskMixIn):
         * ``forcing_intent`` *intent* footprint (local file permissions), default "in"
           Possible values : "in" (read-only), "inout" (read-write)
           type forcing_intent: str
+        * ``forcing_date`` *date* footprint corresponding to the rundate of the forcing.
+          Useful to get the forcing of the monthly reanalysis for example. default is *forcing_dateend*.
         * ``forcing_source_app`` *source_app* footprint, default None
           type forcing_source_app: str, footprints.stdtypes.FPList
         * ``forcing_source_conf`` *source_conf* footprint, default None
@@ -558,10 +560,10 @@ class _CenResearchTask(Task, CENTaskMixIn):
             namespace      = namespace,  # default : 'vortex.multi.fr',
             namebuild      = forcing_namebuild,  # default recherche : 'flat@cen', defaut oper : None
             vortex1        = vortex1,
-            date           = '[dateend]',  # TODO : à supprimer (cas recherche uniquement)
+            date           = self.conf.get('forcing_date', '[dateend]'),  # pas supprimer! C'est necessaire pour reforecast.
             source_app     = forcing_source_app,  # default = None (ne pas refaire l'erreur)
             source_conf    = forcing_source_conf,  # default = None (ne pas refaire l'erreur)
-            cutoff         = forcing_cutoff,  # TODO : à supprimer dans le cas recherche
+            cutoff         = forcing_cutoff,  #
             fatal          = fatal,
         ),
         print(t.prompt, 'FORCING =', forcing)
