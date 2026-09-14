@@ -48,6 +48,8 @@ class Ensemble_Surfex_Task(CENTaskMixIn, Task):
         "focringid+help=*xpid* of the FORCING files",
         "cycle+help=Alias for uenv;type=str",
         "threshold+help=Threshold to apply to the snow water equivalent (in kg/m2);type=int",
+        "surfex_namelist+help=Name of the SURFEX namelist from the pool of namelists;type=str",
+        "sytron_namelist+help=Name of the SURFEX namelist to use for the SYTRON member of namelists;type=str",
     ]
     OPTIONAL_CONFIGURATION_VARIABLES = [
         "prep_vortex1+help=If the 'warmstart' target PREP.nc file was produced with vortex1,type=bool",
@@ -454,7 +456,7 @@ class Ensemble_Surfex_Task(CENTaskMixIn, Task):
 
                 tb07a = vortex.input(
                     role            = 'Nam_surfex',
-                    source          = 'OPTIONS_default.nam',
+                    source          = self.conf.surfex_namelist,
                     genv            = self.conf.cycle,
                     kind            = 'namelist',
                     model           = 'surfex',
@@ -467,7 +469,7 @@ class Ensemble_Surfex_Task(CENTaskMixIn, Task):
 
                 tb07 = vortex.input(
                     role            = 'Nam_surfex',
-                    source          = 'OPTIONS_sytron.nam',
+                    source          = self.conf.sytron_namelist,
                     genv            = self.conf.cycle,
                     kind            = 'namelist',
                     model           = 'surfex',

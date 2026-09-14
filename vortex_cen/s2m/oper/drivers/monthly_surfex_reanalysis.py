@@ -274,7 +274,7 @@ class Monthly_Surfex_Reanalysis(CENTaskMixIn, Task):
             self.sh.title('Toolbox input tb07')
             tb07 = vortex.input(
                 role            = 'Nam_surfex',
-                source          = 'OPTIONS_reanalysis.nam',
+                source          = self.conf.monthly_namelist,
                 genv            = self.conf.cycle,
                 kind            = 'namelist',
                 intent          = 'inout',
