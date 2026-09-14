@@ -437,3 +437,28 @@ raises the following error :
     # [2026/08/17-12:36:48][vortex.data.abstractstores][incacheget:1180][INFO]: incacheget on uget://uget.hack.fr//data/namelists_surfex9_0_crocus3_0_2_std (to: namelists_surfex9_0_crocus3_0_2_std)
     # [2026/08/17-12:36:48][vortex.data.abstractstores][incacheget:1199][INFO]: incacheget retrieve rc=True location=/home/cnrm_other/cen/mrns/vernaym/.vortexrc/hack/uget/vernaym/data/namelists_surfex9_0_crocus3_0_2_std
     # [2026/08/17-12:36:48][vortex_gco.data.stores][ugetget:1664][ERROR]: 'namelists_surfex9_0_crocus3_0_2_std' should be a tarfile
+
+* The lines in uenv catalogue file are sensitive to trailing spaces. The following line (containing a final space character) :
+
+.. code-block::
+
+   MASTER_OFFLINE_MPI="uget:ms_offline.cen.mpi.11.crocus3.0.2@vernaym" |<-- The line ends here
+
+will lead to a non-explicit error:
+
+.. code-block::
+
+    # [2026/09/14-12:59:32][vortex_gco.data.stores][_gspawn:0627][INFO]: gget command: /home/mf/dp/marp/gco/public/bin/gget -host hendrix.meteo.fr -path uget:ms_offline.cen.nompi.11.crocus3.0.2@vernaym"
+    # [2026/09/14-12:59:32][vortex.tools.systems][spawn:1160][WARNING]: Bad return code [1] for ['/home/mf/dp/marp/gco/public/bin/gget', '-host', 'hendrix.meteo.fr', '-path', 'uget:ms_offline.cen.nompi.11.crocus3.0.2@vernaym" ']
+    [ERROR] [GGet::Element::new] ms_offline.cen.nompi.11.crocus3.0.2@vernaym" : can't guess type of element
+    # [2026/09/14-12:59:32][vortex.layout.dataflow][_fatal_wrap:0248][ERROR]: Resource ???
+    # [2026/09/14-12:59:32][vortex_gco.data.stores][_gspawn:0627][INFO]: gget command: /home/mf/dp/marp/gco/public/bin/gget -host hendrix.meteo.fr -path uget:ms_offline.cen.nompi.11.crocus3.0.2@vernaym"
+    # [2026/09/14-12:59:33][vortex.tools.systems][spawn:1160][WARNING]: Bad return code [1] for ['/home/mf/dp/marp/gco/public/bin/gget', '-host', 'hendrix.meteo.fr', '-path', 'uget:ms_offline.cen.nompi.11.crocus3.0.2@vernaym" ']
+    [ERROR] [GGet::Element::new] ms_offline.cen.nompi.11.crocus3.0.2@vernaym" : can't guess type of element
+    # [2026/09/14-12:59:33][vortex.layout.dataflow][_fatal_wrap:0250][CRITICAL]: Fatal error with action get on ???
+
+.. note::
+
+    A ticket has be submited on sept. 14 2026 to fix this issue in vortex-gco (https://git.meteo.fr/cnrm-gmap/vortex/-/work_items/4)
+
+
