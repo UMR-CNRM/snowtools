@@ -278,7 +278,7 @@ class Monthly_Surfex_Reanalysis(CENTaskMixIn, OpTask):
             self.sh.title('Toolbox input tb07')
             tb07 = vortex.input(
                 role            = 'Nam_surfex',
-                source          = 'OPTIONS_reanalysis.nam',
+                source          = self.conf.monthly_namelist,
                 genv            = self.conf.cycle,
                 kind            = 'namelist',
                 intent          = 'inout',
@@ -296,7 +296,7 @@ class Monthly_Surfex_Reanalysis(CENTaskMixIn, OpTask):
                 local          = 'OFFLINE',
                 model          = 'surfex',
                 genv           = self.conf.cycle,
-                gvar           = 'master_surfex_offline_mpi',
+                gvar           = 'master_offline_nompi',
             )
 
             print((t.prompt, 'tb08 =', tb08))
@@ -306,7 +306,7 @@ class Monthly_Surfex_Reanalysis(CENTaskMixIn, OpTask):
 
             self.sh.title('Toolbox algo tb09a')
             tb09 = vortex.task(
-                engine       = 's2m',
+                engine       = 'algo',
                 kind         = 'prepareforcing',
                 datebegin    = [datebegin],
                 dateend      = [dateend],
@@ -314,6 +314,7 @@ class Monthly_Surfex_Reanalysis(CENTaskMixIn, OpTask):
                 geometry_in  = list_geometry,
                 geometry_out = self.conf.geometry.tag,
                 # reprod_info  = self.get_reprod_info,
+                role_members = 'Forcing',
             )
             print((t.prompt, 'tb09a =', tb09))
             print()

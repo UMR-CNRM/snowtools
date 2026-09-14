@@ -72,7 +72,6 @@ with echecker:
     from snowtools.tools.update_namelist import update_surfex_namelist_object
     from snowtools.tools.change_forcing import forcinput_select, forcinput_applymask
     from snowtools.utils.infomassifs import infomassifs
-    from snowtools.tools.massif_diags import massif_simu
     from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
     from snowtools.utils.FileException import TimeListException, MultipleValueException
     from vortex_cen.algo.deterministic import SurfexMixIn
@@ -299,10 +298,6 @@ class SurfexWorker(_CenWorkerBlindRun, SurfexMixIn):
                                     self.dateend)
                             self.link_in(self.system.path.join(forcingdir, massif, forcingname), 'FORCING.nc')
                         except (FileNotFoundError, MultipleValueException) as e:
-#                            deterministic = self.subdir == "mb035"
-#                            rdict['rc'] = S2MExecutionError("missing forcing file in directory " + forcingdir + "/" +
-#                                                            massif, deterministic, self.subdir, datebegin_this_run,
-#                                                            self.dateend)
                             rdict['rc'] = e
                             return rdict  # Note than in the other case return rdict is at the end
                         forcingname = "FORCING_" + massif + ".nc"
@@ -334,10 +329,6 @@ class SurfexWorker(_CenWorkerBlindRun, SurfexMixIn):
                         dateforcbegin, dateforcend, forcingname = self.find_forcing(datebegin_this_run, self.dateend)
                         self.link_in(self.system.path.join(forcingdir, forcingname), 'FORCING.nc')
                     except (FileNotFoundError, MultipleValueException) as e:
-#                        deterministic = self.subdir == "mb035"  # MV : S2M-spécifique, à externaliser
-#                        rdict['rc'] = S2MExecutionError("missing forcing file in directory " + forcingdir,
-#                                                        deterministic, self.subdir, datebegin_this_run,
-#                                                        self.dateend)
                         rdict['rc'] = e
                         return rdict
                     print("FORCING FOUND")
@@ -494,6 +485,7 @@ class PrepareForcingWorker(_CenTaylorVortexWorker):
 
             logger.info("FORCING EXTENSION")
             forcinput_applymask(forcinglist, "FORCING_OUT.nc", **self.reprod_info)
+
         else:
             logger.info("FORCING EXTENSION")
             geoin = self.geometry_in[0]

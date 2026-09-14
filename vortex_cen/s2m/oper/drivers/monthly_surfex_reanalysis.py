@@ -13,10 +13,94 @@ def setup(t, **kw):
         tag='Surfex_Parallel',
         ticket=t,
         nodes=[
+            PrepareForcing(tag='prepareforcing', ticket=t, **kw),
             Monthly_Surfex_Reanalysis(tag='Monthly_Surfex_Reanalysis', ticket=t, **kw),
         ],
         options=kw
     )
+
+
+class PrepareForcing(CENTaskMixIn, Task):
+
+    filter_execution_error = CENTaskMixIn.s2moper_filter_execution_error
+
+    def process(self):
+
+        t = self.ticket
+
+        datebegin, dateend = self.get_period()
+        rundate_forcing = self.get_rundate_forcing()
+
+        list_geometry = self.get_list_geometry()
+        source_safran, block_safran = self.get_source_safran()
+        alternate_safran, alternate_block, alternate_geometry = self.get_alternate_safran()
+
+        if 'early-fetch' in self.steps or 'fetch' in self.steps:
+
+            self.sh.title('Toolbox input tb01')
+            tb01 = vortex.input(
+                role           = 'Forcing',
+                local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_[geometry::tag].nc',
+                vapp           = self.conf.vapp,
+                vconf          = '[geometry:domain]',
+                block          = block_safran,
+                source_app     = 'arpege' if source_safran == 'safran' else None,
+                source_conf    = '4dvarfr' if source_safran == 'safran' else None,
+                experiment     = self.conf.forcingid if source_safran == 'safran' else self.conf.xpid,
+                geometry       = list_geometry,
+                date           = rundate_forcing,
+                datebegin      = datebegin,
+                dateend        = dateend,
+                nativefmt      = 'netcdf',
+                namespace      = self.conf.namespace_in,
+                kind           = 'MeteorologicalForcing',
+                model          = source_safran,
+                cutoff         = 'assimilation',
+                fatal          = True
+            ),
+            print((t.prompt, 'tb01 =', tb01))
+            print()
+
+        if 'compute' in self.steps:
+
+            self.sh.title('Toolbox algo Prepare Forcing')
+            tb09 = vortex.task(
+                engine       = 'algo',
+                kind         = 'prepareforcing',
+                datebegin    = [datebegin],
+                dateend      = [dateend],
+                ntasks       = 1,
+                geometry_in  = list_geometry,
+                geometry_out = self.conf.geometry.tag,
+                reprod_info  = self.get_reprod_info,
+                role_members = 'Forcing',
+            )
+            print((t.prompt, 'tb09a =', tb09))
+            print()
+            tb09.run()
+
+        if 'backup' in self.steps:
+
+            with OutputReportContext(self, t):
+
+                self.sh.title('Toolbox output SURFEX-ready forcing')
+                tb10 = vortex.output(
+                    local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_OUT.nc',
+                    experiment     = self.conf.xpid,
+                    block          = 'meteo',
+                    geometry       = self.conf.geometry,
+                    date           = self.conf.rundate,
+                    datebegin      = datebegin,
+                    dateend        = dateend,
+                    nativefmt      = 'netcdf',
+                    kind           = 'MeteorologicalForcing',
+                    model          = 's2m',
+                    namespace      = self.conf.namespace_out,
+                    cutoff         = 'assimilation',
+                    fatal          = True,
+                ),
+                print((t.prompt, 'tb10 =', tb10))
+                print()
 
 
 class Monthly_Surfex_Reanalysis(CENTaskMixIn, Task):
@@ -113,40 +197,9 @@ class Monthly_Surfex_Reanalysis(CENTaskMixIn, Task):
         t = self.ticket
 
         datebegin, dateend = self.get_period()
-        rundate_forcing = self.get_rundate_forcing()
         rundate_prep, alternate_rundate_prep = self.get_rundate_prep()
 
-        list_geometry = self.get_list_geometry()
-        source_safran, block_safran = self.get_source_safran()
-        alternate_safran, alternate_block, alternate_geometry = self.get_alternate_safran()
-        exceptional_save_forcing = False
-
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
-
-            self.sh.title('Toolbox input tb01')
-            tb01 = vortex.input(
-                role           = 'Forcing',
-                local          = '[geometry::tag]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
-                if len(list_geometry) > 1 else 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
-                vapp           = self.conf.vapp,
-                vconf          = '[geometry:domain]',
-                block          = block_safran,
-                source_app     = 'arpege' if source_safran == 'safran' else None,
-                source_conf    = '4dvarfr' if source_safran == 'safran' else None,
-                experiment     = self.conf.forcingid if source_safran == 'safran' else self.conf.xpid,
-                geometry       = list_geometry,
-                date           = rundate_forcing,
-                datebegin      = datebegin,
-                dateend        = dateend,
-                nativefmt      = 'netcdf',
-                namespace      = self.conf.namespace_in,
-                kind           = 'MeteorologicalForcing',
-                model          = source_safran,
-                cutoff         = 'assimilation',
-                fatal          = True
-            ),
-            print((t.prompt, 'tb01 =', tb01))
-            print()
 
             self.sh.title('Toolbox input tb02')
             tb02 = vortex.input(
@@ -217,6 +270,7 @@ class Monthly_Surfex_Reanalysis(CENTaskMixIn, Task):
                 experiment     = self.ref_reanalysis,
                 vconf          = self.conf.geometry.tag,
                 geometry       = self.conf.geometry,
+                datevalidity   = datebegin,
                 date           = datebegin,
                 intent         = 'inout',
                 nativefmt      = 'netcdf',
@@ -292,28 +346,35 @@ class Monthly_Surfex_Reanalysis(CENTaskMixIn, Task):
                 local          = 'OFFLINE',
                 model          = 'surfex',
                 genv           = self.conf.cycle,
-                gvar           = 'master_surfex_offline_mpi',
+                gvar           = 'master_offline_nompi',
             )
 
             print((t.prompt, 'tb08 =', tb08))
             print()
 
-        if 'compute' in self.steps:
+        if 'fetch' in self.steps:
 
-            self.sh.title('Toolbox algo tb09a')
-            tb09 = vortex.task(
-                engine       = 's2m',
-                kind         = 'prepareforcing',
-                datebegin    = [datebegin],
-                dateend      = [dateend],
-                ntasks       = 1,
-                geometry_in  = list_geometry,
-                geometry_out = self.conf.geometry.tag,
-                reprod_info  = self.get_reprod_info,
-            )
-            print((t.prompt, 'tb09a =', tb09))
+            self.sh.title('Toolbox input tb01')
+            tb01 = vortex.input(
+                role           = 'Forcing',
+                local          = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                experiment     = self.conf.xpid,
+                block          = 'meteo',
+                geometry       = self.conf.geometry,
+                date           = self.conf.rundate,
+                datebegin      = datebegin,
+                dateend        = dateend,
+                nativefmt      = 'netcdf',
+                namespace      = self.conf.namespace_in,
+                kind           = 'MeteorologicalForcing',
+                model          = 's2m',
+                cutoff         = 'assimilation',
+                fatal          = True,
+            ),
+            print((t.prompt, 'tb01 =', tb01))
             print()
-            tb09.run()
+
+        if 'compute' in self.steps:
 
             firstforcing = 'FORCING_' + datebegin.strftime("%Y%m%d%H") + "_" + dateend.strftime("%Y%m%d%H") + ".nc"
 
@@ -322,7 +383,7 @@ class Monthly_Surfex_Reanalysis(CENTaskMixIn, Task):
                 kind         = 'surfex_preprocess',
                 datebegin    = datebegin,
                 dateend      = dateend,
-                forcingname  = firstforcing
+                forcingname  = firstforcing,
             )
             print((t.prompt, 'tb09a =', tb10))
             print()
@@ -338,7 +399,7 @@ class Monthly_Surfex_Reanalysis(CENTaskMixIn, Task):
                 dateinit       = datebegin,
                 threshold      = self.conf.threshold,
                 daily          = False,
-                reprod_info=self.get_reprod_info,
+                reprod_info    = self.get_reprod_info,
             )
             print((t.prompt, 'tb11 =', tb11))
             print()
@@ -351,26 +412,6 @@ class Monthly_Surfex_Reanalysis(CENTaskMixIn, Task):
         if 'late-backup' in self.steps:
 
             with OutputReportContext(self, t):
-
-                if source_safran != 's2m' or exceptional_save_forcing:
-                    self.sh.title('Toolbox output tb10')
-                    tb10 = vortex.output(
-                        local          = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
-                        experiment     = self.conf.xpid,
-                        block          = 'meteo',
-                        geometry       = self.conf.geometry,
-                        date           = self.conf.rundate,
-                        datebegin      = datebegin,
-                        dateend        = dateend,
-                        nativefmt      = 'netcdf',
-                        kind           = 'MeteorologicalForcing',
-                        model          = 's2m',
-                        namespace      = self.conf.namespace_out,
-                        cutoff         = 'assimilation',
-                        fatal          = False
-                    ),
-                    print((t.prompt, 'tb10 =', tb10))
-                    print()
 
                 self.sh.title('Toolbox output tb11')
                 tb11 = vortex.output(
