@@ -2,20 +2,10 @@
 """
 """
 from bronx.stdtypes.date import yesterday
-from mkjob.nodes import Driver, Task
+from mkjob.nodes import Task
 from vortex_cen.tasks.oper_research_mixin import CENTaskMixIn
 import vortex
 import footprints
-
-
-def setup(t, **kw):
-    return Driver(
-        tag='S2M_Hydro',
-        ticket=t,
-        nodes=[
-                Hydro_Task(tag='S2M_Hydro_Task', ticket=t, **kw, delay_component_errors=True, on_error='delayed_fail')],
-        options=kw
-    )
 
 
 class Hydro_Task(CENTaskMixIn, Task):
