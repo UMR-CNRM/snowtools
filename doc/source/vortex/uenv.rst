@@ -13,6 +13,10 @@ The main motivations to use User Environments are :
 * partitioning the data used in different simulations in a clear and secure way
 * minimizing the number of circulating files
 
+.. note::
+
+   The source code is available on git.meteo.fr : https://git.meteo.fr/cnrm-gmap/vortex/-/tree/main/vortex-gco?ref_type=heads
+
 Install the vortex-gco plugin
 -----------------------------
 
