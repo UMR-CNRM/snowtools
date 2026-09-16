@@ -18,7 +18,7 @@ Workflow :
 
 * prepsafran_prevision : Generation of SAFRAN guess files from NWP forecasts
 
-* prepsafran_reanlayse : Generation of archives of SAFRAN guess files from the previous 01/08
+* prepsafran_reanlayse : Generation of archives of SAFRAN guess files from the previous 01/08 until the 18th day of each month (runs on the 22nd day of the month)
 
 * [refill_guess_safran] : Offline generation of an archive of SAFRAN guess files to restart the real-time chain
 
@@ -31,11 +31,18 @@ Workflow :
 
 3. SURFEX
 
+* [cold_start_surfex] : Deterministic SURFEX/Crocus snowpack simulation from the previous 01/08 with "custom" initial condition after a geometry or SURFEX version update. For example, to start the 2026 new S2M oper chain with initial conditions from the 2026 release of the ERA5-S2M reanalysis valid on 1st August 2025 :
+
+.. code-block::
+
+    s2m_oper -j cold_start_surfex -d 2026091412 -a prep_xpid=release_2026 prep_user=vernaym prep_datevalidity=2025080106 prep_block=offline prep_vapp=s2m prep_vconf=reanalysis
+
+
 * ensemble_surfex_tasks_analysis : Update raw SAFRAN forcing files (add slopes and solar masks) + ensemble SURFEX/Crocus snowpack simulations
 
 * ensemble_surfex_tasks_forecast : Update raw SAFRAN forcing files (add slopes and solar masks) + ensemble SURFEX/Crocus snowpack simulations
 
-* monthly_surfex_reanalysis : Deterministic SURFEX/Crocus snowpack simulation from the previous 01/08
+* monthly_surfex_reanalysis : Deterministic SURFEX/Crocus snowpack simulation from the previous 01/08 until the 18th day of each month (runs on the 22nd day of the month)
 
 * monthly_surfex_reanalysis_sytron : Deterministic SURFEX/Crocus snowpack simulation from the previous 01/08 with the SYTRON snow drift module activated
 
