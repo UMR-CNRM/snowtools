@@ -764,7 +764,7 @@ class SytistWorker(_SafranWorker):
                     # Do not rename 'massif_number' variable into 'massif_num' because SURFEX
                     # expects 'massif_number'.
                     forcing = forcing.snowtools.backtrack_preprocess()
-                    forcing.to_netcdf(forcing_name)
+                    forcing.to_netcdf(forcing_name, format="NETCDF4_CLASSIC")
                 self.system.remove('TMP.nc')
 
         if 'rc' in rdict.keys() and (isinstance(rdict['rc'], S2MExecutionError) or

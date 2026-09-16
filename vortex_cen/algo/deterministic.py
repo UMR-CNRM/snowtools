@@ -325,7 +325,7 @@ class SurfexMixIn(_CenMixIn):
             pro = pro.surfex.massif_natural_risk()
             pro.crocus.GlobalAttributes(product=self.get_standard_metadata_section, **self.reprod_info)
             #pro.crocus.add_standard_names()  # Already called by GlobalAttributes
-            pro.to_netcdf(f'PRO_{datebegin_this_run.ymdh}_{dateend_this_run.ymdh}.nc')
+            pro.to_netcdf(f'PRO_{datebegin_this_run.ymdh}_{dateend_this_run.ymdh}.nc', format="NETCDF4_CLASSIC")
 
         #save_file_period(".", "ISBA_PROGNOSTIC.OUT", datebegin_thisrun, dateend_this_run, newprefix="PRO")
 
