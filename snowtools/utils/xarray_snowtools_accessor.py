@@ -311,7 +311,7 @@ class SurfexAccessor(SnowtoolsAccessor):
         :type tile: int
         """
 
-        for drop_dim in ['Number_of_patches', 'tile', 'Number_of_Tile']:
+        for drop_dim in ['tile', 'Number_of_Tile']:
             if drop_dim in self.ds.dims:
                 self.ds = self.ds.sel(drop_dim=tile).squeeze()
 
