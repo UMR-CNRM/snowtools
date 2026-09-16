@@ -351,7 +351,7 @@ class Monthly_Surfex_Reanalysis(CENTaskMixIn, Task):
                     local          = 'OFFLINE',
                     model          = 'surfex',
                     genv           = self.conf.cycle,
-                    gvar           = 'master_offline_nompi',
+                    gvar           = 'master_offline_mpi',
                 )
 
                 print((t.prompt, 'tb08 =', tb08))
