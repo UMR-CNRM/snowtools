@@ -407,8 +407,6 @@ class SurfexWorker(_CenWorkerBlindRun, SurfexMixIn):
 
             # Rename outputs with the dates
             save_file_date(".", "SURFOUT", dateend_this_run, newprefix="PREP")
-            save_file_period(".", "ISBA_PROGNOSTIC.OUT", datebegin_this_run, dateend_this_run,
-                             newprefix="PRO")
 
             # Prepare next iteration if needed
             datebegin_this_run = dateend_this_run
