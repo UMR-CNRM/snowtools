@@ -256,7 +256,7 @@ def set_time_info(description, **kw):
             dateend = kw.get('dateend', None) or description.get('dateend', None)
             if datebegin is not None and dateend is not None:
                 list_dates_begin, list_dates_end, _, _ = \
-                    get_list_dates_files(Date(datebegin), Date(dateend), description.pop('duration', 'yearly'))
+                    get_list_dates_files(Date(datebegin), Date(dateend), description.pop('duration', 'full'))
                 dict_dates_end = get_dic_dateend(list_dates_begin, list_dates_end)
                 filename = '[kind]_[datebegin:ymdh]_[dateend:ymdh].nc'
                 description.update(dict(

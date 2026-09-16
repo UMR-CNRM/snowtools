@@ -153,6 +153,9 @@ def open_vortex_data(configfile, configsection=None, **kw) -> xr.Dataset:
     :type verbose: bool
     """
 
+    # Empty vortex toolbox in case other resources have already been retrieved
+    vortex.ticket().context.sequence.clear()
+
     # Retrive data from vortex cache (or archive)
     get_data(configfile=configfile, configsection=configsection, **kw)
 
