@@ -299,6 +299,7 @@ class _Offline(OfflineCommonsMixin, _CenResearchTask):
         ]
 
         OPTIONAL_CONFIGURATION_VARIABLES = [
+            "namelist_source",
             "forcing",
             "prep",
             "pgd",

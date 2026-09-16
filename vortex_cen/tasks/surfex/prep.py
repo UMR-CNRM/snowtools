@@ -188,6 +188,7 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
             "forcing_dateend",
         ]
         OPTIONAL_CONFIGURATION_VARIABLES = [
+            "namelist_source",
             "forcing",
             "pgd",
             "ntasks",

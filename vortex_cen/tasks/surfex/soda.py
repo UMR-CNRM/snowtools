@@ -185,6 +185,7 @@ class Soda(SodaCommonsMixin, _CenResearchTask):
         ]
 
         OPTIONAL_CONFIGURATION_VARIABLES = [
+            "namelist_source",
             "observation_vapp+help=*vapp* of the snow observation to assimilate;type=str;default=*vapp*",
             "observation_vconf+help=*vconf* of the snow observation to assimilate;type=str;default=*vconf*",
             "observation_xpid+help=Experiment identifier of the snow observation to assimilate;type=str;default=*xpid*",

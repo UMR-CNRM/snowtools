@@ -310,6 +310,7 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
         ]
         OPTIONAL_CONFIGURATION_VARIABLES = [
             "forcing",
+            "namelist_source",
             "pgd_2d",
             "mask_2d",
             "ntasks",
