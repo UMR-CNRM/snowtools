@@ -196,7 +196,7 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
             model      = "surfex",
             namespace  = self.namespace_out,
             namebuild  = "flat@cen",
-            block      = self.conf.get("block", "init_tg"),
+            block      = "init_tg",
         )
         print(self.ticket.prompt, "Output init ground temperature =", init_ground_temperature_out)
         print()
@@ -240,7 +240,6 @@ class FetchClimGroundTemperatureOrMake(InitClimGroundTemperature):
     * ``tg_geometry`` or ``geometry`` geometry of the init_TG. Logically the same as for the rest of the simulation
     * ``tg_vapp`` or ``vapp`` Application name to search the init_TG.nc file.
     * ``tg_vconf`` or ``vconf`` Configuration name to search the init_TG.nc file.
-    * ``tg_block`` Block name to search the init_TG.nc file. Default: *prep*
 
     **Configuration variables used for fetching from uenv:**
 
@@ -418,7 +417,6 @@ class MakeClimGroundTemperatureIfNoPrep(FetchClimGroundTemperatureOrMake):
     * ``tg_geometry`` or ``geometry`` geometry of the init_TG. Logically the same as for the rest of the simulation
     * ``tg_vapp`` or ``vapp`` Application name to search the init_TG.nc file.
     * ``tg_vconf`` or ``vconf`` Configuration name to search the init_TG.nc file.
-    * ``tg_block`` Block name to search the init_TG.nc file. Default: *prep*
 
     **Search for initTG file in unev:**
 
@@ -525,7 +523,6 @@ class FetchClimGroundTemperatureOrCrash(InitClimGroundTemperature, _CenResearchT
     * ``tg_geometry`` or ``geometry`` geometry of the init_TG. Logically the same as for the rest of the simulation
     * ``tg_vapp`` or ``vapp`` Application name to search the init_TG.nc file.
     * ``tg_vconf`` or ``vconf`` Configuration name to search the init_TG.nc file.
-    * ``tg_block`` Block name to search the init_TG.nc file. Default: *prep*
 
     **Optional configuration variables:**
 
@@ -570,7 +567,7 @@ class FetchClimGroundTemperatureOrCrash(InitClimGroundTemperature, _CenResearchT
             model      = "surfex",
             namespace  = "vortex.cache.fr",
             namebuild  = "flat@cen",
-            block      = self.conf.get("out_block", "prep"),
+            block      = 'init_tg',
         )
         print(self.ticket.prompt, "Output init ground temperature =", init_ground_temperature_out)
         print()
