@@ -386,22 +386,18 @@ class _PgdConstruct(PgdCommonsMixin, _CenResearchTask):
         Save the PGD file
         """
         self.sh.title("Toolbox Output PGD")
-        pgd_tbo = (
-            vortex.output(
-                local="PGD.nc",
-                role="SurfexClim",
-                experiment=self.conf.xpid,
-                geometry=self.conf.geometry,
-                nativefmt="netcdf",
-                kind="pgdnc",
-                model="surfex",
-                namespace=self.namespace_out,
-                namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block="pgd",
-            ),
-        )
-        # MF: in surfex_task.py:       member = self.conf.member if hasattr(self.conf, 'member') else None,
-        # MV : c'était un bug introduit par mon commit #21915d5748ec0f80095edced4fc7ee6790a8faa4
+        pgd_tbo = vortex.output(
+            local="PGD.nc",
+            role="SurfexClim",
+            experiment=self.conf.xpid,
+            geometry=self.conf.geometry,
+            nativefmt="netcdf",
+            kind="pgdnc",
+            model="surfex",
+            namespace=self.namespace_out,
+            namebuild="flat@cen",  # TODO : passer en variable de configuration
+            block="pgd",
+        ),
         print(self.ticket.prompt, "pgd_tbo =", pgd_tbo)
         print()
 
@@ -809,6 +805,22 @@ class FetchPgdFileOrCrash(FetchPgdFileOrMake):
         self.get_pgd_file_from_uenv(fatal=force_uenv)
         if len(self.ctx.sequence.effective_inputs(role="SurfexClim")) == 0:
             _ = self.get_pgd_file_from_cache_or_archive(fatal=True)
+
+        self.sh.title("Toolbox Output PGD")
+        out = vortex.output(
+            local="PGD.nc",
+            role="SurfexClim",
+            experiment=self.conf.xpid,
+            geometry=self.conf.geometry,
+            nativefmt="netcdf",
+            kind="pgdnc",
+            model="surfex",
+            namespace='vortex.cache.fr',
+            namebuild="flat@cen",
+            block="pgd",
+        ),
+        print(self.ticket.prompt, "PGD =", out)
+        print()
 
     def get_local_inputs(self):
         pass
