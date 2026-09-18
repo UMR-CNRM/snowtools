@@ -30,20 +30,18 @@ PROJ_avail = True
 
 @unittest.skipIf(SKIP_CRPS, "CRPS Fortran module is not installed")
 class TestSpatialFile(TestWithTempFolder):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.myscores = ProVsPleiade([os.path.join(TESTBASE_DIR, 'PRO', 'PRO_2019051300_2019051400.nc'),
+    def setUp(self):
+        super().setUp()
+        self.myscores = ProVsPleiade([os.path.join(TESTBASE_DIR, 'PRO', 'PRO_2019051300_2019051400.nc'),
                                      os.path.join(TESTBASE_DIR, 'PRO', 'PRO_2019051300_2019051400.nc')],
-                                    ['bli', 'bla'], os.path.join(TESTBASE_DIR, 'P250_GR_13_05_19_attr.nc'),
-                                    'DSN_T_ISBA', [1, 3, 5], [2.],
-                                    [1.], score_file_name="pleiade_scores.nc")
-        cls.myscores.apply_mask(maskfile=os.path.join(TESTBASE_DIR, "masque_glacier2017_foret_ville_riviere.nc"))
-
+                                     ['bli', 'bla'], os.path.join(TESTBASE_DIR, 'P250_GR_13_05_19_attr.nc'),
+                                     'DSN_T_ISBA', [1, 3, 5], [2.],
+                                     [1.], score_file_name=os.path.join(self.diroutput, "pleiade_scores.nc"))
+        self.myscores.apply_mask(maskfile=os.path.join(TESTBASE_DIR, "masque_glacier2017_foret_ville_riviere.nc"))
 
     def test_create_file(self):
-        sf = SpatialScoreFile(['bli', 'bla'], [1, 3, 5], [2.],
-                              [1.])
+        sf = SpatialScoreFile(['bli', 'bla'], [1, 3, 5], [2.], [1.],
+                              filename=os.path.join(self.diroutput, "spatialscores.nc"))
         sf.close()
 
     @unittest.skipIf(not TIME_CRPS, "No crps timing required")
@@ -108,10 +106,9 @@ class TestSpatialFile(TestWithTempFolder):
 
 @unittest.skipIf(SKIP_CRPS, "CRPS Fortran module is not installed")
 class TestMoranDiags(TestSpatialFile):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.local_moran = LocalMoranData(cls.myscores.fc_data['bli'].data)
+    def setUp(self):
+        super().setUp()
+        self.local_moran = LocalMoranData(self.myscores.fc_data['bli'].data)
 
     def test_moran_scatter_colored(self):
         self.local_moran.plot_moran_scatter_colored('snow height',
