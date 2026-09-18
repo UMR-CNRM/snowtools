@@ -51,7 +51,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, OpTask):
                     local          = 'mb035/[geometry::tag]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
                     if len(list_geometry) > 1 else 'mb035/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                     vapp           = self.conf.vapp,
-                    vconf          = '[geometry:area]',
+                    vconf          = '[geometry:domain]',
                     block          = block_safran,
                     member         = 35 if source_safran == 's2m' else None,
                     source_app     = 'arpege' if source_safran == 'safran' else None,
@@ -79,7 +79,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, OpTask):
                         local          = 'mb035/[geometry::tag]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
                         if len(list_geometry) > 1 else 'mb035/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                         vapp           = self.conf.vapp,
-                        vconf          = '[geometry:area]',
+                        vconf          = '[geometry:domain]',
                         block          = alternate_block,
                         member         = None,
                         source_app     = 'arpege',
@@ -105,7 +105,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, OpTask):
                     local          = 'mb[member]/[geometry::tag]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
                     if len(list_geometry) > 1 else 'mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                     vapp           = self.conf.vapp,
-                    vconf          = '[geometry:area]',
+                    vconf          = '[geometry:domain]',
                     block          = block_safran,
                     source_app     = 'arpege' if source_safran == 'safran' else None,
                     source_conf    = 'pearp' if source_safran == 'safran' else None,
@@ -133,7 +133,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, OpTask):
                         local          = 'mb[member]/[geometry::tag]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
                         if len(list_geometry) > 1 else 'mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                         vapp           = self.conf.vapp,
-                        vconf          = '[geometry:area]',
+                        vconf          = '[geometry:domain]',
                         block          = alternate_block,
                         source_app     = 'arpege',
                         source_conf    = 'pearp',

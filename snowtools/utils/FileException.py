@@ -386,7 +386,7 @@ class ModuleImportException(Exception):
 
 class MultipleValueException(Exception):
     """
-    Exception when multiple values match the semection but only one is allowed
+    Exception when multiple values match the selection but only one is allowed
     """
 
     def __str__(self):

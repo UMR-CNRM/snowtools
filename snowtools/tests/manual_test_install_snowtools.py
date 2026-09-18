@@ -1,0 +1,47 @@
+# -*- coding: utf-8 -*-
+
+import unittest
+import subprocess
+import shlex
+import shutil
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+
+from DATA import SNOWTOOLS_CEN  # noqa
+from DATA import TESTBASE_DIR  # noqa
+
+if not os.path.exists(TESTBASE_DIR):
+    sys.exit('The "TESTBASE_DIR" environment variable is not properly defined.\n' +
+             'Set TESTBASE_DIR to valid path before launching this script again.')
+
+
+class install_snowtools(unittest.TestCase):
+
+    def install_cmd(self, cmd, assertFail=False):
+        if assertFail:
+            with self.assertRaises(subprocess.CalledProcessError):
+                subprocess.run(shlex.split(cmd, ' '), check=True)
+        else:
+            subprocess.run(shlex.split(cmd, ' '), check=True)
+
+    def test_editable_install_all(self):
+        # WARNING : This test will crash on HPC with python 3.7.6 because editable installs are not possible with this
+        # python version
+        self.install_cmd(f"python3 {SNOWTOOLS_CEN}/cenutils/install_snowtools.py -e")
+
+    def test_non_editable_install(self):
+        self.install_cmd(f"python3 {SNOWTOOLS_CEN}/cenutils/install_snowtools.py")
+
+    def test_non_editable_install_plot_sql(self):
+        self.install_cmd(f"python3 {SNOWTOOLS_CEN}/cenutils/install_snowtools.py " +
+            f"-v {TESTBASE_DIR}/venv/non_editable_plot_sql -o plot sql scores")
+
+    @classmethod
+    def tearDownClass(cls):
+        if os.path.isdir(f"{TESTBASE_DIR}/venv"):
+            shutil.rmtree(f"{TESTBASE_DIR}/venv")
+
+
+if __name__ == "__main__":
+    unittest.main()

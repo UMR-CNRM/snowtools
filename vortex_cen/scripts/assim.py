@@ -1,0 +1,230 @@
+# -*- coding: utf-8 -*
+"""
+This script allows to launch a SURFEX/Crocus experiment with snow data assimilation.
+
+Such an experiment is a loop over the following sequence of actions over a set of assimilation dates:
+
+    1. Run an ensemble of SURFEX/Crocus simulations (OFFLINE executable) with an MPI parallelisation until
+       an assimilation date. All simulation members are initialised with the same initial conditions (PREP file).
+       --> Associated task : "offline_openloop"
+    2. Assimilate an available snow observation at the assimilation date with a Particle Filter (SODA executable)
+
+    3. Run an ensemble of SURFEX/Crocus simulations (OFFLINE executable) with an MPI parallelisation from
+       the last assimilation date, until the next assimilaiton date (or the date of end simiulation).
+       The difference with the execution of step 1 is that this time, each simulation member is initialised by
+       specific initial conditions (PREP file) coming from step 2 (SODA analysis).
+       --> Associated task : "offline_assim"
+"""
+
+import argparse
+import time
+
+from bronx.stdtypes.date import Date, Time
+from snowtools.tools.execute import callSystemOrDie
+import vortex
+from vortex.util.config import GenericConfigParser
+
+# TODO : Have a look at mkjob "subjobs" tool
+# TODO : Launch this script as a job to avoid waiting on a login node
+
+
+def parse_command_line():
+
+    parser = argparse.ArgumentParser(
+        description='Launch a SURFEX/Crocus experiment with snow data assimilation. \n'
+        'Such an experiment is loop over the following sequence of actions over a set of assimilation dates:\n'
+        '1. Run an ensemble of SURFEX/Crocus simulations (OFFLINE executable) with an MPI parallelisation until '
+        'an assimilation date. All simulation members are initialised with the same initial conditions (PREP file).\n'
+        '--> Associated task : "offline_openloop"\n'
+        '2. Assimilate an available snow observation at the assimilation date with a Particle Filter '
+        '(SODA executable)\n'
+        '3. Run an ensemble of SURFEX/Crocus simulations (OFFLINE executable) with an MPI parallelisation from '
+        'the last assimilation date, until the next assimilaiton date (or the date of end simiulation).\n'
+        'The difference with the execution of step 1 is that this time, each simuaiton member is initialised by'
+        'specific initial conditions (PREP file) coming from step 2 (SODA analysis).\n'
+        '--> Associated task : "offline_assim"\n'
+    )
+
+    parser.add_argument('-b', '--datebegin', type=str,
+                        help="Date of the beginning of the simulation.")
+
+    parser.add_argument('-e', '--dateend', type=str,
+                        help="Date of the end of the simulation.")
+
+    parser.add_argument("--vapp",
+            help="Target application (ex: edelweiss)", type=str, required=True)
+
+    parser.add_argument("--vconf",
+            help="Target configuration", type=str, required=True)
+
+    parser.add_argument("-c", "--conf",
+            help="Path to the simulation's configuration file", type=str, required=True)
+
+    parser.add_argument("-a", "--assimdates", nargs="+",
+            help="List of assimilation dates", required=False, default=list())
+
+    # Temporary argument for script debuging
+    parser.add_argument("--keep_existing_prep", action='store_true', default=False,
+            help="Do not remove existing PREP files to avoid waiting (DBUG mode only)", required=False)
+
+    parser.add_argument("-g", "--geometry",
+            help="Simulation's geometry", type=str, required=False)
+#
+#    parser.add_argument("-x", "--xpid",
+#            help="Experiment identifier", type=str, required=False)
+#
+#    parser.add_argument("-n", "--nmembers",
+#            help="Number of simulation members", type=int, required=False)
+
+    args = parser.parse_args()
+
+    # Add simulation date end to list of assimilation dates for last loop
+    args.assimdates.append(args.dateend)
+
+    return args
+
+
+def wait_mandatory_input(vapp, vconf, xpid, block, geometry, assimdate, nmembers, walltime, keep_existing_prep=False):
+    launch = False
+    start = Date.now()
+    timer = Date.now()
+    prep = vortex.input(
+        kind           = 'PREP',
+        vapp           = vapp,
+        vconf          = vconf,
+        datevalidity   = assimdate,
+        experiment     = xpid,
+        geometry       = geometry,
+        member         = [mb for mb in range(nmembers)],
+        namebuild      = 'flat@cen',
+        block          = 'offline',
+        # stage          = '_bg' if task == 'soda' else '_an',
+        model          = 'surfex',
+        namespace      = 'vortex.cache.fr',
+        nativefmt      = 'netcdf',
+        local          = 'PREP.nc',
+        now            = False,
+    )
+    if not keep_existing_prep:
+        for fic in prep:
+            fic.delete()
+    time.sleep(1)
+    while (timer - start < walltime * 1.1) and not launch:
+        if all([fic.get() for fic in prep]):
+            print('==================================================================')
+            print(f'{block} PREP files present, launching the next simulation step.')
+            print('==================================================================')
+            launch = True
+        else:
+            print(f'Waiting for {block} PREP files')
+            time.sleep(10)
+            timer = Date.now()
+    # TODO : gérer proprement les "timeouts"
+    return launch
+
+
+def mkjob_command(jobname, taskname, conf, datebegin=None, dateend=None, date=None):
+    """
+    Build a valid mkjob command line.
+
+    One of *date* or (*datebegin* and *dateend*) argument must be provided
+    """
+    base = f"mkjob -j name={jobname} task={taskname} profile=rd-belenos-mt package=drivers jobassistant=cen"
+    # TODO : ajouter la période pour éviter d'avoir à mettre datebegin / dateend dans le fichier de conf
+    if date is not None:
+        dateinfo = f"date={date}"
+    else:
+        dateinfo = f"datebegin={datebegin} dateend={dateend}"
+
+    confinfo = f"-c {conf}"
+
+    cmd = " ".join([base, dateinfo, confinfo])
+
+    return cmd
+
+
+def mkjob_list_commands(taskname, conf, njobs=17, mb0=0, datebegin=None, dateend=None, date=None):
+    """
+    Method to construct the actual list of job creation commands.
+
+    One of *date* or (*datebegin* and *dateend*) argument must be provided
+
+    Let's consider that we want to launch an execution of
+    SURFEX with an MPI parallelisation for every FORCING file of an N
+    members ensemble.
+    We want all these jobs to share a common 'surfex_mpi' section in the
+    configuration file.
+
+    Naming the jobs 'surfex_mpi_mb1', 'surfex_mpi_mb2', ...,  'surfex_mpi_mbN'
+    will lead the Vortex's job launcher to do this :
+    - Get each job 'member' from the mbX extension : member=int(X)
+    - put the associated value direcly in the job (variable RD_MEMBER in the
+      template file, then interpreted as 'member' in the configuration
+      dictionary)
+    - rename all jobs 'surfex_mpi' so that they all use the same section of
+      the configuration file
+    """
+
+    jobname = f"{taskname}_job"
+
+    mkjob_list = []
+    if njobs == 1:
+        mkjob_list.append(mkjob_command(jobname=jobname, taskname=taskname, conf=conf,
+            datebegin=datebegin, dateend=dateend, date=date))
+    else:
+        for job_number in range(mb0, mb0 + njobs):
+            mkjob_list.append(mkjob_command(jobname=f'{jobname}_mb{str(job_number)}', taskname=taskname, conf=conf,
+                datebegin=datebegin, dateend=dateend, date=date))
+
+    return mkjob_list
+
+
+def main():
+
+    args = parse_command_line()
+    iniparser = GenericConfigParser(inifile=args.conf)
+
+    nmembers = int(iniparser.get('DEFAULT', 'nmembers'))
+    xpid = iniparser.get('DEFAULT', 'xpid')
+    # walltime tells the method "wait_mandatory_input" how long it has to wait before crashing
+    walltime = Time(iniparser.get('offline_openloop_job', 'time'))
+
+    datebegin = args.datebegin
+    first_run = True
+    for date in args.assimdates:
+        dateend = date
+
+        # 1. Launch an ensemble of OFFLINE_MPI simulations
+        if first_run:
+            # This is the first run:
+            # launch a set of offline_MPI tasks with a single PREP file as initial conditions
+            offline = mkjob_list_commands('offline_openloop', conf=args.conf, njobs=nmembers, datebegin=datebegin,
+                    dateend=dateend)
+            first_run = False
+        elif wait_mandatory_input(vapp=args.vapp, vconf=args.vconf, xpid=xpid, geometry=args.geometry, block='analysis',
+                assimdate=datebegin, nmembers=nmembers, walltime=walltime, keep_existing_prep=args.keep_existing_prep):
+            # This is a run after an assimilation step:
+            # aunch a set of offline_MPI tasks with an ensemble of PREP files as initial conditions
+            offline = mkjob_list_commands('offline_assim', conf=args.conf, njobs=nmembers, datebegin=datebegin,
+                    dateend=dateend)
+            walltime = Time(iniparser.get('offline_assim_job', 'time'))
+
+        for mkjob in offline:
+            print("Run command: " + mkjob + "\n")
+            callSystemOrDie(mkjob)
+
+        # 2. Launch a SODA assimilation (except if end of simulation reached)
+        if dateend != args.dateend:
+            if wait_mandatory_input(vapp=args.vapp, vconf=args.vconf, xpid=xpid, block='background',
+                    geometry=args.geometry, assimdate=date, nmembers=nmembers, walltime=walltime,
+                    keep_existing_prep=args.keep_existing_prep):
+                soda = mkjob_command(jobname='soda_job', taskname='soda', date=date, conf=args.conf)
+                print("Run command: " + soda + "\n")
+                callSystemOrDie(soda)
+                walltime = Time(iniparser.get('soda_job', 'time'))
+                datebegin = date
+
+
+if __name__ == '__main__':
+
+    main()

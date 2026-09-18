@@ -1,0 +1,9 @@
+name=prepsafran_job package=drivers task=prepsafran profile=rd-belenos-mt datebegin=2025080100 dateend=2025083100
+name=prepsafran_job package=drivers task=prepsafran profile=rd-belenos-mt datebegin=2025090100 dateend=2025093000
+name=prepsafran_job package=drivers task=prepsafran profile=rd-belenos-mt datebegin=2025100100 dateend=2025103100
+name=prepsafran_job package=drivers task=prepsafran profile=rd-belenos-mt datebegin=2025110100 dateend=2025113000
+name=prepsafran_job package=drivers task=prepsafran profile=rd-belenos-mt datebegin=2025120100 dateend=2025123100
+name=prepsafran_job package=drivers task=prepsafran profile=rd-belenos-mt datebegin=2026010100 dateend=2026013100
+name=prepsafran_job package=drivers task=prepsafran profile=rd-belenos-mt datebegin=2026020100 dateend=2026022800
+name=prepsafran_job package=drivers task=prepsafran profile=rd-belenos-mt datebegin=2026030100 dateend=2026033100
+name=prepsafran_job package=drivers task=prepsafran profile=rd-belenos-mt datebegin=2026040100 dateend=2026043000

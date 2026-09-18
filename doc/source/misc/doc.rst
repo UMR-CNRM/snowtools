@@ -25,7 +25,14 @@ Note that this generation will require some packages to be installed:
  - all snowtools dependencies (this includes a correct installation of vortex)
  - Python 3.7 or later
  - ``sphinx``
- - The ``sphinx-fortran`` extension (installable with ``pip install sphinx-fortran`` but the ``pipy`` version is quite old, so we encourage you to install the last version available at https://github.com/VACUMM/sphinx-fortran with ``pip install git+https://github.com/VACUMM/sphinx-fortran``)
+ - The ``sphinx-fortran`` and ``sphinx-toolbox`` extensions
+
+All these requirements can be installed with the "requirements-doc.txt" file:
+
+.. code-block::
+
+   cd $SNOWTOOLS_CEN
+   pip install -r requirements-doc.txt
 
 
 Code documentation

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-'''
+"""
 Created on 15 January 2024
 
 @author: Vernay
@@ -9,7 +9,7 @@ cache but not on Hendrix (for example after un password update).
 This task can be called with the exact same s2m command by adding a --refill option.
 It retrieves the ressources produced by the previous simulation on the local cache and put them on Hendrix
 as intended initially.
-'''
+"""
 
 import shlex
 

@@ -48,8 +48,8 @@ These entry points are designed to deal with the following requirements :
 To use these entry points, the native xarray methods `open_dataset`, `open_dataarray` and `open_mfdataset` should
 simply be called with the keyword argument "engine='snowtools'" except if you have an older xarray version (see below).
 
-Meteo-France usage (until next xarray update from version 0.16.0)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Usage with xarray < 0.18
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: python
 
@@ -60,8 +60,8 @@ Meteo-France usage (until next xarray update from version 0.16.0)
     ds = xarray_snowtools.preprocess(ds)
 
 
-Usage with xarray > 0.18
-^^^^^^^^^^^^^^^^^^^^^^^^
+Usage with xarray >= 0.18
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: python
 
@@ -186,7 +186,7 @@ class SnowtoolsBackendEntrypoint(BackendEntrypoint):
         WARNING : the direct use of *open_mfdataset* is recomended whenever you are sure to deal with more
         than one file.
 
-        :param filename_or_obj: Pathi or list of paths of the file(s) to read
+        :param filename_or_obj: Path or list of paths of the file(s) to read
         :type filename_or_obj: str, Path, file_like, DataStore or nested sequence of paths
         :mapping: User-defined dictionnary to map variable or dimension names. It can be used as a complement to
                   the default mapping dictionnary in case of a code based on variable / dimension names different than
@@ -196,14 +196,19 @@ class SnowtoolsBackendEntrypoint(BackendEntrypoint):
 
         """
         if isinstance(filename_or_obj, list):
-            return xarray.open_mfdataset(filename_or_obj, engine='snowtools', mapping=mapping, **kw)
-        else:
-            ds = xarray.open_dataset(filename_or_obj, engine='netcdf4', decode_times=False, **kw)
-            close = ds._close
-            ds = preprocess(ds, mapping=mapping)
-            ds.set_close(close)
+            if len(filename_or_obj) == 1:
+                filename_or_obj = filename_or_obj[0]
+            elif len(filename_or_obj) > 1:
+                return xarray.open_mfdataset(filename_or_obj, engine='snowtools', mapping=mapping, **kw)
+            else:
+                raise ValueError("open_dataset got an empty list as argument")
 
-            return ds
+        ds = xarray.open_dataset(filename_or_obj, engine='netcdf4', decode_times=False, **kw)
+        close = ds._close
+        ds = preprocess(ds, mapping=mapping)
+        ds.set_close(close)
+
+        return ds
 
     open_dataset_parameters = ["filename_or_obj"]
 

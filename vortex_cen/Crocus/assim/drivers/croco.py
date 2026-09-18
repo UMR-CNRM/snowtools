@@ -1,0 +1,64 @@
+# -*- coding: utf-8 -*-
+"""
+The "croco" driver allows to loop over an ensemble of OFFLINE executions without MPI parallelisation,
+followed by a SODA assimilation step in a research context.
+The ensemble members can combine an ensemble of meteorological forcings and different Crocus physics.
+"""
+
+from mkjob.nodes import Driver, WorkshareFamily, LoopFamily
+from vortex_cen.tasks.surfex.offline_ensemble import CrocO
+from vortex_cen.tasks.surfex.pgd import FetchPgdFileOrCrash
+from vortex_cen.tasks.surfex.prep import PrepRefill
+from vortex_cen.tasks.surfex.soda import Soda
+
+
+def setup(t, **kw):
+    return Driver(
+        tag = 'croco',
+        ticket = t,
+        nodes = [
+            # Common namelist pre-processing
+            FetchPgdFileOrCrash(tag='fetch_pgd', ticket=t, **kw),
+            PrepRefill(tag='prep_refill', ticket=t, **kw),
+            # assim sequence
+            LoopFamily(
+                tag='dates',
+                ticket=t,
+                nodes =[
+                    # offline tasks are launched from assimdate_prev to assimdate
+                    # -> last propagation from assimdate[-1] to enddate is outside the loop family.
+                    WorkshareFamily(
+                        tag='offline',
+                        ticket = t,
+                        workshareconf='members,members_id',
+                        worksharename='membersnode,idsnode',
+                        worksharesize=10,
+                        worksharelimit='nnodes',
+                        nodes = [
+                            CrocO(tag = 'offline', ticket=t, **kw),
+                        ], **kw
+                    ),
+                    Soda(tag='soda', ticket=t,
+                        active_callback=lambda s: (not s.conf.get('openloop', False) and
+                            s.conf.assimdate_next is not None),
+                        **kw),
+                ],
+                loopconf='assimdates',
+                loopsuffix='+d{:s}',  # format the loop iterator (assimdate(s) as itself ( a string)
+                active_callback=lambda s: not s.conf.get('openloop', False),
+                **kw
+            ),
+            WorkshareFamily(
+                tag='offline_final',
+                ticket = t,
+                workshareconf='members,members_id',
+                worksharename='membersnode,idsnode',
+                worksharesize=10,
+                worksharelimit='nnodes',
+                nodes = [
+                    CrocO(tag = 'offline_final', ticket=t, **kw),
+                ], **kw
+            ),
+        ],
+        options=kw
+    )

@@ -88,8 +88,6 @@ The next step of the configuration depends on your application:
 * For MPI parallel applications (big domains, deterministic application) : let ``VER_MPI`` and ``VER_CDF`` options to default.
 * For sequential ensemble applications associed with a ParaBlindRun AlgoComponent (one member per core through vortex), and only in this case, export the following variables: ``export VER_MPI=NOMPI`` and ``export VER_CDF=CDF2020``.
 
-You will also need to install :ref:`install-vortex`.
-
 Common configuration
 ^^^^^^^^^^^^^^^^^^^^
 At this step, it is also possible to modify the optimization level by :
@@ -163,12 +161,17 @@ Please check carefully the full names of your binaries (depending on SURFEX vers
    ln -s $EXESURFEX/PGD-LXgfortran-SFX-V8-1-1-NOMPI-O2-X0 $EXESURFEX/PGD
    ln -s $EXESURFEX/SODA-LXgfortran-SFX-V8-1-1-NOMPI-O2-X0 $EXESURFEX/SODA
 
+.. _surfex-install-first-test:
+
 FIRST TEST: test your snowtools and SURFEX install
 --------------------------------------------------
 If you correctly installed the snowtools and SURFEX projects, you must be able to run successfully the following test case:
 
 .. code-block:: bash
 
-   s2m research -f $SNOWTOOLS_CEN/snowtools/DATA/FORCING_test_base.nc -b 20100801 -e 20110801 -o output -g -s ...yoursurfexdirectory.../exe
+    source ~/my_envs/snowtools_env/bin/activate
+    export NOFFLINE=1 # necessary if you haven't done export VER_MPI=NOMPI
+    s2m research -f $SNOWTOOLS_CEN/snowtools/DATA/FORCING_test_base.nc -b 20100801 -e 20110801 -o output -g -s ...yoursurfexdirectory.../exe
+    deactivate
 
 :warning: If you installed SURFEX with MPIAUTO option, you have to set the environment variable NOFFLINE to 1 or 2 to make this test work (because this test have two simulation points).

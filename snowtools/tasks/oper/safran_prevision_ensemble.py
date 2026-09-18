@@ -228,7 +228,7 @@ class Safran(Task, S2MTaskMixIn):
                 self.sh.title('Toolbox input namelist sorties')
                 tb09 = toolbox.input(
                     role            = 'Nam_sorties',
-                    source          = 'namelist_sorties_[geometry:area]',
+                    source          = 'namelist_sorties_[geometry:domain]',
                     geometry        = self.conf.geometry[self.conf.vconf],
                     genv            = self.conf.cycle,
                     kind            = 'namelist',
@@ -254,7 +254,7 @@ class Safran(Task, S2MTaskMixIn):
                 self.sh.title('Toolbox input namelist melange')
                 tb10 = toolbox.input(
                     role            = 'Nam_melange',
-                    source          = 'namelist_melange_[geometry:area]',
+                    source          = 'namelist_melange_[geometry:domain]',
                     geometry        = self.conf.geometry[self.conf.vconf],
                     genv            = self.conf.cycle,
                     kind            = 'namelist',
@@ -279,7 +279,7 @@ class Safran(Task, S2MTaskMixIn):
                 self.sh.title('Toolbox input namelist impress')
                 tb12 = toolbox.input(
                     role            = 'Nam_impress',
-                    source          = 'namelist_impress_[geometry:area]',
+                    source          = 'namelist_impress_[geometry:domain]',
                     geometry        = self.conf.geometry[self.conf.vconf],
                     genv            = self.conf.cycle,
                     kind            = 'namelist',
@@ -294,7 +294,7 @@ class Safran(Task, S2MTaskMixIn):
                     self.sh.title('Toolbox input namelist observr')
                     tb13 = toolbox.input(
                         role            = 'Nam_observr',
-                        source          = 'namelist_observr_[geometry:area]',
+                        source          = 'namelist_observr_[geometry:domain]',
                         geometry        = self.conf.geometry[self.conf.vconf],
                         genv            = self.conf.cycle,
                         kind            = 'namelist',
@@ -308,7 +308,7 @@ class Safran(Task, S2MTaskMixIn):
                 self.sh.title('Toolbox input namelist analyse')
                 tb14 = toolbox.input(
                     role            = 'Nam_analyse',
-                    source          = 'namelist_analyse_[geometry:area]',
+                    source          = 'namelist_analyse_[geometry:domain]',
                     geometry        = self.conf.geometry[self.conf.vconf],
                     genv            = self.conf.cycle,
                     kind            = 'namelist',
@@ -322,7 +322,7 @@ class Safran(Task, S2MTaskMixIn):
                 self.sh.title('Toolbox input namelist ebauche')
                 tb16 = toolbox.input(
                     role            = 'Nam_ebauche',
-                    source          = 'namelist_ebauche_[geometry:area]',
+                    source          = 'namelist_ebauche_[geometry:domain]',
                     geometry        = self.conf.geometry[self.conf.vconf],
                     genv            = self.conf.cycle,
                     kind            = 'namelist',

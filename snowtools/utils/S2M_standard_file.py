@@ -57,9 +57,11 @@ class _StandardNC(netCDF4.Dataset):
             self.date_created = datetime.datetime.today().replace(hour=12, minute=0, second=0,
                                                                   microsecond=0).isoformat()
 
-        contributors = ['Matthieu Vernay', 'Matthieu Lafaysse', 'Mathieu Fructus', 'Léo Viallon-Galinier',
-                        'Sabine Radanovics']
-        roles = ['Matthieu Vernay collected the input data and develops the SAFRAN reanalysis',
+        contributors = ['Diego Monteiro', 'Bénédicte Branchet', 'Matthieu Vernay', 'Matthieu Lafaysse',
+                        'Mathieu Fructus', 'Léo Viallon-Galinier', 'Sabine Radanovics']
+        roles = ['Diego Monteiro produced the observation inputs and the evaluation of the dataset',
+                 'Bénédicte Branchet downloaded the ERA5 data used as guess',
+                 'Matthieu Vernay collected the input data and develops the SAFRAN reanalysis',
                  'Matthieu Lafaysse leads the team and developments around the SURFEX-ISBA/Crocus simulations',
                  'Mathieu Fructus contributes to the SURFEX-ISBA/Crocus development',
                  'Léo Viallon-Galinier supervises the snowtools development',
@@ -175,6 +177,20 @@ class _StandardNC(netCDF4.Dataset):
         else:
             raise UnknownGridTypeException(gridtype, "")
 
+        # WARNING : The pyproj documentation raises the following warning :
+        # """
+        # Avoid using pip install with a conda environment.
+        # """
+        # See : https://pyproj4.github.io/pyproj/3.3.0/installation.html
+        # ==> Installing pyproj with pip on MF's HPC can lead to the following crash :
+        # Exception type: <class 'pyproj.exceptions.CRSError'>
+        # Exception info: Invalid projection: epsg:2154: (Internal Proj Error: proj_create:
+        # no database context specified)
+        # This seems to be caused by pyproj referencing an incorrect crs data directory :
+        # https://gis.stackexchange.com/questions/383883/pyproj-invalid-projection-init-epsg25832/431688#431688
+        # For more information, see the following related issues :
+        # https://github.com/geopandas/geopandas/issues/2270
+        # https://github.com/geopandas/geopandas/issues/1887
         transformer = Transformer.from_crs(epsg, 'epsg:4326')
 
         XX, YY = np.meshgrid(np.asarray(x), np.asarray(y))
@@ -191,8 +207,8 @@ class _StandardNC(netCDF4.Dataset):
         else:
             massifnumber = self.variables['massif_number']
 
-        lat = np.empty(massifnumber.shape, np.float)
-        lon = np.empty(massifnumber.shape, np.float)
+        lat = np.empty(massifnumber.shape, np.float64)
+        lon = np.empty(massifnumber.shape, np.float64)
 
         dimension = self.variables['ZS'].dimensions
         varFillValue = -9999999.
@@ -202,11 +218,11 @@ class _StandardNC(netCDF4.Dataset):
             lat[point] = lonlat[1]
             lon[point] = lonlat[0]
 
-        var = self.createVariable("LAT", np.float, dimension, fill_value=varFillValue)
+        var = self.createVariable("LAT", np.float64, dimension, fill_value=varFillValue)
         setattr(var, 'long_name', 'latitude')
         setattr(var, 'units', 'degrees_north')
         var[:] = lat
-        var = self.createVariable("LON", np.float, dimension, fill_value=varFillValue)
+        var = self.createVariable("LON", np.float64, dimension, fill_value=varFillValue)
         setattr(var, 'long_name', 'longitude')
         setattr(var, 'units', 'degrees_east')
         var[:] = lon
@@ -335,17 +351,17 @@ class StandardPROSNOW(StandardSAFRAN):
         '''Routine to add coordinates in the forcing file for the SAFRAN massifs'''
         massifnumber = self.variables['massif_number']
 
-        lat = np.empty(massifnumber.shape, np.float)
-        lon = np.empty(massifnumber.shape, np.float)
+        lat = np.empty(massifnumber.shape, np.float64)
+        lon = np.empty(massifnumber.shape, np.float64)
 
         dimension = self.variables['ZS'].dimensions
         varFillValue = -9999999.
 
-        var = self.createVariable("LAT", np.float, dimension, fill_value=varFillValue)
+        var = self.createVariable("LAT", np.float64, dimension, fill_value=varFillValue)
         setattr(var, 'long_name', 'latitude')
         setattr(var, 'units', 'degrees_north')
         var[:] = lat
-        var = self.createVariable("LON", np.float, dimension, fill_value=varFillValue)
+        var = self.createVariable("LON", np.float64, dimension, fill_value=varFillValue)
         setattr(var, 'long_name', 'longitude')
         setattr(var, 'units', 'degrees_east')
         var[:] = lon

@@ -1,0 +1,6 @@
+name=safran_reforecast_alp package=drivers task=safran profile=rd-belenos-mt
+name=safran_reforecast_pyr package=drivers task=safran profile=rd-belenos-mt
+name=safran_reforecast_cor package=drivers task=safran profile=rd-belenos-mt
+name=safran_reforecast_mac package=drivers task=safran profile=rd-belenos-mt
+name=safran_reforecast_vog package=drivers task=safran profile=rd-belenos-mt
+name=safran_reforecast_jur package=drivers task=safran profile=rd-belenos-mt

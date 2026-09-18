@@ -1,28 +1,19 @@
-Meteo France HPC environment
-============================
+HPC simulations
+===============
 
-In order to work in Meteo France HPC system, you have to install vortex
-
-VORTEX
-------
+Few informations on how to work on MF HPC.
 
 .. toctree::
    :maxdepth: 1
 
-   Installation of VORTEX <vortex-install.rst>
-
-File Transferts
----------------
+   Essential documentation to work on MF HPC <essentials.rst>
 
 .. toctree::
    :maxdepth: 1
 
-   Communications with Hendrix <file-transfert.rst>
-
-UENV documentation
-------------------
+   Launching simulations on MF HPC <simulations.rst>
 
 .. toctree::
    :maxdepth: 1
 
-   Few tips on UENV on HPC <uenv.rst>
+   Developing new functionalities for MF HPC <developpers.rst>

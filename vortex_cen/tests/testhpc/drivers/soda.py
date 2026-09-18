@@ -1,0 +1,21 @@
+# -*- coding: utf-8 -*-
+"""
+Test the "Soda" unittask. The driver also includes the "Soda_Namelist_Preprocess" task.
+"""
+
+from mkjob.nodes import Driver
+from vortex_cen.tasks.surfex.pgd import FetchPgdFileOrCrash
+from vortex_cen.tasks.surfex.soda import Soda, FetchBackgroundOrCrash
+
+
+def setup(t, **kw):
+    return Driver(
+        tag='soda',
+        ticket=t,
+        nodes=[
+            FetchPgdFileOrCrash(tag='fetch_pgd_soda', ticket=t, **kw),
+            FetchBackgroundOrCrash(tag='fetch_background_soda', ticket=t, **kw),
+            Soda(tag='soda', ticket=t, **kw),
+        ],
+        options=kw,
+    )

@@ -16,6 +16,12 @@ snowtools/interpolation/interpol
 *.o
 *.mod
 *.so
+vortex_cen/s2m/alp/drivers
+vortex_cen/s2m/pyr/drivers
+vortex_cen/s2m/cor/drivers
+vortex_cen/s2m/mac/drivers
+vortex_cen/s2m/vog/drivers
+vortex_cen/s2m/jur/drivers
 
 GUI_selfcontain.zip
 

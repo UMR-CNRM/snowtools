@@ -21,8 +21,9 @@ import numpy as np
 import netCDF4
 from scipy.stats import gamma
 
-from snowtools.plots.pearps2m.postprocess import (Config, Ensemble,
-                                                  EnsembleOperDiagsFlatMassif, EnsembleStation)
+from snowtools.plots.pearps2m.oper_diags_plot import Config, EnsembleOperDiagsFlatMassif
+from snowtools.data.ensemble_classes import Ensemble, EnsembleStation
+from snowtools.tasks.oper.get_oper_files import S2MExtractor
 from snowtools.utils.FileException import DirNameException
 from snowtools.utils.dates import pretty_date
 from snowtools.DATA import SNOWTOOLS_DIR

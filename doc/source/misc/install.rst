@@ -2,29 +2,13 @@
 
 Install Snowtools
 =================
-
-.. note::
-
-   If you are using snowtools on Meteo-France computers, go directly to the last section (:ref:`sec-install_dev`).
-
-Dependencies
-------------
-
 The snowtools project is mainly designed for a Linux environment.
 
-The whole project requires at least python 3.6 and classical scientific packages (``numpy``, ``netCDF4``...). Some specific parts of the code (especially tests, scores, documentation generation require an extended set of dependencies that are fully described in ``requirements.txt``. The vortex toolbox is also needed for run on Meteo-France super-computers.
+Please refer to the section corresponding to your case :
 
-.. note::
-   On Meteo-France computers, you do not have take care of dependecies that are already on your professional computer !
-
-
-Install dependencies with pip
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Most of the packages can easily be installed in a virtual environment with ``pip`` (for instance with ``pip install -r requirements.txt``). This is useless if you plan to then install snowtools with  ``pip``.
-
-Only GDAL python binding need to be installed manually to be installed consistently with your installed ``libgdal-dev`` version. Please install before the system packages ``ligdal`` and ``libgdal-dev`` (or similar) and run: ``pip install --no-cache --force-reinstall gdal[numpy]=="$(gdal-config --version).*"`` (Make sure you have ``numpy``, ``wheel`` and ``setuptools>=67`` installed before running tis line. Older pip versions may require the following command line install : ``pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="$(gdal-config --cflags)"``).
-
-.. _sec-install_users:
+- `You are a simple user of snowtools <sec-install-user_>`_
+- `You are a developper outside of Meteo-France network <sec-install-dev_>`_
+- `You are a developper from Meteo-France/CEN staff <sec-install-mf_>`_
 
 Snowtools install for users
 ---------------------------
@@ -34,177 +18,136 @@ If you are only a user of snowtools, you can install the package easily with pip
 1. Download the source code: ``git clone https://github.com/UMR-CNRM/snowtools.git``
 2. Create a virtual environment : ``python3 -m venv --system-site-packages <name_of_your_virtual_env>``
 3. Enter in the virtual environment:  ``source <name_of_your_virtual_env>/bin/activate``
-4. Ensure you are at the root of the snowtools repository and install the package by running:
+4. Ensure you are at the root of the snowtools repository and install the package (with optional dependencies plot) by running:
 
 .. code-block::
 
-    pip install .[all]
+    pip install .[plot]
+
+5. Once you have finished working with snowtools, you can leave the virtual environment by typing ``deactivate``. You can come back to the environment later by calling again ``source <name_of_your_virtual_env>/bin/activate``.
 
 
-.. _sec-install_dev:
+.. _sec-install-dev:
 
 Snowtools install for developers
 --------------------------------
 
-Install dependencies
-^^^^^^^^^^^^^^^^^^^^
+Get the code
+^^^^^^^^^^^^
 
-Please read ``requirements.txt`` and install the necessary dependecies. On Meteo-France computers you only need to install ``bronx``, ``footprints`` and ``epygram`` packages with ``pip`` (``pip install bronx footprints epygram``).
-
-Clone the git repository
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-Make sure you have a github account, linked to snowtools repository (send a mail to crocus at meteo dot fr) and that you have a SSH key attached to your github account [#footnote1]_. You can then clone the git repository on your computer with :
+Make sure you have a github account and that you have a SSH key attached to your github account [#footnote1]_. Do not hesitate to ask an access to the snowtools code and tickets repository (send a mail to crocus at meteo dot fr). You can then clone the git repository on your computer with:
 
 .. code-block:: bash
 
    git clone git@github.com:UMR-CNRM/snowtools.git
 
-Install
-^^^^^^^
+.. warning::
+   If you had a previous verison of snowtools installed as a developper, you first need to uninstall the previous version.
 
-Make sure you have a github account, linked to snowtools repository (send a mail to crocus at meteo dot fr) and that you have a SSH key attached to your github account [#footnote1]_. You can then clone the git repository on your computer with :
+   .. toctree::
+      :maxdepth: 1
+
+      uninstall-snowtools2.rst
+
+Installation
+^^^^^^^^^^^^
+
+1. Choose a location where to store your virtual environments (e.g. ``~/my_envs``, if you do not have a dedicated folder, create it with ``mkdir ~/my_envs``).
+2. Create a virtual environment :  ``python3 -m venv --system-site-packages ~/my_envs/snowtools_env``.
+3. Enter in the virtual environment:  ``source ~/my_envs/snowtools_env/bin/activate``.
+4. Install snowtools and all its dependencies available outside of Meteo-France in editable mode : ``pip install .[all] -e``
+
+That's all for snowtools.
+
+Each time you will need snowtools, you will have to activate the python virtual environment with ``source ~/my_envs/snowtools_env/bin/activate``. When you have finissed your work, you can leave the virtual environment by using the ``deactivate`` command.
+
+.. _sec-install-mf:
+
+Snowtools install for Meteo-France/CEN staff
+--------------------------------------------
+
+Get the code
+^^^^^^^^^^^^
+
+Make sure you have a github account and that you have a SSH key attached to your github account [#footnote1]_. Do not hesitate to ask an access to the snowtools code and tickets repository (send a mail to crocus at meteo dot fr). You can then clone the git repository on your computer with:
 
 .. code-block:: bash
 
    git clone git@github.com:UMR-CNRM/snowtools.git
 
 
-You have to add the install folder to your ``PYTHONPATH``. This can be done by adding these tho following lines to your ``.bashrc`` or ``.bash-profile``:
+.. admonition:: Special case of insallation on Meteo-France sxcen and HPC machines
+
+   On sxcen and HPC, we recommend you not to clone the repository directly but to synchronize with the code already present on your PC by using the ``put`` tool. To do so, run this command **on your PC** : 
+
+    .. code-block:: bash
+
+        # For Belenos
+        cenutils/put snowtools belenos
+
+        # For SXCEN
+        cenutils/put snowtools sxcen
 
 
-.. code-block:: bash
+.. warning::
+   If you had a previous verison of snowtools installed as a developper, you first need to uninstall the previous version.
 
-   export SNOWTOOLS_CEN=/yourpath/snowtools
-   export PYTHONPATH=$PYTHONPATH:$SNOWTOOLS_CEN
+   .. toctree::
+      :maxdepth: 1
 
-It is also recommended to create useful aliases for s2m command and proreader graphical user interface in the ``~/.bashrc`` file:
+      uninstall-snowtools2.rst
 
-.. code-block:: bash
+Prerequisites on Meteo-France computers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+- On HPC you first have to set the correct python version and compiler to use by running : ``module load python/3.12.12 gcc/15.2.0`` (``module load python/3.10.12 gcc/15.2.0`` on taranis)
+- On all Meteo-Frace machines, if you intend to deal with data stored on Meteo-France archive (hendrix), you will have to configure connecton creedentials as explained on page :ref:`vortex-file-transfer`.
+- You have to configure pip to have an access to the internal repository (nexus) that allow to get internal packages such as ``vortex-gco``. To do so, add the following lines to ``~/.config/pip/pip.conf``:
 
-You have to add the install folder to your ``PYTHONPATH``. This can be done by adding these tho following lines to your ``.bashrc`` or ``.bash-profile``:
+.. code-block:: ini
 
+    [global]
+    index = https://nexus-sidev.meteo.fr/repository/pypi-group/pypi
+    index-url = https://nexus-sidev.meteo.fr/repository/pypi-group/simple
+    extra-index-url = https://nexus.meteo.fr/pypi-vortex-releases/simple
 
-.. code-block:: bash
-
-   export SNOWTOOLS_CEN=/yourpath/snowtools
-   export PYTHONPATH=$PYTHONPATH:$SNOWTOOLS_CEN
-
-It is also recommended to create useful aliases for s2m command and proreader graphical user interface in the ``~/.bashrc`` file:
-
-.. code-block:: bash
-
-   alias s2m="python $SNOWTOOLS_CEN/snowtools/tasks/s2m_command.py"
-   alias proplotter="python3 $SNOWTOOLS_CEN/snowtools/plots/stratiprofile/proplotter.py"
-   alias procompare="python3 $SNOWTOOLS_CEN/snowtools/plots/stratiprofile/procompare.py"
-   alias put="$SNOWTOOLS_CEN/cenutils/put"
+Note that this is not required on HPC because the access to Nexus from HPC is currently blocked.
 
 
-..
-   Method 2
-   ^^^^^^^^
+Installation
+^^^^^^^^^^^^
 
-   editable install with ``pip``.
+1. Choose a location where to store your virtual environments (e.g. ``~/my_envs``, if you do not have a dedicated folder, create it with ``mkdir ~/my_envs``).
+2. Create a virtual environment :  ``python3 -m venv --system-site-packages ~/my_envs/snowtools_env``.
+3. Enter in the virtual environment:  ``source ~/my_envs/snowtools_env/bin/activate``.
+4. Use the script dedicated to installation of snowtools on Meteo-France machines : ``python3 cenutils/install_snowtools.py -o allmf -e``
+   (This command will run ``pip install`` of snowtools, as an editable install and prepare necessary configuration for vortex).
 
-   .. note::
+That's all for snowtools.
 
-       If using this method make sure **not** to have
-       your snowtools directory in your PYTHONPATH.
-       So do not mix with method 1.
+Each time you will need snowtools, you will have to activate the python virtual environment with ``source ~/my_envs/snowtools_env/bin/activate``. When you have finissed your work, you can leave the virtual environment by using the ``deactivate`` command.
 
+Additional optional dependencies and configuration
+--------------------------------------------------
 
-   1. Clone the git repository on your computer.
-   """""""""""""""""""""""""""""""""""""""""""""
-   (see method 1)
+Optional dependecines of the snowtools package
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   2. create or choose a virtual environment.
-   """""""""""""""""""""""""""""""""""""""""""
-   To create a virtual environment you can run:
+By default, we recommend external users use the ``plot`` optional dependencies and developers have all optional dependencies by using the ``all`` optional dependency. However a finer granularity is available if needed :
 
-   .. code-block:: bash
+- ``sql`` : extraction from MF databases
+- ``plot`` : tools for plotting, including plotting tools of simulation outputs
+- ``scores`` : CRPS score computation
+- ``vortex`` : Tools to work with vortex
+- ``all`` gather previous dependencies
+- ``doc`` : Dependencies for documentation generation (in addition to ``all`` dependency), only available at Meteo-France for the moment.
+- ``allmf`` gather previous dependencies and tools to get access to Meteo-France HPC simualtion outputs(``vortex-gco``) and doc, only available at Meteo-France.
+- ``hpc``: only used on Meteo-France HPC, to run simulations on these machines, do not try to install elsewhere.
 
-       python -m venv nameofmyenv --system-site-packages
+Additional dependencies that have to be installed manually
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   where ``nameofmyenv`` is a freely chosen name for the environment
-   and --system-site-packages makes the packages already installed on
-   the system available inside the virtual environment.
-
-   Or create a virtual environment within the PyCharm IDE:
-
-
-       File -> Settings
-
-       In settings go to
-       Project -> Python Interpreter
-
-       Next to the Interpreter line clic "add interpreter" -> "add local interpreter"
-
-       choose
-       environment: new environment
-       type: "virtuelenv"
-       python base:
-       choose the location and a base interpreter
-       (typically the system python install /usr/bin/python3.XX)
-       location: choose the location and name of your environment
-
-       Hint: tick the "inherit packages from base interpreter" check box
-       for the --system-site-packages option.
-
-       clic the "Ok" button.
-
-   3. source the virtual environment
-   """""""""""""""""""""""""""""""""
-
-   .. code-block:: bash
-
-       source ./<pathtovenv>/nameofmyenv/bin/activate
-
-   now the commandline prompt should start with ``(nameofmyenv)``
-   and thus look like ``(nameofmyenv) username@host:~$`` for example.
-
-   4. install build dependencies
-   """"""""""""""""""""""""""""""
-   ``numpy>=1.24.4``, ``meson-python`` and ``ninja`` inside the virtual environment.
-
-   .. code-block:: bash
-
-           pip install numpy>=1.24.4 meson-python ninja
-
-   .. note::
-
-       Snowtools contains a compiled extension module written in Fortran.
-       In order to render compiled extension modules editable similarly to ordinary python code,
-       they are compiled at import time in an editable install rather than during
-       installation in case of a classical install (:ref:`sec-install_users`).
-       This means that the build dependencies have to be available at runtime in
-       the virtual environment and not just temporarily during the install.
-       The advantage is, that edits in the Fortran code trigger the (partial) re-compilation of
-       the extension module at the next import in a new interpreter instance.
-       https://mesonbuild.com/meson-python/how-to-guides/editable-installs.html
-
-   5. install snowtools:
-   """""""""""""""""""""""
-   inside the snowtools directory do:
-
-   .. code-block:: bash
-
-       pip install --no-build-isolation -e .
-
-   .. note::
-
-       ``--no-build-isolation`` disables build isolation.
-       Disabling build isolation is necessary in order to be able to re-build extensions
-       at import time in editable installs. For ordinary installs build isolation is a desired feature.
-
-Optional installations
-----------------------
-
-
-Vortex package
-^^^^^^^^^^^^^^
-
-Only Météo-France users who need to either extract operational S2M files either to run their own experiments on the HPC system need to install the vortex package by following this link :ref:`install-vortex`.
+**GDAL** is a dependency for some geopsatial processings. You first need to install gdal binaries (e.g. on Ubuntu, run ``sudo apt install libgdal libgdal-dev``, already installed on Meteo-France machines). Then, you need to install the python binding manually to be consistently with your installed ``libgdal-dev`` version by running: ``pip install --no-cache gdal[numpy]=="$(gdal-config --version).*"`` (please make sure ``numpy``, ``wheel`` and ``setuptools>=67`` are installed beforehand).
 
 
 Spatial interpolator for SAFRAN
@@ -240,9 +183,8 @@ CRPS scores
 ^^^^^^^^^^^
 CRPS score is now as an independent package available at https://github.com/UMR-CNRM/snowtools-crps
 
-To install it along with snowtools, just install the optional dependency ``snowtools[scores]`` (by running ``pip install .[all,scores]`` instead of ``pip install .[all]``).
+To install it along with snowtools, just install the optional dependency ``pip install snowtools[scores]`` or ``pip install .[all]``.
 Note that you may need to upgrade pip to version above 23.0 to install scores dependency due to a bug in previous pip versions.
-
 
 .. [#footnote1] To generate a new ssh key, go to your ``~/.ssh`` folder (create if it does not exist) and run ``ssh-keygen -t rsa -b 4096 -f github``. You will be asked for an optional password to protect your key. Once created, go to your `github account, section SSH keys <https://github.com/settings/keys>`_, click on "add a SSH key" and copy the content of the file ``~/.ssh/github.pub`` in the "key" field.
     You may had to add to your ``.ssh/config`` the following lines:
@@ -251,4 +193,11 @@ Note that you may need to upgrade pip to version above 23.0 to install scores de
 
         Host github.com
             IdentityFile ~/.ssh/github
+
+    Alternatively, you can use the ssh-agent by running :
+
+    .. code-block:: bash
+
+       eval `ssh-agent -s`
+       ssh-add ~/.ssh/github
 

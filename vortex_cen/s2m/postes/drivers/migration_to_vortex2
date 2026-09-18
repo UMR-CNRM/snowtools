@@ -1,0 +1,5 @@
+sed -i s/algo\(/task\(/g *
+sed -i s/'from vortex import toolbox'/'import vortex'/g *
+sed -i s/toolbox./vortex./g *
+sed -i s/vortex.layout.nodes/mkjob.nodes/g *
+sed -i s/vortex_cen.layout/vortex_cen.layout/g *

@@ -146,6 +146,8 @@ class Test_SURFEX_accessor(unittest.TestCase):
         cls.ds18    = xr.open_dataset(path_pro18, engine='snowtools')
         path_pro_2D = os.path.join(TESTBASE_DIR, "PRO", "PRO_first_2014080106_2015080106.nc")
         cls.ds_2D   = xr.open_dataset(path_pro_2D, engine='snowtools')
+        path_pro_NAT_RISK = os.path.join(TESTBASE_DIR, "PRO", "PRO_gdesRousses_2019-2020.nc")
+        cls.ds_pro_NAT_RISK   = xr.open_dataset(path_pro_NAT_RISK, engine='snowtools')
 
     def test_drop_tile_dimension(self):
         self.ds_2D.surfex.drop_tile_dimension()
@@ -154,6 +156,11 @@ class Test_SURFEX_accessor(unittest.TestCase):
     def test_decode_time_variable(self):
         self.ds_2D.surfex.decode_time_variable('time')
         self.assertEqual(len(self.ds_2D.xx), 5, "Expect: 5 points in xx direction")
+
+    def test_massif_natural_risk(self):
+        tmp = self.ds_pro_NAT_RISK.drop_vars(["naturalIndex"])
+        tmp = tmp.surfex.massif_natural_risk()
+        self.assertTrue('naturalIndex' in list(tmp.keys()))
 
     @classmethod
     def tearDownClass(cls):
@@ -309,6 +316,28 @@ class Test_snowtools_preprocess(unittest.TestCase):
         path_multi_year = os.path.join(TESTBASE_DIR, "PRO", 'PRO_WJF_2010-2016.nc')
         ds_multi_year = xr.open_dataset(path_multi_year, decode_times=False)
         xarray_snowtools.preprocess(ds_multi_year)
+
+
+@unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
+                                                 'pro_2018080306_2018080406.nc')),
+                 "input file not available")
+class Standard_Output_Metadata(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.path_pro = os.path.join(TESTBASE_DIR, "PRO", 'pro_2018080306_2018080406.nc')
+
+    def test_StandardNC(self):
+        ds = xr.open_dataset(self.path_pro, engine="snowtools")
+        ds.standard_nc.GlobalAttributes()
+
+    def test_StandardCROCUS(self):
+        ds = xr.open_dataset(self.path_pro, engine="snowtools")
+        ds.crocus.GlobalAttributes()
+
+    def test_StandardSAFRAN(self):
+        ds = xr.open_dataset(self.path_pro, engine="snowtools")
+        ds.safran.GlobalAttributes()
 
 
 if __name__ == "__main__":

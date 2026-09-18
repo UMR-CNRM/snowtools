@@ -1,0 +1,6 @@
+name=obs_safran_alp package=drivers task=obs_safran profile=rd-belenos-mt geometry=alp27_flat
+name=obs_safran_pyr package=drivers task=obs_safran profile=rd-belenos-mt geometry=pyr24_flat
+name=obs_safran_cor package=drivers task=obs_safran profile=rd-belenos-mt geometry=cor2_flat
+name=obs_safran_mac package=drivers task=obs_safran profile=rd-belenos-mt geometry=mac11_flat
+name=obs_safran_jur package=drivers task=obs_safran profile=rd-belenos-mt geometry=jur4_flat
+name=obs_safran_vog package=drivers task=obs_safran profile=rd-belenos-mt geometry=vog3_flat
