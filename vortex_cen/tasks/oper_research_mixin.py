@@ -234,7 +234,7 @@ class CENTaskMixIn:
         startmember = int(self.conf.startmember) if hasattr(self.conf, "startmember") else 0
         lastmember = int(self.conf.nmembers) + startmember - 1
 
-        if self.conf.geometry.area == "postes":
+        if 'postes' in self.conf.geometry.tag:
             # no sytron members for postes geometry
             return list(range(startmember, lastmember + 1)), list(range(startmember, lastmember + 2))
         elif not sytron:
@@ -251,7 +251,7 @@ class CENTaskMixIn:
             source_safran, block_safran = self.get_source_safran(meteo=meteo)
 
             if source_safran == "safran":
-                if self.conf.geometry.area == "postes":
+                if 'postes' in self.conf.geometry.tag:
                     return self.conf.geometry.list.split(",")
                 else:
                     if self.conf.geometry.slopes:
@@ -263,7 +263,7 @@ class CENTaskMixIn:
 
     def get_alternate_safran(self):
         # WARNING : ne plus utiliser !
-        if self.conf.geometry.area == 'postes':
+        if 'postes' in self.conf.geometry.tag:
             return "safran", "postes", self.conf.geometry.list.split(",")
         else:
             if self.conf.geometry.slopes:
@@ -276,7 +276,7 @@ class CENTaskMixIn:
     def get_block_safran_from_geometry(self):
         # WARNING : ne plus utiliser !
         # --> utiliser une variable explicite dans le fichier de conf
-        if self.conf.geometry.area == 'postes':
+        if 'postes' in self.conf.geometry.tag:
             return 'postes'
         else:
             return 'massifs'
@@ -352,7 +352,11 @@ class CENTaskMixIn:
         reprod_info = dict()
         reprod_info['vapp'] = self.conf.vapp
         reprod_info['vconf'] = self.conf.vconf
-        reprod_info['geometry'] = self.conf.geometry.tag
+        if isinstance(self.conf.geometry, dict):
+            # Safran oper case
+            reprod_info['geometry'] = self.conf.geometry[self.conf.vconf].tag
+        else:
+            reprod_info['geometry'] = self.conf.geometry.tag
         reprod_info['id'] = self.conf.xpid  # Standard version attribute name that can not be changed
         reprod_info['task'] = self.tag
         reprod_info['conf'] = ','.join([f'{k}={v}' for k, v in self.conf.items()])

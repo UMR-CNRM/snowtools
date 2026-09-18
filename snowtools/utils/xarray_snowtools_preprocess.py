@@ -4,13 +4,13 @@ import xarray
 
 # The following dictionnaries are used to control default variable and dimension names mapping
 # TODO : Réfléchir à un mapping plus cohérent nettoyer les dicts actuels (cf ticket #295)
-dimension_map = {'x': 'xx', 'y': 'yy', 'location': 'Number_of_points', 'Number_of_patches': 'tile',
-        'valid_time': 'time'}
+dimension_map = {'x': 'xx', 'y': 'yy', 'lat': 'yy', 'latitude': 'yy', 'lon': 'xx', 'longitude': 'xx',
+        'location': 'Number_of_points', 'Number_of_patches': 'tile', 'valid_time': 'time'}
 variables_map = {'Rainf_ds': 'Rainf', 'Snowf_ds': 'Snowf', 'band_data': 'ZS', 'prec': 'Precipitation',
-        'rr': 'Precipitation', 'massif_number': 'massif_num'}
+        'rr': 'Precipitation', 'massif_number': 'massif_num', 'elevation': 'ZS'}
 
 
-def preprocess(ds, mapping=dict(), decode_time=True, transpose=False, sort_dims=True):
+def preprocess(ds, mapping=dict(), decode_time=True, transpose=True, sort_dims=True):
     """
 
     This is the main method to call when opening a SURFEX IO NetCDF file.
@@ -42,7 +42,7 @@ def preprocess(ds, mapping=dict(), decode_time=True, transpose=False, sort_dims=
     :type mapping: dict
     :param decode_time: Manually decode the time variable when xarray fails to do it properly (SURFEX outputs)
     :type decode_time: bool
-    :param transpose: Put time dimension as first dimension in case of data processing through numpy arrays
+    :param transpose: Order dimensions for data processing through numpy arrays and plotting tools
     :type transpose: bool
     """
 
@@ -56,9 +56,10 @@ def preprocess(ds, mapping=dict(), decode_time=True, transpose=False, sort_dims=
     if decode_time:
         ds = decode_time_dimension(ds)
 
-    # Ensure that the time dimension is in the first one for numpy-based tools backward compatibility
+    # Ensure that the time dimensions are always in the same order
+    # for numpy-based tools backward compatibility
     if transpose:
-        ds = transpose(ds)
+        ds = ds.snowtools.transpose()
 
     if sort_dims:
         ds = sort_dimensions(ds)

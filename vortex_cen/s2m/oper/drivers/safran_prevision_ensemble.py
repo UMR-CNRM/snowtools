@@ -312,6 +312,7 @@ class Safran(Task, CENTaskMixIn, SafranMixIn):
                 dateend        = dateend.ymd6h,
                 ntasks         = self.conf.ntasks,
                 execution      = 'forecast',
+                reprod_info    = self.get_reprod_info,
             )
             print(t.prompt, 'tb18 =', tb18)
             print()

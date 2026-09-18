@@ -25,7 +25,7 @@
 45 9 * * * . ~/.bash_profile ; . $HOME/venv/oper/bin/activate ; s2m_oper -j safran_ana -d $( date '+\%Y\%m\%d09')
 #
 # Prévision 3H
-20 5 * * * . ~/.bash_profile ; . $HOME/venv/oper/bin/activate ; s2m_oper -j safran_prv -d $( date '+\%Y\%m\%d03')
+40 5 * * * . ~/.bash_profile ; . $HOME/venv/oper/bin/activate ; s2m_oper -j safran_prv -d $( date '+\%Y\%m\%d03')
 #
 # Analyse mensuelle 12H
 00 14 22 * * . ~/.bash_profile ; . $HOME/venv/oper/bin/activate ; s2m_oper -j safran_ana -d $( date '+\%Y\%m\%d12')
@@ -37,7 +37,7 @@
 15 04 * * * . ~/.bash_profile ; . $HOME/venv/oper/bin/activate ; s2m_oper -j surfex_ana -d $( date '+\%Y\%m\%d03')
 #
 # Prevision 3H
-40 05 * * * . ~/.bash_profile ; . $HOME/venv/oper/bin/activate ; s2m_oper -j surfex_prv -d $( date '+\%Y\%m\%d03')
+45 05 * * * . ~/.bash_profile ; . $HOME/venv/oper/bin/activate ; s2m_oper -j surfex_prv -d $( date '+\%Y\%m\%d03')
 #
 # Analyse 6H
 00 07 * * * . ~/.bash_profile ; . $HOME/venv/oper/bin/activate ; s2m_oper -j surfex_ana -d $( date '+\%Y\%m\%d06')

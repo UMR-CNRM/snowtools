@@ -324,10 +324,13 @@ class SurfexMixIn(_CenMixIn):
         outname = f'PRO_{datebegin_this_run.ymdh}_{dateend_this_run.ymdh}.nc'
         self.system.mv("ISBA_PROGNOSTIC.OUT.nc", outname)
         with xr.open_dataset(outname, engine='snowtools') as pro:
+            pro = pro.snowtools.backtrack_preprocess()
             pro = pro.surfex.massif_natural_risk()
             pro.crocus.GlobalAttributes(product=self.get_standard_metadata_section, **self.reprod_info)
+            pro.crocus.get_coord()
             # pro.crocus.add_standard_names()  # Already called by GlobalAttributes
-        pro.to_netcdf(f'PRO_{datebegin_this_run.ymdh}_{dateend_this_run.ymdh}.nc', format="NETCDF4_CLASSIC", mode="a")
+        pro.snowtools.to_netcdf(f'PRO_{datebegin_this_run.ymdh}_{dateend_this_run.ymdh}.nc', format="NETCDF4_CLASSIC",
+                mode="a")
 
         if self.system.path.isfile("ISBA_DIAGNOSTICS.OUT.nc"):
             save_file_period(".", "ISBA_DIAGNOSTICS.OUT", datebegin_this_run, dateend_this_run, newprefix="DIAG")

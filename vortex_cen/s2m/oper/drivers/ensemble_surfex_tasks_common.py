@@ -98,7 +98,7 @@ class Ensemble_Surfex_Task(CENTaskMixIn, Task):
                     dateend        = dateend,
                     nativefmt      = 'netcdf',
                     kind           = 'MeteorologicalForcing',
-                    namespace      = 'vortex.multi.fr',
+                    namespace      = self.conf.namespace_in,
                     model          = source_safran,
                     cutoff         = 'production' if self.conf.previ else 'assimilation',
                     fatal          = False

@@ -11,6 +11,7 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 default_report_dir = '/scratch/mtool'
+opconfs = ['alp', 'pyr', 'cor', 'mac', 'vog', 'jur', 'postes', 'common']
 
 
 class _ReportContext:
@@ -30,6 +31,10 @@ class _ReportContext:
         """Report status of the session (IO review)."""
         raise NotImplementedError("To be overwritten...")
 
+    @property
+    def task(self):
+        return self._task
+
 
 class InputReportContext(_ReportContext):
     """Context manager that prints a report on inputs."""
@@ -48,11 +53,15 @@ class InputReportContext(_ReportContext):
                 t.sh.header('Input informations: everything is ok')
         else:
             t.sh.header('Input informations: one of the input failed')
-            if 'test' in self._task.conf:
-                outdir = t.sh.path.join(self._task.conf.get('test_report_dir', default_report_dir), t.env['USER'])
+            outdir = t.sh.path.join(self.task.conf.get('test_report_dir', default_report_dir), t.env['USER'])
+            if 'test' in self.task.conf:
                 with open(t.sh.path.join(outdir, 'FailTests.txt'), 'a') as f:
                     time = Date.now().strftime('%Y-%m-%d %H:%M')
-                    f.write(f'{time} Test informations: the input step of test "{self._task._tag}" failed\n')
+                    f.write(f'{time} Test informations: the input step of test "{self.task._tag}" failed\n')
+            elif self.task.conf.vapp == 's2m' and self.task.conf.vconf in opconfs:
+                with open(t.sh.path.join(outdir, 'S2MFail.txt'), 'a') as f:
+                    time = Date.now().strftime('%Y-%m-%d %H:%M')
+                    f.write(f'{time} The input step of "{self.task.conf.jobname}" failed\n')
 
 
 class AlgoReportContext(_ReportContext):
@@ -60,11 +69,16 @@ class AlgoReportContext(_ReportContext):
 
     def _report(self, t, try_ok=True, **kw):
         """Report status of the session (test review)."""
-        if not try_ok and 'test' in self._task.conf:
-            outdir = t.sh.path.join(self._task.conf.get('test_report_dir', default_report_dir), t.env['USER'])
-            with open(t.sh.path.join(outdir, 'FailTests.txt'), 'a') as f:
-                time = Date.now().strftime('%Y-%m-%d %H:%M')
-                f.write(f'{time} Test informations: the algo step of test "{self._task._tag}" failed\n')
+        if not try_ok:
+            outdir = t.sh.path.join(self.task.conf.get('test_report_dir', default_report_dir), t.env['USER'])
+            if 'test' in self.task.conf:
+                with open(t.sh.path.join(outdir, 'FailTests.txt'), 'a') as f:
+                    time = Date.now().strftime('%Y-%m-%d %H:%M')
+                    f.write(f'{time} Test informations: the algo step of test "{self.task._tag}" failed\n')
+            elif self.task.conf.vapp == 's2m' and self.task.conf.vconf in opconfs:
+                with open(t.sh.path.join(outdir, 'S2MFail.txt'), 'a') as f:
+                    time = Date.now().strftime('%Y-%m-%d %H:%M')
+                    f.write(f'{time} The algo step of "{self.task.conf.jobname}" failed\n')
 
 
 class OutputReportContext(_ReportContext):
@@ -76,11 +90,15 @@ class OutputReportContext(_ReportContext):
             t.sh.header('Output informations: everything is ok')
         else:
             t.sh.header('Output informations: one of the output failed')
-            if 'test' in self._task.conf:
-                outdir = t.sh.path.join(self._task.conf.get('test_report_dir', default_report_dir), t.env['USER'])
+            outdir = t.sh.path.join(self.task.conf.get('test_report_dir', default_report_dir), t.env['USER'])
+            if 'test' in self.task.conf:
                 with open(t.sh.path.join(outdir, 'FailTests.txt'), 'a') as f:
                     time = Date.now().strftime('%Y-%m-%d %H:%M')
-                    f.write(f'{time} Test informations: the output step of test "{self._task._tag}" failed\n')
+                    f.write(f'{time} Test informations: the output step of test "{self.task._tag}" failed\n')
+            elif self.task.conf.vapp == 's2m' and self.task.conf.vconf in opconfs:
+                with open(t.sh.path.join(outdir, 'S2MFail.txt'), 'a') as f:
+                    time = Date.now().strftime('%Y-%m-%d %H:%M')
+                    f.write(f'{time} The output step of "{self.task.conf.jobname}" failed\n')
 
 
 class TestReportContext(_ReportContext):
@@ -88,14 +106,14 @@ class TestReportContext(_ReportContext):
 
     def _report(self, t, try_ok=True, **kw):
         """Report status of the session (test review)."""
-        outdir = t.sh.path.join(self._task.conf.get('test_report_dir', default_report_dir), t.env['USER'])
+        outdir = t.sh.path.join(self.task.conf.get('test_report_dir', default_report_dir), t.env['USER'])
         if try_ok:
             t.sh.header('Test informations: everything is ok')
             with open(t.sh.path.join(outdir, 'OKTests.txt'), 'a') as f:
                 time = Date.now().strftime('%Y-%m-%d %H:%M')
-                f.write(f'{time} Test informations: everything is ok for test {self._task._tag}\n')
+                f.write(f'{time} Test informations: everything is ok for test {self.task._tag}\n')
         else:
             t.sh.header('Test informations: the test failed')
             with open(t.sh.path.join(outdir, 'FailTests.txt'), 'a') as f:
                 time = Date.now().strftime('%Y-%m-%d %H:%M')
-                f.write(f'{time} Test informations: task "{self._task._tag}" failed reproducibility check\n')
+                f.write(f'{time} Test informations: task "{self.task._tag}" failed reproducibility check\n')

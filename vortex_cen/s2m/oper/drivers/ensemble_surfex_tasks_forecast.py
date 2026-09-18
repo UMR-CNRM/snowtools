@@ -2,7 +2,9 @@
 """
 """
 
+from vortex_cen.tools.monitoring import InputReportContext, OutputReportContext
 from .ensemble_surfex_tasks_common import Ensemble_Surfex_Task
+
 from .hydro_task import Hydro_Task
 from mkjob.nodes import Driver, Task
 from vortex_cen.tasks.oper_research_mixin import CENTaskMixIn
@@ -65,7 +67,7 @@ class Four_Seasons_Task(CENTaskMixIn, Task):
 
         if 'early-fetch' in self.steps:
 
-            if True:  # In order to have an indentation and facilitate the comparison with IGA Task
+            with InputReportContext(self, t):
 
                 self.sh.title('Toolbox input EMOS Pars')
                 tbi_emos_par = vortex.input(
@@ -139,7 +141,7 @@ class Four_Seasons_Task(CENTaskMixIn, Task):
 
         if 'backup' in self.steps or 'late-backup' in self.steps:
 
-            if True:  # In order to have an indentation and facilitate the comparison with IGA Task
+            with OutputReportContext(self, t):
 
                 self.sh.title('Toolbox output tb03')
                 tb03 = vortex.output(

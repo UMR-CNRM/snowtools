@@ -261,29 +261,3 @@ class PrepSafran(Task, CENTaskMixIn):
                 ),
                 print(t.prompt, 'tb06 =', tb06)
                 print()
-
-#            self.sh.title('Toolbox output tb06b')
-#            tb06b = vortex.output(
-#                role           = 'Ebauche',
-#                local          = 'PEARP_[member]_[cumul:hour]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
-#                experiment     = self.conf.xpid,
-#                block          = self.conf.block,
-#                geometry       = self.conf.domains,
-#                vconf          = '[geometry::area]',
-#                date           = '{0:s}/+PT24H/-PT12H'.format(datebegin.ymd6h),
-#                cumul          = footprints.util.rangex(self.conf.prv_terms)[20:38:2],
-#                nativefmt      = 'ascii',
-#                kind           = 'guess',
-#                model          = 'safran',
-#                source_app     = self.conf.source_app,
-#                source_conf    = self.conf.eps_conf,
-#                namespace      = self.conf.namespace_out,
-#                member         = footprints.util.rangex(self.conf.pearp_members),
-#                fatal          = False,
-#            ),
-#            print(t.prompt, 'tb06b =', tb06b)
-#            print()
-
-#            print('==================================================================================================')
-#            print('==================================================================================================')
-#            raise Exception('INFO :The execution went well, do not take into account the following error')

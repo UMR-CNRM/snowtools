@@ -224,13 +224,17 @@ class Monthly_Surfex_Reanalysis(CENTaskMixIn, Task):
                 tb03 = vortex.input(
                     role           = 'SnowpackInit',
                     local          = 'PREP.nc',
-                    block          = 'prep',
-                    experiment     = self.conf.xpid,
+                    # ####################### Difference oper-dev ##########################
+                    # Pour la chaine dev, l'initialisation de la réanalyse mensuelle vient de la réanalyse S2M
+                    vapp           = self.conf.get('prep_vapp', self.conf.vapp),  # dev only !
+                    vconf          = self.conf.get('prep_vconf', self.conf.vconf),  # dev only !
+                    experiment     = self.conf.get('prep_xpid', self.conf.xpid),  # dev only !
+                    username       = self.conf.get('prep_user', None),  # dev only !
+                    datevalidity   = self.conf.get('prep_datevalidity', datebegin),  # dev only !
+                    block          = self.conf.get('prep_block', 'prep'),  # dev only !
+                    namebuild      = 'flat@cen',  # dev only !
+                    # ####################### Fin difference ###############################
                     geometry       = self.conf.geometry,
-                    datevalidity   = datebegin,
-					#  Difference between oper and research: in oper use date of the current task (because refill)
-					date           = rundate_prep,
-                    member         = 35,
                     namespace      = self.conf.namespace_in,
                     intent         = 'inout',
                     nativefmt      = 'netcdf',
@@ -403,10 +407,10 @@ class Monthly_Surfex_Reanalysis(CENTaskMixIn, Task):
                 kind           = 'deterministic',
                 datebegin      = datebegin,
                 dateend        = dateend,
-                dateinit       = datebegin,
+                dateinit       = self.conf.get('prep_datevalidity', datebegin),  # Diff oper-dev
                 threshold      = self.conf.threshold,
                 daily          = False,
-                reprod_info    = self.get_reprod_info,
+                reprod_info    = self.get_reprod_info,  # diff oper-dev
             )
             print((t.prompt, 'tb11 =', tb11))
             print()

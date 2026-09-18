@@ -20,7 +20,7 @@ Adding standard Crocus attributes the 'PRO_gdesRousses_2019-2020.nc' file of the
 
     ds = xr.open_dataset('PRO_gdesRousses_2019-2020.nc', engine='snowtools')
     ds.crocus.GlobalAttributes()
-    ds.crocus.add_coord()  # Optional
+    ds.crocus.get_coord()  # Optional
 
 """
 
@@ -100,8 +100,6 @@ class StandardNC:
         except OSError:
             pass
 
-        self.get_coord()
-
         # temporal coverage
         self.ds.attrs["time_coverage_start"] = time.data[0].astype(str)
         self.ds.attrs["time_coverage_end"] = time.data[-1].astype(str)
@@ -133,7 +131,7 @@ class StandardNC:
         if product is not None:
             if "S2M" in product:
                 massifname = self.getmassifname
-                return StandardS2M.special_long_names(massifname)
+                return self.S2M_special_long_names(massifname)
         else:
             return dict()
 
@@ -152,6 +150,15 @@ class StandardNC:
 
         return self.ds
 
+    def S2M_special_long_names(self, massifname):
+        """
+        Return a massif-specific {variable_name: long_name} dictionary
+        """
+        longnames = dict()
+        longnames[massifname] = 'SAFRAN massif number. Metadata are provided in the associated shapefile.'
+
+        return longnames
+
     def apply_to_all(self, func, **kwargs):
         """
         Optional but usefull method to apply a function `func` to all variables
@@ -167,20 +174,12 @@ class StandardNC:
         }
         self.ds.assign(**new_vars)
 
-    def get_coord(self):
-        pass
 
-
+@xr.register_dataset_accessor("s2m")
 class StandardS2M:
 
-    def special_long_names(self, massifname):
-        """
-        Return a massif-specific {variable_name: long_name} dictionary
-        """
-        longnames = dict()
-        longnames[massifname] = 'SAFRAN massif number. Metadata are provided in the associated shapefile.'
-
-        return longnames
+    def __init__(self, xarray_ds):
+        self.ds = xarray_ds
 
     def xy2latlon(self, xvar, yvar):
         """
@@ -219,6 +218,7 @@ class StandardS2M:
         return lat, lon
 
     def get_coord(self):
+
         # Noms attendus (à définir dans les méthodes getlatname/getlonname/getcoordname des accesseurs spécifiques)
         latname = getattr(self, "getlatname", None)
         lonname = getattr(self, "getlonname", None)
@@ -272,7 +272,8 @@ class StandardS2M:
         INFOmassifs = infomassifs()
         dicLonLat = INFOmassifs.getAllMassifLatLon()
 
-        massif_number = self.ds["massif_number"].values
+        massifname = self.getmassifname
+        massif_number = self.ds[massifname].values
 
         lat = np.empty(massif_number.shape, np.float64)
         lon = np.empty(massif_number.shape, np.float64)
@@ -309,9 +310,13 @@ class StandardS2M:
 
         return da_lat, da_lon
 
+    @property
+    def getmassifname(self):
+        return 'massif_num'
+
 
 @xr.register_dataset_accessor("crocus")
-class StandardCROCUS(StandardNC):
+class StandardCROCUS(StandardNC, StandardS2M):
 
     def GlobalAttributes(self, product=None, **additionnal_attributes):
         super(StandardCROCUS, self).GlobalAttributes(product=product, **additionnal_attributes)
@@ -342,16 +347,16 @@ class StandardCROCUS(StandardNC):
             if 'XSOILGRID' in N['NAM_ISBA']:
                 bottom = list(map(float, N['NAM_ISBA'].XSOILGRID))
                 top = [0] + bottom[:-1]
-                self.soilgrid = (np.array(top) + np.array(bottom)) / 2.
+                self.ds.attrs['soilgrid'] = (np.array(top) + np.array(bottom)) / 2.
 
-        if not hasattr(self, 'soilgrid') and os.path.isfile("PGD.nc"):
+        if 'soilgrid' not in self.ds.attrs.keys() and os.path.isfile("PGD.nc"):
             pgd = xr.open_dataset("PGD.nc", engine="snowtools")
             nlayers = pgd["GROUND_LAYER"].data
             bottom = []
-            for layer in range(1, nlayers[0] + 1):
+            for layer in range(1, nlayers + 1):
                 bottom.append(pgd["SOILGRID"] + str(layer)[0])
             top = [0] + bottom[:-1]
-            self.soilgrid = (np.array(top) + np.array(bottom)) / 2.
+            self.ds.attrs['soilgrid'] = (np.array(top) + np.array(bottom)) / 2.
             pgd.close()
 
     def soil_long_names(self, varname):
@@ -430,27 +435,27 @@ class StandardCROCUS(StandardNC):
 
 
 @xr.register_dataset_accessor("safran")
-class StandardSAFRAN(StandardNC):
+class StandardSAFRAN(StandardNC, StandardS2M):
 
     def GlobalAttributes(self, product=None, **additionnal_attributes):
         super(StandardSAFRAN, self).GlobalAttributes(product=product, **additionnal_attributes)
         self.read_constant_attributes('StandardSAFRAN')
         if hasattr(self, 'title'):
-            self.title = self.title + ": meteorological variables"
+            self.ds.attrs['title'] = self.title + ": meteorological variables"
         else:
-            self.title = "SAFRAN meteorological variables"
+            self.ds.attrs['title'] = "SAFRAN meteorological variables"
         if hasattr(self, 'summary'):
-            self.summary = self.summary + ' This file provides the SAFRAN meteorological fields'
+            self.ds.attrs['summary'] = self.summary + ' This file provides the SAFRAN meteorological fields'
         else:
-            self.summary = 'This file provides the SAFRAN meteorological fields'
+            self.ds.attrs['summary'] = 'This file provides the SAFRAN meteorological fields'
         keywords = ',INCOMING SOLAR RADIATION,LONGWAVE RADIATION,SHORTWAVE RADIATION,AIR' \
             ' TEMPERATURE,SURFACE TEMPERATURE,ABSOLUTE HUMIDITY,RELATIVE HUMIDITY,' \
             'WIND DIRECTION,WIND SPEED,SURFACE WINDS,RAIN,LIQUID PRECIPITATION,' \
             'HOURLY PRECIPITATION AMOUNT,SOLID PRECIPITATION'
         if hasattr(self, 'keywords'):
-            self.keywords = self.keywords + keywords
+            self.ds.attrs['keywords'] = self.keywords + keywords
         else:
-            self.keywords = keywords
+            self.ds.attrs['keywords'] = keywords
 
         return self.ds
 

@@ -181,9 +181,8 @@ def get_dem(genv='uenv:dem.2@vernaym', gvar='DEM_ALP1KM_EPSG4326'):
         unknown=True
     )
     # dem = rioxarray.open_rasterio('TARGET_RELIEF.tif')
-    ds = xr.open_dataset('TARGET_RELIEF.tif')
-    ds = ds.rename({'lon': 'xx', 'lat': 'yy'})
-    dem = ds['elevation']
+    ds = xr.open_dataset('TARGET_RELIEF.tif', engine='snowtools')
+    dem = ds['ZS']
     dem = dem.squeeze()
     return dem
 

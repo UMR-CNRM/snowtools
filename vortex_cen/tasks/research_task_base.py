@@ -561,7 +561,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
             namespace      = namespace,  # default : 'vortex.multi.fr',
             namebuild      = forcing_namebuild,  # default recherche : 'flat@cen', defaut oper : None
             vortex1        = vortex1,
-            date           = self.conf.get('forcing_date', '[dateend]'),  # pas supprimer! C'est necessaire pour reforecast.
+            date           = self.conf.get('forcing_date', None),  # pas supprimer! C'est necessaire pour reforecast.
             source_app     = forcing_source_app,  # default = None (ne pas refaire l'erreur)
             source_conf    = forcing_source_conf,  # default = None (ne pas refaire l'erreur)
             cutoff         = forcing_cutoff,  #

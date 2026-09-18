@@ -22,6 +22,7 @@ vortex_cen/s2m/cor/drivers
 vortex_cen/s2m/mac/drivers
 vortex_cen/s2m/vog/drivers
 vortex_cen/s2m/jur/drivers
+vortex_cen/s2m/postes/drivers
 
 GUI_selfcontain.zip
 

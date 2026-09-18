@@ -284,6 +284,8 @@ class Monthly_Surfex_Reanalysis(CENTaskMixIn, Task):
 
             with OutputReportContext(self, t):
 
+                pearpmembers, members = self.get_list_members()
+
                 self.sh.title('Toolbox output tb11')
                 tb11 = vortex.output(
                     local          = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
@@ -314,7 +316,7 @@ class Monthly_Surfex_Reanalysis(CENTaskMixIn, Task):
                     geometry       = self.conf.geometry,
                     datevalidity   = dateend,
                     date           = self.conf.rundate.replace(hour = self.nightruntime.hour),
-                    member         = 35,
+                    member         = members,
                     nativefmt      = 'netcdf',
                     kind           = 'PREP',
                     model          = 'surfex',

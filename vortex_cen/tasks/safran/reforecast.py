@@ -328,6 +328,7 @@ class SafranReforecast(_CenResearchTask):
             kind           = 'sytist',
             local          = 'sytist',
             model          = 'safran',
+            reprod_info    = self.get_reprod_info,
         )
         print(t.prompt, 'sytist =', self.sytist)
         print()

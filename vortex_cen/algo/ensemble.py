@@ -52,6 +52,7 @@ Algo Components for ensemble Surfex simulations.
 """
 
 import glob
+import xarray as xr
 
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, Period, tomorrow
@@ -74,6 +75,7 @@ with echecker:
     from snowtools.utils.infomassifs import infomassifs
     from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
     from snowtools.utils.FileException import TimeListException, MultipleValueException
+    from snowtools.utils import xarray_snowtools  # noqa
     from vortex_cen.algo.deterministic import SurfexMixIn
 
 
@@ -296,15 +298,14 @@ class SurfexWorker(_CenWorkerBlindRun, SurfexMixIn):
                         try:
                             dateforcbegin, dateforcend, forcingname = self.find_forcing(datebegin_this_run,
                                     self.dateend)
-                            self.link_in(self.system.path.join(forcingdir, massif, forcingname), 'FORCING.nc')
                         except (FileNotFoundError, MultipleValueException) as e:
                             rdict['rc'] = e
                             return rdict  # Note than in the other case return rdict is at the end
-                        forcingname = "FORCING_" + massif + ".nc"
-                        self.system.mv("FORCING.nc", forcingname)
-                        forcinglist.append(forcingname)
+                        newforcingname = "FORCING_" + massif + ".nc"
+                        self.link_in(self.system.path.join(forcingdir, massif, forcingname), newforcingname)
+                        forcinglist.append(newforcingname)
+                    print('forcinglist = ', forcinglist)
 
-                    print(forcinglist)
                     try:
                         forcinput_applymask(forcinglist, "FORCING.nc", **self.reprod_info)
                     except TimeListException:
@@ -480,9 +481,12 @@ class PrepareForcingWorker(_CenTaylorVortexWorker):
             for massif in self.geometry_in:
                 forcingname = "FORCING_" + massif + ".nc"
                 forcinglist.append(forcingname)
+            with xr.open_dataset(forcinglist, combine='nested', concat_dim='Number_of_points',
+                    engine='snowtools') as ds:
+                ds.to_netcdf("FORCING_AGG.nc", format="NETCDF4_CLASSIC")
 
             logger.info("FORCING EXTENSION")
-            forcinput_applymask(forcinglist, "FORCING_OUT.nc", **self.reprod_info)
+            forcinput_applymask(["FORCING_AGG.nc"], "FORCING_OUT.nc", **self.reprod_info)
 
         else:
             logger.info("FORCING EXTENSION")

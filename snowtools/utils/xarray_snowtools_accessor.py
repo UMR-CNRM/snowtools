@@ -115,16 +115,22 @@ class SnowtoolsAccessor:
     def __init__(self, xarray_obj):
         self.ds = xarray_obj
 
+    def to_netcdf(self, *args, **kw):
+        """
+        Undo dimensions / variable renaming from the preprocessing step before writing the dataset into NetCDF file.
+        Takes the exact same arguments than the xarray native 'to_netcdf' method.
+        """
+        self.ds = self.ds.snowtools.backtrack_preprocess()
+        self.ds.to_netcdf(*args, **kw)
+
     def transpose(self):
         """
-        Put time dimension as first dimension in case of data processing through numpy arrays
-
+        Order dimensions for data processing through numpy arrays and plotting tools
         """
 
-        if 'time' in self.ds.dims:
-            return self.ds.transpose('time', ...)
-        else:
-            return self.ds
+        ordered_dims = ['time', 'yy', 'xx']
+        actual_ordered_dims = [dim for dim in ordered_dims if dim in self.ds.dims]
+        return self.ds.transpose(*actual_ordered_dims, ...)
 
     def squeeze(self):
         """
@@ -636,7 +642,7 @@ class DistributedAccessor(SnowtoolsAccessor):
                 j = 0
                 for mb in ensemble.member.data[1:]:
                     tmp = ensemble.sel({'member': mb})
-                    im = plot2D.plot_field(tmp, ax=ax[i, j], vmin=vmin, vmax=vmax, cmap=cmap, dem=dem,
+                    im, ax[i, j] = plot2D.plot_field(tmp, ax=ax[i, j], vmin=vmin, vmax=vmax, cmap=cmap, dem=dem,
                             isolevels=isolevels, add_colorbar=False)
                     j = j + 1
                     if j == 4:

@@ -185,7 +185,7 @@ class Safran(OpTask, CENTaskMixIn, SafranMixIn):
                     cutoff         = 'assimilation',
                     hook_autohook1 = (tb01_generic_hook1, ),
                 )
-                print((t.prompt, 'tb01 =', tb01))
+                print(t.prompt, 'tb01 =', tb01)
                 print()
 
                 # ##########    End of differences    ###########

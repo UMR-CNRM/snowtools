@@ -763,7 +763,8 @@ class SytistWorker(_SafranWorker):
                     # Do not rename 'massif_number' variable into 'massif_num' because SURFEX
                     # expects 'massif_number'.
                     forcing = forcing.snowtools.backtrack_preprocess()
-                forcing.to_netcdf(forcing_name, format="NETCDF4_CLASSIC", mode="a")
+                    forcing.safran.get_coord()
+                forcing.snowtools.to_netcdf(forcing_name, format="NETCDF4_CLASSIC", mode="a")
 
         if 'rc' in rdict.keys() and (isinstance(rdict['rc'], S2MExecutionError) or
                                      isinstance(rdict['rc'], InputCheckerError)):
