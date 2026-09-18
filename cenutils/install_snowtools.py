@@ -33,7 +33,7 @@ args = parser.parse_args()
 
 
 # Retrieve the snowtools root directory from the current script location
-snowtools_dir = os.path.dirname(os.path.dirname(__file__))
+snowtools_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Retrieve server name to activate server-specific installation steps
 HOSTNAME = os.getenv('HOSTNAME', '')
