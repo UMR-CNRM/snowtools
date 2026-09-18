@@ -177,7 +177,7 @@ class ConcatForcingsWorker(_CenTaylorVortexWorker):
         try:
             with xr.open_dataset(self.list_forcings, combine='nested', concat_dim=self.concat_dim,
                     engine='snowtools') as ds:
-                ds.to_netcdf("FORCING_OUT.nc")
+                ds.to_netcdf("FORCING_OUT.nc", format="NETCDF4_CLASSIC")
         except Exception as e:
             rdict['rc'] = e
         finally:

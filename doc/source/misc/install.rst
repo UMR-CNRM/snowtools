@@ -10,6 +10,8 @@ Please refer to the section corresponding to your case :
 - `You are a developper outside of Meteo-France network <sec-install-dev_>`_
 - `You are a developper from Meteo-France/CEN staff <sec-install-mf_>`_
 
+.. _sec-install-user:
+
 Snowtools install for users
 ---------------------------
 

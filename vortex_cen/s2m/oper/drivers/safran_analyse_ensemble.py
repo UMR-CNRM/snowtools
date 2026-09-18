@@ -100,7 +100,7 @@ class Safran(Task, CENTaskMixIn, SafranMixIn):
 
         if 'refill' in self.steps:  # Unused in the dev task
 
-            if True:
+            with InputReportContext(self, t):
 
                 self.sh.title('Toolbox input tb01wi')
                 tb01wi = vortex.input(

@@ -30,9 +30,9 @@ from bronx.syntax.externalcode import ExternalCodeImportChecker
 
 vortex_checker = ExternalCodeImportChecker('vortex')
 with vortex_checker:
-    from vortex import toolbox
+    import vortex
 
-toolbox.active_now = True
+vortex.toolbox.active_now = True
 matplotlib.rcParams.update({'font.size': 16})
 
 know_cmaps = dict(
@@ -174,7 +174,7 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=None, addpoint=None, a
 @vortex_checker.disabled_if_unavailable
 def get_dem(genv='uenv:dem.2@vernaym', gvar='DEM_ALP1KM_EPSG4326'):
 
-    toolbox.input(
+    vortex.input(
         genv   = genv,
         gvar   = gvar,
         filename='TARGET_RELIEF.tif',
@@ -188,7 +188,7 @@ def get_dem(genv='uenv:dem.2@vernaym', gvar='DEM_ALP1KM_EPSG4326'):
     return dem
 
 
-def add_iso_elevation(dem, ax=None, levels=[1000, 2000, 3000, 4000]):
+def add_iso_elevation(dem, ax=None, levels=[500, 1000, 1500, 2000, 2500, 3000, 3500, 4000]):
     """
     Add iso-elevation bands to show the relief
     """
@@ -251,7 +251,7 @@ def add_quadrilateral(ax, label, xy, color='k', **kw):
 def get_administrative_boundaries():
 
     tarname = 'world-administrative-boundaries.tar'
-    toolbox.input(
+    vortex.input(
         genv     = 'uenv:shapefiles.1@vernaym',
         gvar     = 'WORLD_BOUNDARIES',
         filename = tarname,
@@ -283,7 +283,7 @@ def add_boundaries(ax, filename=None):
 def get_safran_massifs():
 
     tarname = "massifs_safran.tar"
-    toolbox.input(
+    vortex.input(
         genv     = 'uenv:shapefiles.1@vernaym',
         gvar     = 'MASSIFS_SAFRAN',
         filename = tarname,
@@ -315,7 +315,7 @@ def add_massifs(ax, filename=None):
 def get_french_cities():
 
     filename = "french_cities.csv"
-    toolbox.input(
+    vortex.input(
         genv     = 'uenv:shapefiles.1@vernaym',
         gvar     = 'FRENCH_CITIES',
         filename = filename,

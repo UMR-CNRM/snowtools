@@ -395,7 +395,3 @@ class PrepSafran(Task, CENTaskMixIn):
                     ),
                     print(t.prompt, 'tb05 =', tb05)
                     print()
-
-#            print('==================================================================================================')
-#            print('==================================================================================================')
-#            raise Exception('INFO :The execution went well, do not take into account the following error')

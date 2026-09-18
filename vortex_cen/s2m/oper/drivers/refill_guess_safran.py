@@ -229,10 +229,11 @@ class PrepSafran(Task, CENTaskMixIn):
                 role           = 'Metadata',
                 format         = 'grib',
                 genv            = self.conf.cycle,
-                geometry       = self.conf.arpege_geometry,  #EURAT01
-                gdomain        = '[geometry:domain]',
+                geometry       = self.conf.nwp_geometry,  #EURAT01
+                gdomain        = '[geometry:area]',
                 kind           = 'relief',
                 local          = 'METADATA.grib',
+                model          = 'safran',
                 fatal          = True,
             )
             print(t.prompt, 'tbmeta =', tbmeta)
@@ -324,7 +325,7 @@ class PrepSafran(Task, CENTaskMixIn):
                             geometry       = dom,
                             vapp           = 's2m',
                             vconf          = '[geometry:domain]',
-                            experiment     = self.conf.xpid_guess,
+                            experiment     = self.conf.xpid,
                             cutoff         = 'assimilation',
                             block          = 'guess',
                             date           = rundate.ymdh,
@@ -353,7 +354,7 @@ class PrepSafran(Task, CENTaskMixIn):
                     role           = 'Reanalyses',
                     kind           = 'packedguess',
                     local          = tarname,
-                    experiment     = self.conf.xpid_guess,
+                    experiment     = self.conf.xpid,
                     block          = 'guess',
                     nativefmt      = 'tar',
                     namespace      = self.conf.namespace_out,

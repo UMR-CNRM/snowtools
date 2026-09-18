@@ -391,7 +391,10 @@ def get_summary_git(path=None):
     else:
         # Search for a .git_info file
         path = path if path is not None else ''
-        gitinfos_file_path = os.path.join(path, '.git_info')
+        if os.path.isfile(path):
+            gitinfos_file_path = path
+        else:
+            gitinfos_file_path = os.path.join(path, '.git_info')
         if os.path.isfile(gitinfos_file_path):
             try:
                 with open(gitinfos_file_path, 'r') as f:

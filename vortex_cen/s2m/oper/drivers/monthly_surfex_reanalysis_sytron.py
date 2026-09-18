@@ -193,7 +193,7 @@ class Monthly_Surfex_Reanalysis_Sytron(CENTaskMixIn, Task):
             self.sh.title('Toolbox input tb07')
             tb07 = vortex.input(
                 role            = 'Nam_surfex',
-                source          = 'OPTIONS_sytron.nam',
+                source          = self.conf.sytron_namelist,
                 genv            = self.conf.cycle,
                 kind            = 'namelist',
                 intent          = 'inout',
@@ -211,7 +211,7 @@ class Monthly_Surfex_Reanalysis_Sytron(CENTaskMixIn, Task):
                 local          = 'OFFLINE',
                 model          = 'surfex',
                 genv           = self.conf.cycle,
-                gvar           = 'master_surfex_offline_mpi',
+                gvar           = 'master_offline_nompi',
             )
 
             print((t.prompt, 'tb08 =', tb08))

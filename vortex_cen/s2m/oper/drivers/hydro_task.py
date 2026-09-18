@@ -2,20 +2,11 @@
 """
 """
 from bronx.stdtypes.date import yesterday
-from mkjob.nodes import Driver, Task
+from mkjob.nodes import Task
 from vortex_cen.tasks.oper_research_mixin import CENTaskMixIn
+from vortex_cen.tools.monitoring import InputReportContext, OutputReportContext
 import vortex
 import footprints
-
-
-def setup(t, **kw):
-    return Driver(
-        tag='S2M_Hydro',
-        ticket=t,
-        nodes=[
-                Hydro_Task(tag='S2M_Hydro_Task', ticket=t, **kw, delay_component_errors=True, on_error='delayed_fail')],
-        options=kw
-    )
 
 
 class Hydro_Task(CENTaskMixIn, Task):
@@ -56,7 +47,7 @@ class Hydro_Task(CENTaskMixIn, Task):
         datebegin, dateend = self.get_period()
         rundate_forcing = self.get_rundate_forcing()
 
-        members_out = [35] # List of members for archive
+        members_out = [35]  # List of members for archive
 
         if self.conf.previ:
             pearpmembers, members = self.get_list_members(sytron=False)
@@ -68,7 +59,7 @@ class Hydro_Task(CENTaskMixIn, Task):
                 datebegin_forcing = yesterday(datebegin)
             datebegin_pro = datebegin
         else:
-            members = [35] # List of members for computation
+            members = [35]  # List of members for computation
             cutoff = 'assimilation'
             kindalgo = 's2m_hydro_deter'
             datebegin_forcing = datebegin
@@ -79,7 +70,7 @@ class Hydro_Task(CENTaskMixIn, Task):
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
-            if True: # In order to have an indentation and facilitate the comparison with IGA Task
+            with InputReportContext(self, t):
 
                 self.sh.title('Toolbox input tb01')
                 tb01 = vortex.input(
@@ -99,7 +90,7 @@ class Hydro_Task(CENTaskMixIn, Task):
 
         if 'fetch' in self.steps:
 
-            if True:  # In order to have an indentation and facilitate the comparison with IGA Task
+            with InputReportContext(self, t):
 
                 self.sh.title('Toolbox input tb01')
                 tb02 = vortex.input(
@@ -163,7 +154,7 @@ class Hydro_Task(CENTaskMixIn, Task):
 
         if 'late-backup' in self.steps:
 
-            if True:  # In order to have an indentation and facilitate the comparison with IGA Task
+            with OutputReportContext(self, t):
 
                 self.sh.title('Toolbox output tb04')
                 tb04 = vortex.output(
@@ -190,7 +181,7 @@ class Hydro_Task(CENTaskMixIn, Task):
                 if kindalgo == 's2m_hydro_ensemble':
 
                     self.sh.title('Toolbox output tb04')
-                    tb04 = vortex.output(
+                    tb05 = vortex.output(
                         role        = 'Postproc_output',
                         intent      = 'out',
                         local       = 'HYDRO_[datebegin:ymdh]_[dateend:ymdh].nc',
@@ -207,5 +198,5 @@ class Hydro_Task(CENTaskMixIn, Task):
                         cutoff      = cutoff,
                         fatal       = True
                     ),
-                    print(t.prompt, 'tb04 =', tb04)
+                    print(t.prompt, 'tb05 =', tb05)
                     print()

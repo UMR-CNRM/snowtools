@@ -84,11 +84,9 @@ class Surfex_PreProcess(AlgoComponent):
             "forcingname": {
                 "info": "Name of the first forcing file",
                 "type": str,
+                "optional": True,
+                "default": None,
             },
-            # "forcingname": {
-            #     "info": "Name of the first forcing file",
-            #     "type": str,
-            # },
         }
     }
 
@@ -112,7 +110,10 @@ class Surfex_PreProcess(AlgoComponent):
             # Update the contents of the namelist (date and location)
             # Location taken in the FORCING file.
             first_forcing = self.context.sequence.effective_inputs(kind="FORCING")[0].rh
-            forcingname = first_forcing.container.localpath()
+            if self.forcingname:
+                forcingname = self.forcingname
+            else:
+                forcingname = first_forcing.container.localpath()
             newcontent = update_surfex_namelist_object(
                 namelist.contents, self.datebegin, forcing=forcingname, dateend=self.dateend
             )
@@ -320,13 +321,13 @@ class SurfexMixIn(_CenMixIn):
         """
 
         # Add massif natural risk diagnostics to output PRO files
-        with xr.open_dataset("ISBA_PROGNOSTIC.OUT.nc", engine='snowtools') as pro:
+        outname = f'PRO_{datebegin_this_run.ymdh}_{dateend_this_run.ymdh}.nc'
+        self.system.mv("ISBA_PROGNOSTIC.OUT.nc", outname)
+        with xr.open_dataset(outname, engine='snowtools') as pro:
             pro = pro.surfex.massif_natural_risk()
             pro.crocus.GlobalAttributes(product=self.get_standard_metadata_section, **self.reprod_info)
-            #pro.crocus.add_standard_names()  # Already called by GlobalAttributes
-            pro.to_netcdf(f'PRO_{datebegin_this_run.ymdh}_{dateend_this_run.ymdh}.nc')
-
-        #save_file_period(".", "ISBA_PROGNOSTIC.OUT", datebegin_thisrun, dateend_this_run, newprefix="PRO")
+            # pro.crocus.add_standard_names()  # Already called by GlobalAttributes
+        pro.to_netcdf(f'PRO_{datebegin_this_run.ymdh}_{dateend_this_run.ymdh}.nc', format="NETCDF4_CLASSIC", mode="a")
 
         if self.system.path.isfile("ISBA_DIAGNOSTICS.OUT.nc"):
             save_file_period(".", "ISBA_DIAGNOSTICS.OUT", datebegin_this_run, dateend_this_run, newprefix="DIAG")

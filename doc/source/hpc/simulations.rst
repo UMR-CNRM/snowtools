@@ -58,6 +58,10 @@ The mkjob launcher
 This section provides an overview of the mkjob launcher from a CEN perspective.
 The full mkjob package documentation is available here: https://cnrm-gmap.gitlab.meteo.fr/mkjob/index.html
 
+.. note::
+
+   The source code is available on git.meteo.fr : https://git.meteo.fr/cnrm-gmap/vortex/-/tree/main/mkjob?ref_type=heads
+
 Mkjob is a job script generator. It combines a job templates and a user-defined configuration file to produce and launch jobs on MF's HPC.
 Although several job types ("profiles") are available (see https://cnrm-gmap.gitlab.meteo.fr/mkjob/configuration.html), only the "rd-belenos-mt" profile is used at CEN.
 This profile is based on the MTOOL tool that splits the execution in separate job submissions (called "steps"):

@@ -84,6 +84,7 @@ class _CenResearchTask(Task, CENTaskMixIn):
             "io_duration",
             "namespace_out",
             "diff",
+            "allow_path",
         ]
 
     def update_attributes(self, mandatory, optional, overwrite=None):

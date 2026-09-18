@@ -370,7 +370,6 @@ class SurfexCommonsMixin:
     * ``tg_geometry`` or ``geometry`` geometry of the init_TG. Logically the same as for the rest of the simulation
     * ``tg_vapp`` or ``vapp`` Application name to search the init_TG.nc file.
     * ``tg_vconf`` or ``vconf`` Configuration name to search the init_TG.nc file.
-    * ``tg_block`` Block name to search the init_TG.nc file. Default: *prep*
 
         """
         if cache_only:
@@ -393,7 +392,7 @@ class SurfexCommonsMixin:
                 model      = 'surfex',
                 namespace  = namespace,
                 namebuild  = 'flat@cen',  # TODO : passer en variable de configuration
-                block      = self.conf.get("tg_block", "prep"),
+                block      = "init_tg",
                 fatal      = fatal,
             ),
             print(self.ticket.prompt, 'initTG =', init_tg)

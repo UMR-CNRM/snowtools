@@ -756,16 +756,14 @@ class SytistWorker(_SafranWorker):
 
     def postfix(self, rdict):
         for forcing_name in ['FORCING_massif.nc', 'FORCING_postes.nc']:
-            self.mv_if_exists(forcing_name, 'TMP.nc')
-            if self.system.path.isfile('TMP.nc'):
+            if self.system.path.isfile(forcing_name):
                 product = self.get_standard_metadata_section
-                with xr.open_dataset('TMP.nc', engine='snowtools') as forcing:
+                with xr.open_dataset(forcing_name, engine='snowtools') as forcing:
                     forcing.safran.GlobalAttributes(product=product, **self.reprod_info)
                     # Do not rename 'massif_number' variable into 'massif_num' because SURFEX
                     # expects 'massif_number'.
                     forcing = forcing.snowtools.backtrack_preprocess()
-                    forcing.to_netcdf(forcing_name)
-                self.system.remove('TMP.nc')
+                forcing.to_netcdf(forcing_name, format="NETCDF4_CLASSIC", mode="a")
 
         if 'rc' in rdict.keys() and (isinstance(rdict['rc'], S2MExecutionError) or
                                      isinstance(rdict['rc'], InputCheckerError)):

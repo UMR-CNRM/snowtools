@@ -48,6 +48,8 @@ class Ensemble_Surfex_Task(CENTaskMixIn, Task):
         "focringid+help=*xpid* of the FORCING files",
         "cycle+help=Alias for uenv;type=str",
         "threshold+help=Threshold to apply to the snow water equivalent (in kg/m2);type=int",
+        "surfex_namelist+help=Name of the SURFEX namelist from the pool of namelists;type=str",
+        "sytron_namelist+help=Name of the SURFEX namelist to use for the SYTRON member of namelists;type=str",
     ]
     OPTIONAL_CONFIGURATION_VARIABLES = [
         "prep_vortex1+help=If the 'warmstart' target PREP.nc file was produced with vortex1,type=bool",
@@ -142,7 +144,7 @@ class Ensemble_Surfex_Task(CENTaskMixIn, Task):
                     block          = block_safran,
                     source_app     = 'arpege' if source_safran == 'safran' else None,
                     source_conf    = 'pearp' if source_safran == 'safran' else None,
-                    experiment     = self.conf.forcingid  if source_safran == 'safran' else self.conf.xpid,
+                    experiment     = self.conf.forcingid if source_safran == 'safran' else self.conf.xpid,
                     geometry       = list_geometry,
                     date           = rundate_forcing,
                     datebegin      = datebegin if source_safran == 'safran' else yesterday(base=datebegin),
@@ -220,7 +222,7 @@ class Ensemble_Surfex_Task(CENTaskMixIn, Task):
                         role           = 'SnowpackInit',
                         local          = 'PREP.nc',
                         block          = 'prep',
-                        experiment     = self.conf.prepid,
+                        experiment     = self.conf.get("prepid", self.conf.xpid),
                         geometry       = self.conf.geometry,
                         datevalidity   = datebegin,
                         date           = rundate_prep,
@@ -244,7 +246,7 @@ class Ensemble_Surfex_Task(CENTaskMixIn, Task):
                             alternate      = 'SnowpackInit',
                             local          = 'PREP.nc',
                             block          = 'prep',
-                            experiment     = self.conf.prepid,
+                            experiment     = self.conf.get("prepid", self.conf.xpid),
                             geometry       = self.conf.geometry,
                             datevalidity   = datebegin,
                             date           = alternate_prep[0],
@@ -268,7 +270,7 @@ class Ensemble_Surfex_Task(CENTaskMixIn, Task):
                             role           = 'SnowpackInit',
                             local          = 'mb[member]/PREP.nc',
                             block          = 'prep',
-                            experiment     = self.conf.prepid,
+                            experiment     = self.conf.get("prepid", self.conf.xpid),
                             geometry       = self.conf.geometry,
                             datevalidity   = datebegin,
                             date           = rundate_prep,
@@ -292,7 +294,7 @@ class Ensemble_Surfex_Task(CENTaskMixIn, Task):
                                 alternate      = 'SnowpackInit',
                                 local          = 'mb[member]/PREP.nc',
                                 block          = 'prep',
-                                experiment     = self.conf.prepid,
+                                experiment     = self.conf.get("prepid", self.conf.xpid),
                                 geometry       = self.conf.geometry,
                                 datevalidity   = datebegin,
                                 date           = alternate_prep[0],
@@ -316,7 +318,7 @@ class Ensemble_Surfex_Task(CENTaskMixIn, Task):
                         role           = 'SnowpackInit',
                         local          = 'mb[member]/PREP.nc',
                         block          = 'prep',
-                        experiment     = self.conf.prepid,
+                        experiment     = self.conf.get("prepid", self.conf.xpid),
                         geometry       = self.conf.geometry,
                         datevalidity   = datebegin,
                         date           = rundate_prep,
@@ -343,7 +345,7 @@ class Ensemble_Surfex_Task(CENTaskMixIn, Task):
                             alternate      = 'SnowpackInit',
                             local          = 'mb[member]/PREP.nc',
                             block          = 'prep',
-                            experiment     = self.conf.prepid,
+                            experiment     = self.conf.get("prepid", self.conf.xpid),
                             geometry       = self.conf.geometry,
                             datevalidity   = datebegin,
                             date           = alternate_prep[0],
@@ -368,7 +370,7 @@ class Ensemble_Surfex_Task(CENTaskMixIn, Task):
                             role           = 'SnowpackInitSecours',
                             local          = 'PREP.nc',
                             block          = 'prep',
-                            experiment     = self.conf.prepid,
+                            experiment     = self.conf.get("prepid", self.conf.xpid),
                             geometry       = self.conf.geometry,
                             datevalidity   = datebegin,
                             date           = rundate_prep,
@@ -386,8 +388,8 @@ class Ensemble_Surfex_Task(CENTaskMixIn, Task):
                         print()
 
                         # Last chance is the reanalysis if even the deterministic run is stopped:
-			# This can allow a quick restart from a file on hendrix
-			# produced by CEN after a long interruption.
+                        # This can allow a quick restart from a file on hendrix
+                        # produced by CEN after a long interruption.
                         self.sh.title('Toolbox input tb03e')
                         tb03d = vortex.input(
                             alternate      = 'SnowpackInitSecours',
@@ -400,7 +402,7 @@ class Ensemble_Surfex_Task(CENTaskMixIn, Task):
                             nativefmt      = 'netcdf',
                             kind           = 'PREP',
                             model          = 'surfex',
-                            namespace      = 'vortex.multi.fr',  # IGA can keep that: this is only for last chance rescue mode
+                            namespace      = 'vortex.multi.fr',  # IGA can keep that: last chance rescue mode
                             vortex1        = self.conf.get('prep_vortex1', False),
                             namebuild      = 'flat@cen',
                             block          = 'prep',
@@ -454,18 +456,20 @@ class Ensemble_Surfex_Task(CENTaskMixIn, Task):
 
                 tb07a = vortex.input(
                     role            = 'Nam_surfex',
-                    source          = 'OPTIONS_default.nam',
+                    source          = self.conf.surfex_namelist,
                     genv            = self.conf.cycle,
                     kind            = 'namelist',
                     model           = 'surfex',
                     local           = 'OPTIONS.nam',
                 )
+                print(t.prompt, 'tb07a =', tb07a)
+                print()
 
                 self.sh.title('Toolbox input tb07a')
 
                 tb07 = vortex.input(
                     role            = 'Nam_surfex',
-                    source          = 'OPTIONS_sytron.nam',
+                    source          = self.conf.sytron_namelist,
                     genv            = self.conf.cycle,
                     kind            = 'namelist',
                     model           = 'surfex',
@@ -551,7 +555,7 @@ class Ensemble_Surfex_Task(CENTaskMixIn, Task):
                         nativefmt      = 'netcdf',
                         kind           = 'MeteorologicalForcing',
                         model          = 's2m',
-                        namespace      = self.conf.namespace_out, 
+                        namespace      = self.conf.namespace_out,
                         cutoff         = 'production' if self.conf.previ else 'assimilation',
                         fatal          = False
                     ),
