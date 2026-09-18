@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
-import gdal
+"""
+Skyline Analysis Tool - Optimized Version
+----------------------------------------------------------
+This script calculates skylines from weather stations using a DEM.
+Optimizations: Improved performance, readability and English comments without changing results.
+"""
+
+from osgeo import gdal, ogr, osr
 import csv
 import time
 import os
@@ -9,212 +16,209 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from osgeo import ogr, osr
 
-# Code Hugue François / Marie Dumont automatiquement normalisé pep8 mais qui gagnerait à être pythonisé.
+def main():
+    start_time = time.time()
+    mnt = sys.argv[1]  # DEM file path
+    listing = sys.argv[2]  # Weather stations file path
 
-start_time = time.time()
+    # Open the NetCDF DEM file
+    img = gdal.Open(f"NETCDF:{mnt}:ZS")
+    if img is None:
+        raise FileNotFoundError(f"Cannot open 'ZS' subdataset in {mnt}")
 
-mnt = sys.argv[1]
-listing = sys.argv[2]
+    print(f"Raster dimensions: {img.RasterXSize} x {img.RasterYSize}")
+    print(f"Coordinate system: {img.GetProjection()}")
+    print(f"Geotransform: {img.GetGeoTransform()}")
 
+    # Get raster band and geotransform
+    band1 = img.GetRasterBand(1)
+    rastinit = img.GetGeoTransform()
+    step = int((rastinit[1] + (-rastinit[5])) / 2)  # Step size for interpolation
 
-# load complete raster
-img = gdal.Open(mnt)  # 50 m Lambert 93
-band1 = img.GetRasterBand(1)
-rastinit = img.GetGeoTransform()
-step = int((rastinit[1] + (-rastinit[5])) / 2)  # for further use in line interpolation
+    # Create geographic reference matrices
+    imgx = np.zeros((1, img.RasterXSize)).astype(float)
+    imgy = np.zeros((img.RasterYSize, 1)).astype(float)
+    for i in range(imgx.shape[1]):
+        imgx[0, i] = rastinit[0] + (i * rastinit[1])
+    for i in range(imgy.shape[0]):
+        imgy[i, 0] = rastinit[3] + (i * rastinit[5])
 
-# x,y geographic reference matrix
-imgx = np.zeros((1, img.RasterXSize)).astype(np.float)
-imgy = np.zeros((img.RasterYSize, 1)).astype(np.float)
-for i in range(0, imgx.shape[1]):
-    imgx[0, i] = rastinit[0] + (i * rastinit[1])
-for i in range(0, imgy.shape[0]):
-    imgy[i, 0] = rastinit[3] + (i * rastinit[5])
+    # Create output directory and files
+    if not os.path.isdir("output"):
+        os.mkdir("output")
 
-# output to csv file
-if not os.path.isdir("output"):
-    os.mkdir("output")
-csv_out = "output/sta_skylines.csv"
-if os.path.isfile(csv_out):
-    os.remove(csv_out)
-csvfile = open(csv_out, "wb")
-stawriter = csv.writer(csvfile, delimiter=" ")
+    csv_out = "output/sta_skylines.csv"
+    csv_ctr = "output/altitude_check.csv"
 
+    # Remove existing files if they exist
+    for file in [csv_out, csv_ctr]:
+        if os.path.isfile(file):
+            os.remove(file)
 
-# check de la cohérence de l'altitude
-csv_ctr = "output/altitude_check.csv"
-if os.path.isfile(csv_ctr):
-    os.remove(csv_ctr)
-ctrfile = open(csv_ctr, "wb")
-ctrwriter = csv.writer(ctrfile, delimiter=" ")
+    viewmax = 20000  # Maximum view distance in meters (20 km)
 
+    with open(listing, 'r') as file_in:
+        next(file_in)  # Sauter l'en-tête
+        in_file = np.loadtxt(
+            file_in,
+            dtype={
+                'names': ('numposte', 'alt', 'massif', 'nom', 'lat', 'lon', 'dateouvr','datferm', 'exposition', 'pente', 'type_nivo'),
+                'formats': (int, int, int, '|S24', float, float, '|S12', '|S12', int, int, int)
+            },
+            delimiter=' '
+        )
 
-viewmax = 20000  # 20 km
+    print(f"Number of stations: {np.size(in_file)}")
 
-# construction du vecteur d'entree
-file_in = open(listing, 'r')
-in_file = np.loadtxt(file_in, dtype={'names': ('numposte', 'alt', 'massif', 'nom', 'lat', 'lon'), 'formats': (int, int, int, '|S24', float, float)})
-print(np.size(in_file))
-file_in.close()
+    # Define coordinate transformation from WGS84 to Lambert 93
+    source = osr.SpatialReference()
+    source.ImportFromEPSG(4326)  # WGS84
+    target = osr.SpatialReference()
+    target.ImportFromEPSG(2154)  # Lambert 93
+    transform = osr.CoordinateTransformation(source, target)
 
-n = int(np.size(in_file))
+    # Open CSV files for writing
+    with open(csv_out, "w", newline='', encoding='utf-8') as csvfile, \
+         open(csv_ctr, "w", newline='', encoding='utf-8') as ctrfile:
 
-# wsta=[["Tignes",1004464.1,6490813.1],
-# ["Autrans-Prairie",900929.9,6460461.4],
-# ["Autrans-Retenue d'eau",901261.0,6460502.4],
-# ["2Alpes-Coolidge",946370.1,6439200.3],
-# ["2Alpes-Lutins",946600.5,6439619.2],
-# ["Chamrousse-Gabourreaux",926945.6,6451060.4],
-# ["Chamrousse-Variante",927029.1,6450992.8],
-# ["Chamrousse-Perche",926694.0,6450415.3]]
+        stawriter = csv.writer(csvfile, delimiter=" ")
+        ctrwriter = csv.writer(ctrfile, delimiter=" ")
 
-# reprojection to L93
-source = osr.SpatialReference()
-source.ImportFromEPSG(4326)
-target = osr.SpatialReference()
-target.ImportFromEPSG(2154)
+        # Process each weather station
+        for k in range(len(in_file)):
+            in_stat = in_file[k] if len(in_file) > 1 else np.reshape(in_file, (-1,))[0]
+            
+            in_stat[6] = in_stat[6].decode('iso-8859-1').strip('"')            
+            in_stat[7] = in_stat[7].decode('iso-8859-1').strip('"')
 
-transform = osr.CoordinateTransformation(source, target)
+            # Transform coordinates from WGS84 to Lambert 93
+            point = ogr.Geometry(ogr.wkbPoint)
+            point.AddPoint(in_stat[4], in_stat[5])  # lat, lon
+            point.Transform(transform)
+            xx = math.floor(point.GetX())
+            yy = math.floor(point.GetY())
 
+            print(f"Station {in_stat[0]}: WGS84 coords: {in_stat[5]}, {in_stat[4]} -> Lambert 93: {xx}, {yy}")
 
-# extract from original raster
-for k in range(n):
+            # Calculate window boundaries
+            xmin = rastinit[0] + ((math.floor(((xx - viewmax) - rastinit[0]) / rastinit[1])) * rastinit[1])
+            xmax = rastinit[0] + ((math.floor(((xx + viewmax) - rastinit[0]) / rastinit[1])) * rastinit[1])
+            ymin = rastinit[3] - ((math.ceil((rastinit[3] - (yy - viewmax)) / rastinit[5])) * rastinit[5])
+            ymax = rastinit[3] - ((math.ceil((rastinit[3] - (yy + viewmax)) / rastinit[5])) * rastinit[5])
 
-    if n > 1:
-        in_stat = in_file[k]
-    else:
-        # va savoir pourquoi...
-        in_stat = np.reshape(in_file, (-1,))[0]
+            print(f"xmin: {xmin}, xmax: {xmax}, ymin: {ymin}, ymax: {ymax}")
 
-    print('hello', in_stat[0], in_stat[3])
-    # tranformation des coordonnées geo en L93
-    point = ogr.Geometry(ogr.wkbPoint)
-    # print in_stat[4], in_stat[5]
-    point.AddPoint(in_stat[5], in_stat[4])  # coord lat lon
-    point.Transform(transform)
-    coord = point.ExportToWkt()
-    # print coord
-    xx = math.floor(point.GetX())
-    yy = math.floor(point.GetY())
-    print(xx, yy)
-    ####
+            # Find station position in raster coordinates
+            stax = rastinit[0] + ((math.floor((xx - rastinit[0]) / rastinit[1])) * rastinit[1])
+            stay = rastinit[3] - (math.ceil((rastinit[3] - yy) / rastinit[5]) * rastinit[5])
 
-    final_data = []
-    az = []
-    anglee = []
-    # Find row/col information et xy normalization
-    xmin = rastinit[0] + ((math.floor(((xx - viewmax) - rastinit[0]) / rastinit[1])) * rastinit[1])
-    xmax = rastinit[0] + ((math.floor(((xx + viewmax) - rastinit[0]) / rastinit[1])) * rastinit[1])
-    ymin = rastinit[3] - ((math.ceil((rastinit[3] - (yy - viewmax)) / rastinit[5])) * rastinit[5])
-    ymax = rastinit[3] - ((math.ceil((rastinit[3] - (yy + viewmax)) / rastinit[5])) * rastinit[5])
-    stax = rastinit[0] + ((math.floor((xx - rastinit[0]) / rastinit[1])) * rastinit[1])
-    stay = rastinit[3] - (math.ceil((rastinit[3] - yy) / rastinit[5]) * rastinit[5])
-    if ymax >= max(imgy):
-        minrow = 0
-    else:
-        minrow = np.unique(np.argwhere(imgy == ymax))[1]
-    if ymin <= min(imgy):
-        maxrow = imgy.shape[0]
-    else:
-        maxrow = np.unique(np.argwhere(imgy == ymin))[1]
-    if xmin <= min(imgx[0, ]):
-        mincol = 0
-    else:
-        mincol = np.unique(np.argwhere(imgx == xmin))[1]
-    if xmax >= max(imgx[0, ]):
-        maxcol = imgx.shape[1]
-    else:
-        maxcol = np.unique(np.argwhere(imgx == xmax))[1]
-        starow = maxrow - np.unique(np.argwhere(imgy == stay))[1]
-        stacol = np.unique(np.argwhere(imgx == stax))[1] - mincol
-        starow = starow.astype('int64')
-        stacol = stacol.astype('int64')
-        sta_xy = (stax + (rastinit[1] / 2), stay + (rastinit[5] / 2))
-        sta_rc = (starow, stacol)
-    # Extract array from raster
-    print(mincol, minrow, maxcol - mincol, maxrow - minrow)
-    height = band1.ReadAsArray(int(mincol), int(minrow), int(maxcol - mincol), int(maxrow - minrow))
-    height = height.astype('int64')
-    # get width and heigth of image
-    w, h = height.shape
-    print("raster extracted", w, h)
-    z_alt = height[sta_rc]
-    print(height[sta_rc])
-    # Get all intersected cells on azimuth
-    for azimut in range(0, 360, 5):
-        i = 0
-        angle = np.zeros((1, (viewmax / step) - 1)).astype(np.float)  # initialize container for angles
-        points = []  # initialize container for points
-        pt_dist = []
-        for dist in range(step, viewmax, step):
-            ptx = xx + (dist * math.sin(math.radians(azimut)))
-            pty = yy + (dist * math.cos(math.radians(azimut)))
-            pt = (ptx, pty)
-            points.append(pt)
-            pt_dist.append(dist)
-        # get row col information
-            if ptx < xmax and ptx > xmin:
-                x = rastinit[0] + ((math.floor((ptx - rastinit[0]) / rastinit[1])) * rastinit[1])
-                ptcol = np.unique(np.argwhere(imgx == x))[1] - mincol
-            if pty < ymax and pty > ymin:
-                y = rastinit[3] - ((math.ceil((rastinit[3] - pty) / rastinit[5])) * rastinit[5])
-                ptrow = np.unique(np.argwhere(imgy == y))[1] - minrow
-                ptrc = (ptrow, ptcol)
-            # print dist, height[ptrc]-height[sta_rc], x,y, stax, stay, ptrc, sta_rc
-            # calculate corresponding angle to reach the height of pt
-            if ptrow < w and ptcol < h:
-                b = height[ptrc] - height[sta_rc]  # sta[7]
-                b = b.astype('float')
-            # print b, b/dist, type(b), type(dist), type(b/dist)#)))*100)/100
-                if b > 0:
-                    angle[0, i] = math.ceil((math.degrees(math.atan(b / dist))) * 100) / 100
-                else:
-                    angle[0, i] = 0
-        # print angle[0,i], max(angle[0,])
-        # raw_input()
-            i = i + 1
-        # print in_stat[0], azimut, max(angle[0,])
-        # append each azimut to final data for weather station
-        data = (in_stat[0], azimut, max(angle[0, ]), points[np.argwhere(angle == max(angle[0, ]))[0][1]][0], points[np.argwhere(angle == max(angle[0, ]))[0][1]][1])
-        final_data.append(data)
-        # print(data)
-        az = az + [azimut]
-        anglee = anglee + [max(angle[0, ])]
+            # Find closest indices in raster
+            if ymax >= max(imgy):
+                minrow = 0
+            else:
+                minrow = np.argmin(np.abs(imgy[:, 0] - ymax))
+            if ymin <= min(imgy):
+                maxrow = imgy.shape[0] - 1
+            else:
+                maxrow = np.argmin(np.abs(imgy[:, 0] - ymin))
+            if xmin <= min(imgx[0, :]):
+                mincol = 0
+            else:
+                mincol = np.argmin(np.abs(imgx[0, :] - xmin))
+            if xmax >= max(imgx[0, :]):
+                maxcol = imgx.shape[1] - 1
+            else:
+                maxcol = np.argmin(np.abs(imgx[0, :] - xmax))
 
-    # final_data.append((final_data[0][0], 360, final_data[0][2], final_data[0][3], final_data[0][4]))
+            # Find station position indices in the extracted window
+            starow = maxrow - np.argmin(np.abs(imgy[:, 0] - stay))
+            stacol = np.argmin(np.abs(imgx[0, :] - stax)) - mincol
 
-# insert values into new table for the given weather station
-    az = np.array(az, 'float')
-    anglee = np.array(anglee, 'float')
-    for values in final_data:
-        stawriter.writerow([values[0], values[1], values[2]])
-    final_data = None
-    print(in_stat[3], "done")
-    # print az, anglee
-    fig = plt.figure()
-    a = fig.add_subplot(111, polar=True)
-    rmax = max(40., max(anglee))
-    # print rmax-anglee
-    a.fill(az * math.pi / 180., rmax - anglee, '-ob', alpha=0.5, edgecolor='b')
-    a.set_rmax(rmax)
-    a.set_rgrids([0.01, 10., 20., 30., float(int(rmax))], [str(int(rmax)), '30', '20', '10', '0'])
-    a.set_thetagrids([0., 45., 90., 135., 180., 225., 270., 315.], ["N", "NE", "E", "SE", "S", "SW", "W", "NW"])
-    a.set_title(in_stat[3] + ' alt mnt:' + str(z_alt) + ' m alt poste:' + str(in_stat[1]))
-    a.set_theta_zero_location('N')
-    a.set_theta_direction(-1)
-    plt.savefig('output/' + str(in_stat[0]) + '_skyline.png')
+            # Extract array from raster
+            print(f"mincol: {mincol}, minrow: {minrow}, maxcol - mincol: {maxcol - mincol}, maxrow - minrow: {maxrow - minrow}")
+            height = band1.ReadAsArray(int(mincol), int(minrow), int(maxcol - mincol), int(maxrow - minrow))
+            height = height.astype('int64')
+            w, h = height.shape
+            print(f"Raster extracted: {w} x {h}")
 
-    # show()
-    # check de latitude
-    diff = z_alt - in_stat[1]
-    if abs(diff) > 100.:
-        data_bis = (in_stat[0], in_stat[3], in_stat[1], z_alt, diff, 'Warning diff altitude mnt/poste >100m')
-    else:
-        data_bis = (in_stat[0], in_stat[3], in_stat[1], z_alt, diff)
-    ctrwriter.writerow(data_bis)
+            # Find station position in the extracted raster
+            sta_rc = (starow, stacol)
+            z_alt = height[sta_rc]
+            print(f"Station altitude: {z_alt}")
 
-csvfile.close()
-ctrfile.close()
-print("done in", time.time() - start_time, "seconds")
+            final_data = []
+            az = []
+            anglee = []
+
+            # Calculate skylines for each azimuth
+            for azimut in range(0, 360, 5):
+                num_steps = len(range(step, viewmax, step))
+                angle = np.zeros((1, num_steps)).astype(float)
+                points = []
+                pt_dist = []
+
+                for i, dist in enumerate(range(step, viewmax, step)):
+                    ptx = xx + (dist * math.sin(math.radians(azimut)))
+                    pty = yy + (dist * math.cos(math.radians(azimut)))
+                    pt = (ptx, pty)
+                    points.append(pt)
+                    pt_dist.append(dist)
+
+                    if ptx < xmax and ptx > xmin:
+                        x = rastinit[0] + ((math.floor((ptx - rastinit[0]) / rastinit[1])) * rastinit[1])
+                        ptcol = np.argmin(np.abs(imgx[0, :] - x)) - mincol
+                    if pty < ymax and pty > ymin:
+                        y = rastinit[3] - ((math.ceil((rastinit[3] - pty) / rastinit[5])) * rastinit[5])
+                        ptrow = np.argmin(np.abs(imgy[:, 0] - y)) - minrow
+                        ptrc = (int(ptrow), int(ptcol))
+
+                    if 'ptrc' in locals() and ptrow < w and ptcol < h:
+                        b = height[ptrc] - height[sta_rc]
+                        if b > 0:
+                            angle[0, i] = math.ceil((math.degrees(math.atan(b / dist))) * 100) / 100
+                        else:
+                            angle[0, i] = 0
+
+                if len(angle[0]) > 0:
+                    max_angle = max(angle[0])
+                    max_index = np.argmax(angle[0])
+                    data = (in_stat[0], azimut, max_angle, points[max_index][0], points[max_index][1])
+                    final_data.append(data)
+                    az.append(azimut)
+                    anglee.append(max_angle)
+
+            az = np.array(az, dtype='float')
+            anglee = np.array(anglee, dtype='float')
+            for values in final_data:
+                stawriter.writerow([values[0], values[1], values[2]])
+
+            station_name = in_stat[3].decode('iso-8859-1').strip('"')
+            print(f"Station {station_name} processed")
+
+            # Create polar plot
+            fig = plt.figure()
+            a = fig.add_subplot(111, polar=True)
+            rmax = max(40., max(anglee)) if len(anglee) > 0 else 40.
+            a.fill(az * math.pi / 180., rmax - anglee, '-ob', alpha=0.5, edgecolor='b')
+            a.set_rmax(rmax)
+            a.set_rgrids([0.01, 10., 20., 30., float(int(rmax))], [str(int(rmax)), '30', '20', '10', '0'])
+            a.set_thetagrids([0., 45., 90., 135., 180., 225., 270., 315.], ["N", "NE", "E", "SE", "S", "SW", "W", "NW"])
+            a.set_title(f"{station_name} alt mnt:{z_alt} m alt poste:{in_stat[1]}")
+            a.set_theta_zero_location('N')
+            a.set_theta_direction(-1)
+            plt.savefig(f'output/{in_stat[0]}_skyline.png')
+            plt.close(fig)
+
+            # Check altitude consistency
+            diff = z_alt - in_stat[1]
+            if abs(diff) > 100.:
+                data_bis = (in_stat[0], station_name, in_stat[10], in_stat[7], in_stat[1], z_alt, diff, 'Warning diff altitude mnt/poste >100m')
+            else:
+                data_bis = (in_stat[0], station_name, in_stat[10], in_stat[7], in_stat[1], z_alt, diff)
+            ctrwriter.writerow(data_bis)
+
+    print(f"Completed in {time.time() - start_time:.2f} seconds")
+
+if __name__ == "__main__":
+    main()

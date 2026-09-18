@@ -8,10 +8,11 @@ import pandas as pd
 import shutil
 import shapefile
 from shapely.geometry import Point, Polygon
+from osgeo import ogr, osr
 
 from snowtools.scripts.extract.obs.bdquery import question
-from snowtools.DATA import SNOWTOOLS_CEN
-
+from snowtools.DATA import SNOWTOOLS_DATA
+from snowtools.utils.infomassifs import infomassifs
 
 departements = ["04", "05", "06", "26", "38", "73", "74", "09", "31", "64", "65", "66", "99", "20", "07", "11", "15", "30", "34", "42", "43", "48", "63", "81", "54", "57", "67", "68", "70", "88", "90", "01", "25", "39"]
 departements_etrangers = ["204", "205", "203"]
@@ -85,11 +86,13 @@ def extraction():
 
 def check_massif_number(df):
 
-    # Sécurité : si le poste n'est associé à aucun massif, on cherche à lui associer le massif dans lequel il se trouve
-    # WARNING le shapefile dans snowtools n'est pas dans la projection lat/lon des postes
-    #shapefile_path = os.path.join(SNOWTOOLS_CEN, 'snowtools', 'DATA')
-    from snowtools.DATA import SNOWTOOLS_DATA
-    from osgeo import ogr, osr
+    # On attribue toujours le numéro de massif à partir des polygones de référence de S2M
+    # sans faire confiance aux valeurs saisies en BDCLIM qui peuvent souffrir d'erreurs
+    # On affiche les problèmes
+
+
+    IXML=infomassifs()
+
     filename = 'massifs.shp'
     shp = shapefile.Reader(os.path.join(SNOWTOOLS_DATA, filename))
     
@@ -103,10 +106,28 @@ def check_massif_number(df):
     
     transform = osr.CoordinateTransformation(source, target)
     
+    ncorrected = 0
+    nattributed = 0
+    nok = 0
+    noutside_defined = 0
+    noutside_undefined = 0
+    noccasional = 0
     
     def set_massif_number(row):
-        if pd.isna(row["massif_nivo"]) or row["massif_nivo"] == 99:
 
+        nonlocal ncorrected, nattributed, nok, noutside_defined, noutside_undefined, noccasional
+        
+        massif_bdclim = row["massif_nivo"]
+        massif_bdclim_valid = not pd.isna(massif_bdclim) and massif_bdclim != 99
+        occasionnel = massif_bdclim >= 100 # poste occasionnels que SAFRAN ne sait pas traiter
+
+        if occasionnel >= 100:
+            noccasional += 1
+            return np.nan
+        else:
+        
+            print (row["num_poste"])
+            # Find massif from shapefile
             lon = row["lon_dg"]
             lat = row["lat_dg"]
             
@@ -123,18 +144,35 @@ def check_massif_number(df):
                 massif_coords = shape.shape.points
                 poly = Polygon(massif_coords)
                 if Point(x_lambert, y_lambert).within(poly):
-                    print ('Poste ', row["nom_usuel"], 'Attributed massif=', massif_number)
+                    if not massif_bdclim_valid:
+                        print ('Poste ', row["nom_usuel"], 'Attributed massif=', massif_number, IXML.getMassifName(massif_number))
+                        nattributed += 1
+                    else:
+                        if massif_bdclim != massif_number:
+                            print ('Poste ', row["nom_usuel"], 'Corrected massif=', massif_number, IXML.getMassifName(massif_number))
+                            ncorrected += 1
+                        else:
+                            print ('Poste ok', row["nom_usuel"])
+                            nok += 1
                     return massif_number
-            print ('Poste ', row["nom_usuel"], 'No massif found')
-            return np.nan
-        elif row["massif_nivo"] >= 100:
-            # poste occasionnels que SAFRAN ne sait pas traiter
-            return np.nan
-        return row["massif_nivo"]
-
+                    
+            # Si on est ici, c'est que le poste est en-dehors des contours.
+            if massif_bdclim_valid:
+                # Néanmoins un massif est défini dans la BDCLIM (on le garde)
+                print ('Poste ', row["nom_usuel"], 'outside boundary but BDCLIM defines the massif')
+                noutside_defined += 1
+                return massif_bdclim
+            else:
+                print ('Poste ', row["nom_usuel"], 'No massif found')                
+                noutside_undefined += 1
+                return np.nan
 
     # Créer une copie explicite du DataFrame pour éviter les SettingWithCopyWarning
     df = df.copy()
+
+    # Save the massif field from BDCLIM
+    df["massif_bdclim"] = df["massif_nivo"]
+    df["massif_bdclim"] = df["massif_bdclim"].fillna(99).astype(int)
 
     # Appliquer la fonction à chaque ligne
     df.loc[:, "massif_nivo"] = df.apply(set_massif_number, axis=1)
@@ -145,6 +183,13 @@ def check_massif_number(df):
     # Convertir explicitement chaque valeur en entier
     df["massif_nivo"] = df["massif_nivo"].apply(lambda x: int(x))
 
+    # Summary
+    print (nok, " postes with correct massif in BDCLIM")
+    print (ncorrected, " postes with incorrect massif BDCLIM (corrected in output file)")
+    print (nattributed, " postes with missing massif field BDCLIM (attributed in output file)")
+    print (noutside_undefined, " postes undefined outside massifs contours")    
+    print (noutside_defined, " postes defined in BDCLIM but outside massifs contours")
+    print (noccasional, " occasional postes, excluded")
     return df
 
 
@@ -204,7 +249,7 @@ def make_carposts(df):
         os.chdir(rundir)
 
 def write_carpost(index, row):
-
+    # Files needed by SAFRAN to run postes simulations
     carname = "CARPOST{0:0=3d}".format(index)
     with open(carname, 'w') as c:
         c.write(','.join(row.iloc[:7].values.tolist() + ['1.00'] + ["00"]*36 + ['0', row.iloc[-1] + '\n']))
@@ -220,7 +265,7 @@ def main():
     df["exposition_nivo"] = df.apply(convert_aspect, axis=1)
     # Remplacer les guillemets et les espaces par des tirets dans la colonne "nom_usuel"
     df["nom_usuel"] = df["nom_usuel"].str.replace('"', '').str.replace(' ', '-')
-    # Write information file on extracted carposts
+    # Write information file needed to build the blacklist, compute the masks and update METADATA.xml
     df.to_csv('carposts_info.csv', sep=' ', header=True, index=False)
     # Write carposts
     make_carposts(df)
