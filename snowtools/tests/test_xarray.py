@@ -258,6 +258,21 @@ class Test_distributed_accessor(unittest.TestCase):
         cls.ds_2D.close()
 
 
+@unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "DEM.nc",)),
+                 "input file not available")
+class Test_compute_slope_and_aspect(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # fichier au nouveau format de la chaîne
+        path_dem = os.path.join(TESTBASE_DIR, "DEM.nc")
+        cls.dem = xr.open_dataset(path_dem, engine='snowtools')
+
+    def test_compute_slope_and_aspect(self):
+        out = self.dem.distributed.add_slope_and_aspect()
+        self.assertTrue(set(['aspect', 'slope']).issubset(list(out.keys())))
+
+
 @unittest.skipIf(SKIP_ARRAY_BACKEND, 'Snowtools backend not available')
 @unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
                                                  'old_PRO_20180807032000_002400.nc')),

@@ -556,17 +556,17 @@ class DistributedAccessor(SnowtoolsAccessor):
             ds.distributed.sel_stations(df.lons.values, df.lats.values, station_numbers=df.num_poste.values)
 
         :param lons: List of longitudes of the points to be extracted
-        :param lons: array_like
+        :typ lons: array_like
         :param lats: List of latitudes of the points to be extracted
-        :param lats: array_like
+        :type lats: array_like
         :param station_numbers: List of station numbers to use as new coordinate
-        :param station_numbers: array_like
+        :type station_numbers: array_like
         :param x_dim: Name of the 'X' dimension in the dataset
-        :param x_dim: str
+        :type x_dim: str
         :param y_dim: Name of the 'Y' dimension in the dataset
-        :param y_dim: str
+        :type y_dim: str
         :param method: Method to use for inexact matches (see xarray 'sel' method)
-        :param method: str
+        :type method: str
 
         """
 
@@ -582,6 +582,110 @@ class DistributedAccessor(SnowtoolsAccessor):
             out['station'] = station_numbers
 
         return out
+
+    def add_slope_and_aspect(self, varname='ZS', x_dim='xx', y_dim='yy', aspect_classes=False):
+        """
+        Add 'slope' and 'aspect' variables to dataset.
+        Usage example (compute slope and aspect of the reference 'GrandesRousses250m' DEM):
+
+        .. code-block:: python
+
+            import vortex
+            from snowtools.utils import xarray_snowtools
+
+            vortex.input(
+                kind       = 'relief',
+                filename   = 'TARGET_RELIEF.nc',
+                gvar       = 'RELIEF_GRANDESROUSSES250M_L93',
+                genv       = "uenv:dem.2@vernaym",
+                geometry   = 'GrandesRousses250m',
+            )
+
+            dem = xr.open_dataset('TARGET_RELIEF.nc', engine='snowtools')
+            # Compute slope and aspect
+            dem = dem.distributed.add_slope_and_aspect(varname=elevation_varname)
+
+        :param varname: Name of the variable containing the elevation information
+        :type varname: str
+        :param x_dim: Name of the dimension describing the 'x' coordinates in the input dataset / dataarray
+        :type x_dim: str
+        :param y_dim: Name of the dimension describing the 'y' coordinates in the input dataset / dataarray
+        :type y_dim: str
+        :param aspect_classes: Group computed aspects into the 8 main aspect classes (N, NE, E, SE, S, SW, W, NW)
+        :type aspect_classes: bool
+        """
+
+        if isinstance(self.ds, xr.Dataset):
+            if varname not in list(self.ds.keys()):
+                raise ValueError(f"Variable {varname} not in Dataset")
+            else:
+                dem = self.ds[varname]
+        else:
+            dem = self.ds.to_dataset()
+
+        # Spatial derivatives
+        dz_x = dem.differentiate(x_dim)
+        dz_y = dem.differentiate(y_dim)
+
+        # Compute slope and aspect
+        slope_rad = np.arctan(np.sqrt(dz_x**2 + dz_y**2))
+        slope_deg = slope_rad * (180 / np.pi)
+
+        aspect_rad = np.arctan2(-dz_y, dz_x)
+        aspect_deg = (90 - np.degrees(aspect_rad)) % 360
+
+        # Security : remove missing values if necessary
+        slope_deg = slope_deg.where(dem.notnull())
+        aspect_deg = aspect_deg.where(dem.notnull())
+
+        # Add slope and aspect to initial dataset
+        self.ds['slope'] = slope_deg
+        self.ds['slope'].attrs['long_name'] = "Slope"
+        self.ds['slope'].attrs['unit'] = '°'
+        self.ds['aspect'] = aspect_deg
+        self.ds['aspect'].attrs['long_name'] = "Aspect"
+        self.ds['aspect'].attrs['unit'] = "degrees from North"
+
+        if aspect_classes:
+            # Class aspect values into 8 discrete classes
+
+            # bins = [0, 22.5, 67.5, 112.5, 157.5, 202.5, 247.5, 292.5, 337.5, 360]
+            bins = [0, 45, 90, 135, 180, 225, 270, 315]
+            labels = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
+            # aspect_map = {0: 'N', 45: 'NE', 90: 'E', 135: 'SE', 180: 'S', 225: 'SW', 270: 'W', 315: 'NW'}
+            # aspect_values = aspect_map.keys()
+            # aspect_labels = aspect_map.values()
+
+            def classify_aspect(aspect_array):
+                indices = np.zeros_like(aspect_array, dtype=int)
+
+                # Specific processing for the North class
+                mask_N = (aspect_array >= 337.5) | (aspect_array <= 22.5)
+                indices[mask_N] = 0
+
+                # Other classes
+                for idx, aspect in enumerate(bins[1:]):
+                    lower = aspect - 22.5
+                    upper = aspect + 22.5
+                    mask = (aspect_array > lower) & (aspect_array <= upper)
+                    indices[mask] = idx + 1
+
+                return np.array(bins)[indices]
+
+            aspect_class = xr.apply_ufunc(
+                classify_aspect,
+                aspect_deg,
+                input_core_dims=[['yy', 'xx']],
+                output_core_dims=[['yy', 'xx']],
+                vectorize=True,
+                dask='parallelized'
+            )
+            self.ds['aspect_class'] = aspect_class
+            self.ds['aspect_class'].attrs['long_name'] = "Aspect"
+            self.ds['aspect_class'].attrs['unit'] = ""
+            self.ds['aspect_class'].attrs['labels'] = dict(zip(bins, labels))
+
+        return self.ds
 
     def plot_ensemble(self, variable=None, vmin=None, vmax=None, cmap=None, dem=None, isolevels=None,
                       members: Union[str, int] = 'all', projection=None):
