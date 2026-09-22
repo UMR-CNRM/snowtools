@@ -246,9 +246,12 @@ def set_time_info(description, **kw):
             if datevalidity is None:
                 raise ValueError("A *datevalidity* attribute must be provided to extract PREP files")
             else:
-                filename = '[kind]_[datevalidity:ymdh].nc'
+                if 'local' not in description.keys():
+                    filename = '[kind]_[datevalidity:ymdh].nc'
+                else:
+                    filename = description['local']
                 description.update(dict(
-                    datevalidity = kw.datevalidity,
+                    datevalidity = datevalidity,
                     local = filename,
                 ))
         else:
@@ -258,7 +261,10 @@ def set_time_info(description, **kw):
                 list_dates_begin, list_dates_end, _, _ = \
                     get_list_dates_files(Date(datebegin), Date(dateend), description.pop('duration', 'full'))
                 dict_dates_end = get_dic_dateend(list_dates_begin, list_dates_end)
-                filename = '[kind]_[datebegin:ymdh]_[dateend:ymdh].nc'
+                if 'local' not in description.keys():
+                    filename = '[kind]_[datebegin:ymdh]_[dateend:ymdh].nc'
+                else:
+                    filename = description['local']
                 description.update(dict(
                     datebegin = list_dates_begin,
                     dateend   = dict_dates_end,
