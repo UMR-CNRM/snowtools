@@ -22,7 +22,6 @@ import cartopy.crs as ccrs
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from matplotlib import ticker
 
 import snowtools  # noqa
 
@@ -100,8 +99,7 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=None, addpoint=None, a
         norm = None
 
     # Plot Nan values in grey
-    if cmap is not None:
-        cmap.set_bad('grey', 1)
+    cmap.set_bad('grey', 1)
 
     if dem is None:
         dem = get_dem()
@@ -132,18 +130,8 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=None, addpoint=None, a
     # The workaround is to use "contourf" instead.
     # WARNING : this can "hide" some varibility in *field*
     if alpha < 1:
-        nlevels = categories if categories is not None else 50
-        cml = ax.contourf(
-            field.xx, field.yy, field.data,
-            levels      = np.linspace(vmin, vmax, nlevels),
-            cmap        = cmap,
-            vmin        = vmin,
-            vmax        = vmax,
-            alpha       = alpha,  # Transparency
-            # Try to remove lines :
-            antialiased = True,
-        )
-        plt.colorbar(cml, ticks=ticker.MaxNLocator(6))
+        cml = field.plot.contourf(ax=ax, cmap=cmap, norm=norm, levels=categories,
+                vmin=vmin, vmax=vmax, alpha=alpha, add_colorbar=add_colorbar)
         # Rasterize to reduce figure size
         for c in cml.collections:
             c.set_rasterized(True)
