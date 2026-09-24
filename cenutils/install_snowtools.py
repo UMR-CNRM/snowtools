@@ -118,7 +118,7 @@ if '-sidev' in HOSTNAME:
     pip_options = ['--trusted-host', 'pypi.org', '--trusted-host', 'pypi.python.org', '--trusted-host',
             'files.pythonhosted.org']
 elif 'hpc' in HOSTNAME:
-    pip_options = ['--find-links', '/home/verolive/wheels']
+    pip_options = ['--find-links', '/home/mf/dp/marp/verolive/public/wheelhouse/']
 else:
     pip_options = list()
 

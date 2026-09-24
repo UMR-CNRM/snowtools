@@ -6,7 +6,18 @@ The s2m "oper" configuration
 Operational SAFRAN-SURFEX/Crocus-MEPRA (S2M) model chain.
 The actual alp, pyr, cor, mac, vog, jur operational configurations derive from the "oper" configuration :
 * "oper" contains the drivers (common to all domains) and "prepsafran" jobs (common to all domains)
-* [alp|pyr|cor|mac|vog|jur] contains the domain-specific jobs and configuration files
+* [alp|pyr|cor|mac|vog|jur|postes] contains the domain-specific jobs and configuration files
+
+The file "env_s2m_oper.txt" allows to reproduce the latest operational environment.
+This environment was obtained by installing first a local clone of the packages distributed on Nexus (mkjob, vortex-gco and vortex-olive).
+The snowtools was installed with:
+
+.. code-block::
+
+    pip install snowtools[hpc]==3.0.0b0
+
+
+The file "cron.txt" can directly be install as crontab to operate a real-time s2m chain.
 
 
 Workflow :
