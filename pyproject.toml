@@ -62,11 +62,7 @@ plot = [
 ]
 
 scores = [
-    'snowtools-crps@git+https://github.com/UMR-CNRM/snowtools-crps.git',
-]
-
-vortex = [
-    'vortex-nwp@git+https://github.com/UMR-CNRM/vortex.git@e5a166f83c2f75d71f9cbf41c6acfa961f1f59f8',  # A remplacer par 'vortex-nwp' dès que possible avec versionnement > 2.4.1
+#    'snowtools-crps@git+https://github.com/UMR-CNRM/snowtools-crps.git',
 ]
 
 hpc = [
@@ -79,7 +75,7 @@ hpc = [
 
 doc = [
     'sphinx>=4.3',
-    'sphinx-fortran@git+https://github.com/VACUMM/sphinx-fortran.git',
+#    'sphinx-fortran@git+https://github.com/VACUMM/sphinx-fortran.git',
     'sphinx-toolbox',
     'graphviz',
     'mkjob',
@@ -93,7 +89,7 @@ all = [
     'matplotlib',
     'cartopy',
     'rioxarray',
-    'snowtools-crps@git+https://github.com/UMR-CNRM/snowtools-crps.git',
+#    'snowtools-crps@git+https://github.com/UMR-CNRM/snowtools-crps.git',
 ]
 allmf = [
     'vortex-nwp>=2.4.2',
@@ -102,9 +98,9 @@ allmf = [
     'matplotlib',
     'cartopy',
     'rioxarray',
-    'snowtools-crps@git+https://github.com/UMR-CNRM/snowtools-crps.git',
+#    'snowtools-crps@git+https://github.com/UMR-CNRM/snowtools-crps.git',
     'sphinx>=4.3',
-    'sphinx-fortran@git+https://github.com/VACUMM/sphinx-fortran.git',
+#    'sphinx-fortran@git+https://github.com/VACUMM/sphinx-fortran.git',
     'sphinx-toolbox',
     'graphviz',
     'mkjob',

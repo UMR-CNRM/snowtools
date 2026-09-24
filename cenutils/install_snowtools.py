@@ -153,13 +153,13 @@ if os.path.isdir('.git'):
 elif os.path.exists('.git_info'):
     shutil.copyfile('.git_info', os.path.join(venv, '.snowtools_info'))
 
-# TEMPORARY step to install dev versions of mkjob, vortex-gco and vortex-olive on HPC while the access to nexus in
-# blocked
-#if 'hpc' in HOSTNAME:
-#    install_dir = "/home/cnrm_other/cen/mrns/vernaym/Projects/common"
-#    for package in ["mkjob", "vortex-gco", "vortex-olive"]:
-#        target = os.path.join(install_dir, package)
-#        subprocess.run([pip, 'install', target], check=True)
+if args.optional in ['scores', 'allmf']:
+    crps = 'snowtools-crps@git+https://github.com/UMR-CNRM/snowtools-crps.git'
+    subprocess.run([pip, 'install', crps])
+
+if args.optional in ['doc', 'allmf']:
+    sphinx_fortran = 'sphinx-fortran@git+https://github.com/VACUMM/sphinx-fortran.git'
+    subprocess.run([pip, 'install', sphinx_fortran])
 
 # Configure Vortex
 vortex_config = os.path.join(os.environ['HOME'], '.vortex.d', 'vortex.toml')
