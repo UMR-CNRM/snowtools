@@ -89,7 +89,7 @@ all = [
     'matplotlib',
     'cartopy',
     'rioxarray',
-#    'snowtools-crps@git+https://github.com/UMR-CNRM/snowtools-crps.git',
+    'snowtools-crps',
 ]
 allmf = [
     'vortex-nwp>=2.4.2',
@@ -98,7 +98,7 @@ allmf = [
     'matplotlib',
     'cartopy',
     'rioxarray',
-#    'snowtools-crps@git+https://github.com/UMR-CNRM/snowtools-crps.git',
+    'snowtools-crps',
     'sphinx>=4.3',
 #    'sphinx-fortran@git+https://github.com/VACUMM/sphinx-fortran.git',
     'sphinx-toolbox',

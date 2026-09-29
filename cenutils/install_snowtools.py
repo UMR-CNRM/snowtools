@@ -153,10 +153,6 @@ if os.path.isdir('.git'):
 elif os.path.exists('.git_info'):
     shutil.copyfile('.git_info', os.path.join(venv, '.snowtools_info'))
 
-if args.optional in ['scores', 'allmf']:
-    crps = 'snowtools-crps@git+https://github.com/UMR-CNRM/snowtools-crps.git'
-    subprocess.run([pip, 'install', crps])
-
 if args.optional in ['doc', 'allmf']:
     sphinx_fortran = 'sphinx-fortran@git+https://github.com/VACUMM/sphinx-fortran.git'
     subprocess.run([pip, 'install', sphinx_fortran])
