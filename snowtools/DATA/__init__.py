@@ -42,6 +42,9 @@ LUSTRE_NOSAVE_DIR = '/cnrm/mrns/users/NO_SAVE'
 INTERPOL_BIN_CEN = '/rd/cenfic3/cenmod/home/lafaysse/common/interpolation/interpol'
 """Common binary for interpolation (at CEN only)"""
 
+AT_CEN = os.path.isdir('/rd/cenfic3/cenmod/home/viallonl/testbase')
+"""A variable to guess if we are on wired network at CEN"""
+
 try:
     LUSTRE_NOSAVE_USER_DIR = os.path.join('/cnrm/mrns/users/NO_SAVE', os.getlogin())
 except OSError:

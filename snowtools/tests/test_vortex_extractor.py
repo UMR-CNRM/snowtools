@@ -3,17 +3,25 @@
 import unittest
 import os
 import shlex
+import sys
 import subprocess
 
 from snowtools.utils import xarray_snowtools  # noqa: F401
-from snowtools.DATA import SNOWTOOLS_CEN
+from snowtools.DATA import SNOWTOOLS_CEN, AT_CEN
+
+# Run only at CEN, if vortex have been installed on the machine
+if AT_CEN and os.path.isfile(os.path.expanduser('~/.vortex.d/vortex.toml')) and os.path.isfile(os.path.expanduser('~/.netrc')):
+    SKIP = False
+else:
+    SKIP = True
 
 
+@unittest.skipIf(SKIP, 'This test is only available at CEN')
 class Test_vortex_extractor(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        self.basecmd = f'python {SNOWTOOLS_CEN}/vortex_cen/scripts/get_simulation_output.py --checkonly'
+        self.basecmd = f'{sys.executable} {SNOWTOOLS_CEN}/vortex_cen/scripts/get_simulation_output.py --checkonly'
         self.s2m_reanalysis_conf = 'S2MReanalysis.ini'
         self.test_no_section_conf = os.path.join(SNOWTOOLS_CEN, 'snowtools', 'tests', 'conf',
                 'vortex_extractor_no_section.ini')
