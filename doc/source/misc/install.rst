@@ -104,7 +104,19 @@ Prerequisites on Meteo-France computers
 
 - On HPC you first have to set the correct python version and compiler to use by running : ``module load python/3.12.12 gcc/15.2.0`` (``module load python/3.10.12 gcc/15.2.0`` on taranis)
 - On all Meteo-Frace machines, if you intend to deal with data stored on Meteo-France archive (hendrix), you will have to configure connecton creedentials as explained on page :ref:`vortex-file-transfer`.
-- You have to configure pip to have an access to the internal repository (nexus) that allow to get internal packages such as ``vortex-gco``. To do so, add the following lines to ``~/.config/pip/pip.conf``:
+- You have to configure pip to have an access to the internal repository (nexus) that allow to get internal packages such as ``vortex-gco``. To do so, add the following lines to ``~/.config/pip/pip.conf``
+
+* On MF HPC:
+
+.. code-block:: ini
+
+    [global]
+    index = http://ada2-sihpc.meteo.fr/repository/pypi-proxy/pypi
+    index-url = http://ada2-sihpc.meteo.fr/repository/pypi-proxy/simple
+    extra-index-url = http://ada2-sihpc.meteo.fr/repository/pypi-vortex-releases/simple
+    trusted-host = ada2-sihpc.meteo.fr
+
+* On other servers:
 
 .. code-block:: ini
 
@@ -112,8 +124,6 @@ Prerequisites on Meteo-France computers
     index = https://nexus-sidev.meteo.fr/repository/pypi-group/pypi
     index-url = https://nexus-sidev.meteo.fr/repository/pypi-group/simple
     extra-index-url = https://nexus.meteo.fr/pypi-vortex-releases/simple
-
-Note that this is not required on HPC because the access to Nexus from HPC is currently blocked.
 
 
 Installation

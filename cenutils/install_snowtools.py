@@ -117,8 +117,8 @@ if '-sidev' in HOSTNAME:
     # On SOPRANO servers, the following pip arguments are required to enable the connexion to PyPI
     pip_options = ['--trusted-host', 'pypi.org', '--trusted-host', 'pypi.python.org', '--trusted-host',
             'files.pythonhosted.org']
-elif 'hpc' in HOSTNAME:
-    pip_options = ['--find-links', '/home/mf/dp/marp/verolive/public/wheelhouse/']
+#elif 'hpc' in HOSTNAME:
+#    pip_options = ['--find-links', '/home/mf/dp/marp/verolive/public/wheelhouse/']
 else:
     pip_options = list()
 
