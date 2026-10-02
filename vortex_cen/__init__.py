@@ -12,4 +12,4 @@ __all__ = []
 
 __tocinfoline__ = "The DESR/CNRM/CEN VORTEX VORTEX extension"
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
