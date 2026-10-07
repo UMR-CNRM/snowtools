@@ -258,11 +258,20 @@ def set_time_info(description, **kw):
             datebegin = kw.get('datebegin', None) or description.get('datebegin', None)
             dateend = kw.get('dateend', None) or description.get('dateend', None)
             if datebegin is not None and dateend is not None:
-                list_dates_begin, list_dates_end, _, _ = \
-                    get_list_dates_files(Date(datebegin), Date(dateend), description.pop('duration', 'full'))
-                dict_dates_end = get_dic_dateend(list_dates_begin, list_dates_end)
+                if description.pop('duration', 'full') == 'full':
+                    # In case of files covering a "full" period, the *datebegin* / *dateend*
+                    # footprints should be exactly the ones provided by the user
+                    list_dates_begin = datebegin
+                    dict_dates_end = dateend
+                else:
+                    # In case of files with standard durations, the exact list of datebegin / dateend is
+                    # automatically computed.
+                    list_dates_begin, list_dates_end, _, _ = \
+                        get_list_dates_files(Date(datebegin), Date(dateend), description.pop('duration', 'yearly'))
+                    dict_dates_end = get_dic_dateend(list_dates_begin, list_dates_end)
                 if 'local' not in description.keys():
-                    filename = '[kind]_[datebegin:ymdh]_[dateend:ymdh].nc'
+                    # By default, the local file name contains the geometry and period information to avoid overwrites
+                    filename = '[kind]_[geometry:tag]_[datebegin:ymdh]_[dateend:ymdh].nc'
                 else:
                     filename = description['local']
                 description.update(dict(
