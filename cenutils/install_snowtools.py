@@ -173,6 +173,8 @@ if not os.path.exists(vortex_config):
         target_config = 'vortex_taranis.toml'
     elif 'sxcen' in HOSTNAME:
         target_config = 'vortex_sxcen.toml'
+    elif 'sidev' in HOSTNAME:
+        target_config = 'vortex_soprano.toml'
     else:
         target_config = 'vortex_pc.toml'
     os.symlink(os.path.join(config_path, target_config), vortex_config)
