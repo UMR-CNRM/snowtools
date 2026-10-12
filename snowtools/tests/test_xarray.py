@@ -271,6 +271,10 @@ class Test_compute_slope_and_aspect(unittest.TestCase):
     def test_compute_slope_and_aspect(self):
         out = self.dem.distributed.add_slope_and_aspect()
         self.assertTrue(set(['aspect', 'slope']).issubset(list(out.keys())))
+        diff_aspect = out.aspect - out.aspect_ref
+        self.assertTrue(bool(diff_aspect.max() < 0.001))
+        diff_slope = out.slope - out.slope_ref
+        self.assertTrue(bool(diff_slope.max() < 0.001))
 
 
 @unittest.skipIf(SKIP_ARRAY_BACKEND, 'Snowtools backend not available')

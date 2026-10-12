@@ -585,7 +585,9 @@ class DistributedAccessor(SnowtoolsAccessor):
 
     def add_slope_and_aspect(self, varname='ZS', x_dim='xx', y_dim='yy', aspect_classes=False):
         """
-        Add 'slope' and 'aspect' variables to dataset.
+        Compute and 'slope' and 'aspect' variables from a DEM according to the Zevenbergen and Thorne (1987)
+        algorithm, and add these variables to the input dataset.
+
         Usage example (compute slope and aspect of the reference 'GrandesRousses250m' DEM):
 
         .. code-block:: python
@@ -603,7 +605,7 @@ class DistributedAccessor(SnowtoolsAccessor):
 
             dem = xr.open_dataset('TARGET_RELIEF.nc', engine='snowtools')
             # Compute slope and aspect
-            dem = dem.distributed.add_slope_and_aspect(varname=elevation_varname)
+            dem = dem.distributed.add_slope_and_aspect(varname='elevation')
 
         :param varname: Name of the variable containing the elevation information
         :type varname: str
@@ -618,33 +620,77 @@ class DistributedAccessor(SnowtoolsAccessor):
         if isinstance(self.ds, xr.Dataset):
             if varname not in list(self.ds.keys()):
                 raise ValueError(f"Variable {varname} not in Dataset")
-            else:
-                dem = self.ds[varname]
         else:
-            dem = self.ds.to_dataset()
+            self.ds = self.ds.rename(varname).to_dataset()
 
-        # Spatial derivatives
-        dz_x = dem.differentiate(x_dim)
-        dz_y = dem.differentiate(y_dim)
+        dem = self.ds[varname]
 
-        # Compute slope and aspect
-        slope_rad = np.arctan(np.sqrt(dz_x**2 + dz_y**2))
-        slope_deg = slope_rad * (180 / np.pi)
+        # Extract dem values as numpy array and compute reolution (assuming regular grid)
+        z = dem.values.astype(float)
+        resolution_x = dem[x_dim].data[1] - dem[x_dim].data[0]
+        resolution_y = dem[y_dim].data[1] - dem[y_dim].data[0]
 
-        aspect_rad = np.arctan2(-dz_y, dz_x)
-        aspect_deg = (90 - np.degrees(aspect_rad)) % 360
+        # Initialisation of output arrays
+        rows, cols = z.shape
+        dz_dx = np.zeros_like(z)
+        dz_dy = np.zeros_like(z)
 
-        # Security : remove missing values if necessary
-        slope_deg = slope_deg.where(dem.notnull())
-        aspect_deg = aspect_deg.where(dem.notnull())
+        # For each pixel, a 3x3 grid centered on the target pixel is used to compute partial spatial derivatives
+        # according according to the Zevenbergen & Thorne (1987) algorithm
+        for i in range(1, rows - 1):
+            for j in range(1, cols - 1):
+                dz_dx[i, j] = (z[i, j + 1] - z[i, j - 1]) / (2 * resolution_x)
+                dz_dy[i, j] = (z[i + 1, j] - z[i - 1, j]) / (2 * resolution_y)
+
+        # Compute slope (in degrees)
+        slope = np.arctan(np.sqrt(dz_dx**2 + dz_dy**2)) * (180 / np.pi)
+
+        # Compute aspect (in degrees)
+        aspect = np.arctan2(-dz_dx, -dz_dy) * (180 / np.pi)  # convention 0° = Nord
+        # convert in interval [0, 359[
+        aspect = np.where(aspect < 0, aspect + 360, aspect)
+        aspect = np.where(aspect == 360, 0, aspect)
+
+        # Mask border pixels where the spatial derivatives can not be computed
+        slope[0, :] = np.nan
+        slope[-1, :] = np.nan
+        slope[:, 0] = np.nan
+        slope[:, -1] = np.nan
+
+        aspect[0, :] = np.nan
+        aspect[-1, :] = np.nan
+        aspect[:, 0] = np.nan
+        aspect[:, -1] = np.nan
+
+        # Create xarray DataArrays for slope and aspect
+        slope_da = xr.DataArray(
+            slope,
+            dims=("yy", "xx"),
+            coords={"yy": dem.yy, "xx": dem.xx},
+            attrs={
+                'unit': 'degrees',
+                "long_name": "slope angle",
+                'description': 'Slope computed according to the "Zevenbergen and Thorne" algorithm',
+                'algorithm': 'Zevenbergen & Thorne (1987)'
+            }
+        )
+
+        aspect_da = xr.DataArray(
+            aspect,
+            dims=("yy", "xx"),
+            coords={"yy": dem.yy, "xx": dem.xx},
+            attrs={
+                'units': 'degrees',
+                "long_name": "aspect angle",
+                'description': 'Aspect computed according to the "Zevenbergen and Thorne" algorithm',
+                'algorithm': 'Zevenbergen & Thorne (1987)',
+                'convention': '0=N, 90=E, 180=S, 270=W'
+            }
+        )
 
         # Add slope and aspect to initial dataset
-        self.ds['slope'] = slope_deg
-        self.ds['slope'].attrs['long_name'] = "Slope"
-        self.ds['slope'].attrs['unit'] = '°'
-        self.ds['aspect'] = aspect_deg
-        self.ds['aspect'].attrs['long_name'] = "Aspect"
-        self.ds['aspect'].attrs['unit'] = "degrees from North"
+        self.ds['slope'] = slope_da
+        self.ds['aspect'] = aspect_da
 
         if aspect_classes:
             # Class aspect values into 8 discrete classes
@@ -652,9 +698,6 @@ class DistributedAccessor(SnowtoolsAccessor):
             # bins = [0, 22.5, 67.5, 112.5, 157.5, 202.5, 247.5, 292.5, 337.5, 360]
             bins = [0, 45, 90, 135, 180, 225, 270, 315]
             labels = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
-            # aspect_map = {0: 'N', 45: 'NE', 90: 'E', 135: 'SE', 180: 'S', 225: 'SW', 270: 'W', 315: 'NW'}
-            # aspect_values = aspect_map.keys()
-            # aspect_labels = aspect_map.values()
 
             def classify_aspect(aspect_array):
                 indices = np.zeros_like(aspect_array, dtype=int)
@@ -674,7 +717,7 @@ class DistributedAccessor(SnowtoolsAccessor):
 
             aspect_class = xr.apply_ufunc(
                 classify_aspect,
-                aspect_deg,
+                aspect,
                 input_core_dims=[['yy', 'xx']],
                 output_core_dims=[['yy', 'xx']],
                 vectorize=True,
