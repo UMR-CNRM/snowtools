@@ -556,17 +556,17 @@ class DistributedAccessor(SnowtoolsAccessor):
             ds.distributed.sel_stations(df.lons.values, df.lats.values, station_numbers=df.num_poste.values)
 
         :param lons: List of longitudes of the points to be extracted
-        :param lons: array_like
+        :typ lons: array_like
         :param lats: List of latitudes of the points to be extracted
-        :param lats: array_like
+        :type lats: array_like
         :param station_numbers: List of station numbers to use as new coordinate
-        :param station_numbers: array_like
+        :type station_numbers: array_like
         :param x_dim: Name of the 'X' dimension in the dataset
-        :param x_dim: str
+        :type x_dim: str
         :param y_dim: Name of the 'Y' dimension in the dataset
-        :param y_dim: str
+        :type y_dim: str
         :param method: Method to use for inexact matches (see xarray 'sel' method)
-        :param method: str
+        :type method: str
 
         """
 
@@ -582,6 +582,153 @@ class DistributedAccessor(SnowtoolsAccessor):
             out['station'] = station_numbers
 
         return out
+
+    def add_slope_and_aspect(self, varname='ZS', x_dim='xx', y_dim='yy', aspect_classes=False):
+        """
+        Compute and 'slope' and 'aspect' variables from a DEM according to the Zevenbergen and Thorne (1987)
+        algorithm, and add these variables to the input dataset.
+
+        Usage example (compute slope and aspect of the reference 'GrandesRousses250m' DEM):
+
+        .. code-block:: python
+
+            import vortex
+            from snowtools.utils import xarray_snowtools
+
+            vortex.input(
+                kind       = 'relief',
+                filename   = 'TARGET_RELIEF.nc',
+                gvar       = 'RELIEF_GRANDESROUSSES250M_L93',
+                genv       = "uenv:dem.2@vernaym",
+                geometry   = 'GrandesRousses250m',
+            )
+
+            dem = xr.open_dataset('TARGET_RELIEF.nc', engine='snowtools')
+            # Compute slope and aspect
+            dem = dem.distributed.add_slope_and_aspect(varname='elevation')
+
+        :param varname: Name of the variable containing the elevation information
+        :type varname: str
+        :param x_dim: Name of the dimension describing the 'x' coordinates in the input dataset / dataarray
+        :type x_dim: str
+        :param y_dim: Name of the dimension describing the 'y' coordinates in the input dataset / dataarray
+        :type y_dim: str
+        :param aspect_classes: Group computed aspects into the 8 main aspect classes (N, NE, E, SE, S, SW, W, NW)
+        :type aspect_classes: bool
+        """
+
+        if isinstance(self.ds, xr.Dataset):
+            if varname not in list(self.ds.keys()):
+                raise ValueError(f"Variable {varname} not in Dataset")
+        else:
+            self.ds = self.ds.rename(varname).to_dataset()
+
+        dem = self.ds[varname]
+
+        # Extract dem values as numpy array and compute reolution (assuming regular grid)
+        z = dem.values.astype(float)
+        resolution_x = dem[x_dim].data[1] - dem[x_dim].data[0]
+        resolution_y = dem[y_dim].data[1] - dem[y_dim].data[0]
+
+        # Initialisation of output arrays
+        rows, cols = z.shape
+        dz_dx = np.zeros_like(z)
+        dz_dy = np.zeros_like(z)
+
+        # For each pixel, a 3x3 grid centered on the target pixel is used to compute partial spatial derivatives
+        # according according to the Zevenbergen & Thorne (1987) algorithm
+        for i in range(1, rows - 1):
+            for j in range(1, cols - 1):
+                dz_dx[i, j] = (z[i, j + 1] - z[i, j - 1]) / (2 * resolution_x)
+                dz_dy[i, j] = (z[i + 1, j] - z[i - 1, j]) / (2 * resolution_y)
+
+        # Compute slope (in degrees)
+        slope = np.arctan(np.sqrt(dz_dx**2 + dz_dy**2)) * (180 / np.pi)
+
+        # Compute aspect (in degrees)
+        aspect = np.arctan2(-dz_dx, -dz_dy) * (180 / np.pi)  # convention 0° = Nord
+        # convert in interval [0, 359[
+        aspect = np.where(aspect < 0, aspect + 360, aspect)
+        aspect = np.where(aspect == 360, 0, aspect)
+
+        # Mask border pixels where the spatial derivatives can not be computed
+        slope[0, :] = np.nan
+        slope[-1, :] = np.nan
+        slope[:, 0] = np.nan
+        slope[:, -1] = np.nan
+
+        aspect[0, :] = np.nan
+        aspect[-1, :] = np.nan
+        aspect[:, 0] = np.nan
+        aspect[:, -1] = np.nan
+
+        # Create xarray DataArrays for slope and aspect
+        slope_da = xr.DataArray(
+            slope,
+            dims=("yy", "xx"),
+            coords={"yy": dem.yy, "xx": dem.xx},
+            attrs={
+                'unit': 'degrees',
+                "long_name": "slope angle",
+                'description': 'Slope computed according to the "Zevenbergen and Thorne" algorithm',
+                'algorithm': 'Zevenbergen & Thorne (1987)'
+            }
+        )
+
+        aspect_da = xr.DataArray(
+            aspect,
+            dims=("yy", "xx"),
+            coords={"yy": dem.yy, "xx": dem.xx},
+            attrs={
+                'units': 'degrees',
+                "long_name": "aspect angle",
+                'description': 'Aspect computed according to the "Zevenbergen and Thorne" algorithm',
+                'algorithm': 'Zevenbergen & Thorne (1987)',
+                'convention': '0=N, 90=E, 180=S, 270=W'
+            }
+        )
+
+        # Add slope and aspect to initial dataset
+        self.ds['slope'] = slope_da
+        self.ds['aspect'] = aspect_da
+
+        if aspect_classes:
+            # Class aspect values into 8 discrete classes
+
+            # bins = [0, 22.5, 67.5, 112.5, 157.5, 202.5, 247.5, 292.5, 337.5, 360]
+            bins = [0, 45, 90, 135, 180, 225, 270, 315]
+            labels = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
+
+            def classify_aspect(aspect_array):
+                indices = np.zeros_like(aspect_array, dtype=int)
+
+                # Specific processing for the North class
+                mask_N = (aspect_array >= 337.5) | (aspect_array <= 22.5)
+                indices[mask_N] = 0
+
+                # Other classes
+                for idx, aspect in enumerate(bins[1:]):
+                    lower = aspect - 22.5
+                    upper = aspect + 22.5
+                    mask = (aspect_array > lower) & (aspect_array <= upper)
+                    indices[mask] = idx + 1
+
+                return np.array(bins)[indices]
+
+            aspect_class = xr.apply_ufunc(
+                classify_aspect,
+                aspect,
+                input_core_dims=[['yy', 'xx']],
+                output_core_dims=[['yy', 'xx']],
+                vectorize=True,
+                dask='parallelized'
+            )
+            self.ds['aspect_class'] = aspect_class
+            self.ds['aspect_class'].attrs['long_name'] = "Aspect"
+            self.ds['aspect_class'].attrs['unit'] = ""
+            self.ds['aspect_class'].attrs['labels'] = dict(zip(bins, labels))
+
+        return self.ds
 
     def plot_ensemble(self, variable=None, vmin=None, vmax=None, cmap=None, dem=None, isolevels=None,
                       members: Union[str, int] = 'all', projection=None):

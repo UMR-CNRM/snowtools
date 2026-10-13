@@ -72,10 +72,20 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=None, addpoint=None, a
         else:
             fig, ax = plt.subplots(figsize=(12 * len(field.xx) / len(field.yy), 10))
 
-    if cmap is None and field.name in know_cmaps.keys():
+    if cmap is None:
+        cmap = plt.cm.viridis
+    elif field.name in know_cmaps.keys():
         cmap = know_cmaps[field.name]
     elif isinstance(cmap, str):
         cmap = matplotlib.colormaps[cmap]
+    else:
+        cmap = cmap
+
+    # Set default vmin/vmax values from field if necessary
+    if vmax is None:
+        vmax = np.max(np.abs(field))
+    if vmin is None:
+        vmin = -vmax
 
     if categories is not None:
         cmaplist = [cmap(i) for i in range(cmap.N)]
@@ -117,16 +127,10 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=None, addpoint=None, a
         lonmax = float(field.xx.max())
         add_cities(ax, latmin, latmax, lonmin, lonmax)
 
-    # Set defailt vmin/vmax values from field if necessary
-    if vmax is None:
-        vmax = np.max(np.abs(field))
-    if vmin is None:
-        vmin = -vmax
-
     # Plot field
-    # If alpha < 1, the overlaping pixels look like grid lines that
+    # If alpha < 1, the overlaping pixels look like grid lines
     # The workaround is to use "contourf" instead.
-    # WARNING : this can "hide" some varibility in *filed*
+    # WARNING : this can "hide" some varibility in *field*
     if alpha < 1:
         nlevels = categories if categories is not None else 50
         cml = ax.contourf(
