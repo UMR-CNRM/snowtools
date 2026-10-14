@@ -115,11 +115,11 @@ def check_encoding(ds):
     """
     if isinstance(ds, xarray.core.dataarray.Dataset):
         for var in ds.keys():
-            if 'missing_value' in ds[var].encoding.keys():
+            if 'missing_value' in ds[var].encoding.keys() and '_FillValue' in ds[var].encoding.keys():
                 ds[var].encoding['missing_value'] = ds[var].encoding['_FillValue']
 
     elif isinstance(ds, xarray.core.dataarray.DataArray):
-        if 'missing_value' in ds.encoding.keys():
+        if 'missing_value' in ds.encoding.keys() and '_FillValue' in ds.encoding.keys():
             ds.encoding['missing_value'] = ds.encoding['_FillValue']
 
     return ds
