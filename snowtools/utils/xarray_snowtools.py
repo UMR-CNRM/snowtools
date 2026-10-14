@@ -166,12 +166,17 @@ def open_vortex_data(configfile, configsection=None, **kw) -> xr.Dataset:
     if len(listfiles) == 0:
         raise ValueError("No file matching the provided description")
     else:
-        with xr.open_dataset(listfiles, engine='snowtools', **kw) as ds:
-            # yield dataset to caller
-            yield ds
-            # The dataset is automatically closed at exit of `with` statement,
-            # the files can now be deleted
-            for fic in listfiles:
-                vortex.ticket().sh.remove(fic)
-            for subdir in listdir:
-                vortex.ticket().sh.remove(subdir)
+        if not kw.get('checkonly', False):
+            for footprint in ['kind', 'vapp', 'vconf', 'experiment', 'username', 'geometry', 'block',
+                    'member', 'datebegin', 'dateend', 'duration', 'datevalidity', 'checkonly', 'verbose']:
+                if footprint in kw.keys():
+                    kw.pop(footprint)
+            with xr.open_dataset(listfiles, engine='snowtools', **kw) as ds:
+                # yield dataset to caller
+                yield ds
+                # The dataset is automatically closed at exit of `with` statement,
+                # the files can now be deleted
+                for fic in listfiles:
+                    vortex.ticket().sh.remove(fic)
+                for subdir in listdir:
+                    vortex.ticket().sh.remove(subdir)
