@@ -1234,3 +1234,49 @@ Cold Regions Science and Technology, 69(2–3), 139–144. https://doi.org/10.10
 Weissgraeber, P., & Rosendahl, P. L. (2023).
 A closed-form model for layered snow slabs.
 The Cryosphere, 17(4), 1475–1496. https://doi.org/10.5194/tc-17-1475-2023
+
+10-New compactions and metamorphism parameterizations
+--------------------------------------------------------
+
+Basic information
+^^^^^^^^^^^^^^^^^
+
+* **Developer name** : Lisa Bouvet
+* **Status of the development** : [Finished]
+* **Date of start of development** : 10/2025
+* **Date of end of development** : 06/2026
+* **Commit of development** : 4e8eabc
+* **Branches on which the developpment is present** : [cen_dev_lisa_tassement]
+* **Evaluated against SURFEX test database ?** : [No]
+* **New test added to database ?** :  [Yes]
+
+Description of the development
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Addition of a metamorhism option from the development of Vincent Vionnet and Julien Meloche at ECCC (article in prep. Vionnet et al., 2026) adapted from the SSA evolution law of Braun et al. (2026).
+* Addition of three compaction options from the thesis work of Louis Védrine (Védrine and Hagenmuller, 2026, Védrine et al., 2026). 
+
+
+Full Description
+^^^^^^^^^^^^^^^^^
+
+**B25** : Metamorphism option from Braun et al. (2026), adapted by Vincent Vionnet and Julien Meloche (in prep. Vionnet et al., 2026).
+
+**V25** : Snow compaction option from Védrine and Hagenmuller, 2026. Non-linear glenn law with a condition on snow faceting on the value of the exponent n.
+
+**V26** :  V25 with a variable strain rate prefactor depending on the temperature (bi-linear Arrhenius law with two temperature regimes) (see Védrine et al., 2026).
+
+**V27** : V26 with the parameter m variable as a function of the density, cf thesis from L. Vedrine (2026).
+
+
+References
+^^^^^^^^^^
+Braun, A., Fourteau, K., Frei, S., Lehning, M., and Löwe, H.: Toward a physically and microstructure-based equation for the evolution of the specific surface area in snow, Journal of Glaciology, 72, e40, https://doi.org/10.1017/jog.2024.109, 2026.
+
+Védrine, L. and Hagenmuller, P.: Revisiting snow settlement with microstructural knowledge, The Cryosphere, 20, 1257–1277, https://doi.org/10.5194/tc-20-1257-2026, 2026.
+
+Védrine, L., Brun, M., Bozon, M., Laurent, B., and Hagenmuller, P.: Temperature sensitivity of snow viscoplasticity: evidence from controlled creep experiments, EGUsphere, 2026, 1–24, https://doi.org/10.5194/egusphere-2026-2612, 2026.
+
+Vionnet, V., Meloche, J., Fourteau, K., Dumont, M., Calonne, N., Leroux, N., Bouvet, L. and Hachikubo, A.: A physically-based metamorphism scheme for improved specific surface area simulations in snowpack models, in prep., 2026
+
+

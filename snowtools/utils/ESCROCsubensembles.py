@@ -24,10 +24,10 @@ class ESCROC_subensembles(dict):
 
     def __init__(self, subensemble, members, randomDraw = False):
 
-        self.dicoptrad = {"B60": "B92", "B10": "B92", "TAR": "T17", "TA+": "T17", "T17": "T17"}
-        self.dicageing = {"B60": 60., "B10": 10., "B120": 120., "B180": 180., "B240": 240., "TAR": 60., "TA+": 60., "T17": 60.}
-        self.dicimpurdry = {"B60": [0, 0], "B10": [0, 0], "T17": 0, "TAR": [1.E-14, 0], "TA+": [5.E-13, 0]}
-        self.dicimpurwet = {"B60": [0, 0], "B10": [0, 0], "T17": 0, "TAR": [3.5E-14, 0], "TA+": [3.5E-13, 0]}
+        self.dicoptrad = {"B60": "B92", "B650": "B92", "B10": "B92", "TAR": "T17", "TA+": "T17", "T17": "T17"}
+        self.dicageing = {"B60": 60., "B10": 10., "B120": 120., "B180": 180., "B240": 240., "B650": 650.,"TAR": 60., "TA+": 60., "T17": 60.}
+        self.dicimpurdry = {"B60": [0, 0], "B650": [0, 0], "B10": [0, 0], "T17": 0, "TAR": [1.E-14, 0], "TA+": [5.E-13, 0]}
+        self.dicimpurwet = {"B60": [0, 0], "B650": [0, 0], "B10": [0, 0], "T17": 0, "TAR": [3.5E-14, 0], "TA+": [3.5E-13, 0]}
         # In Lafaysse et al, 2017 with TAR option the impurity concentration dry increase rate was 4 ng/g/day
         # = 4E-12/3600 g kg-1 s-1 at the surface with an exponential decrease factor exp(-0.5z/0.05)
         # For a typical first layer of 1 cm and 250 kg/m3 this is equivalent to :
@@ -120,28 +120,55 @@ class ESCROC_subensembles(dict):
         physical_options, snow_parameters, memberslist = self.drawMembers(members, randomDraw)
         return physical_options, snow_parameters, memberslist
 
-    def E1notartes(self, members, randomDraw):
+
+#    def E1notartes(self, members, randomDraw):
+#        """
+#        Quasi duplicate from E1tartes
+#        E1notartes is a duplicate from E1 with T17 replaced by B92#####
+#
+#        .. warning::
+#           member identities will be different from one run to another
+#           the returned models are randomly drawn among E1notartes#
+#
+#        """
+#        self.snowflist = ['V12', 'S02', 'A76']
+#        self.metamlist = ['B21', 'F06', 'S-F']
+#        self.radlist = ['B60']
+#        self.turblist = ['RIL', 'RI1', 'RI2', 'M98']
+#        self.condlist = ['Y81', 'I02']
+#        self.holdlist = ['B92', 'SPK', 'B02']
+#        self.complist = ['B92', 'S14', 'T11']
+#        self.cvlist = ['CV10000', 'CV30000', 'CV50000']
+#        self.size = len(self.snowflist) * len(self.metamlist) * len(self.radlist) * len(self.turblist) * len(self.condlist) * len(self.holdlist) * len(self.complist) * len(self.cvlist)
+#        physical_options, snow_parameters, memberslist = self.drawMembers(members, randomDraw)
+#
+#        return physical_options, snow_parameters, memberslist
+
+        
+    def E1notartes(self, members, randomDraw = False):
         """
-        Quasi duplicate from E1tartes
-        E1notartes is a duplicate from E1 with T17 replaced by B92
+        Same structure as E1notartes (commented above) with a focus on arctic parameterizations 
+        and new parameterizations of compaction (V25) and metamorphism (B25) (by L.Bouvet, summer 2026)
 
         .. warning::
            member identities will be different from one run to another
            the returned models are randomly drawn among E1notartes
 
         """
-        self.snowflist = ['V12', 'S02', 'A76']
-        self.metamlist = ['B21', 'F06', 'S-F']
-        self.radlist = ['B60']
-        self.turblist = ['RIL', 'RI1', 'RI2', 'M98']
-        self.condlist = ['Y81', 'I02']
-        self.holdlist = ['B92', 'SPK', 'B02']
-        self.complist = ['B92', 'S14', 'T11']
-        self.cvlist = ['CV10000', 'CV30000', 'CV50000']
-        self.size = len(self.snowflist) * len(self.metamlist) * len(self.radlist) * len(self.turblist) * len(self.condlist) * len(self.holdlist) * len(self.complist) * len(self.cvlist)
+        self.snowflist = ['V12', 'R21']
+        self.snowdrift = ['VI13', 'R21W', 'R21F']
+        self.metamlist = ['B21', 'B25']
+        self.radlist = ['B650']
+        self.turblist = ['RI2']
+        self.condlist = ['F21']
+        self.holdlist = ['B92']
+        self.complist = ['B92', 'V25', 'V27', 'R21']
+        self.cvlist = ['CV30000']
+        self.size = len(self.snowdrift) * len(self.snowflist) * len(self.metamlist) * len(self.radlist) * len(self.turblist) * len(self.condlist) * len(self.holdlist) * len(self.complist) * len(self.cvlist)
         physical_options, snow_parameters, memberslist = self.drawMembers(members, randomDraw)
 
         return physical_options, snow_parameters, memberslist
+        
 
     def E2(self, members):
         """
@@ -399,29 +426,31 @@ class ESCROC_subensembles(dict):
         snow_parameters = [None] * len(memberslist)
         mb = 0
         for snowfall in self.snowflist:
-            for metamo in self.metamlist:
-                for radiation in self.radlist:
-                    for turb in self.turblist:
-                        for cond in self.condlist:
-                            for holding in self.holdlist:
-                                for compaction in self.complist:
-                                    for cv in self.cvlist:
-                                        mb += 1
-                                        if mb in memberslist:
-                                            ind = list(memberslist).index(mb)
-                                            po, sp = self.convert_options(
-                                                snowfall, metamo, radiation, turb, cond, holding, compaction, cv)
-                                            physical_options[ind] = po
-                                            snow_parameters[ind] = sp
+            for snowdrift in self.snowdrift:
+                for metamo in self.metamlist:
+                    for radiation in self.radlist:
+                        for turb in self.turblist:
+                            for cond in self.condlist:
+                                for holding in self.holdlist:
+                                    for compaction in self.complist:
+                                        for cv in self.cvlist:
+                                            mb += 1
+                                            if mb in memberslist:
+                                                ind = list(memberslist).index(mb)
+                                                po, sp = self.convert_options(
+                                                    snowfall, snowdrift, metamo, radiation, turb, cond, holding, compaction, cv)
+                                                physical_options[ind] = po
+                                                snow_parameters[ind] = sp
         return list(physical_options), list(snow_parameters), memberslist
 
-    def convert_options(self, snowfall, metamo, radiation, turb, cond, holding, compaction, cv):
+    def convert_options(self, snowfall, snowdrift,  metamo, radiation, turb, cond, holding, compaction, cv):
         """
         :meta private:
         """
 
         physical_options = dict(
             csnowfall=snowfall,
+            csnowdrift=snowdrift,
             csnowmetamo=metamo,
             csnowrad=self.dicoptrad[radiation],
             csnowcond=cond,

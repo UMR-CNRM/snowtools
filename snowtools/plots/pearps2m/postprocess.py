@@ -40,7 +40,8 @@ from bronx.syntax.externalcode import ExternalCodeImportChecker
 
 echecker = ExternalCodeImportChecker('cartopy')
 with echecker:
-    import cartopy
+    pass
+    #import cartopy
 echecker_pyproj = ExternalCodeImportChecker('pyproj')
 with echecker_pyproj as echecker_register:
     import pyproj

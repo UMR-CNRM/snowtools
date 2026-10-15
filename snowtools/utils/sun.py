@@ -3,10 +3,15 @@
 import numpy as np
 import math
 
+
 from snowtools.utils.resources import print_used_memory
 
-# L. Roussel dec. 2024 : modification start slope_aspect_correction when extracting dates
-#                        + write comprehensive commented code
+# TODO temporary
+import matplotlib.pyplot as plt
+# import pysolar
+# from pysolar.solar import *
+from datetime import timezone
+import pandas as pd
 
 def interp1d(x, y, tab):
     """
@@ -58,9 +63,11 @@ class sun():
 
         :returns: corrected direct solar radiation and optionally, the angular positions of sun
         """
-        # Docs about solar radiation :
+        # A bit of docs about solar radiation to start :
         # "Basics in solar radiation at earth surface" (L. Wald) : https://minesparis-psl.hal.science/hal-01676634
         # "Wikipedia: solar irradience" : https://en.wikipedia.org/wiki/Solar_irradiance 
+        
+        print("Slope, aspect and illumination mask radiation correction.")
         
         tab_direct = direct[:]
         tab_diffus = diffus[:]
@@ -75,34 +82,34 @@ class sun():
         lat = self.upscale_tab(lat_in, tab_direct.shape)
 
         # --------- Extraction of days and time ---------
-        # extraction of date and computation of fractional Julian day, j_2 (1 january is 0)
         if convert_time is True:
             # M. Lafaysse : convert date in date at the middle of the time step to compute angles more representative of the fluxes
-            # L. Roussel 2024 : SAFRAN gives the hourly solar radiation at hour-30 minutes,
+            # SAFRAN gives the hourly solar radiation at hour-30 minutes,
             # then SURFEX uses this flux between H-1 and H.
             deltatime = time[1] - time[0]
             tab_time_date = time - deltatime / 2
         else:
             tab_time_date = time
+
         julian_days = np.ones(tab_time_date.shape, 'f')
         decimal_hours = np.ones(tab_time_date.shape, 'f')
+        
         for i in range(len(tab_time_date)):
             # timetuple list description: 
             # j[0]: year, j[1]: month, j[2]: day, 
             # j[3]: hour, j[4]: minute, j[5]: second,
             # j[6]: day of the week, j[7]: day of the year,
             # j[8]: daylight saving time
-            time_tuple = tab_time_date[i].timetuple()
-            julian_days[i] = time_tuple[7]  # extract Julian day (integer, 1st january is 1)
+            timetup = tab_time_date[i].timetuple()
+            julian_days[i] = timetup[7]  # extract Julian day (integer, 1st january is 1)
             # L. Roussel: fix to decimal hour instead of integer hour
-            decimal_hours[i] = time_tuple[3] + time_tuple[4] / 60 + time_tuple[5] / 3600  # extrac time in hour
-
+            decimal_hours[i] = timetup[3] + timetup[4] / 60 + timetup[5] / 3600  # extrac time in hour
 
         j = self.upscale_tab_time(julian_days, tab_direct.shape)
         h = self.upscale_tab_time(decimal_hours, tab_direct.shape)
 
         # all tabs now have the same dimension, which is that of tab_direct.
-        # method from crocus meteo.f90 original file (v2.4)
+        # method used id from crocus meteo.f90 original file (v2.4)
 
         # --------- Math constants ---------
         eps = 0.0001
@@ -114,12 +121,12 @@ class sun():
         slope, aspect = slope * DG2RD, aspect * DG2RD
 
         # Later computations are almost all approximations used for engineering
-
+        
         # --------- Equation of Time --------- 
         # (time shift in minutes, take in account orbit eccentricity, and obliquity)
         eot = 9.9 * np.sin(2 * (j - 101.4) / 365 * 2 * PI) \
             - 7.7 * np.sin((j - 2.027) / 365 * 2 * PI)
-
+        
         # --------- Sun declination (delta) ---------
         # (angular distance of the sun's rays north (or south) of the equator)
         # L. Roussel 03/2024, small changes here, but easier to understand:
@@ -155,18 +162,20 @@ class sun():
         lat_radian = lat * DG2RD
         sin_gamma = np.sin(lat_radian) * sin_delta + np.cos(lat_radian) * np.cos(delta) * np.cos(omega_time)
         # L. Roussel: set as 0 if negative (before 0.001)
-        sin_gamma = np.where(sin_gamma < eps, 0., sin_gamma)
+        sin_gamma = np.where(sin_gamma < eps, 0, sin_gamma)
         gamma = np.arcsin(sin_gamma)
-        
+          
         # M Lafaysse : remove this threshold because there are controls in SAFRAN and because there are numerical issues at sunset.
         # --------- Theoretical maximum radiation ---------
         max_theor_radiation = 1370 * (1 - sin_delta / 11.7)
 
-        # F. Besson/M. Lafaysse : Threshold on ZSINPS (bug on some cells of SIM-FRANCE)
+        ######## Not used anymore, old code ########
         # solar zenith angle
-        ZSINPS = np.cos(delta) * np.sin(omega_time) / np.cos(gamma)
-        ZSINPS = np.where(ZSINPS < -1.0, -1.0, ZSINPS)
-        ZSINPS = np.where(ZSINPS > 1.0, 1.0, ZSINPS)
+        # ZSINPS = np.cos(ZDELTA) * np.sin(ZOMEGA) / np.cos(ZGAMMA)
+
+        # F. Besson/M. Lafaysse : Threshold on ZSINPS (bug on some cells of SIM-FRANCE)
+        # ZSINPS = np.where(ZSINPS < -1.0, -1.0, ZSINPS)
+        # ZSINPS = np.where(ZSINPS > 1.0, 1.0, ZSINPS)
 
         # Not used : ML comment this instruction
         # ZCOSPS=(np.sin(ZLAT)*ZSINGA-ZSINDL)/(np.cos(ZLAT)*np.cos(ZGAMMA))
@@ -175,12 +184,12 @@ class sun():
         # # # # ZPSI = np.arcsin(ZSINPS)  # solar azimuth, 0. is South # # # # # NEVER USE THIS WRONG FORMULA
         # This gives a wrong trajectory in summer when the azimuth should be <90° or >270°
         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+        #############################################
+        
         # The new computation of azimuth below is extracted from the theoricRadiation method
         # Who knows where it comes from ?
 
         # --------- Azimuth ---------
-        # L. Roussel 2024: precedent computation was fine, just rename variables
         # component x of azimuth angle:
         x_azimuth_angle = - np.sin(omega_time) * np.cos(delta)
         # component y of azimuth angle:
@@ -199,6 +208,7 @@ class sun():
         c = -4.472389
         d = -0.276815
 
+        # mu = sunvector2  # mu = cos of zenith angle
         mu = sin_gamma.copy()
         ratio_clearsky = np.exp(a * (mu ** 3) + b * (mu ** 2) + c * mu + d)
         ratio_clearsky = np.where(ratio_clearsky <= 1, ratio_clearsky, 1)
@@ -210,29 +220,46 @@ class sun():
         a0 = -0.025767794921
 
         ZTHEOR = max_theor_radiation * (a3 * mu**3 + a2 * mu**2 + a1 * mu + a0)
+        # plt.plot(ZTHEOR, label="ZTHEOR")
         ZTHEOR = np.where(ZTHEOR < 0., 0., ZTHEOR)
 
         # Compute theorical components
         theor_diffus = ratio_clearsky * ZTHEOR
         theor_direct = ZTHEOR - theor_diffus
+        
+        # plt.plot(tab_time_date, theor_diffus, marker=".", label="theor_diffus")
+        # plt.plot(tab_time_date, theor_direct, marker=".", label="theor_direct")
+        # plt.plot(tab_time_date, tab_direct, marker=".", label="tab_direct before")
 
-        # Apply a threshold to the direct radiation (can not exceed the theorical direct component, otherwise, the projection can provide very strange values
+        # Apply a threshold to the direct radiation (can not exceed the theorical direct component, 
+        # otherwise, the projection can provide very strange values)
+        # plt.plot(tab_direct, label="before threshold")
+        # plt.plot(theor_direct)
         tab_direct = np.where(tab_direct <= theor_direct, tab_direct, theor_direct)
-
+        # TODO coupe beaucoup de radiation direct ici... ca change quoi si on met d'autre coefficient pour le fit au dessus pour Argentiere ? 
+        # plt.plot(tab_direct, label="after threshold")
+        # plt.legend()
+        # plt.show()
+        # plt.plot(tab_time_date, tab_direct, marker=".", label="tab_direct after")
+        # plt.legend()
+        # plt.show()
         # Conserve energy by a transfer to the diffuse component
-        tab_diffus = tab_global - tab_direct
+        # TODO L. Roussel why we keep radiation in deep valleys ?
+        # tab_diffus = tab_global - tab_direct
+        ###########################################
+        ###########################################
 
         # direct incident radiation (maximum value authorized is the theoretical maximum radiation)
+        # If you don't pass `out` the indices where (sin_gamma == 0) will be uninitialized !
         direct_incident = np.divide(tab_direct, sin_gamma, out=np.zeros_like(tab_direct), where=sin_gamma!=0)
 
         # M Lafaysse : remove this threshold because there are controls in SAFRAN and because there are numerical issues at sunset.
-        # L. Roussel 2024: this one looks useless, still keep it to control anyway
+        # L. Roussel: this one looks useless, still keep it to control anyway
         direct_incident = np.where(direct_incident >= max_theor_radiation, max_theor_radiation, direct_incident)
-        
+
         # --------- Projection on slope/aspect surface --------- 
         # (note that aspect is taken from North)
-        # old code 1: ZRSIP=ZRSI*(np.cos(ZGAMMA)*np.sin(slope)*np.cos(ZPSI - (np.pi + aspect))+ZSINGA*np.cos(slope))
-        # old code 2: ZRSIP = ZRSI * (np.cos(ZGAMMA) * np.sin(slope) * np.cos(azimuth - aspect) + ZSINGA * np.cos(slope))
+        # old code : ZRSIP=ZRSI*(np.cos(ZGAMMA)*np.sin(slope)*np.cos(ZPSI - (np.pi + aspect))+ZSINGA*np.cos(slope))
         direct_plane_projected = direct_incident * (np.cos(gamma) * np.sin(slope) * np.cos(azimuth - aspect) + sin_gamma * np.cos(slope))
         direct_plane_projected = np.where(direct_plane_projected <= 0., 0., direct_plane_projected)
 
@@ -252,8 +279,154 @@ class sun():
             
             # set to zero direct radiation values when solar angle is below mask angle
             direct_plane_projected_masked = np.where(simu_interp_mask > gamma * RD2DG, 0., direct_plane_projected)  
+        
+        
+        # --------- Comparison with ground truth ---------
+        # ### Pysolar
+        # pysolar_radiation = []
+        # for date in tab_time_date:
+        #     date = date.replace(tzinfo=timezone.utc)
+        #     altitude_deg = get_altitude(lat_in[0], lon_in[0], date)
+        #     current_radiation = pysolar.radiation.get_radiation_direct(date, altitude_deg)
+        #     # print(current_radiation)
+        #     pysolar_radiation.append(current_radiation)
+        # print(pysolar_radiation)
+        # ### PVLib
+        # import pvlib
+        # import pandas as pd
+        # tus = pvlib.location.Location(lat_in[0], lon_in[0], 'UTC', 0, 'Test')
+        # times = pd.date_range(start="2020-08-01", end="2021-08-01", freq='1h', tz=tus.tz)
+        # ephem_data = tus.get_solarposition(times)
+        # irrad_data = tus.get_clearsky(times)
+        # plt.plot(tab_time_date, tab_direct, marker=".", label="tab_direct")
+        # plt.plot(tab_time_date, max_theor_radiation, marker=".", label="max_theor_radiation")
+        # # plt.plot(tab_time_date, direct_incident, marker=".", label="direct_incident")
+        # plt.plot(tab_time_date, direct_plane_projected, marker=".", label="direct_plane_projected")
+        # plt.plot(tab_time_date, direct_plane_projected_masked, marker=".", label="direct_plane_projected_masked")
+        # # plt.plot(tab_time_date, tab_diffus, marker=".", label="diffus")
+        # plt.plot(tab_time_date, pysolar_radiation, marker=".", label="pysolar_radiation")
+        # sin_gamma = sin_gamma.flatten()
+        # pysolar_radiation = np.array(pysolar_radiation)
+        # plt.plot(tab_time_date, pysolar_radiation * sin_gamma, marker=".", label="pysolar_radiation * sin_gamma")
+        # plt.plot(times, irrad_data.ghi.values, label="ghi")
+        # plt.plot(times, irrad_data.dni.values, label="dni")
+        # plt.legend()
+        # plt.show()
+        def scatter_plot(x, y):
+            fig, ax = plt.subplots(1, 1, figsize=(15 / 2.54, 15 / 2.54))
+            ax.scatter(x, y, alpha=0.2, s=10)
+            mini = min(np.min(x), np.min(y))
+            maxi = min(np.max(x), np.max(y))
+            ax.plot([mini, maxi], [mini, maxi], "--", color="black")
+            plt.show()
             
-            
+        # --------- Recaler sur l'AWS moraine ---------
+        rescale_low_radiation = False
+        if rescale_low_radiation:
+            year1 = tab_time_date[0].timetuple()[0]
+            year2 = tab_time_date[-1].timetuple()[0]
+            print("year1", year1, "year2", year2)
+            if not year1 == 2022: # TODO miss 2023
+                assert year2 == year1 + 1
+                fns_moraine = [
+                    "/home/roussell/glaciers/data/meteo_station/argentiere/station_moraine/Argentiere{}-halfhourly.csv".format(year1),
+                    "/home/roussell/glaciers/data/meteo_station/argentiere/station_moraine/Argentiere{}-halfhourly.csv".format(year2),
+                ]
+                print(fns_moraine)
+                df_moraine_1 = pd.read_csv(fns_moraine[0], parse_dates=["Date"], date_format='%d/%m/%Y %H:%M', index_col=["Date"], decimal=",")
+                df_moraine_2 = pd.read_csv(fns_moraine[1], parse_dates=["Date"], date_format='%d/%m/%Y %H:%M', index_col=["Date"], decimal=",")
+                df_moraine = pd.concat([df_moraine_1, df_moraine_2])
+                sw_moraine = df_moraine["SW inc (W/m2)"]
+                print(sw_moraine)
+                sw_moraine = sw_moraine[::2]
+                sw_moraine[sw_moraine < 0] = 0
+                print(sw_moraine)
+    
+                plt.plot(sw_moraine, ".-", color="blue")
+                plt.plot(time, direct_plane_projected_masked + diffus, ".-", color="red")
+
+                assert direct.shape[1] == 1 # should be only one point if correction for the moment
+                # correct here if more point : 
+                df_safran = pd.DataFrame({"SW_safran": direct_plane_projected_masked.flatten() + diffus.flatten(), 
+                                        "SW_safran_direct": direct_plane_projected_masked.flatten(),
+                                        "SW_safran_diffus": diffus.flatten()}, 
+                                        index=time)
+                df_moraine = pd.DataFrame({"SW_moraine": sw_moraine}, index=sw_moraine.index)
+                print(df_moraine)
+                print(df_safran)
+                df_merged = pd.merge(df_moraine, df_safran, left_index=True, right_index=True)
+                print("df_merged", df_merged["2020-12-30":"2021-01-01"])
+                # mean at day resolution :
+                resample_day = df_merged.resample("1d").mean()
+                print("reample day", resample_day["2020-12-31":"2021-01-01"])
+                # when is safran too much high ?
+                resample_day["safran_high"] = (0.75 * resample_day["SW_safran"] > resample_day["SW_moraine"])
+                
+                # correction multiplicative coefficient
+                resample_day["coeff"] = (resample_day["SW_moraine"] - resample_day["SW_safran_diffus"]) / resample_day["SW_safran"] 
+                resample_day[resample_day["coeff"] < 0] = 0
+                print("reample day", resample_day["2020-12-31":"2021-01-01"])
+        
+                df_rescale = resample_day[["safran_high", "coeff"]].resample("1h").ffill()
+                # include infos rescale in merged df
+                df_merged = pd.merge(df_merged, df_rescale, left_index=True, right_index=True)
+                print(df_merged)
+                
+                # if safran too high that day, correct, else do nothing
+                df_merged["new_SW_safran_direct"] = df_merged["safran_high"] * (df_merged["SW_safran_direct"] * df_merged["coeff"]) \
+                                                + (1 - df_merged["safran_high"]) * (df_merged["SW_safran_direct"])
+                # avoid netagive values
+                df_merged[df_merged["new_SW_safran_direct"] < 0] = 0
+                # nan values not changed, keep initial direct radiation
+                df_merged["new_SW_safran_direct"].fillna(df_merged["SW_safran_direct"], inplace=True)
+                
+                df_merged["new_SW_safran"] = df_merged["new_SW_safran_direct"] + df_merged["SW_safran_diffus"] # update
+                plt.plot(df_merged["new_SW_safran"],  ".-", color="black")
+                plt.grid()
+                plt.legend()
+                print("Correct", sum(resample_day["safran_high"]), "days")
+                plt.show()
+        
+                from sklearn.metrics import r2_score, mean_squared_error
+                print(df_merged["SW_moraine"], df_merged["SW_safran"])
+                print(len((df_merged["SW_moraine"])))
+                print(sum(pd.isna(df_merged["SW_moraine"])), sum(pd.isna(df_merged["SW_safran"])))
+                # r21 score whee moraine is not nan
+                inxs_notna = pd.notna(df_merged["SW_moraine"])
+                print("r2:", r2_score(df_merged["SW_moraine"][inxs_notna], df_merged["SW_safran"][inxs_notna]))
+                print("r2 new:", r2_score(df_merged["SW_moraine"][inxs_notna], df_merged["new_SW_safran"][inxs_notna]))
+                print("rmse:", np.sqrt(mean_squared_error(df_merged["SW_moraine"][inxs_notna], df_merged["SW_safran"][inxs_notna])))
+                print("rmse new:", np.sqrt(mean_squared_error(df_merged["SW_moraine"][inxs_notna], df_merged["new_SW_safran"][inxs_notna])))
+                print("mbe:", sum(df_merged["SW_moraine"][inxs_notna] - df_merged["SW_safran"][inxs_notna]) / len(df_merged["SW_moraine"][inxs_notna]))
+                print("mbe new:", sum(df_merged["SW_moraine"][inxs_notna] - df_merged["new_SW_safran"][inxs_notna]) / len(df_merged["new_SW_safran"][inxs_notna]))
+                scatter_plot(df_merged["SW_moraine"], df_merged["new_SW_safran"])
+                scatter_plot(df_merged["SW_moraine"], df_merged["SW_safran"])
+
+                # TODO only correction at one point here
+                print(df_merged["new_SW_safran_direct"].values.shape, direct_plane_projected_masked.shape)
+                print(df_merged.index, tab_time_date)
+                
+                # check only last day without data for df_merged : 6 hours missing
+                assert df_merged["new_SW_safran_direct"].values.shape[0] == direct_plane_projected_masked.shape[0] - 6
+                
+                # check rmse shifted
+                dot_before = np.dot(direct_plane_projected_masked[1:-6, 0], df_merged["new_SW_safran_direct"].values[:-1])
+                dot_centered = np.dot(direct_plane_projected_masked[0:-7, 0], df_merged["new_SW_safran_direct"].values[:-1])
+                dot_after = np.dot(direct_plane_projected_masked[0:-7, 0], df_merged["new_SW_safran_direct"].values[1:])
+                assert dot_centered > dot_after and dot_centered > dot_before
+                 
+                plt.plot(df_merged["new_SW_safran_direct"].values)
+                plt.plot(direct_plane_projected_masked)
+                plt.show()
+                
+
+                direct_plane_projected_masked[:-6, 0] = df_merged["new_SW_safran_direct"].values # diffus does not change
+        
+        # en meme temps que l'analyse des précipitations, anbalyser le SW, quel jour doivent être corrigé, avec quels coeffs ? 
+        # en sortie de cette analyse à la moraine :
+        # [liste de jour], [liste de coeffs de correction du rayonnement incident]
+
+        
         if lnosof_surfex:
             # Now this is the normal case
             tab_direct = direct_plane_projected_masked
@@ -380,6 +553,59 @@ class sun():
 
         return sin_gamma
 
+    def azimuth(self, tab_time_date, lat, lon):
+        """ TODO
+
+        Args:
+            tab_time_date (_type_): _description_
+            lat (_type_): _description_
+            lon (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        julian_days = np.ones(tab_time_date.shape, 'f')
+        decimal_hours = np.ones(tab_time_date.shape, 'f')
+        for i in range(len(tab_time_date)):
+            # tab_time_date_2[i] = time_init + datetime.timedelta(seconds = tab_time_date[i])
+            timetup = tab_time_date[i].timetuple()
+            julian_days[i] = timetup[7]  # extract Julian day (integer)
+            # L. Roussel: fix to decimal hour instead of integer hour
+            decimal_hours[i] = timetup[3] + timetup[4] / 60 + timetup[5] / 3600  # extrac time in hour
+            
+        j = self.upscale_tab_time(julian_days, (tab_time_date.shape[0], 1))
+        h = self.upscale_tab_time(decimal_hours, (tab_time_date.shape[0], 1))
+       
+        # --------- Math constants ---------
+        PI = math.pi
+        DG2RD = PI / 180. # degree to radian
+
+        # --------- Equation of Time --------- 
+        eot = 9.9 * np.sin(2 * (j - 101.4) / 365 * 2 * PI) \
+            - 7.7 * np.sin((j - 2.027) / 365 * 2 * PI)
+        
+        # --------- Sun declination (delta) ---------
+        sin_delta = 0.4 * np.sin((0.986 * j - 80) * DG2RD)
+        delta = np.arcsin(sin_delta)
+
+        # --------- Solar angular time ---------
+        omega_time = (h - 12 + eot / 60 + lon / 15) / 24 * 2 * PI
+
+
+        lat_radian = lat * DG2RD
+        # --------- Azimuth ---------
+        # component x of azimuth angle:
+        x_azimuth_angle = - np.sin(omega_time) * np.cos(delta)
+        # component y of azimuth angle:
+        y_azimuth_angle = np.sin(lat_radian) * np.cos(omega_time) * np.cos(delta) - np.cos(lat_radian) * np.sin(delta)  
+        
+        azimuth = np.where((x_azimuth_angle == 0) & (y_azimuth_angle == 0), 0.,
+                    (np.pi) - np.arctan(x_azimuth_angle / y_azimuth_angle))
+        azimuth = np.where(y_azimuth_angle <= 0., azimuth + np.pi, azimuth)
+        azimuth = np.where(azimuth >= 2. * np.pi, azimuth - 2. * np.pi, azimuth) # back into [0, 2 * PI]
+
+        return azimuth
+        
     def directdiffus(self, SWglo, time, lat, lon, slope, aspect, site):
         """
         Separation of direct and diffuse  short wave radiations
@@ -454,7 +680,7 @@ class sun():
         SWdif = np.where(ratio <= 1, ratio * SWglo, SWglo)
         SWdir = SWglo - SWdif
 
-    #   for hour in range(1, 24):
-    #       print hour, coszenith[ndays * 24 + hour - 1], ratio[ndays * 24 + hour - 1], SWdir[ndays * 24 + hour - 1], SWdif[ndays * 24 + hour - 1], SWglo[ndays * 24 + hour - 1]
+    # for hour in range(1, 24):
+    #   print hour, coszenith[ndays * 24 + hour - 1], ratio[ndays * 24 + hour - 1], SWdir[ndays * 24 + hour - 1], SWdif[ndays * 24 + hour - 1], SWglo[ndays * 24 + hour - 1]
 
         return SWdir, SWdif

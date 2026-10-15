@@ -30,10 +30,12 @@ MEPRA_dict = {'PP': 0,      # fr
               'DH': 11,     # gob
               'MF': 12,     # gel
               'MF+DH': 13,  # gob_fon
-              'MF+FC': 14   # ron_ang
+              'MF+FC': 14,   # ron_ang
+              'SH': 15,
+              'IF':16      
               }
 
-MEPRA_labels = ['PP', 'PP+DF', 'DF', 'DF+RG', 'DF+FC', 'PPgp', 'RG', 'MF+RG', 'RG+FC', 'FC', 'FC+DH', 'DH', 'MF', 'MF+DH', 'MF+FC']
+MEPRA_labels = ['PP', 'PP+DF', 'DF', 'DF+RG', 'DF+FC', 'PPgp', 'RG', 'MF+RG', 'RG+FC', 'FC', 'FC+DH', 'DH', 'MF', 'MF+DH', 'MF+FC', 'SH', 'IF']
 
 coloring = {'PP': np.array([0, 255, 0]) / 255.0,
             'MM': np.array([255, 215, 0]) / 255.0,
@@ -61,6 +63,9 @@ color_grain = {MEPRA_dict['PP']: coloring['PP'],
                MEPRA_dict['DH']: coloring['DH'],
                MEPRA_dict['MF']: coloring['MF'],
                MEPRA_dict['MF+DH']: 0.5 * (coloring['MF'] + coloring['DH']),
-               MEPRA_dict['MF+FC']: 0.5 * (coloring['MF'] + coloring['FC'])}
+               MEPRA_dict['MF+FC']: 0.5 * (coloring['MF'] + coloring['FC']),
+               MEPRA_dict['SH']: coloring['SH'],
+               MEPRA_dict['IF']: coloring['IF']
+               }
 
-grain_colormap = LinearSegmentedColormap.from_list("custom", [[i / 14., color_grain[i]] for i in range(15)])
+grain_colormap = LinearSegmentedColormap.from_list("custom", [[i / 16., color_grain[i]] for i in range(17)])

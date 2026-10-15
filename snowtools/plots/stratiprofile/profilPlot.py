@@ -135,10 +135,10 @@ def saisonProfil(ax, dz, value, time, colormap='viridis', value_min=None, value_
     extend = 'neither'
     if colormap == 'grains':
         cmap = Dictionnaries.grain_colormap
-        bounds = np.linspace(-0.5, 14.5, 16)
+        bounds = np.linspace(-0.5, 16.5, 18)
         norm = colors.BoundaryNorm(bounds, cmap.N)
         vmin = -0.5
-        vmax = 14.5
+        vmax = 16.5
     elif colormap == 'echelle_log':
         cmap = plt.get_cmap('gray_r')
         vmin = max(minval, 0.0000000001)
