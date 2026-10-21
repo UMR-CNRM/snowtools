@@ -11,6 +11,8 @@ from collections import Counter, defaultdict
 import numpy as np
 import matplotlib.style
 
+from mkjob.appconf import ConfigSet
+
 from snowtools.utils.prosimu import prosimu
 from snowtools.utils.dates import check_and_convert_date, pretty_date
 from snowtools.plots.temporal.chrono import spaghettis_with_det, spaghettis
@@ -61,12 +63,14 @@ class Config:
     list_members = list(range(0, 36))
     namespace = "vortex.multi.fr"
     namebuild = "date@std"
+    vortex1 = True
 
     def __init__(self, OPTIONS):
         """
         #) checks and converts dates
         #) creates output directories if they don't exist.
         """
+        super().__init__()
         OPTIONS.datebegin, OPTIONS.dateend = [check_and_convert_date(dat)
                                               for dat in [OPTIONS.datebegin, OPTIONS.dateend]]
         if OPTIONS.datebegin.hour == 0:
@@ -85,16 +89,22 @@ class Config:
                 os.mkdir(required_directory)
 
         self.dev = OPTIONS.dev
+     #   print(OPTIONS)
         if OPTIONS.dev:
             self.xpid = "DEV"
             self.username = "lafaysse"
             delattr(Config, 'alternate_xpid')
             self.list_geometry = ['jur', 'mac', 'vog', 'cor', 'alp', 'pyr', 'postes']
+            self.vortex1 = True
         self.dble = OPTIONS.dble
         if OPTIONS.dble:
-            self.xpid = "dble"
+            self.xpid = "DBLE"
             delattr(Config, 'alternate_xpid')
-            self.list_geometry = ['alp', 'pyr', 'cor', 'jur', 'mac', 'vog', 'postes']
+            # self.list_geometry = ['alp', 'pyr', 'cor', 'jur', 'mac', 'vog', 'postes']
+            self.list_geometry = ['jur4_allslopes', 'mac11_allslopes',
+                                  'vog3_allslopes', 'alp27_allslopes',
+                                  'pyr24_allslopes', 'cor2_allslopes']
+            self.vortex1 = False
         self.reforecast = OPTIONS.reforecast
         if OPTIONS.reforecast:
             self.xpid = "reforecast_double2021"
@@ -704,7 +714,7 @@ def main(c):
     #     S2ME = FutureS2MExtractor(c)
     # else:
     S2ME = FutureS2MExtractor(c)
-    snow_members, snow_xpid = S2ME.get_snow()
+    snow_members, snow_xpid = S2ME.get_snow(vortex1=c.vortex1)
 
     dict_chaine = defaultdict(str)
     dict_chaine['OPER'] = ' (oper)'

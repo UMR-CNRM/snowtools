@@ -38,6 +38,7 @@ if __name__ == "__main__":
     OPTIONS = PARSER.parse_args()  # @UnusedVariable
     c = Config(OPTIONS)
     # c.list_geometry = ['cor']
+    print(c.__dict__)
     main(c)
     if OPTIONS.dev:
         pp_plots(c)

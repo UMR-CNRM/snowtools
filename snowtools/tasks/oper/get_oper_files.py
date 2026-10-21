@@ -245,12 +245,12 @@ class FutureS2MExtractor(S2MExtractor):
         return meteo_outputs, snow_outputs, hydro_outputs, pp_outputs
 
 
-    def get_meteo(self):
+    def get_meteo(self, vortex1=True):
 
         tb01 = vortex.input(
             role           = 'Forcing',
             vapp           = 's2m',
-            vconf          = '[geometry::area]',
+            vconf          = '[geometry::domain]',
             local          = '[geometry::area]/[date:ymdh]/mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
             experiment     = self.conf.xpid,
             username = self.conf.username,
@@ -267,7 +267,7 @@ class FutureS2MExtractor(S2MExtractor):
             cutoff         = 'production' if self.conf.previ else 'assimilation',
             intent         = 'in',
             fatal          = False,
-            vortex1=True,
+            vortex1= vortex1,
             namebuild= self.conf.namebuild,
         )
 
@@ -280,7 +280,7 @@ class FutureS2MExtractor(S2MExtractor):
                 tb01.extend(vortex.input(
                     alternate      = 'Forcing',
                     vapp           = 's2m',
-                    vconf          = '[geometry::area]',
+                    vconf          = '[geometry::domain]',
                     local          = '[geometry::area]/[date:ymdh]/mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                     experiment     = alternate_xpid,
                     username=self.conf.username,
@@ -297,18 +297,18 @@ class FutureS2MExtractor(S2MExtractor):
                     cutoff         = 'production' if self.conf.previ else 'assimilation',
                     intent         = 'in',
                     fatal          = False,
-                    vortex1=True,
+                    vortex1=vortex1,
                     namebuild= self.conf.namebuild,
                 ))
 
         return self.get_std(tb01)
 
-    def get_snow(self):
+    def get_snow(self, vortex1=True):
         import vortex_cen
         tb02 = vortex.input(
             role           = 'pro',
             vapp           = 's2m',
-            vconf          = '[geometry::area]',
+            vconf          = '[geometry::domain]',
             local          = '[geometry::area]/[date:ymdh]/mb[member]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
             experiment     = self.conf.xpid,
             username=self.conf.username,
@@ -325,7 +325,7 @@ class FutureS2MExtractor(S2MExtractor):
             cutoff         = 'production' if self.conf.previ else 'assimilation',
             intent         = 'in',
             fatal          = False,
-            vortex1 = True,
+            vortex1 = vortex1,
             namebuild = self.conf.namebuild,
 
         )
@@ -345,7 +345,7 @@ class FutureS2MExtractor(S2MExtractor):
                 tb02.extend(vortex.input(
                     alternate      = 'pro',
                     vapp           = 's2m',
-                    vconf          = '[geometry::area]',
+                    vconf          = '[geometry::domain]',
                     local          = '[geometry::area]/[date:ymdh]/mb[member]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
                     experiment     = alternate_xpid,
                     username=self.conf.username,
@@ -362,21 +362,21 @@ class FutureS2MExtractor(S2MExtractor):
                     cutoff         = 'production' if self.conf.previ else 'assimilation',
                     intent         = 'in',
                     fatal          = False,
-                    vortex1=True,
+                    vortex1=vortex1,
                     namebuild= self.conf.namebuild,
 
                 ))
 
         return self.get_std(tb02)
 
-    def get_hydro(self):
+    def get_hydro(self, vortex1=True):
         import vortex_cen
 
         if self.conf.previ:
             tb03 = vortex.input(
                 role           = 'hydro',
                 vapp           = 's2m',
-                vconf          = '[geometry::area]',
+                vconf          = '[geometry::domain]',
                 local          = '[geometry::area]/[date:ymdh]/HYDRO_[datebegin:ymdh]_[dateend:ymdh].nc',
                 experiment     = self.conf.xpid,
                 username=self.conf.username,
@@ -392,14 +392,14 @@ class FutureS2MExtractor(S2MExtractor):
                 cutoff         = 'production',
                 intent         = 'in',
                 fatal          = False,
-                vortex1=True,
+                vortex1=vortex1,
                 namebuild= self.conf.namebuild,
             )
         else:
             tb03 = vortex.input(
                 role = 'hydro',
                 vapp = 's2m',
-                vconf = '[geometry::area]',
+                vconf = '[geometry::domain]',
                 local = '[geometry::area]/[date:ymdh]/HYDRO_[datebegin:ymdh]_[dateend:ymdh].nc',
                 experiment = self.conf.xpid,
                 username=self.conf.username,
@@ -416,21 +416,21 @@ class FutureS2MExtractor(S2MExtractor):
                 cutoff = 'assimilation',
                 intent = 'in',
                 fatal = False,
-                vortex1=True,
+                vortex1=vortex1,
                 namebuild= self.conf.namebuild,
             )
 
         return self.get_std(tb03)
 
 
-    def get_pp_quantiles(self):
+    def get_pp_quantiles(self, vortex1=True):
         import vortex_cen
 
         tb_pp = vortex.input(
             role        = 'Postproc_output',
             intent      = 'in',
             vapp        = 's2m',
-            vconf       = '[geometry::area]',
+            vconf       = '[geometry::domain]',
             local       = '[geometry::area]/[date:ymdh]/PRO_post_[datebegin:ymdh]_[dateend:ymdh].nc',
             experiment  = self.conf.xpid,
             username=self.conf.username,
@@ -446,7 +446,7 @@ class FutureS2MExtractor(S2MExtractor):
             namespace   = self.conf.namespace,
             cutoff      = 'production',
             fatal       = False,
-            vortex1=True,
+            vortex1=vortex1,
             namebuild= self.conf.namebuild,
         )
 
