@@ -83,6 +83,7 @@ def parse_command_line():
 
 
 def fetch_prep_footprints(vapp: str, vconf: str, block: str, xpid: str, geometry: str, assimdate: str, nmembers: int):
+    print(geometry)
     prep = vortex.input(
         kind="PREP",
         vapp=vapp,
@@ -120,7 +121,7 @@ def wait_mandatory_input(
     start = Date.now()
     timer = Date.now()
     prep = fetch_prep_footprints(
-        app=vapp, vconf=vconf, block=block, xpid=xpid, geometry=geometry, assimdate=assimdate, nmembers=nmembers
+        vapp=vapp, vconf=vconf, block=block, xpid=xpid, geometry=geometry, assimdate=assimdate, nmembers=nmembers
     )
     # if not args.keep_existing_prep:
     #     for fic in prep:
@@ -247,7 +248,9 @@ def main():
                 nmembers=nmembers,
                 keep_existing_prep=args.keep_existing_prep,
             )
-            offline = mkjob_list_commands("offline_openloop", datebegin=datebegin, dateend=dateend)
+            offline = mkjob_list_commands(
+                "offline_openloop", conf=args.conf, njobs=nmembers, datebegin=datebegin, dateend=dateend
+            )
             first_run = False
         elif wait_mandatory_input(
             vapp=args.vapp,
@@ -262,7 +265,9 @@ def main():
         ):
             # This is a run after an assimilation step:
             # Launch a set of offline_MPI tasks with an ensemble of PREP files as initial conditions
-            offline = mkjob_list_commands("offline_assim", datebegin=datebegin, dateend=dateend)
+            offline = mkjob_list_commands(
+                "offline_assim", conf=args.conf, njobs=nmembers, datebegin=datebegin, dateend=dateend
+            )
             walltime = Time(iniparser.get("offline_assim_job", "time"))
         else:
             break
@@ -282,7 +287,7 @@ def main():
             nmembers=nmembers,
             walltime=walltime,
         ):
-            soda = mkjob_command(jobname="soda_job", taskname="soda", date=date)
+            soda = mkjob_command(jobname="soda_job", conf=args.conf, taskname="soda", date=date)
             print("Run command: " + soda + "\n")
             callSystemOrDie(soda)
             walltime = Time(iniparser.get("soda_job", "time"))
