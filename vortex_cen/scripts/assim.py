@@ -82,7 +82,7 @@ def parse_command_line():
     return args
 
 
-def fetch_prep_footprints(vapp: str, vconf: str, xpid: str, geometry: str, assimdate: str, nmembers: int):
+def fetch_prep_footprints(vapp: str, vconf: str, block: str, xpid: str, geometry: str, assimdate: str, nmembers: int):
     prep = vortex.input(
         kind="PREP",
         vapp=vapp,
@@ -92,7 +92,7 @@ def fetch_prep_footprints(vapp: str, vconf: str, xpid: str, geometry: str, assim
         geometry=geometry,
         member=[mb for mb in range(nmembers)],
         namebuild="flat@cen",
-        block="offline",
+        block=block,
         model="surfex",
         namespace="vortex.cache.fr",
         nativefmt="netcdf",
@@ -103,10 +103,10 @@ def fetch_prep_footprints(vapp: str, vconf: str, xpid: str, geometry: str, assim
 
 
 def fetch_and_clear_preps(
-    vapp: str, vconf: str, xpid: str, geometry: str, assimdate: str, nmembers: int, keep_existing_prep=False
+    vapp: str, vconf: str, block: str, xpid: str, geometry: str, assimdate: str, nmembers: int, keep_existing_prep=False
 ):
     prep_footprints = fetch_prep_footprints(
-        vapp=vapp, vconf=vconf, xpid=xpid, geometry=geometry, assimdate=assimdate, nmembers=nmembers
+        vapp=vapp, vconf=vconf, block=block, xpid=xpid, geometry=geometry, assimdate=assimdate, nmembers=nmembers
     )
     if not keep_existing_prep:
         for fic in prep_footprints:
@@ -119,7 +119,9 @@ def wait_mandatory_input(
     launch = False
     start = Date.now()
     timer = Date.now()
-    prep = fetch_prep_footprints(app=vapp, vconf=vconf, xpid=xpid, geometry=geometry, assimdate=assimdate, nmembers=nmembers)
+    prep = fetch_prep_footprints(
+        app=vapp, vconf=vconf, block=block, xpid=xpid, geometry=geometry, assimdate=assimdate, nmembers=nmembers
+    )
     # if not args.keep_existing_prep:
     #     for fic in prep:
     #         fic.delete()
@@ -224,8 +226,27 @@ def main():
         if first_run:
             # This is the first run:
             # launch a set of offline_MPI tasks with a single PREP file as initial conditions
-            fetch_and_clear_preps(block="prep/background", assimdate=date, nmembers=nmembers)
-            fetch_and_clear_preps(block="soda/analysis", assimdate=date, nmembers=nmembers)
+            # Clear existing PREPs if needed
+            fetch_and_clear_preps(
+                vapp=args.vapp,
+                vconf=args.vconf,
+                block="offline",
+                xpid=xpid,
+                geometry=args.geometry,
+                assimdate=datebegin,
+                nmembers=nmembers,
+                keep_existing_prep=args.keep_existing_prep,
+            )
+            fetch_and_clear_preps(
+                vapp=args.vapp,
+                vconf=args.vconf,
+                block="soda",
+                xpid=xpid,
+                geometry=args.geometry,
+                assimdate=datebegin,
+                nmembers=nmembers,
+                keep_existing_prep=args.keep_existing_prep,
+            )
             offline = mkjob_list_commands("offline_openloop", datebegin=datebegin, dateend=dateend)
             first_run = False
         elif wait_mandatory_input(
@@ -233,7 +254,7 @@ def main():
             vconf=args.vconf,
             xpid=xpid,
             geometry=args.geometry,
-            block="analysis",
+            block="soda",
             assimdate=datebegin,
             nmembers=nmembers,
             walltime=walltime,
@@ -255,12 +276,11 @@ def main():
             vapp=args.vapp,
             vconf=args.vconf,
             xpid=xpid,
-            block="background",
+            block="offline",
             geometry=args.geometry,
             assimdate=date,
             nmembers=nmembers,
             walltime=walltime,
-            keep_existing_prep=args.keep_existing_prep,
         ):
             soda = mkjob_command(jobname="soda_job", taskname="soda", date=date)
             print("Run command: " + soda + "\n")
