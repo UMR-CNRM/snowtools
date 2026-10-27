@@ -29,8 +29,13 @@ Tasks designed to launch the PREP executable.
    :class-doc-from: class
    :show-inheritance:
 
-.. autoclass:: PrepRefill
+.. autoclass:: FetchMemberPrepFilesOrCrash
    :no-members:
+   :class-doc-from: class
+   :show-inheritance:
+
+.. autoclass:: PrepRefill
+   :members:
    :class-doc-from: class
    :show-inheritance:
 
@@ -76,21 +81,21 @@ class PrepCommonsMixin(SurfexCommonsMixin):
         """
 
         if mpi:
-            default_gvar = "master_prep_mpi"
+            default_gvar = 'master_prep_mpi'
         else:
-            default_gvar = "master_prep_nompi"
+            default_gvar = 'master_prep_nompi'
 
-        self.sh.title("Toolbox input PREP executable from uenv")
+        self.sh.title('Toolbox input PREP executable from uenv')
         PREP_tbx = vortex.executable(
-            role="Binary",
-            kind="prep",
-            local="PREP",
-            model="surfex",
-            genv=self.conf.get("surfex_uenv", self.conf.uenv),
-            gvar=self.conf.get("prep_gvar", default_gvar),
-            fatal=fatal,
+            role           = 'Binary',
+            kind           = 'prep',
+            local          = 'PREP',
+            model          = 'surfex',
+            genv           = self.conf.get('surfex_uenv', self.conf.uenv),
+            gvar           = self.conf.get('prep_gvar', default_gvar),
+            fatal          = fatal,
         )
-        print(self.ticket.prompt, "PREP_tbx =", PREP_tbx)
+        print(self.ticket.prompt, 'PREP_tbx =', PREP_tbx)
         print()
 
     def get_prep_exe_from_path(self):
@@ -102,11 +107,15 @@ class PrepCommonsMixin(SurfexCommonsMixin):
         * ``exesurfex`` Path to the executable if it should come from a local path.
         """
 
-        self.sh.title("Toolbox input PREP executable from local path")
+        self.sh.title('Toolbox input PREP executable from local path')
         prep_tbx = vortex.executable(
-            role="Binary", kind="prep", local="PREP", model="surfex", remote=self.conf.exesurfex + "/PREP"
+            role           = 'Binary',
+            kind           = 'prep',
+            local          = 'PREP',
+            model          = 'surfex',
+            remote         = self.conf.exesurfex + "/PREP"
         )
-        print(self.ticket.prompt, "PREP_tbx =", prep_tbx)
+        print(self.ticket.prompt, 'PREP_tbx =', prep_tbx)
         print()
 
 
@@ -201,11 +210,12 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
             "dateend",
         ]
         super().__init__(**kw)
-        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES, overwrite=overwrite)
+        self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES,
+                overwrite=overwrite)
 
     @property
     def datevalidity(self):
-        return self.conf.get("prep_datevalidity", self.conf.datebegin)
+        return self.conf.get('prep_datevalidity', self.conf.datebegin)
 
     @property
     def namespace_out(self):
@@ -217,7 +227,7 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
         Get ecoclimapI_covers_param.bin, ecoclimapII_eu_covers_param.bin,
         Get drdt_bst_fit_60.nc, PGD.nc
         """
-        self.get_forcing(localname="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc")
+        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
         self.get_namelist()
@@ -234,22 +244,20 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
         """
         Call either "get_prep_exe_from_path" or "get_prep_exe_from_uenv" method.
         """
-        raise NotImplementedError(
-            "A get_prep_executable method should be implemented, it should call either the "
-            "get_prep_exe_from_path or the get_prep_exe_from_uenv method."
-        )
+        raise NotImplementedError("A get_prep_executable method should be implemented, it should call either the "
+                                  "get_prep_exe_from_path or the get_prep_exe_from_uenv method.")
 
     def algo(self):
         """
         Algo component to produce the PREP file if not found in the inputs
         """
-        self.sh.title("Toolbox algo PREP")
+        self.sh.title('Toolbox algo PREP')
         PREP_tba = vortex.task(
-            kind="make_prep",
-            engine="parallel",
-            date=self.datevalidity,
+            kind       = 'make_prep',
+            engine     = 'parallel',
+            date       = self.datevalidity,
         )
-        print(self.ticket.prompt, "Toolbox algo prep=", PREP_tba)
+        print(self.ticket.prompt, 'Toolbox algo prep=', PREP_tba)
         print()
         return PREP_tba
 
@@ -263,26 +271,24 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
         """
         Save the PREP file
         """
-        self.sh.title("Output PREP")
-        prep_tbo = (
-            vortex.output(
-                local="PREP.nc",
-                role="SnowpackInit",
-                experiment=self.conf.xpid,
-                datevalidity=self.datevalidity,
-                vapp=self.conf.vapp,
-                vconf=self.conf.vconf,
-                geometry=self.conf.geometry,
-                nativefmt="netcdf",
-                kind="PREP",
-                model="surfex",
-                namespace=self.namespace_out,
-                namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block="prep",
-                member=self.conf.get("member", None),
-            ),
-        )
-        print(self.ticket.prompt, "prep_tbo =", prep_tbo)
+        self.sh.title('Output PREP')
+        prep_tbo = vortex.output(
+            local        = 'PREP.nc',
+            role         = 'SnowpackInit',
+            experiment   = self.conf.xpid,
+            datevalidity = self.datevalidity,
+            vapp         = self.conf.vapp,
+            vconf        = self.conf.vconf,
+            geometry     = self.conf.geometry,
+            nativefmt    = 'netcdf',
+            kind         = 'PREP',
+            model        = 'surfex',
+            namespace    = self.namespace_out,
+            namebuild    = 'flat@cen',  # TODO : passer en variable de configuration
+            block        = 'prep',
+            member       = self.conf.get('member', None),
+        ),
+        print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
         print()
 
     def diff(self):
@@ -290,27 +296,25 @@ class _PrepConstruct(PrepCommonsMixin, _CenResearchTask):
         Test output reproductibility [OPTIONAL]
         """
         self.sh.title("Reproductibility check : PREP")
-        diff = (
-            vortex.diff(
-                local="PREP.nc",
-                role="SnowpackInit",
-                experiment=self.conf.diff_xpid,
-                username=self.conf.get("diff_user", None),
-                datevalidity=self.conf.get("date", self.conf.get("datebegin", None)),
-                vapp=self.conf.vapp,
-                vconf=self.conf.vconf,
-                geometry=self.conf.geometry,
-                nativefmt="netcdf",
-                kind="PREP",
-                model="surfex",
-                namespace="vortex.multi.fr",
-                namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block="prep",
-                member=self.conf.get("member", None),
-                vortex1=self.conf.get("diff_vortex1", False),
-            ),
-        )
-        print(self.ticket.prompt, "diff =", diff)
+        diff = vortex.diff(
+            local        = 'PREP.nc',
+            role         = 'SnowpackInit',
+            experiment   = self.conf.diff_xpid,
+            username     = self.conf.get('diff_user', None),
+            datevalidity = self.conf.get('date', self.conf.get('datebegin', None)),
+            vapp         = self.conf.vapp,
+            vconf        = self.conf.vconf,
+            geometry     = self.conf.geometry,
+            nativefmt    = 'netcdf',
+            kind         = 'PREP',
+            model        = 'surfex',
+            namespace    = 'vortex.multi.fr',
+            namebuild    = 'flat@cen',  # TODO : passer en variable de configuration
+            block        = 'prep',
+            member       = self.conf.get('member', None),
+            vortex1      = self.conf.get("diff_vortex1", False),
+        ),
+        print(self.ticket.prompt, 'diff =', diff)
         print()
 
 
@@ -381,7 +385,15 @@ class FetchPrepFileOrMake(_PrepConstruct):
             "uenv",
         ]
 
-        OPTIONAL_CONFIGURATION_VARIABLES = ["date", "member", "exesurfex", "tg_cache", "prep", "pgd", "prep_block"]
+        OPTIONAL_CONFIGURATION_VARIABLES = [
+            "date",
+            "member",
+            "exesurfex",
+            "tg_cache",
+            "prep",
+            "pgd",
+            "prep_block"
+        ]
         super().__init__(**kw)
         self.update_attributes(MANDATORY_CONFIGURATION_VARIABLES, OPTIONAL_CONFIGURATION_VARIABLES)
 
@@ -396,7 +408,7 @@ class FetchPrepFileOrMake(_PrepConstruct):
         * ``prep_gvar`` specify the name of the PREP executable in the uenv. Default is ``master_prep_mpi``
           if the mpi parameter is True and ``master_prep_nompi`` otherwise.
         """
-        if self.allow_path and hasattr(self.conf, "exesurfex"):
+        if self.allow_path and hasattr(self.conf, 'exesurfex'):
             self.get_prep_exe_from_path()
         else:
             self.get_prep_exe_from_uenv()
@@ -428,26 +440,24 @@ class FetchPrepFileOrMake(_PrepConstruct):
 
     def put_outputs(self):
 
-        self.sh.title("Put PREP to cache")
-        prep_tbo = (
-            vortex.output(
-                local="PREP.nc",
-                role="SnowpackInit",
-                experiment=self.conf.xpid,
-                datevalidity=self.datevalidity,
-                vapp=self.conf.get("prep_vapp", self.conf.vapp),
-                vconf=self.conf.get("prep_vconf", self.conf.vconf),
-                geometry=self.conf.geometry,
-                nativefmt="netcdf",
-                kind="PREP",
-                model="surfex",
-                namespace=self.namespace_out,
-                namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block="prep",
-                member=self.conf.get("prep_member", self.conf.get("member", None)),
-            ),
-        )
-        print(self.ticket.prompt, "prep_tbo =", prep_tbo)
+        self.sh.title('Put PREP to cache')
+        prep_tbo = vortex.output(
+            local       = 'PREP.nc',
+            role        = 'SnowpackInit',
+            experiment  = self.conf.xpid,
+            datevalidity = self.datevalidity,
+            vapp        = self.conf.get('prep_vapp', self.conf.vapp),
+            vconf       = self.conf.get('prep_vconf', self.conf.vconf),
+            geometry    = self.conf.geometry,
+            nativefmt   = 'netcdf',
+            kind        = 'PREP',
+            model       = 'surfex',
+            namespace   = self.namespace_out,
+            namebuild   = 'flat@cen',  # TODO : passer en variable de configuration
+            block       = 'prep',
+            member      = self.conf.get('prep_member', self.conf.get('member', None)),
+        ),
+        print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
         print()
 
     def diff(self):
@@ -482,7 +492,6 @@ class FetchPrepFileOrCrash(FetchPrepFileOrMake):
       analysis (*assimilation*). Default is *None*. Might be useful for reforecasts.
 
     """
-
     def __init__(self, **kw):
         MANDATORY_CONFIGURATION_VARIABLES = [
             "xpid",
@@ -492,8 +501,8 @@ class FetchPrepFileOrCrash(FetchPrepFileOrMake):
             "prep",
         ]
         OPTIONAL_CONFIGURATION_VARIABLES = [
-            "prep_xpid",
-            "prep_user",
+            'prep_xpid',
+            'prep_user',
         ]
         overwrite = [
             "prep",
@@ -532,6 +541,7 @@ class FetchPrepFileOrCrash(FetchPrepFileOrMake):
         )
         print(self.ticket.prompt, "prep_tbi =", prep_tbi)
         print()
+        
 
     def get_local_inputs(self):
         pass
@@ -549,14 +559,11 @@ class FetchPrepFileOrCrash(FetchPrepFileOrMake):
         # No file produced, no need for reproducibility check
         pass
 
-
 class FetchMembersPrepFilesOrCrash(FetchPrepFileOrCrash):
     """
     Fetch prep files from different simulation members/
     Useful for OfflineAssim taks
-
     **Mandatory configuration variables:**
-
     * ``geometry`` *geometry* of the forcing file(s)
       type: str, footprints.stdtypes.FPList
     * ``xpid`` Experiment identifier
@@ -575,7 +582,6 @@ class FetchMembersPrepFilesOrCrash(FetchPrepFileOrCrash):
       Default is ``None``.
     * ``prep_cutoff`` Can be used to select a PREP file coming from an operational forecast (*forecast*) or
       analysis (*assimilation*). Default is *None*. Might be useful for reforecasts.
-
     """
 
     def __init__(self, **kw):
@@ -607,7 +613,6 @@ class FetchMembersPrepFilesOrCrash(FetchPrepFileOrCrash):
         )
         print(self.ticket.prompt, "prep_tbi =", prep_tbi)
         print()
-
 
 class PrepRefill(FetchPrepFileOrCrash):
     """
@@ -675,29 +680,27 @@ class PrepRefill(FetchPrepFileOrCrash):
         self.get_prep_file_from_cache_or_archive(fatal=True)
 
         # Put output file(s) in the cache now so that the next task will be able to use it
-        self.sh.title("Put PREP to cache")
-        prep_tbo = (
-            vortex.output(
-                local="PREP.nc",
-                role="SnowpackInit",
-                experiment=self.conf.xpid,
-                datevalidity=self.datevalidity,
-                vapp=self.conf.vapp,
-                vconf=self.conf.vconf,
-                geometry=self.conf.geometry,
-                nativefmt="netcdf",
-                kind="PREP",
-                model="surfex",
-                namespace="vortex.cache.fr",
-                namebuild="flat@cen",  # TODO : passer en variable de configuration
-                block=self.conf.get("refill_block", "prep_refill"),
-                member=self.conf.get("prep_member", None),
-                # Arguments used to cold-start the real time chain
-                cutoff=self.conf.get("cutoff", None),
-                rundate=self.conf.get("rundate", None),
-            ),
-        )
-        print(self.ticket.prompt, "prep_tbo =", prep_tbo)
+        self.sh.title('Put PREP to cache')
+        prep_tbo = vortex.output(
+            local        = 'PREP.nc',
+            role         = 'SnowpackInit',
+            experiment   = self.conf.xpid,
+            datevalidity = self.datevalidity,
+            vapp         = self.conf.vapp,
+            vconf        = self.conf.vconf,
+            geometry     = self.conf.geometry,
+            nativefmt    = 'netcdf',
+            kind         = 'PREP',
+            model        = 'surfex',
+            namespace    = 'vortex.cache.fr',
+            namebuild    = 'flat@cen',  # TODO : passer en variable de configuration
+            block        = self.conf.get('refill_block', 'prep_refill'),
+            member       = self.conf.get('prep_member', None),
+            # Arguments used to cold-start the real time chain
+            cutoff       = self.conf.get("cutoff", None),
+            rundate      = self.conf.get("rundate", None),
+        ),
+        print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
         print()
 
     def put_outputs(self):
@@ -770,7 +773,6 @@ class MakePrepFile(_PrepConstruct):
       if the mpi parameter is True and ``master_prep_nompi`` otherwise.
 
     """
-
     def __init__(self, **kw):
         MANDATORY_CONFIGURATION_VARIABLES = []
         OPTIONAL_CONFIGURATION_VARIABLES = [
@@ -792,7 +794,7 @@ class MakePrepFile(_PrepConstruct):
           if the mpi parameter is True and ``master_prep_nompi`` otherwise.
         * ``mpi`` If True, *mpi* executable is fetched, if False *nompi* executable. Default: True
         """
-        if self.allow_path and hasattr(self.conf, "exesurfex"):
+        if self.allow_path and hasattr(self.conf, 'exesurfex'):
             self.get_prep_exe_from_path()
         else:
             mpi = self.conf.get("mpi", True)

@@ -17,11 +17,8 @@ Such an experiment is a loop over the following sequence of actions over a set o
 """
 
 import argparse
-import os
 import time
 
-import pyproj
-import pyproj.datadir
 import vortex
 from bronx.stdtypes.date import Date, Time
 from vortex.util.config import GenericConfigParser
@@ -34,51 +31,53 @@ from snowtools.tools.execute import callSystemOrDie
 def parse_command_line():
 
     parser = argparse.ArgumentParser(
-        description="Launch a SURFEX/Crocus experiment with snow data assimilation. \n"
-        "Such an experiment is loop over the following sequence of actions over a set of assimilation dates:\n"
-        "1. Run an ensemble of SURFEX/Crocus simulations (OFFLINE executable) with an MPI parallelisation until "
-        "an assimilation date. All simulation members are initialised with the same initial conditions (PREP file).\n"
+        description='Launch a SURFEX/Crocus experiment with snow data assimilation. \n'
+        'Such an experiment is loop over the following sequence of actions over a set of assimilation dates:\n'
+        '1. Run an ensemble of SURFEX/Crocus simulations (OFFLINE executable) with an MPI parallelisation until '
+        'an assimilation date. All simulation members are initialised with the same initial conditions (PREP file).\n'
         '--> Associated task : "offline_openloop"\n'
-        "2. Assimilate an available snow observation at the assimilation date with a Particle Filter "
-        "(SODA executable)\n"
-        "3. Run an ensemble of SURFEX/Crocus simulations (OFFLINE executable) with an MPI parallelisation from "
-        "the last assimilation date, until the next assimilaiton date (or the date of end simiulation).\n"
-        "The difference with the execution of step 1 is that this time, each simuaiton member is initialised by"
-        "specific initial conditions (PREP file) coming from step 2 (SODA analysis).\n"
+        '2. Assimilate an available snow observation at the assimilation date with a Particle Filter '
+        '(SODA executable)\n'
+        '3. Run an ensemble of SURFEX/Crocus simulations (OFFLINE executable) with an MPI parallelisation from '
+        'the last assimilation date, until the next assimilaiton date (or the date of end simiulation).\n'
+        'The difference with the execution of step 1 is that this time, each simuaiton member is initialised by'
+        'specific initial conditions (PREP file) coming from step 2 (SODA analysis).\n'
         '--> Associated task : "offline_assim"\n'
     )
 
-    parser.add_argument("-b", "--datebegin", type=str, help="Date of the beginning of the simulation.")
+    parser.add_argument('-b', '--datebegin', type=str,
+                        help="Date of the beginning of the simulation.")
 
-    parser.add_argument("-e", "--dateend", type=str, help="Date of the end of the simulation.")
+    parser.add_argument('-e', '--dateend', type=str,
+                        help="Date of the end of the simulation.")
 
-    parser.add_argument("--vapp", help="Target application (ex: edelweiss)", type=str, required=True)
+    parser.add_argument("--vapp",
+            help="Target application (ex: edelweiss)", type=str, required=True)
 
-    parser.add_argument("--vconf", help="Target configuration", type=str, required=True)
+    parser.add_argument("--vconf",
+            help="Target configuration", type=str, required=True)
 
-    parser.add_argument("-c", "--conf", help="Path to the simulation's configuration file", type=str, required=True)
+    parser.add_argument("-c", "--conf",
+            help="Path to the simulation's configuration file", type=str, required=True)
 
-    parser.add_argument("-a", "--assimdates", nargs="+", help="List of assimilation dates", required=False, default=list())
+    parser.add_argument("-a", "--assimdates", nargs="+",
+            help="List of assimilation dates", required=False, default=list())
 
     # Temporary argument for script debuging
-    parser.add_argument(
-        "--keep_existing_prep",
-        action="store_true",
-        default=False,
-        help="Do not remove existing PREP files to avoid waiting (DBUG mode only)",
-        required=False,
-    )
+    parser.add_argument("--keep_existing_prep", action='store_true', default=False,
+            help="Do not remove existing PREP files to avoid waiting (DBUG mode only)", required=False)
 
-    parser.add_argument("-g", "--geometry", help="Simulation's geometry", type=str, required=False)
-    #
-    #    parser.add_argument("-x", "--xpid",
-    #            help="Experiment identifier", type=str, required=False)
-    #
-    #    parser.add_argument("-n", "--nmembers",
-    #            help="Number of simulation members", type=int, required=False)
+    parser.add_argument("-g", "--geometry",
+            help="Simulation's geometry", type=str, required=False)
+#
+#    parser.add_argument("-x", "--xpid",
+#            help="Experiment identifier", type=str, required=False)
+#
+#    parser.add_argument("-n", "--nmembers",
+#            help="Number of simulation members", type=int, required=False)
 
     args = parser.parse_args()
-    print(args)
+
     # Add simulation date end to list of assimilation dates for last loop
     args.assimdates.append(args.dateend)
 
@@ -211,21 +210,15 @@ def mkjob_list_commands(taskname, conf, njobs=17, mb0=0, datebegin=None, dateend
     return mkjob_list
 
 
-def fix_pyproj_data_dir():
-    """Temporal bugfix for installation problem of PYPROJ under belenos environment"""
-    if pyproj.datadir.get_data_dir() is None:
-        pyproj.datadir.set_data_dir("/opt/softs/anaconda3/envs/Python312/share/proj")
-
-
 def main():
 
     args = parse_command_line()
     iniparser = GenericConfigParser(inifile=args.conf)
 
-    nmembers = int(iniparser.get("DEFAULT", "nmembers"))
-    xpid = iniparser.get("DEFAULT", "xpid")
+    nmembers = int(iniparser.get('DEFAULT', 'nmembers'))
+    xpid = iniparser.get('DEFAULT', 'xpid')
     # walltime tells the method "wait_mandatory_input" how long it has to wait before crashing
-    walltime = Time(iniparser.get("offline_openloop_job", "time"))
+    walltime = Time(iniparser.get('offline_openloop_job', 'time'))
 
     datebegin = args.datebegin
     first_run = True
