@@ -4,7 +4,7 @@ from mkjob.nodes import Driver
 
 from vortex_cen.tasks.surfex.offline import OfflineAssim
 from vortex_cen.tasks.surfex.pgd import FetchPgdFileOrCrash
-from vortex_cen.tasks.surfex.prep import FetchPrepFileOrCrash
+from vortex_cen.tasks.surfex.prep import FetchMembersPrepFilesOrCrash
 
 
 def setup(t, **kw):
@@ -13,7 +13,7 @@ def setup(t, **kw):
         ticket=t,
         nodes=[
             FetchPgdFileOrCrash(tag="fetch_pgd", ticket=t, **kw),
-            FetchPrepFileOrCrash(tag="fetch_prep_file_assim", ticket=t, **kw),
+            FetchMembersPrepFilesOrCrash(tag="fetch_prep_file_assim", ticket=t, **kw),
             OfflineAssim(tag="offline_assim", ticket=t, **kw),
         ],
         options=kw,

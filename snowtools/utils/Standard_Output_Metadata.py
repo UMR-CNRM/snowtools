@@ -32,10 +32,12 @@ import re
 import sys
 
 import numpy as np
+import pyproj
 import xarray as xr
 from bronx.datagrip.namelist import NamelistParser
 from bronx.stdtypes.date import Date
 from pyproj import Transformer
+from pyproj.exceptions import DataDirError
 
 from snowtools.utils.infomassifs import infomassifs
 
@@ -175,6 +177,18 @@ class StandardS2M:
     def __init__(self, xarray_ds):
         self.ds = xarray_ds
 
+    def fix_pyproj_data_dir(self):
+        """TEMPORARY bugfix for installation problem of PYPROJ under belenos environment.
+        The bug is pyproj not finding its data directory.
+        If not found, we manually set it to a default folder in the belnos conda environment
+        @NI October 2026"""
+        try:
+            pyproj.datadir.get_data_dir()
+        except DataDirError as e:
+            print(f"Pyproj data dir error caught: {e}")
+            print(f"Setting pyproj data dir to {'/opt/softs/anaconda3/envs/Python312/share/proj'}")
+            pyproj.datadir.set_data_dir("/opt/softs/anaconda3/envs/Python312/share/proj")
+
     def xy2latlon(self, xvar, yvar):
         """
         Convert from an x/y projection to lat/lon by reading the info in the SURFEX namelist
@@ -198,9 +212,7 @@ class StandardS2M:
         else:
             raise ValueError(f"Unknown grid type: {gridtype}")
 
-        import pyproj
-
-        pyproj.datadir.set_data_dir("/opt/softs/anaconda3/envs/Python312/share/proj")
+        self.fix_pyproj_data_dir()
         transformer = Transformer.from_crs(epsg_src, "epsg:4326", always_xy=True)
 
         #  xvar/yvar must be 2D DataArrays
@@ -209,8 +221,7 @@ class StandardS2M:
 
         XX, YY = np.meshgrid(x, y, indexing="ij")
         lon2d, lat2d = transformer.transform(XX, YY)
-        print("xvar.dims", xvar.dims)
-        print("yvar.dims", yvar.dims)
+
         lat = xr.DataArray(lat2d, dims=(*xvar.dims, *yvar.dims), attrs={"standard_name": "latitude"})
         lon = xr.DataArray(lon2d, dims=(*xvar.dims, *yvar.dims), attrs={"standard_name": "longitude"})
         return lat, lon

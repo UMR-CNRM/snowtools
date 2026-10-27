@@ -17,8 +17,11 @@ Such an experiment is a loop over the following sequence of actions over a set o
 """
 
 import argparse
+import os
 import time
 
+import pyproj
+import pyproj.datadir
 import vortex
 from bronx.stdtypes.date import Date, Time
 from vortex.util.config import GenericConfigParser
@@ -83,7 +86,6 @@ def parse_command_line():
 
 
 def fetch_prep_footprints(vapp: str, vconf: str, block: str, xpid: str, geometry: str, assimdate: str, nmembers: int):
-    print(geometry)
     prep = vortex.input(
         kind="PREP",
         vapp=vapp,
@@ -209,6 +211,12 @@ def mkjob_list_commands(taskname, conf, njobs=17, mb0=0, datebegin=None, dateend
     return mkjob_list
 
 
+def fix_pyproj_data_dir():
+    """Temporal bugfix for installation problem of PYPROJ under belenos environment"""
+    if pyproj.datadir.get_data_dir() is None:
+        pyproj.datadir.set_data_dir("/opt/softs/anaconda3/envs/Python312/share/proj")
+
+
 def main():
 
     args = parse_command_line()
@@ -218,6 +226,7 @@ def main():
     xpid = iniparser.get("DEFAULT", "xpid")
     # walltime tells the method "wait_mandatory_input" how long it has to wait before crashing
     walltime = Time(iniparser.get("offline_openloop_job", "time"))
+
     datebegin = args.datebegin
     first_run = True
     for date in args.assimdates:
@@ -227,14 +236,14 @@ def main():
         if first_run:
             # This is the first run:
             # launch a set of offline_MPI tasks with a single PREP file as initial conditions
-            # Clear existing PREPs if needed
+            # Clear existing PREPs
             fetch_and_clear_preps(
                 vapp=args.vapp,
                 vconf=args.vconf,
                 block="offline",
                 xpid=xpid,
                 geometry=args.geometry,
-                assimdate=datebegin,
+                assimdate=date,
                 nmembers=nmembers,
                 keep_existing_prep=args.keep_existing_prep,
             )
@@ -244,7 +253,7 @@ def main():
                 block="soda",
                 xpid=xpid,
                 geometry=args.geometry,
-                assimdate=datebegin,
+                assimdate=date,
                 nmembers=nmembers,
                 keep_existing_prep=args.keep_existing_prep,
             )
@@ -261,7 +270,6 @@ def main():
             assimdate=datebegin,
             nmembers=nmembers,
             walltime=walltime,
-            keep_existing_prep=args.keep_existing_prep,
         ):
             # This is a run after an assimilation step:
             # Launch a set of offline_MPI tasks with an ensemble of PREP files as initial conditions

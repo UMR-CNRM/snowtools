@@ -550,6 +550,65 @@ class FetchPrepFileOrCrash(FetchPrepFileOrMake):
         pass
 
 
+class FetchMembersPrepFilesOrCrash(FetchPrepFileOrCrash):
+    """
+    Fetch prep files from different simulation members/
+    Useful for OfflineAssim taks
+
+    **Mandatory configuration variables:**
+
+    * ``geometry`` *geometry* of the forcing file(s)
+      type: str, footprints.stdtypes.FPList
+    * ``xpid`` Experiment identifier
+      type: str
+    * ``prep_xpid`` or ``xpid`` Experiment id the prep file should be searched for or put in cache.
+    * ``prep_user`` name of the user who produced the PREP file. Default: None.
+    * ``prep_datevalidity`` Validity date of the prep file.
+    * ``prep_vapp`` or ``vapp`` Application name to search the PREP.nc file.
+    * ``prep_vconf`` or ``vconf`` Configuration name to search the PREP.nc file.
+    * ``prep_vortex1`` type: bool. *True* if the requested PREP.nc file was produced with vortex 1 and thus uses
+      vortex 1 naming conventions. Default is *False*.
+    * ``prep_geometry`` or ``geometry`` *geometry* of the PREP file.
+    * ``prep_namebuild`` Default: *flat@cen*
+    * ``prep_block`` block part of the data tree to search for the PREP.nc file. Default is ``prep``.
+    * ``prep_member`` or ``member`` If the PREP.nc file comes from an ensemble, a member can be chosen.
+      Default is ``None``.
+    * ``prep_cutoff`` Can be used to select a PREP file coming from an operational forecast (*forecast*) or
+      analysis (*assimilation*). Default is *None*. Might be useful for reforecasts.
+
+    """
+
+    def __init__(self, **kw):
+        super().__init__(**kw)
+
+    def get_remote_inputs(self):
+
+        self.sh.title("Input PREP")
+        prep_tbi = (
+            vortex.input(
+                local="PREP.nc",
+                role="SnowpackInit",
+                experiment=self.conf.get("prep_xpid", self.conf.xpid),
+                username=self.conf.get("prep_user", None),
+                datevalidity=self.conf.get("prep_datevalidity", self.conf.datebegin),
+                vapp=self.conf.get("prep_vapp", self.conf.vapp),
+                vconf=self.conf.get("prep_vconf", self.conf.vconf),
+                geometry=self.conf.geometry,
+                nativefmt="netcdf",
+                kind="PREP",
+                namespace="vortex.multi.fr",
+                vortex1=self.conf.get("prep_vortex1", False),
+                namebuild="flat@cen",  # TODO : passer en variable de configuration ?
+                member=self.conf.member,
+                block=self.conf.get("prep_block", "prep"),
+                model="surfex",
+                intent="inout",
+            ),
+        )
+        print(self.ticket.prompt, "prep_tbi =", prep_tbi)
+        print()
+
+
 class PrepRefill(FetchPrepFileOrCrash):
     """
     **Task : PrepRefill**
