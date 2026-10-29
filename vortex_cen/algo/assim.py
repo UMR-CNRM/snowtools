@@ -37,22 +37,24 @@ Algo Components for the exectution of SODA-related tasks within a snow data assi
 
 """
 
+import footprints
+import pandas as pd
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date
 from bronx.syntax.externalcode import ExternalCodeImportChecker
-
-import footprints
-from vortex.algo.components import Parallel, AlgoComponent
+from vortex.algo.components import AlgoComponent, Parallel
 from vortex.syntax.stdattrs import a_date
+
+from snowtools.tools.particle_filter import EdelweissParticleFilter
 from vortex_cen.algo.components import _CenTaylorRun, _CenTaylorVortexWorker
 
 logger = loggers.getLogger(__name__)
 
-echecker = ExternalCodeImportChecker('snowtools')
+echecker = ExternalCodeImportChecker("snowtools")
 with echecker:
-    from snowtools.tools.update_namelist import update_namelist_object_nmembers
-    from snowtools.tools.perturb_forcing import forcinput_perturb
     from snowtools.scripts.post_processing import croco_postprocess as cpp
+    from snowtools.tools.perturb_forcing import forcinput_perturb
+    from snowtools.tools.update_namelist import update_namelist_object_nmembers
 
 
 class Soda(Parallel):
@@ -338,3 +340,51 @@ class CrocOPostProcessWorker(_CenTaylorVortexWorker):
         """
         # Launch "core" algo
         cpp.execute(self.datebegin, self.dateend)
+
+
+
+@echecker.disabled_if_unavailable
+class PythonParticleFilter(_CenTaylorRun):
+    _footprint = dict(
+        info="AlgoComponent for particle filtering based on some Python code",
+        attr=dict(
+            dateassim=a_date,
+            kind=dict(
+                values=["python_particle_filter"],
+            ),
+            role_members=dict(
+                info="Role of RH inputs to use for members definition",
+                values=["SnowpackSimulation"],
+            ),
+        ),
+    )
+
+
+@echecker.disabled_if_unavailable
+class PythonParticleFilterWorker(_CenTaylorVortexWorker):
+    """
+    Worker associated to the `PythonParticleFilter` algo component.
+
+    """
+
+    _footprint = dict(
+        info="AlgoComponent for particle filtering based on some Python code",
+        attr=dict(
+            dateassim=a_date,
+            kind=dict(
+                values=["python_particle_filter"],
+            ),
+        ),
+    )
+
+    def _commons(self, rundir, thisdir, rdict, **kwargs):
+        """
+        Method called by the main **vortex_task** method of the **_CenMixIn** class
+        """
+        # Launch "core" algo
+        particle_filter = EdelweissParticleFilter(self.dateassim)
+        particle_filter.run()
+
+        # df = pd.DataFrame(new_weights).T
+        # # df.to_csv("weights_20220226.csv")
+        # pd.DataFrame(alpha).to_csv("alpha_20220226.csv")

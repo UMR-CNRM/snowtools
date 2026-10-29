@@ -31,50 +31,48 @@ from snowtools.tools.execute import callSystemOrDie
 def parse_command_line():
 
     parser = argparse.ArgumentParser(
-        description='Launch a SURFEX/Crocus experiment with snow data assimilation. \n'
-        'Such an experiment is loop over the following sequence of actions over a set of assimilation dates:\n'
-        '1. Run an ensemble of SURFEX/Crocus simulations (OFFLINE executable) with an MPI parallelisation until '
-        'an assimilation date. All simulation members are initialised with the same initial conditions (PREP file).\n'
+        description="Launch a SURFEX/Crocus experiment with snow data assimilation. \n"
+        "Such an experiment is loop over the following sequence of actions over a set of assimilation dates:\n"
+        "1. Run an ensemble of SURFEX/Crocus simulations (OFFLINE executable) with an MPI parallelisation until "
+        "an assimilation date. All simulation members are initialised with the same initial conditions (PREP file).\n"
         '--> Associated task : "offline_openloop"\n'
-        '2. Assimilate an available snow observation at the assimilation date with a Particle Filter '
-        '(SODA executable)\n'
-        '3. Run an ensemble of SURFEX/Crocus simulations (OFFLINE executable) with an MPI parallelisation from '
-        'the last assimilation date, until the next assimilaiton date (or the date of end simiulation).\n'
-        'The difference with the execution of step 1 is that this time, each simuaiton member is initialised by'
-        'specific initial conditions (PREP file) coming from step 2 (SODA analysis).\n'
+        "2. Assimilate an available snow observation at the assimilation date with a Particle Filter "
+        "(SODA executable)\n"
+        "3. Run an ensemble of SURFEX/Crocus simulations (OFFLINE executable) with an MPI parallelisation from "
+        "the last assimilation date, until the next assimilaiton date (or the date of end simiulation).\n"
+        "The difference with the execution of step 1 is that this time, each simuaiton member is initialised by"
+        "specific initial conditions (PREP file) coming from step 2 (SODA analysis).\n"
         '--> Associated task : "offline_assim"\n'
     )
 
-    parser.add_argument('-b', '--datebegin', type=str,
-                        help="Date of the beginning of the simulation.")
+    parser.add_argument("-b", "--datebegin", type=str, help="Date of the beginning of the simulation.")
 
-    parser.add_argument('-e', '--dateend', type=str,
-                        help="Date of the end of the simulation.")
+    parser.add_argument("-e", "--dateend", type=str, help="Date of the end of the simulation.")
 
-    parser.add_argument("--vapp",
-            help="Target application (ex: edelweiss)", type=str, required=True)
+    parser.add_argument("--vapp", help="Target application (ex: edelweiss)", type=str, required=True)
 
-    parser.add_argument("--vconf",
-            help="Target configuration", type=str, required=True)
+    parser.add_argument("--vconf", help="Target configuration", type=str, required=True)
 
-    parser.add_argument("-c", "--conf",
-            help="Path to the simulation's configuration file", type=str, required=True)
+    parser.add_argument("-c", "--conf", help="Path to the simulation's configuration file", type=str, required=True)
 
-    parser.add_argument("-a", "--assimdates", nargs="+",
-            help="List of assimilation dates", required=False, default=list())
+    parser.add_argument("-a", "--assimdates", nargs="+", help="List of assimilation dates", required=False, default=list())
 
     # Temporary argument for script debuging
-    parser.add_argument("--keep_existing_prep", action='store_true', default=False,
-            help="Do not remove existing PREP files to avoid waiting (DBUG mode only)", required=False)
+    parser.add_argument(
+        "--keep_existing_prep",
+        action="store_true",
+        default=False,
+        help="Do not remove existing PREP files to avoid waiting (DBUG mode only)",
+        required=False,
+    )
 
-    parser.add_argument("-g", "--geometry",
-            help="Simulation's geometry", type=str, required=False)
-#
-#    parser.add_argument("-x", "--xpid",
-#            help="Experiment identifier", type=str, required=False)
-#
-#    parser.add_argument("-n", "--nmembers",
-#            help="Number of simulation members", type=int, required=False)
+    parser.add_argument("-g", "--geometry", help="Simulation's geometry", type=str, required=False)
+    #
+    #    parser.add_argument("-x", "--xpid",
+    #            help="Experiment identifier", type=str, required=False)
+    #
+    #    parser.add_argument("-n", "--nmembers",
+    #            help="Number of simulation members", type=int, required=False)
 
     args = parser.parse_args()
 
@@ -105,7 +103,14 @@ def fetch_prep_footprints(vapp: str, vconf: str, block: str, xpid: str, geometry
 
 
 def fetch_and_clear_preps(
-    vapp: str, vconf: str, block: str, xpid: str, geometry: str, assimdate: str, nmembers: int, keep_existing_prep=False
+    vapp: str,
+    vconf: str,
+    block: str,
+    xpid: str,
+    geometry: str,
+    assimdate: str,
+    nmembers: int,
+    keep_existing_prep: bool = False,
 ):
     prep_footprints = fetch_prep_footprints(
         vapp=vapp, vconf=vconf, block=block, xpid=xpid, geometry=geometry, assimdate=assimdate, nmembers=nmembers
@@ -116,13 +121,26 @@ def fetch_and_clear_preps(
 
 
 def wait_mandatory_input(
-    vapp: str, vconf: str, block: str, xpid: str, geometry: str, assimdate: str, nmembers: int, walltime: Time
+    vapp: str,
+    vconf: str,
+    block: str,
+    xpid: str,
+    geometry: str,
+    assimdate: str,
+    nmembers: int,
+    walltime: Time,
 ):
     launch = False
     start = Date.now()
     timer = Date.now()
     prep = fetch_prep_footprints(
-        vapp=vapp, vconf=vconf, block=block, xpid=xpid, geometry=geometry, assimdate=assimdate, nmembers=nmembers
+        vapp=vapp,
+        vconf=vconf,
+        block=block,
+        xpid=xpid,
+        geometry=geometry,
+        assimdate=assimdate,
+        nmembers=nmembers,
     )
     # if not args.keep_existing_prep:
     #     for fic in prep:
@@ -215,44 +233,46 @@ def main():
     args = parse_command_line()
     iniparser = GenericConfigParser(inifile=args.conf)
 
-    nmembers = int(iniparser.get('DEFAULT', 'nmembers'))
-    xpid = iniparser.get('DEFAULT', 'xpid')
+    nmembers = int(iniparser.get("DEFAULT", "nmembers"))
+    xpid = iniparser.get("DEFAULT", "xpid")
     # walltime tells the method "wait_mandatory_input" how long it has to wait before crashing
-    walltime = Time(iniparser.get('offline_openloop_job', 'time'))
-
+    walltime = Time(iniparser.get("offline_openloop_job", "time"))
+    engine_assim = "soda"
+    # engine_assim = "python_assim"
     datebegin = args.datebegin
     first_run = True
     for date in args.assimdates:
         dateend = date
 
+        # Clear existing PREPs according to keep_existing_prep
+        fetch_and_clear_preps(
+            vapp=args.vapp,
+            vconf=args.vconf,
+            block="offline",
+            xpid=xpid,
+            geometry=args.geometry,
+            assimdate=date,
+            nmembers=nmembers,
+            keep_existing_prep=args.keep_existing_prep,
+        )
+        fetch_and_clear_preps(
+            vapp=args.vapp,
+            vconf=args.vconf,
+            block="soda",
+            xpid=xpid,
+            geometry=args.geometry,
+            assimdate=date,
+            nmembers=nmembers,
+            keep_existing_prep=args.keep_existing_prep,
+        )
         # 1. Launch an ensemble of OFFLINE_MPI simulations
         if first_run:
             # This is the first run:
             # launch a set of offline_MPI tasks with a single PREP file as initial conditions
-            # Clear existing PREPs
-            fetch_and_clear_preps(
-                vapp=args.vapp,
-                vconf=args.vconf,
-                block="offline",
-                xpid=xpid,
-                geometry=args.geometry,
-                assimdate=date,
-                nmembers=nmembers,
-                keep_existing_prep=args.keep_existing_prep,
-            )
-            fetch_and_clear_preps(
-                vapp=args.vapp,
-                vconf=args.vconf,
-                block="soda",
-                xpid=xpid,
-                geometry=args.geometry,
-                assimdate=date,
-                nmembers=nmembers,
-                keep_existing_prep=args.keep_existing_prep,
-            )
             offline = mkjob_list_commands(
                 "offline_openloop", conf=args.conf, njobs=nmembers, datebegin=datebegin, dateend=dateend
             )
+            # offline = []
             first_run = False
         elif wait_mandatory_input(
             vapp=args.vapp,
@@ -288,10 +308,10 @@ def main():
             nmembers=nmembers,
             walltime=walltime,
         ):
-            soda = mkjob_command(jobname="soda_job", conf=args.conf, taskname="soda", date=date)
-            print("Run command: " + soda + "\n")
-            callSystemOrDie(soda)
-            walltime = Time(iniparser.get("soda_job", "time"))
+            assim_job = mkjob_command(jobname=f"{engine_assim}_job", conf=args.conf, taskname=engine_assim, date=date)
+            print("Run command: " + assim_job + "\n")
+            callSystemOrDie(assim_job)
+            walltime = Time(iniparser.get(f"{engine_assim}_job", "time"))
             datebegin = date
         else:
             break
