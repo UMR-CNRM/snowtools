@@ -28,6 +28,9 @@ SURFEX/Crocus output resources.
 .. autoclass:: Pro
    :show-inheritance:
 
+.. autoclass:: Pro_xios
+   :show-inheritance:
+
 .. autoclass:: Prep
    :show-inheritance:
 
@@ -67,6 +70,26 @@ class Pro(SurfaceIO):
     @property
     def realkind(self):
         return "PRO"
+
+
+class Pro_xios(Pro):
+    """Class for the SURFEX/Crocus output files produced through an IO server."""
+    _footprint = [
+        dict(
+            info = 'Surfex-simulated snowpack files',
+            attr = dict(
+                content = dict(
+                    values   = ['SL1', 'SL2', 'NOSL'],
+                    info     = 'SL1: 1st batch of snow layers ; SL2: 2nd batch of snow layers ; NOSL: No snow layers',
+                    optional = False,
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return '_'.join(["PRO", self.content])
 
 
 @namebuilding_delete('src')
