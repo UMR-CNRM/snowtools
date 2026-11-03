@@ -67,28 +67,33 @@ class Surfex_PreProcess(AlgoComponent):
     WARNING : this algo should now be used only in the operationnal S2M chain
     """
 
-    _footprint = {  # noqa: RUF012
-        "attr": {
-            "kind": {"values": ["surfex_preprocess"]},
-            "engine": {"optional": True, "default": "algo"},
-            "datebegin": {
-                "info": "Date in the namelist to run PREP.",
-                "type": Date,
-            },
-            "dateend": {
-                "info": "Date in the namelist to stop OFFLINE.",
-                "type": Date,
-                "optional": True,
-                "default": None
-            },
-            "forcingname": {
-                "info": "Name of the first forcing file",
-                "type": str,
-                "optional": True,
-                "default": None,
-            },
-        }
-    }
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ["surfex_preprocess"],
+            ),
+            engine = dict(
+                optional = True,
+                default  = "algo"
+            ),
+            datebegin = dict(
+                info = "Date in the namelist to run PREP.",
+                type = Date,
+            ),
+            dateend = dict(
+                info     = "Date in the namelist to stop OFFLINE.",
+                type     = Date,
+                optional = True,
+                default  = None
+            ),
+            forcingname = dict(
+                info      = "Name of the first forcing file",
+                type      = str,
+                optional  = True,
+                default   = None,
+            ),
+        )
+    )
 
     def find_namelists(self, opts=None):
         """Find any namelists candidates in actual context inputs."""
@@ -131,11 +136,13 @@ class Generate_Clim_TG(AlgoComponent):
     from surfex meteorological forcing files
     """
 
-    _footprint = {  # noqa: RUF012
-        "attr": {
-            "kind": {"values": ["clim"]},
-        }
-    }
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ["clim"]
+            ),
+        )
+    )
 
     def execute(self, rh, opts):
 
@@ -374,35 +381,39 @@ class Surfex_Parallel(Parallel, DrHookDecoMixin, SurfexMixIn):
     _footprint = dict(
         info="AlgoComponent designed to run SURFEX experiments over large domains with MPI parallelization.",
         attr=dict(
-            # Unused ?
-            # binary = dict(
-            #     values = ['OFFLINE'],
-            # ),
-            datebegin=dict(info="The first date of the simulation.", type=Date, optional=False),
-            dateend=dict(info="The final date of the simulation.", type=Date, optional=False),
+            datebegin = dict(
+                info     = "The first date of the simulation.",
+                type     = Date,
+                optional = False,
+            ),
+            dateend = dict(
+                info     = "The final date of the simulation.",
+                type     = Date,
+                optional = False,
+            ),
             dateinit=dict(
-                info="The initialization date if different from the starting date.",
-                type=Date,
-                optional=True,
-                default="[datebegin]",
+                info     = "The initialization date if different from the starting date.",
+                type     = Date,
+                optional = True,
+                default  = "[datebegin]",
             ),
             threshold=dict(
-                info="Threshold on snow water equivalent on August 1st.",
-                type=int,
-                optional=True,
-                default=-999
+                info     = "Threshold on snow water equivalent on August 1st.",
+                type     = int,
+                optional = True,
+                default  = -999
             ),
             daily=dict(
-                info="If True, split simulations in daily runs",
-                type=bool,
-                optional=True,
-                default=False,
+                info     = "If True, split simulations in daily runs",
+                type     = bool,
+                optional = True,
+                default  = False,
             ),
             reprod_info=dict(
-                info="Informations that must be stored in output files for reproductibility",
-                type=dict,
-                optional=True,
-                default=dict(),
+                info     = "Informations that must be stored in output files for reproductibility",
+                type     = dict,
+                optional = True,
+                default  = dict(),
             ),
         ),
     )
@@ -411,55 +422,27 @@ class Surfex_Parallel(Parallel, DrHookDecoMixin, SurfexMixIn):
         self.execute_offline(rh, opts)
 
 
-class Surfex_Xios_Parallel(Parallel, ParallelIoServerMixin, SurfexMixIn, DrHookDecoMixin):
+class Surfex_Xios_Parallel(Surfex_Parallel, ParallelIoServerMixin):
     """
     This algo component is designed to run SURFEX experiments over large domains
     with MPI parallelization and IO server XIOS
     """
 
-    _footprint = {  # noqa: RUF012
-        "info": "AlgoComponent designed to run SURFEX experiments over large domains with MPI parallelization "
-                "and IO server XIOS",
-        "attr": {
-            # Unused ?
-            # binary = dict(
-            #     values = ['OFFLINE'],
-            # ),
-            "kind": {"values": ["xios"]},
-            "datebegin": {"info": "The first date of the simulation.", "type": Date, "optional": False},
-            "dateend": {"info": "The final date of the simulation.", "type": Date, "optional": False},
-            "dateinit": {
-                "info": "The initialization date if different from the starting date.",
-                "type": Date,
-                "optional": True,
-                "default": "[datebegin]",
-            },
-            "threshold": {
-                "info": "Threshold on snow water equivalent on August 1st.",
-                "type": int,
-                "optional": True,
-                "default": -999,
-            },
-            "daily": {
-                "info": "If True, split simulations in daily runs",
-                "type": bool,
-                "optional": True,
-                "default": False,
-            },
-            "reprod_info": {
-                "info": "Informations that must be stored in output files for reproductibility",
-                "type": dict,
-                "optional": True,
-                "default": {},
-            },
-        },
-    }
+    _footprint = dict(
+        info = "AlgoComponent designed to run SURFEX experiments over large domains with MPI parallelization "
+        "and IO server XIOS",
+        attr = dict(
+            kind = dict(
+                values= ["xios"],
+            )
+        ),
+    )
 
     def offline_postprocess(self, datebegin_this_run, dateend_this_run):
 
-        save_file_period(".", "PRO_nosl.nc", datebegin_this_run, dateend_this_run, newprefix="PRO_nosl")
-        save_file_period(".", "PRO_sl1.nc", datebegin_this_run, dateend_this_run, newprefix="PRO_sl1")
-        save_file_period(".", "PRO_sl2.nc", datebegin_this_run, dateend_this_run, newprefix="PRO_sl2")
+        save_file_period(".", "PRO_nosl", datebegin_this_run, dateend_this_run, newprefix="PRO_nosl")
+        save_file_period(".", "PRO_sl1", datebegin_this_run, dateend_this_run, newprefix="PRO_sl1")
+        save_file_period(".", "PRO_sl2", datebegin_this_run, dateend_this_run, newprefix="PRO_sl2")
 
         if self.system.path.isfile("ISBA_DIAGNOSTICS.OUT.nc"):
             save_file_period(".", "ISBA_DIAGNOSTICS.OUT", datebegin_this_run, dateend_this_run, newprefix="DIAG")
@@ -476,21 +459,17 @@ class Interpol_Forcing(Parallel):
     with MPI parallelization.
     """
 
-    _footprint = {  # noqa: RUF012
-        "info": "AlgoComponent designed to interpolate SAFRAN forcings on regular grid with MPI parallelization.",
-        "attr": {
-            # Unused ?
-            # binary = dict(
-            #     values = ['INTERPOL'],
-            # ),
-            "reprod_info": {
-                "info": "Informations that must be stored in output files for reproductibility",
-                "type": dict,
-                "optional": True,
-                "default": {},
-            }
-        },
-    }
+    _footprint = dict(
+        info = "AlgoComponent designed to interpolate SAFRAN forcings on regular grid with MPI parallelization.",
+        attr = dict(
+            reprod_info = dict(
+                info     = "Informations that must be stored in output files for reproductibility",
+                type     = dict,
+                optional = True,
+                default  = {},
+            ),
+        ),
+    )
 
     def execute(self, rh, opts):
 
