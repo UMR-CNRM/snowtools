@@ -462,6 +462,9 @@ class Interpol_Forcing(Parallel):
     _footprint = dict(
         info = "AlgoComponent designed to interpolate SAFRAN forcings on regular grid with MPI parallelization.",
         attr = dict(
+            kind = dict(
+                values = ['interpol'],
+            ),
             reprod_info = dict(
                 info     = "Informations that must be stored in output files for reproductibility",
                 type     = dict,
