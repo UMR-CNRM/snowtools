@@ -208,10 +208,10 @@ class InterpolateS2MForcing(_CenResearchTask, InterpolMixIn):
         """
         self.sh.title("Toolbox algo interpolation")
         interpolation_tba = vortex.task(
-            engine="parallel",
-            binary="INTERPOL",
-            kind="deterministic",
-            reprod_info=dict(genv=self.conf.uenv),
+            engine      = "parallel",
+            binary      = "INTERPOL",
+            kind        = "interpol",
+            reprod_info = dict(genv=self.conf.uenv),
         )
         print(self.ticket.prompt, "interpolation algo component =", interpolation_tba)
         print()
