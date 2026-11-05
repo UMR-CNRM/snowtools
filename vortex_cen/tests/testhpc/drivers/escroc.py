@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Test the "Escroc" unittask. The driver includes the "GetPgd1D" task.
+Test the "Escroc" unittask. The driver includes the "GetPgd" task.
 """
 
 from mkjob.nodes import Driver
@@ -14,7 +14,7 @@ def setup(t, **kw):
         tag='escroc',
         ticket=t,
         nodes=[
-            FetchPgdFileOrMake(tag='getpgd1d_escroc', ticket=t, **kw),
+            FetchPgdFileOrMake(tag='getpgd_escroc', ticket=t, **kw),
             FetchPrepFileOrMake(tag='getprep_escroc', ticket=t, **kw),
             Escroc(tag='escroc', ticket=t, **kw),
         ],

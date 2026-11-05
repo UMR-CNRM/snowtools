@@ -3,7 +3,7 @@
 Test the "Offline_MPI_Uenv" unittask.
 The driver also includes the following tasks :
 - "GetClimGroundTemperature"
-- "GetPgd1D"
+- "GetPgd"
 - "GetPrep"
 """
 
@@ -20,7 +20,7 @@ def setup(t, **kw):
         ticket=t,
         nodes=[
             FetchClimGroundTemperatureOrMake(tag='fetchclimgroundtemperature_offline', ticket=t, **kw),
-            FetchPgdFileOrMake(tag='getpgd1d', ticket=t, **kw),
+            FetchPgdFileOrMake(tag='getpgd', ticket=t, **kw),
             FetchPrepFileOrMake(tag='offline_getprep', ticket=t, **kw),
             Offline_Mpi_Uenv(tag='offline', ticket=t, **kw),
         ],

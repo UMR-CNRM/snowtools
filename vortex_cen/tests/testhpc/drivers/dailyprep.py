@@ -13,7 +13,7 @@ def setup(t, **kw):
         ticket=t,
         nodes=[
             FetchClimGroundTemperatureOrMake(tag='getclimgroundtemperature_dailyprep', ticket=t, **kw),
-            FetchPgdFileOrMake(tag='getpgd1d', ticket=t, **kw),
+            FetchPgdFileOrMake(tag='getpgd', ticket=t, **kw),
             FetchPrepFileOrMake(tag='getprep_dailyprep', ticket=t, **kw),
             OfflineMpiDailyPrep(tag='offline_mpi_dailyprep', ticket=t, **kw),
         ],
