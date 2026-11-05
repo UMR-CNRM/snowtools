@@ -6,6 +6,7 @@
 
 # General python modules
 import numpy as np
+import xarray as xr
 import os
 
 # Snowtools modules
@@ -196,6 +197,19 @@ def update_loc(NamelistObject, forcing):
     # another special patch/bugfix for distributed simulations (then CGRID==IGN)
     if NamelistObject["NAM_PGD_GRID"].CGRID == "IGN":
         NamelistObject["NAM_IO_OFFLINE"].LWRITE_TOPO = False
+
+        # Get grid from FORCING file
+        forc = xr.open_dataset(forcing)
+        dx = int(forc.x.data[1] - forc.x.data[0])
+        dy = int(forc.y.data[1] - forc.y.data[0])
+        if dy != dy:
+            raise ValueError(f'Grid cells should have the same size in X (got {dx}) and Y (got {dy})')
+        NamelistObject["NAM_IGN"].NCOLS = len(forc.x)
+        NamelistObject["NAM_IGN"].NROWS = len(forc.y)
+        NamelistObject["NAM_IGN"].XCELLSIZE = dx
+        NamelistObject["NAM_IGN"].XX_LLCORNER = int(forc.x.data[0])
+        NamelistObject["NAM_IGN"].XY_LLCORNER = int(forc.y.data[0])
+
     else:
         NamelistObject["NAM_IO_OFFLINE"].LWRITE_TOPO = True
 
