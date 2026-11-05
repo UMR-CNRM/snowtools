@@ -206,15 +206,15 @@ class StandardS2M:
 
         transformer = Transformer.from_crs(epsg_src, "epsg:4326", always_xy=True)
 
-        #  xvar/yvar must be 2D DataArrays
         x = np.asarray(xvar)
         y = np.asarray(yvar)
 
         XX, YY = np.meshgrid(x, y, indexing="ij")
         lon2d, lat2d = transformer.transform(XX, YY)
 
-        lat = xr.DataArray(lat2d, dims=xvar.dims, attrs={"standard_name": "latitude"})
-        lon = xr.DataArray(lon2d, dims=yvar.dims, attrs={"standard_name": "longitude"})
+        dims = xvar.dims + yvar.dims
+        lat = xr.DataArray(lat2d, dims=dims, attrs={"standard_name": "latitude"})
+        lon = xr.DataArray(lon2d, dims=dims, attrs={"standard_name": "longitude"})
         return lat, lon
 
     def get_coord(self):
