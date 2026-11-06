@@ -222,7 +222,7 @@ link() {
 save_executable()
 {
     local EXE_NAME=$1
-    EXE_PATH=$(find_binary "${EXE_NAME}-*${VER_MPI}*${OPTLEVEL}*{VER_XIOS}")
+    EXE_PATH=$(find_binary "${EXE_NAME}-*${VER_MPI}*O${OPTLEVEL}*X${VER_XIOS}")
     link "${EXE_PATH}" "${EXESURFEX}/${EXE_NAME}"
     cp ${EXE_PATH} ${data_dir}/${EXE_NAME}_${VER_MPI}_${surfex_commit}
     echo "MASTER_${EXE_NAME}_${MPI_ID}=\"uenv:${EXE_NAME}_${VER_MPI}_${surfex_commit}@${USER}\"" >> $uenv
@@ -233,6 +233,9 @@ echo "Creation of symbolic links toward SURFEX executables"
 for executable in OFFLINE PREP PGD SODA ;
     do save_executable ${executable}
 done
+if [[ ${VER_XIOS} -eq 2 ]]; then
+    save_executable XIOS
+fi
 
 export EXESURFEX="${EXESURFEX}"
 
