@@ -45,7 +45,7 @@ from bronx.syntax.externalcode import ExternalCodeImportChecker
 from vortex.algo.components import AlgoComponent, Parallel
 from vortex.syntax.stdattrs import a_date
 
-from snowtools.tools.particle_filter import EdelweissParticleFilter
+from snowtools.tools.particle_filter import EdelweissParticleFilter, EdelweissParticleFilterConfig
 from vortex_cen.algo.components import _CenTaylorRun, _CenTaylorVortexWorker
 
 logger = loggers.getLogger(__name__)
@@ -62,42 +62,32 @@ class Soda(Parallel):
     worker for a SODA run (designed for Particle filtering for snow)
     @author: B. Cluzet 2018-05-24
     """
+
     _footprint = dict(
-        info = 'AlgoComponent that runs domain-parallelized soda',
-        attr = dict(
-            kind = dict(
-                values = ['s2m_soda']
-            ),
-            binary = dict(
-                values = ['SODA'],
-                optional = False
-            ),
-            dateassim=dict(
-                type = Date,
-                optional = False
-            ),
+        info="AlgoComponent that runs domain-parallelized soda",
+        attr=dict(
+            kind=dict(values=["s2m_soda"]),
+            binary=dict(values=["SODA"], optional=False),
+            dateassim=dict(type=Date, optional=False),
             nmembers=dict(
                 info="The number of members that will be processed",
                 type=int,
             ),
-        )
+        ),
     )
 
     @property
     def mb_sections(self):
-        return sorted(
-            self.context.sequence.effective_inputs(role=('SnowpackInit', )),
-            key=lambda s: s.rh.provider.member)
+        return sorted(self.context.sequence.effective_inputs(role=("SnowpackInit",)), key=lambda s: s.rh.provider.member)
 
     def prepare(self, rh, opts):
         super().prepare(rh, opts)
         mb_sections = self.mb_sections
         # symbolic links for each prep from each member dir to the soda dir
         for jj, mb_s in enumerate(mb_sections, start=1):
-            self.system.symlink(mb_s.rh.container.localpath(),
-                                'PREP_' + self.dateassim.ymdHh + '_PF_ENS' + str(jj) + '.nc')
+            self.system.symlink(mb_s.rh.container.localpath(), "PREP_" + self.dateassim.ymdHh + "_PF_ENS" + str(jj) + ".nc")
         # symbolic link from a virtual PREP.nc to the first member (for SODA date-reading reasons)
-        self.system.symlink(mb_sections[0].rh.container.localpath(), 'PREP.nc')
+        self.system.symlink(mb_sections[0].rh.container.localpath(), "PREP.nc")
         self.modify_namelist()
 
     def postfix(self, rh, opts):
@@ -106,30 +96,30 @@ class Soda(Parallel):
         # rename background preps
         # delete soda symbolic links
         mb_sections = self.mb_sections
-        self.system.remove('PREP.nc')
+        self.system.remove("PREP.nc")
         for jj, mb_s in enumerate(mb_sections, start=1):
             dir_it = mb_s.rh.container.dirname
-            self.system.remove('PREP_' + self.dateassim.ymdHh + '_PF_ENS' + str(jj) + '.nc')
-            if self.system.path.isfile(self.system.path.join(dir_it, 'PREP.nc')):
-                self.system.remove(self.system.path.join(dir_it, 'PREP.nc'))
+            self.system.remove("PREP_" + self.dateassim.ymdHh + "_PF_ENS" + str(jj) + ".nc")
+            if self.system.path.isfile(self.system.path.join(dir_it, "PREP.nc")):
+                self.system.remove(self.system.path.join(dir_it, "PREP.nc"))
             my_base, my_ext = self.system.path.splitext(mb_s.rh.container.localpath())
             # Save background:
-            self.system.mv(my_base + my_ext, my_base + '_bg' + my_ext)
+            self.system.mv(my_base + my_ext, my_base + "_bg" + my_ext)
             # Save analysis:
-            self.system.mv("SURFOUT" + str(jj) + ".nc", my_base + '.nc')
-            if dir_it == 'mb{:04d}'.format(mb_s.rh.provider.member):
+            self.system.mv("SURFOUT" + str(jj) + ".nc", my_base + ".nc")
+            if dir_it == "mb{:04d}".format(mb_s.rh.provider.member):
                 # useful only for old task/offline case
-                self.system.symlink(my_base + '.nc', dir_it + '/PREP.nc')
+                self.system.symlink(my_base + ".nc", dir_it + "/PREP.nc")
 
         # rename particle file
-        for fprefix in ('PART', 'BG_CORR', 'IMASK', 'ALPHA'):
+        for fprefix in ("PART", "BG_CORR", "IMASK", "ALPHA"):
             if self.system.path.isfile(fprefix):
-                self.system.mv(fprefix, fprefix + '_' + self.dateassim.ymdh + '.txt')
+                self.system.symlink(fprefix, fprefix + "_" + self.dateassim.ymdh + ".txt")
 
     def find_namelists(self, opts=None):
         """Find any namelists candidates in actual context inputs."""
-        namcandidates = [x.rh for x in self.context.sequence.effective_inputs(kind='namelist')]
-        self.system.subtitle('Namelist candidates')
+        namcandidates = [x.rh for x in self.context.sequence.effective_inputs(kind="namelist")]
+        self.system.subtitle("Namelist candidates")
         for nam in namcandidates:
             nam.quickview()
 
@@ -141,10 +131,7 @@ class Soda(Parallel):
         for namelist in self.find_namelists():
             # Update the contents of the namelist (number of members)
             # Location taken in the FORCING file.
-            newcontent = update_namelist_object_nmembers(
-                namelist.contents,
-                nmembers=self.nmembers
-            )
+            newcontent = update_namelist_object_nmembers(namelist.contents, nmembers=self.nmembers)
             newnam = footprints.proxy.container(filename=namelist.container.basename)
             newcontent.rewrite(newnam)
             newnam.close()
@@ -159,13 +146,9 @@ class SodaPreProcess(AlgoComponent):
     """
 
     _footprint = dict(
-        attr = dict(
-            kind = dict(
-                values = ['soda_preprocess']),
-            engine = dict(
-                optional     = True,
-                default   = 'algo'
-            ),
+        attr=dict(
+            kind=dict(values=["soda_preprocess"]),
+            engine=dict(optional=True, default="algo"),
             nmembers=dict(
                 info="The number of members that will be processed",
                 type=int,
@@ -175,8 +158,8 @@ class SodaPreProcess(AlgoComponent):
 
     def find_namelists(self, opts=None):
         """Find any namelists candidates in actual context inputs."""
-        namcandidates = [x.rh for x in self.context.sequence.effective_inputs(kind='namelist')]
-        self.system.subtitle('Namelist candidates')
+        namcandidates = [x.rh for x in self.context.sequence.effective_inputs(kind="namelist")]
+        self.system.subtitle("Namelist candidates")
         for nam in namcandidates:
             nam.quickview()
 
@@ -188,11 +171,8 @@ class SodaPreProcess(AlgoComponent):
         for namelist in self.find_namelists():
             # Update the contents of the namelist (number of members)
             # Location taken in the FORCING file.
-            newcontent = update_namelist_object_nmembers(
-                namelist.contents,
-                nmembers=self.nmembers
-            )
-            newnam = footprints.proxy.container(filename='OPTIONS_OUT.nam')
+            newcontent = update_namelist_object_nmembers(namelist.contents, nmembers=self.nmembers)
+            newnam = footprints.proxy.container(filename="OPTIONS_OUT.nam")
             newcontent.rewrite(newnam)
             newnam.close()
 
@@ -204,18 +184,16 @@ class PerturbForcingWorker(_CenTaylorVortexWorker):
     """
 
     _footprint = dict(
-        info = 'Apply stochastic perturbations to a forcing file',
-        attr = dict(
-            kind = dict(
-                values = ['perturbforcing']
-            ),
+        info="Apply stochastic perturbations to a forcing file",
+        attr=dict(
+            kind=dict(values=["perturbforcing"]),
             reprod_info=dict(
                 info="Informations that must be stored in output files for reproductibility",
                 type=dict,
                 optional=True,
                 default=dict(),
-            )
-        )
+            ),
+        ),
     )
 
     def _commons(self, rundir, thisdir, rdict):
@@ -234,23 +212,22 @@ class PerturbForcingComponent(_CenTaylorRun):
     as input (parallelisation over the different sub-periods) and one single FORCING file as output
     (parallelisation over the ensemble members).
     """
+
     _footprint = dict(
-        info = 'AlgoComponent that build an ensemble of perturbed forcings from deterministic forcing files',
-        attr = dict(
-            kind = dict(
-                values = ['perturbforcing']
-            ),
-            members = dict(
-                info = "The list of members for output",
-                type = footprints.stdtypes.FPList,
+        info="AlgoComponent that build an ensemble of perturbed forcings from deterministic forcing files",
+        attr=dict(
+            kind=dict(values=["perturbforcing"]),
+            members=dict(
+                info="The list of members for output",
+                type=footprints.stdtypes.FPList,
             ),
             reprod_info=dict(
                 info="Informations that must be stored in output files for reproductibility",
                 type=dict,
                 optional=True,
                 default=dict(),
-            )
-        )
+            ),
+        ),
     )
 
     def get_subdirs(self, rh, opts):
@@ -291,25 +268,24 @@ class PerturbForcingComponent(_CenTaylorRun):
         """
 
         subdirs = super().get_subdirs(rh, opts)
-        subdirs = [f'{subdir}/mb{member:04d}' for member in self.members for subdir in subdirs]
+        subdirs = [f"{subdir}/mb{member:04d}" for member in self.members for subdir in subdirs]
 
         return subdirs
 
 
 @echecker.disabled_if_unavailable
 class CrocOPostProcess(_CenTaylorRun):
-
     _footprint = dict(
-        info = 'AlgoComponent for SODA post_processing (merge PRO files)',
-        attr = dict(
-            datebegin = a_date,
-            dateend   = a_date,
-            kind  = dict(
-                values     = ['croco_postprocess'],
+        info="AlgoComponent for SODA post_processing (merge PRO files)",
+        attr=dict(
+            datebegin=a_date,
+            dateend=a_date,
+            kind=dict(
+                values=["croco_postprocess"],
             ),
-            role_members = dict(
-                info     = "Role of RH inputs to use for members definition",
-                values   = ['SnowpackSimulation'],
+            role_members=dict(
+                info="Role of RH inputs to use for members definition",
+                values=["SnowpackSimulation"],
             ),
         ),
     )
@@ -324,14 +300,14 @@ class CrocOPostProcessWorker(_CenTaylorVortexWorker):
     """
 
     _footprint = dict(
-        info = 'AlgoComponent for snow cover duration diagnotics computation from SURFEX-Crocus simulations',
-        attr = dict(
-            datebegin = a_date,
-            dateend   = a_date,
-            kind  = dict(
-                values     = ['croco_postprocess'],
+        info="AlgoComponent for snow cover duration diagnotics computation from SURFEX-Crocus simulations",
+        attr=dict(
+            datebegin=a_date,
+            dateend=a_date,
+            kind=dict(
+                values=["croco_postprocess"],
             ),
-        )
+        ),
     )
 
     def _commons(self, rundir, thisdir, rdict, **kwargs):
@@ -340,7 +316,6 @@ class CrocOPostProcessWorker(_CenTaylorVortexWorker):
         """
         # Launch "core" algo
         cpp.execute(self.datebegin, self.dateend)
-
 
 
 @echecker.disabled_if_unavailable
@@ -382,7 +357,7 @@ class PythonParticleFilterWorker(_CenTaylorVortexWorker):
         Method called by the main **vortex_task** method of the **_CenMixIn** class
         """
         # Launch "core" algo
-        particle_filter = EdelweissParticleFilter(self.dateassim)
+        particle_filter = EdelweissParticleFilter(assim_date=self.dateassim, config=EdelweissParticleFilterConfig())
         particle_filter.run()
 
         # df = pd.DataFrame(new_weights).T

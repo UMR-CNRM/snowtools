@@ -17,6 +17,10 @@ logger = logging.getLogger("logger")
 logging.basicConfig(level=logging.INFO)
 
 
+class ParticleFilterError(Exception):
+    pass
+
+
 class AssimilationProblemError(Exception):
     pass
 
@@ -245,15 +249,35 @@ class PointParticleFilter(ParticleFilter):
         self.alpha = alpha
 
 
+@dataclass
+class EdelweissParticleFilterConfig:
+    inflation: bool = True
+    min_n_eff: int = 8
+    min_alpha: float = 0.1
+    observation_uncertainty: str = "constant"
+    sigma_const: float | None = 0.15
+
+    def __post_init__(self):
+        self.check_observation_uncertainty_inputs()
+
+    def check_observation_uncertainty_inputs(self):
+        if self.observation_uncertainty not in ("constant", "variable"):
+            raise ParticleFilterError(
+                f"Observation uncertainty should be either constant or variable. User input: {self.observation_uncertainty}"
+            )
+
+
 class EdelweissParticleFilter(PointParticleFilter):
-    def __init__(self, assim_date: Date, inflation=True, min_n_eff=8, min_alpha=0.1):
+    def __init__(self, assim_date: Date, config: EdelweissParticleFilterConfig):
         self.assim_date = assim_date
+        self.config = config
         snow_thickness = self.read_preps()
         snow_thickness_ensemble = Ensemble(
             members=[StateVector(snow_thickness.sel(member=i).values) for i in range(snow_thickness.sizes["member"])]
         )
         observation = self.read_observation()
-        inv_R = self.set_observation_error(observation=observation, sigma_const=0.15)
+        inv_R = self.get_inverse_error_covariance_matrix()
+        print(inv_R)
         logger.info("Create particle filter object")
         assimilation_problem = AssimilationProblem(
             state=snow_thickness_ensemble,
@@ -261,7 +285,12 @@ class EdelweissParticleFilter(PointParticleFilter):
             observation_operator=dickinson,
             inverse_observation_error_covariance_matrix=inv_R,
         )
-        super().__init__(assimilation_problem, inflation=inflation, min_n_eff=min_n_eff, min_alpha=min_alpha)
+        super().__init__(
+            assimilation_problem,
+            inflation=self.config.inflation,
+            min_n_eff=self.config.min_n_eff,
+            min_alpha=self.config.min_alpha,
+        )
 
     @property
     def vars_to_copy(self) -> list[str]:
@@ -279,7 +308,7 @@ class EdelweissParticleFilter(PointParticleFilter):
         logger.info("Read PREPs")
         prep_files = self.list_prep_files()
         background_preps = xr.concat([xr.open_dataset(prep_file) for prep_file in prep_files], dim="member")
-        self.backround_preps = background_preps
+
         snow_thickness = (
             background_preps.groupby("member").map(compute_snow_thickness_mass_from_prep).data_vars["snow_thickness"]
         )
@@ -287,18 +316,34 @@ class EdelweissParticleFilter(PointParticleFilter):
             y=snow_thickness.coords["y"].sortby("y"), x=snow_thickness.coords["x"].sortby("x")
         )
         snow_thickness = snow_thickness.stack(n_point=("y", "x"))
+
+        self.backround_preps = background_preps
         return snow_thickness
 
-    def read_observation(self) -> xr.DataArray:
+    def read_observation(self, var_name: str = "SCF") -> xr.DataArray:
         obs_filename = f"./OBSERVATIONS_{self.assim_date.ymdHh}.nc"
-        logger.info("Read observation")
+        logger.info(f"Read observation: {var_name}")
         observation = xr.open_dataset(obs_filename)
-        observation = observation.rename({"xx": "x", "yy": "y"}).stack(n_point=("y", "x")).data_vars["SCF"]
+        # If observation is empty, fail with a nice message
+        if observation.data_vars[var_name].count() == 0:
+            raise ParticleFilterError(f"Observation for variable {var_name} is empty. Assimilation not possible.")
+        observation = observation.rename({"xx": "x", "yy": "y"}).stack(n_point=("y", "x")).data_vars[var_name]
         return observation
 
-    def set_observation_error(self, observation: xr.DataArray, sigma_const: float) -> np.ndarray:
+    @staticmethod
+    def constant_inverse_covariance_matrix(n_points: int, sigma_const: float) -> np.ndarray:
         logger.info("Set observation error")
-        inv_R = 1 / sigma_const**2 * np.eye(observation.sizes["n_point"])
+        inv_R = 1 / sigma_const**2 * np.eye(n_points)
+        return inv_R
+
+    def get_inverse_error_covariance_matrix(self):
+        if self.config.observation_uncertainty == "constant":
+            inv_R = EdelweissParticleFilter.constant_inverse_covariance_matrix(
+                n_points=self.backround_preps.sizes["Number_of_points"], sigma_const=self.config.sigma_const
+            )
+        elif self.config.observation_uncertainty == "variable":
+            sigma_obs = self.read_observation(var_name="UNC")
+            inv_R = np.diag(1 / sigma_obs.values**2)
         return inv_R
 
     def reindex_preps(self, duplicated_particles: np.ndarray) -> xr.DataArray:
@@ -348,5 +393,13 @@ class EdelweissParticleFilter(PointParticleFilter):
 
         # Diagnostics
         logger.info("Export diagnostics")
-        pd.DataFrame(duplicated_particles).to_csv("PART_python", header=False, index=False)
-        pd.DataFrame(self.alpha).to_csv("ALPHA_python", header=False, index=False)
+        pd.DataFrame(duplicated_particles).to_csv("PART", header=False, index=False)
+        pd.DataFrame(self.alpha).to_csv("ALPHA", header=False, index=False)
+
+
+class EdelweissParticleFilterHeteroskedastic(EdelweissParticleFilter):
+    def __init__(self, assim_date, inflation=True, min_n_eff=8, min_alpha=0.1):
+        super().__init__(assim_date, inflation, min_n_eff, min_alpha)
+
+    def set_observation_error(self, observation: xr.DataArray) -> np.ndarray:
+        logger.info("Set observation error")

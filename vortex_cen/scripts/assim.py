@@ -237,7 +237,7 @@ def main():
     xpid = iniparser.get("DEFAULT", "xpid")
     # walltime tells the method "wait_mandatory_input" how long it has to wait before crashing
     walltime = Time(iniparser.get("offline_openloop_job", "time"))
-    engine_assim = "soda"
+    engine_assim = "python_assim"
     # engine_assim = "python_assim"
     datebegin = args.datebegin
     first_run = True
