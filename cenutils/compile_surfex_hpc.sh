@@ -17,6 +17,7 @@ echo "Options:"
 echo "    --surfex_dir     : Absolute path to the local SURFEX repository"
 echo "    --ver_mpi        : Set MPI compilation option. Possible values : 'MPI' or 'NOMPI'. Default : 'MPI'"
 echo "    --optlevel       : Set optimisation level. Possible values : 'O2' or 'DEBUG'. Default : 'O2' (Long runs must never be run in DEBUG mode)"
+echo "    --ver_xios       : Set XIOS compilation option. Possible values : '0' (NO XIOS) or '2' (XIOS). Default : '0'"
 echo "    -h|--help        : Print help message"
 echo
 echo Minimal example for a compilation with MPI parallelisation and an O2 optimisation:
@@ -31,6 +32,7 @@ export XYZ=""
 VER_MPI=MPIAUTO
 MPI_ID=MPI
 OPTLEVEL=O2
+VER_XIOS=0
 
 if [[ $# -eq 0 ]]; then
   usage
@@ -80,6 +82,21 @@ while [[ $# -gt 0 ]]; do
             esac
             shift 2
             ;;
+        --ver_xios)
+            [[ -n "${2-}" ]] || { echo "ERROR: option --ver_xios requires an argument"; exit 1; }
+            case $2 in
+                0)
+                    VER_XIOS=0
+                ;;
+                2)
+                    VER_XIOS=2
+                ;;
+                *)
+                    echo "Invalid option for --ver_xios: $2"
+                    exit 1
+            esac
+            shift 2
+            ;;
         -h|--help)  usage ; exit 0 ;;
         *)          echo "Unknown option: $1" ; exit 1 ;;
     esac
@@ -87,6 +104,7 @@ done
 
 export $VER_MPI
 export OPTLEVEL=$OPTLEVEL
+export VER_XIOS=$VER_XIOS
 
 module load intel
 module load intelmpi
@@ -204,7 +222,7 @@ link() {
 save_executable()
 {
     local EXE_NAME=$1
-    EXE_PATH=$(find_binary "${EXE_NAME}-*${VER_MPI}*${OPTLEVEL}*")
+    EXE_PATH=$(find_binary "${EXE_NAME}-*${VER_MPI}*${OPTLEVEL}*{VER_XIOS}")
     link "${EXE_PATH}" "${EXESURFEX}/${EXE_NAME}"
     cp ${EXE_PATH} ${data_dir}/${EXE_NAME}_${VER_MPI}_${surfex_commit}
     echo "MASTER_${EXE_NAME}_${MPI_ID}=\"uenv:${EXE_NAME}_${VER_MPI}_${surfex_commit}@${USER}\"" >> $uenv
