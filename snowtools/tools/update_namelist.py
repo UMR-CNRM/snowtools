@@ -129,7 +129,8 @@ def update_mandatory_settings(NamelistObject):
     check_or_create_block(NamelistObject, "NAM_IO_OFFLINE")
     NamelistObject["NAM_IO_OFFLINE"].CSURF_FILETYPE = "NC "
     NamelistObject["NAM_IO_OFFLINE"].CFORCING_FILETYPE = "NETCDF"
-    NamelistObject["NAM_IO_OFFLINE"].CTIMESERIES_FILETYPE = "NETCDF"
+    if NamelistObject["NAM_IO_OFFLINE"].CTIMESERIES_FILETYPE != "XIOS":
+        NamelistObject["NAM_IO_OFFLINE"].CTIMESERIES_FILETYPE = "NETCDF"
     NamelistObject["NAM_IO_OFFLINE"].LRESTART = True
 
     '''The following options are necessary to output homogeneous fluxes among the Crocus community'''

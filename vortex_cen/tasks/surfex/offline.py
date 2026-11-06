@@ -55,6 +55,7 @@ Tasks designed to launch the OFFLINE executable with MPI parallelisation.
    :show-inheritance:
 """
 
+import footprints
 import vortex
 from bronx.stdtypes.date import daterange, tomorrow
 from vortex.layout.dataflow import SectionFatalError
@@ -887,12 +888,12 @@ class OfflineXiosMpi(_Offline):
         # iodef.xml
         self.sh.title("Toolbox input iodef.xml")
         iodef_tbi = vortex.input(
-            format="ascii",
-            kind="coverparams",
-            genv=self.conf.get("consts_surfex_uenv", self.conf.uenv),
-            model="surfex",
-            local="iodef.xml",
-            gvar="IODEF",
+            format  = "ascii",
+            kind    = "coverparams",
+            genv    = self.conf.get("consts_surfex_uenv", self.conf.uenv),
+            model   = "surfex",
+            local   = "iodef.xml",
+            gvar    = "IODEF",
         )
         print(self.ticket.prompt, "iodef_tbi =", iodef_tbi)
         print()
@@ -900,12 +901,12 @@ class OfflineXiosMpi(_Offline):
         # surfex.xml
         self.sh.title("Toolbox input surfex.xml")
         conf_xml_tbi = vortex.input(
-            format="ascii",
-            kind="coverparams",
-            genv=self.conf.get("consts_surfex_uenv", self.conf.uenv),
-            model="surfex",
-            local="surfex.xml",
-            gvar="CONF_XML",
+            format  = "ascii",
+            kind    = "coverparams",
+            genv    = self.conf.get("consts_surfex_uenv", self.conf.uenv),
+            model   = "surfex",
+            local   = "surfex.xml",
+            gvar    = "CONF_XML",
         )
         print(self.ticket.prompt, "conf_xml_tbi =", conf_xml_tbi)
         print()
@@ -913,13 +914,12 @@ class OfflineXiosMpi(_Offline):
     def get_executable(self):
         self.sh.title("Input XIOS executable from uenv")
         self.xios_exe = vortex.executable(
-            role="Binary",
-            kind="xios",
-            local="XIOS",
-            model="surfex",
-            binopts="--np 6",
-            genv=self.conf.get("surfex_uenv", self.conf.uenv),
-            gvar=self.conf.get("xios_gvar", "MASTER_XIOS"),
+            role   = "Binary",
+            kind   = "xios",
+            local  = "XIOS",
+            model  = "surfex",
+            genv   = self.conf.get("surfex_uenv", self.conf.uenv),
+            gvar   = self.conf.get("xios_gvar", "MASTER_XIOS"),
         )
         print(self.ticket.prompt, "XIOS executable =", self.xios_exe)
         print()
@@ -929,37 +929,33 @@ class OfflineXiosMpi(_Offline):
         """
         Algo component to execute OFFLINE with XIOS
         """
-        import footprints
         self.sh.title("Algo XIOS")
         xios = footprints.proxy.mpibinary(
-            kind="ioserv",
-            nodes=self.conf.io_nodes,
-            tasks=self.conf.io_tasks,
+            kind   = "ioserv",
+            nodes  = self.conf.io_nodes,
+            tasks  = self.conf.io_tasks,
         )
         print(self.ticket.prompt, "Xios =", xios)
         print()
-        #xios.master = self.xios_exe[0].container.localpath()
         xios.master = self.xios_exe[0].container.abspath
 
         self.sh.title("Algo OFFLINE-XIOS-MPI")
         offline_tba = vortex.task(
-            engine="parallel",
-            # binary         = 'OFFLINE',  # unused
-            kind="xios",
-            datebegin=self.conf.datebegin,
-            dateend=self.conf.dateend,
-            # MV : *dateinit* correspond à la date de validité du fichier PREP
-            dateinit=self.ticket.context.sequence.effective_inputs(role="SnowpackInit")[0].rh.resource.datevalidity,
+            engine     = "parallel",
+            kind       = "xios",
+            datebegin  = self.conf.datebegin,
+            dateend    = self.conf.dateend,
+            dateinit   = self.ticket.context.sequence.effective_inputs(role="SnowpackInit")[0].rh.resource.datevalidity,
             # MV : la valeur par défaut de "threshold" dans la commande s2m est -999
             # TODO : cette valeur par défaut pourrait être codée directement dans l'algo
-            threshold=self.conf.get("august_threshold", -999),
+            threshold  = self.conf.get("august_threshold", -999),
             # daily          = self.conf.dailyprep,
             # MV la valeur par défaut de 'drhook' dans la commande s2m est False
             # TODO : cette valeur par défaut pourrait être codée directement dans l'algo
-            drhookprof=self.conf.get("drhook", False),
+            drhookprof = self.conf.get("drhook", False),
             # MV : on traitera les question de reproductibilité dans un 2nd temps.
             # reprod_info    = self.get_reprod_info,
-            ioserver = xios,
+            ioserver   = xios,
             iolocation = 0,
         )
         print(self.ticket.prompt, "Algo =", offline_tba)
@@ -973,17 +969,32 @@ class OfflineXiosMpi(_Offline):
         # Pour un exécution de binaire, il faut donner l'objet "exécutable" associé (récupéré par la commande
         # vortex.executable(...))
         # Il est possible de récupérer cet objet avec la ligne suivante :
-        #executables = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
         executables = self.offline_exe
 
-        self.component_runner(algo, executables,
-#            mpiopts={
-#                "nnodes": self.conf.nnodes,
-##                "nprocs": self.conf.nprocs,  # Redondant avec la valeur par défaut dans mkjob
-#                "ntasks": self.conf.ntasks - self.conf.io_tasks,
-#                "envelope": True,
-#            },
+        self.component_runner(algo, executables)
+
+    def put_pro(self):
+
+        self.sh.title("Output PRO")
+        pro_tbo = (
+            vortex.output(
+                kind       = "SnowpackSimulation",
+                content    = ["SL1", "SL2", "NOSL"],
+                local      = "PRO_[content:lower]_[datebegin:ymdh]_[dateend:ymdh].nc",
+                experiment = self.conf.xpid,
+                geometry   = self.conf.geometry,
+                datebegin  = self.list_dates_begin_pro,
+                dateend    = self.dict_dates_end_pro,
+                nativefmt  = "netcdf",
+                model      = "surfex",
+                namespace  = self.namespace_out,
+                namebuild  = "flat@cen",
+                block      = "offline",
+                member     = self.conf.get("member", None),
+            ),
         )
+        print(self.ticket.prompt, "pro_tbo =", pro_tbo)
+        print()
 
 
 class _Offline_NOMPI(_Offline):
