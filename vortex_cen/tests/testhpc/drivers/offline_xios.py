@@ -22,10 +22,10 @@ def setup(t, **kw):
         tag="surfex",
         ticket=t,
         nodes=[
-            MakeClimGroundTemperatureIfNoPrep(tag="inittg", ticket=t, **kw),
-            FetchPgdFileOrMake(tag="pgd", ticket=t, **kw),
-            FetchPrepFileOrMake(tag="prep", ticket=t, **kw),
-            OfflineXiosMpi(tag="offline", ticket=t, **kw),
+            MakeClimGroundTemperatureIfNoPrep(tag="inittg_offlinexios", ticket=t, **kw),
+            FetchPgdFileOrMake(tag="pgd_offlinexios", ticket=t, **kw),
+            FetchPrepFileOrMake(tag="prep_offlinexios", ticket=t, **kw),
+            OfflineXiosMpi(tag="offline_offlinexios", ticket=t, **kw),
         ],
         options=kw,
     )

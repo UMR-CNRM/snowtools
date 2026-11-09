@@ -142,25 +142,27 @@ if [[ ! -d "$EXESURFEX" ]]; then
     exit 1
 fi
 
-if git rev-parse --is-inside-work-tree ; then
-    # $SURFEX_DIR is a git repository
-    if ! git diff HEAD --quiet ; then
-        # Un-tracked local changes : the commit may not ensure reproducibility
-        # TODO : définir le comportement à adopter dans ce cas
-        surfex_commit="$(git log -n 1 --pretty=format:'%h')_uncommitted_local_changes"
-        outstr="WARNING : there are untracked local changes since last commit.
-                The commit associated to the compiled executables may not ensure reproducibility."
-    else
-        # Code up to date with last commit
-        # TODO : add an eventual tag ?
-        surfex_commit=$(git log -n 1 --pretty=format:"%h")
-        if [[ $(git branch -r --contains $surfex_commit) = "" ]]; then
-            # Commit on local branch only --> must be pushed to ensure reproducibililty
-            outstr="WARNING : The executables have successfully been linked to a git commit
-                    but the commit has not been pushed to a remote repository yet."
+if [[ -f ${SURFEX_DIR}/.git ]]; then
+    if git rev-parse --is-inside-work-tree ; then
+        # $SURFEX_DIR is a git repository
+        if ! git diff HEAD --quiet ; then
+            # Un-tracked local changes : the commit may not ensure reproducibility
+            # TODO : définir le comportement à adopter dans ce cas
+            surfex_commit="$(git log -n 1 --pretty=format:'%h')_uncommitted_local_changes"
+            outstr="WARNING : there are untracked local changes since last commit.
+                    The commit associated to the compiled executables may not ensure reproducibility."
         else
-            # Commit on remote --> we can guarantee reproducibililty
-            outstr="The executables have successfully been linked to a git commit already pushed on a remote repository"
+            # Code up to date with last commit
+            # TODO : add an eventual tag ?
+            surfex_commit=$(git log -n 1 --pretty=format:"%h")
+            if [[ $(git branch -r --contains $surfex_commit) = "" ]]; then
+                # Commit on local branch only --> must be pushed to ensure reproducibililty
+                outstr="WARNING : The executables have successfully been linked to a git commit
+                        but the commit has not been pushed to a remote repository yet."
+            else
+                # Commit on remote --> we can guarantee reproducibililty
+                outstr="The executables have successfully been linked to a git commit already pushed on a remote repository"
+            fi
         fi
     fi
 elif [[ -f ${SURFEX_DIR}/.git_info ]]; then
@@ -222,7 +224,16 @@ link() {
 save_executable()
 {
     local EXE_NAME=$1
-    EXE_PATH=$(find_binary "${EXE_NAME}-*${VER_MPI}*O${OPTLEVEL}*X${VER_XIOS}")
+    EXE_PATH=$(find_binary "${EXE_NAME}-*${VER_MPI}*${OPTLEVEL}*X${VER_XIOS}")
+    link "${EXE_PATH}" "${EXESURFEX}/${EXE_NAME}"
+    cp ${EXE_PATH} ${data_dir}/${EXE_NAME}_${VER_MPI}_${surfex_commit}
+    echo "MASTER_${EXE_NAME}_${MPI_ID}=\"uenv:${EXE_NAME}_${VER_MPI}_${surfex_commit}@${USER}\"" >> $uenv
+}
+
+save_executable_xios()
+{
+    local EXE_NAME=$1
+    EXE_PATH="${SRC_DIR}/LIB/XIOS-GMGEC-2152-LXifort/bin/xios_server.exe"
     link "${EXE_PATH}" "${EXESURFEX}/${EXE_NAME}"
     cp ${EXE_PATH} ${data_dir}/${EXE_NAME}_${VER_MPI}_${surfex_commit}
     echo "MASTER_${EXE_NAME}_${MPI_ID}=\"uenv:${EXE_NAME}_${VER_MPI}_${surfex_commit}@${USER}\"" >> $uenv
@@ -234,7 +245,7 @@ for executable in OFFLINE PREP PGD SODA ;
     do save_executable ${executable}
 done
 if [[ ${VER_XIOS} -eq 2 ]]; then
-    save_executable XIOS
+    save_executable_xios XIOS
 fi
 
 export EXESURFEX="${EXESURFEX}"
