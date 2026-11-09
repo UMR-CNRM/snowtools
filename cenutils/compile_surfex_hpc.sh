@@ -142,7 +142,7 @@ if [[ ! -d "$EXESURFEX" ]]; then
     exit 1
 fi
 
-if [[ -f ${SURFEX_DIR}/.git ]]; then
+if [[ -d ${SURFEX_DIR}/.git ]]; then
     if git rev-parse --is-inside-work-tree ; then
         # $SURFEX_DIR is a git repository
         if ! git diff HEAD --quiet ; then
@@ -236,7 +236,7 @@ save_executable_xios()
     EXE_PATH="${SRC_DIR}/LIB/XIOS-GMGEC-2152-LXifort/bin/xios_server.exe"
     link "${EXE_PATH}" "${EXESURFEX}/${EXE_NAME}"
     cp ${EXE_PATH} ${data_dir}/${EXE_NAME}_${VER_MPI}_${surfex_commit}
-    echo "MASTER_${EXE_NAME}_${MPI_ID}=\"uenv:${EXE_NAME}_${VER_MPI}_${surfex_commit}@${USER}\"" >> $uenv
+    echo "MASTER_${EXE_NAME}=\"uenv:${EXE_NAME}_${VER_MPI}_${surfex_commit}@${USER}\"" >> $uenv
 }
 
 echo "Creation of symbolic links toward SURFEX executables"

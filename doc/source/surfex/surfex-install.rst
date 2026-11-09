@@ -87,6 +87,7 @@ The next step of the configuration depends on your application:
 
 * For MPI parallel applications (big domains, deterministic application) : let ``VER_MPI`` and ``VER_CDF`` options to default.
 * For sequential ensemble applications associed with a ParaBlindRun AlgoComponent (one member per core through vortex), and only in this case, export the following variables: ``export VER_MPI=NOMPI`` and ``export VER_CDF=CDF2020``.
+* If you plan to use XIOS, please copy the XIOS library from ``/rd/cenfic3/cenmod/home/lafaysse/common/SURFEX_LIB`` into your folder ``src/LIB``. The compilation of XIOS won't work if you have changed the default environment of supercomputers (e.g. gcc library) 
 
 Common configuration
 ^^^^^^^^^^^^^^^^^^^^
