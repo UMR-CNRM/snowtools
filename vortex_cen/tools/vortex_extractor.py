@@ -280,8 +280,8 @@ def set_time_info(description, **kw):
                     local = filename,
                 ))
             else:
-                raise ValueError("*datebegin* and *dateend* attributes must be provided to extract files covering a "
-                "time period")
+                # Trying to get a standard vortex resource, use the default vortex name builder
+                vortex.defaults.pop('namebuild')
 
         return description
     else:
