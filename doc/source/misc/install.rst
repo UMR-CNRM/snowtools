@@ -43,6 +43,13 @@ Make sure you have a github account and that you have a SSH key attached to your
 
    git clone git@github.com:UMR-CNRM/snowtools.git
 
+for developers, you should start from the ``dev`` branch :
+
+.. code-block:: bash
+
+   git checkout dev
+
+
 .. warning::
    If you had a previous verison of snowtools installed as a developper, you first need to uninstall the previous version.
 
@@ -61,7 +68,7 @@ Installation
 
 That's all for snowtools.
 
-Each time you will need snowtools, you will have to activate the python virtual environment with ``source ~/my_envs/snowtools_env/bin/activate``. When you have finissed your work, you can leave the virtual environment by using the ``deactivate`` command.
+Each time you will need snowtools, you will have to activate the python virtual environment with ``source ~/my_envs/snowtools_env/bin/activate``. When you have finished your work, you can leave the virtual environment by using the ``deactivate`` command.
 
 .. _sec-install-mf:
 
