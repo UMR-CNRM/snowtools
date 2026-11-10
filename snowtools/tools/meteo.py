@@ -32,6 +32,12 @@ be done the following way (knowing the air temperature ``Tair`` and atmospheric 
 """
 
 import numpy as np
+import xarray as xr
+from scipy.interpolate import LinearNDInterpolator
+from scipy.interpolate import griddata
+from scipy.spatial import KDTree
+from pyproj import Transformer
+
 
 CO2_CONCENTRATION = 0.00062
 """Mean CO2 concentration"""
@@ -90,3 +96,155 @@ def psurf(elevation):
     :rtype: same as elevation
     """
     return 101325 * ((288 - 0.0065 * elevation) / 288)**5.255
+
+
+def reproject(
+        x_coords: np.ndarray,
+        y_coords: np.ndarray,
+        crs_in: str = "EPSG:4326",
+        crs_out: str = "EPSG:2154"
+) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Conversion of geographic coordinates from one CRS into another CRS
+
+    :param x_coords: 1D or 2D array of coordinates along the horizontal axis
+    :type x_coords: np.ndarray
+    :param y_coords: 1D or 2D array of coordinates along the vertical axis
+    :type y_coords: np.ndarray
+    :param crs_in: CRS of the input object
+    :type crs_in: str
+    :param crs_out: CRS of the output object
+    :type crs_out: str
+    """
+
+    # Reprojection on the target grid's CRS
+    transformer = Transformer.from_crs(crs_in, crs_out, always_xy=True)
+
+    # Convert coordinates as 2D arrays in order to apply the "transform" method
+    if len(np.shape(x_coords)) == 1 and len(np.shape(y_coords)) == 1:
+        x_coords, y_coords = np.meshgrid(x_coords, y_coords)
+    elif len(np.shape(x_coords)) > 2 or len(np.shape(y_coords)) > 2:
+        raise ValueError('X and Y dimension must be 1D or 2D')
+
+    x_out, y_out = transformer.transform(x_coords, y_coords)
+
+    return x_out, y_out
+
+
+def bilinear_downscaling(
+    da_coarse: xr.DataArray,
+    # dem_coarse: xr.DataArray,
+    dem_fine: xr.DataArray,
+    crs_coarse: str = "EPSG:4326",
+    crs_fine: str = "EPSG:2154",
+    # grad_std: float = -0.0065,  # Default value in K/m
+    method: str = 'LinearNDInterpolator',
+) -> xr.DataArray:
+    """
+    Downscale a 2D field from a coarse resolution to a finer resolution with a simple interpolation.
+
+
+    Input data arrays can have different CRS, in this case the coarse grid is first reprojected on the target
+    fine grid's CRS.
+
+    Once both grid are on the same CRS, data from the coarse grid are interpolated on the fine grid.
+    The main problem arises when the input coarse grid is irregular (2D arrays as coordinates). This is
+    for example the case of the native AROME grid, which looks like :
+
+                              ..........
+                 ....................................
+           ................................................
+             ............................................
+               ........................................
+                 ....................................
+                  .................................
+                   ...............................
+                    .............................
+                     ...........................
+                     ..........        .........
+
+    In this case, the most straightforward interpolation methods such as xarray's "interp" do not apply.
+
+
+
+    :param da_coarse: Input field(s) on the coarse resolution grid
+    :type da_coarse: xr.DataArray
+    :param da_fine: Output field(s) on the finer resolution grid
+    :type da_fine: xr.DataArray
+    :param dem_coarse: Digital elevation model of the input coarse resolution grid (m)
+    :type dem_coarse: xr.DataArray
+    :param dem_fine: Digital elevation model of the output fine resolution grid (m)
+    :type dem_fine: xr.DataArray
+    :param crs_coarse: CRS of the input object
+    :type crs_coarse: str
+    :param crs_fine: CRS of the output object
+    :type crs_fine: str
+    :param grad_std: Elevation correction to apply to the interpolated field for 1m of elevation difference
+    :type grad_std: float
+
+    :return: Output field(s) on the finer resolution grid
+    :rtype: xr.DataArray
+    """
+
+    # TODO : add coherence check between da_coarse and dem_coarse grids
+
+    # Reprojected the coarse grid on the target fine grid's CRS if necessary
+    if crs_coarse != crs_fine:
+        x_coarse, y_coarse = reproject(da_coarse["xx"].data, da_coarse["yy"].data, crs_in=crs_coarse, crs_out=crs_fine)
+    else:
+        x_coarse = da_coarse["xx"].values
+        y_coarse = da_coarse["yy"].values
+    values_coarse = da_coarse.data
+    # z_coarse = dem_coarse.data
+
+    # Flatten 2D data in case of an irregular grid
+    if len(np.shape(x_coarse)) == 2 and len(np.shape(y_coarse)) == 2:
+        x_coarse = x_coarse.ravel()
+        y_coarse = y_coarse.ravel()
+        values_coarse = values_coarse.ravel()
+        # z_coarse = z_coarse.ravel()
+
+    # Coordinates of the input coarse grid
+    coarse_points = np.column_stack((x_coarse, y_coarse))
+
+    # Coordinates of the target fine grid
+    x_fine, y_fine = np.meshgrid(dem_fine.xx.data, dem_fine.yy.data)
+    fine_points = np.column_stack((x_fine.ravel(), y_fine.ravel()))
+
+    # Interpolation
+    if method == 'LinearNDInterpolator':
+        interpolator = LinearNDInterpolator(coarse_points, values_coarse, fill_value=np.nan)
+        interpolated_data = interpolator(fine_points).reshape(x_fine.shape)
+    elif method == 'griddata':
+        interpolated_data = griddata(
+            coarse_points,
+            values_coarse,
+            (x_fine, y_fine),
+            method="linear",
+            fill_value=np.nan,
+        )
+    elif method == 'KDTree':
+        tree = KDTree(coarse_points)
+        # Find nearest points indices
+        _, indices = tree.query(fine_points)
+        # interpolation
+        interpolated_data = values_coarse[indices].reshape(x_fine.shape)
+
+#    # Elevation
+#    interpolator = LinearNDInterpolator(coarse_points, z_coarse, fill_value=np.nan)
+#    interpolated_z = interpolator(fine_points).reshape(x_fine.shape)
+
+#    # Elevation correction
+#    """
+#    da_fine = interpolation[da_coarse] + grad_std * (interpolation[dem_coarse] - dem_fine)
+#    """
+#    out_data  = interpolated_values + grad_std * (dem_fine.data - interpolated_z)
+
+    # Conversion of the output into a DataArray
+    out = xr.DataArray(
+        interpolated_data,
+        dims=dem_fine.dims,
+        coords={dim: dem_fine[dim].data for dim in dem_fine.dims},
+    )
+
+    return out
