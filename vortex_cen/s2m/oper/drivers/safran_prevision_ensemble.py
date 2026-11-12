@@ -417,6 +417,7 @@ class Safran(Task, CENTaskMixIn, SafranMixIn):
                     dateend        = dateend.ymd6h,
                     namespace      = self.conf.namespace_out,
                     member         = footprints.util.rangex(self.conf.pearp_members),
+                    fatal          = False,
                 ),
                 print(t.prompt, 'tb29 =', tb29)
                 print()
@@ -458,6 +459,7 @@ class Safran(Task, CENTaskMixIn, SafranMixIn):
                     dateend        = dateend.ymd6h,
                     namespace      = self.conf.namespace_out,
                     member         = footprints.util.rangex(self.conf.pearp_members),
+                    fatal          = False,
                 ),
                 print(t.prompt, 'tb30 =', tb30)
                 print()
