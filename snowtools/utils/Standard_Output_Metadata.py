@@ -354,7 +354,7 @@ class StandardCROCUS(StandardNC, StandardS2M):
             nlayers = pgd["GROUND_LAYER"].data
             bottom = []
             for layer in range(1, nlayers + 1):
-                bottom.append(pgd["SOILGRID"] + str(layer)[0])
+                bottom.append(pgd["SOILGRID" + str(layer)[0]])
             top = [0] + bottom[:-1]
             self.ds.attrs['soilgrid'] = (np.array(top) + np.array(bottom)) / 2.
             pgd.close()
