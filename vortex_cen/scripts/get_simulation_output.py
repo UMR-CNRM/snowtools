@@ -75,6 +75,10 @@ def parse_args():
                         default=None,
                         help="Ensemble member(s) to extract (ex : 'first-last-step')")
 
+    parser.add_argument("-l", "--local", "--filename", dest="local",
+                        default=None,
+                        help="Ensemble member(s) to extract (ex : 'first-last-step')")
+
     parser.add_argument("--vapp",
                         help="Vapp of the data to extract",
                         choices = ["s2m", "edelweiss", "Crocus"])
@@ -87,7 +91,7 @@ def parse_args():
                         help="Configuration file containing a (potentially partial) description "
                         "of the data to extract",)
 
-    parser.add_argument("--configsection",
+    parser.add_argument("-s", "--configsection",
                         help="Name of the target section of the data in the configuration file",)
 
     parser.add_argument("--block",
