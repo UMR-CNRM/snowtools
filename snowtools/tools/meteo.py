@@ -33,6 +33,7 @@ be done the following way (knowing the air temperature ``Tair`` and atmospheric 
 
 import numpy as np
 import xarray as xr
+from scipy.spatial import Delaunay
 from scipy.interpolate import LinearNDInterpolator
 from scipy.interpolate import griddata
 from scipy.spatial import KDTree
@@ -129,6 +130,73 @@ def reproject(
     x_out, y_out = transformer.transform(x_coords, y_coords)
 
     return x_out, y_out
+
+
+class DelaunayFixGridsInterpolator:
+    def __init__(
+        self,
+        x_source,
+        y_source,
+        x_target,
+        y_target,
+    ):
+        """
+        On suppose qu'on n'est pas dans un cas tordu ou les coordonnées sont inversées,
+        i.e. x(yy,xx) ...
+        Pour les grib extraits de la BDAP on sera sur latitude(y) longitude(x) par exemple comme noms de dimensions
+        """
+        self.x_source = x_source
+        self.y_source = y_source
+        self.x_target = x_target
+        self.y_target = y_target
+        self.points_source = self._shape_coord_(x_source, y_source)
+        self.points_target = self._shape_coord_(x_target, y_target)
+
+    def _shape_coord_(self, x_array, y_array):
+        if isinstance(x_array, np.ndarray) and isinstance(y_array, np.ndarray):
+            return np.array([x_array.ravel(), y_array.ravel()]).T
+        if len(np.shape(x_array)) == 1 and len(np.shape(y_array)) == 1:
+            X, Y = np.meshgrid(x_array.values, y_array.values)
+            return np.array([X.ravel(), Y.ravel()]).T
+        elif len(np.shape(x_array)) == 2 and len(np.shape(y_array)) == 2:
+            return np.array([x_array.values.ravel(), y_array.values.ravel()]).T
+
+    def _values_to_numpy_(self, values_array):
+        """
+        L'array de valeurs est supposé bidimensionnel (dépend de la dim associée
+        à x et de celle associée à y
+        """
+        if values_array.dims == self.xy_source_dim_names:
+            return values_array.values.ravel()
+        if values_array.dims == self.xy_source_dim_names[::-1]:
+            return values_array.values.T.ravel()
+        raise Exception("non implémenté")
+
+    def compute_interpolation_coeffs(self):
+        triangulation = Delaunay(self.points_source)
+        indexes = triangulation.find_simplex(self.points_target)
+        # pour chaque index
+        T = triangulation.transform[
+            indexes, :2
+        ]  # pour chaque index, la transformation affine du triangle
+        r = triangulation.transform[indexes, 2]  # le barycentre pour chaque index
+        ab = np.array(
+            [np.dot(T[i], self.points_target[i] - r[i]) for i in range(T.shape[0])]
+        )
+        c = 1 - ab.sum(axis=1)
+        self.index_interpolating_triangle_vertex = triangulation.simplices[indexes]
+        self.regression_coeff_on_interpolating_triangle = np.c_[ab, c]
+
+    def compute_interpolated_values_on_target(self, values_array: xr.DataArray):
+        values = values_array.values.ravel()
+        try:
+            values_shaped = values[self.index_interpolating_triangle_vertex]
+            values_on_target = (
+                self.regression_coeff_on_interpolating_triangle * values_shaped
+            ).sum(axis=1)
+            return values_on_target.reshape(self.x_target.shape)
+        except AttributeError:
+            print("Please call compute_interpolation_coeffs method first")
 
 
 def bilinear_downscaling(
