@@ -1206,6 +1206,173 @@ It is considered if new snow or drifting snow thresholds are exceeded and if a p
 
 Boolean (XUNDEF, 1) tables (Nb_points, time) are stored in ``SNSAT_NPWL`` for natural hazard and ``SNSAT_APWL`` for triggered hazard.
 
+10-Glaciers and light-absorbing particles
+--------------------------------------------------------
+
+Basic information
+^^^^^^^^^^^^^^^^^
+
+* **Developer name** : Léon Roussel
+* **Status of the development** : In progress
+* **Date of start of development** : 11/2026 (2024)
+* **Date of end of development** : 12/2026
+* **Commit and tag before development** : fab19de03f96a35ed4cd0af67ff8bc66891e7a80
+* **Commit and tag after development** : 38ef17cd3269d958c22302d787c07145e79f2e77
+* **Branches on which the developpment is present** : cen_dev_glacier_2026
+* **Evaluated against SURFEX test database ?** : No
+* **New test added to database ?** :  Yes (TODO)
+
+Description of the development
+^^^^^^^^^^^^^^^^^
+
+All the following modifications builds on top of the modifications of François Tuzet presented in section `2-Explicit representation of Light-Absorbing Particles`. 
+
+Associated publications are https://doi.org/10.5194/tc-19-5201-2025 and preprint https://doi.org/10.21203/rs.3.rs-10065820/v1 
+
+**Context**
+
+Multiple problems were encountered with the initial implementation of explicit LAP when applying the model for glaciers, more particularly surface mass balance modeling. For instance, layering rules used to merge too easily the contaminated layers, or TARTES that was used on ice depsite its non-applicability. This branch aims to first fix those problems and second to add bulk surface outputs to avoid large output files. 
+
+**The main modifications are :**
+
+- Adapt merging layer rules, and account for concentration of dust
+- Remove LAPs in deep layers
+- Possibility to deactivate the effect of LAPs on snow albedo
+- Bypassing TARTES when ice at the surface
+- New outputs of surface variables
+
+(see below for details)
+
+
+Namelist additionnal parameters
+~~~~~~~~~~~~~~~~~~~~
+
+ **Input**
+
+ *LSNOW_GLACIER*
+
+``LSNOW_GLACIER`` [logical], to be activated for glacier usage. Allows the modifications 2), 3) and 4) to be effective. 
+
+Namelist : ``NAM_ISBA_SNOWn`` section.
+
+ *N_IMPUR_FORGET_IMPACT*
+
+``N_IMPUR_FORGET_IMPACT`` [int] forget the impact/do NOT account for the radiative effect of
+
+Namelist : ``NAM_PREP_ISBA_SNOW`` section.
+
+1: black carbon (if``N_IMPUR_FORGET_IMPACT=1``)
+
+2: dust (if ``N_IMPUR_FORGET_IMPACT=2``)
+
+0: all LAPs type are accounted for (if ``N_IMPUR_FORGET_IMPACT=0``)
+
+ *XIMPUR_MAE400, XIMPUR_AAE*
+
+``XIMPUR_MAE400`` [m2/g] is the mass absorption efficiency. 
+
+``XIMPUR_AAE`` [-] is the Angstrom exponent of LAPs
+
+Namelist : ``NAM_SURF_SNOW_CSTS`` section.
+
+Usage : e.g., to set dust MAE and AAE : ``XIMPUR_MAE400(2)=71.0, XIMPUR_AAE(2)=3.2,`` in the namelist.
+
+Warning : For now, these values are only possibly affected to **dust**, not BC or other LAP type. 
+
+
+ **Output**
+
+ *TOP_RHO*
+
+``TOP_RHO`` [kg/m3]: mean density at the surface (top 5 cm of the snowpack)
+
+
+ *TOP_AGE*
+
+``TOP_AGE`` [days]: mean age at the surface (top 5 cm of the snowpack) 
+
+ *TOP_SSA*
+
+``TOP_SSA`` [m2/kg?]: mean SSA at the surface (top 5 cm of the snowpack) 
+
+ *TOP_IMP1*
+
+``TOP_IMP1`` [g/g]: mean black carbon concentration at the surface (top 10 mm of the snowpack) 
+
+ *TOP_IMP2*
+
+``TOP_IMP2`` [g/g]: mean dust of the surface (top 10 mm of the snowpack) 
+
+Namelist : ``CSELECT`` list of the ``NAM_WRITE_DIAG_SURFn`` section.
+
+Note : Number_of_points values per output, it has only been tested for non-gridded cases.
+
+
+
+Description of the modifications
+^^^^^^^^^^^^^^^^^
+
+1) Adapt merging layer rules
+~~~~~~~~~~~~~~~~~~~~
+
+**Context**
+
+Since the Crocus model was primarily developed for avalanche forecasting, the layering rules discourage the merging of layers with different snow grain properties, e.g., optical radius or sphericity. 
+In addition, a snow layer would not be merged with an ice layer. 
+However, those initial layering rules allowed the merging of layer containing very different LAPs concentration if their microstructure properties were sufficiently close. 
+When it occurred several times, especially with thick layers, this numerical process could artificially redistribute impurities across the entire snowpack. 
+This spurious redistribution of LAPs, which modified their reappearance date during the melt period and their impact on albedo had to be avoided. 
+
+**Modifications**
+
+Here, this version add the computation of the variables ``DISTANCE`` and `PENALTY` for all successive pair of layers (including the potential new snow and 1st top layer) at the beggining of the ``SNOWNLFALL_UPGRID`` routine.
+The function computing the distance is named ``SNOW3L_DISTANCE`` (in mode_snowcro.f90), replacing ``SNOW3LDIFTYP``. 
+
+The 2 cases of aggregation of the ``SNOWNLFALL_UPGRID`` routine were changed :
+
+- the case of a new fresh snow layer with a snowpack containing the maximal number of layer : a pair of successive layers has to be found for fusion. The implementation has been changed, but the result should be the same than before.
+
+- the case of possible fusion of similar layers without any . This last fusion possibility was before relying on conditions on the distance ``DISTANCE`` and the heigth of the layers compared to the attractor. These conditions have been replace by a condition on the `PENALTY` (`PENALTY < 20.`). The implementation has been changed, and the result may change slightly because of this condition. This condition is more easily interpretable, and could be easily changed. 
+
+
+Next, When ``OSNOW_GLACIER`` is set to ``.TRUE.``, the effect of dust concentration on the distance ``DISTANCE`` is activated, i.e., two layers with very different dust concetration will likely not fusion. 
+We chose to prioritize mineral dust because its concentration in seasonal snow is vertically more discontinuous than that of BC.
+However, layers containing a high concentration of both mineral dust and BC, e.g., top of the firn from the previous year, were preserved through the prioritization of layers with a high concentration of dust. 
+See the comment inside of the function for more details.
+
+
+The impact of the layering rules (merging, splitting) has not been evaluated precisely. But ultimately, a choice between LAP stratigraphy or snow grain type stratigraphy has to be made for deep snowpacks. 
+
+2) Remove LAPs in deep layers
+~~~~~~~~~~~~~~~~~~~~
+
+When ``OSNOW_GLACIER`` is set to ``.TRUE.``, the LAPs in deep layers are removed/deleted when the age of the layer is > to 5 years, and the depth is > to 10 m w.e.. This allows to keep a fine profile at the surface. 
+
+
+3) Deactivate LAP effect on snow albedo
+~~~~~~~~~~~~~~~~~~~~
+
+Since the modeling relies now on the LAP stratigraphy, simulating the snowpack without the impact of LAP has to be done by disabling the radiative impact of LAP in TARTES using ``N_IMPUR_FORGET_IMPACT``, and no longer by ignoring the LAP input (which was previously done using ``NIMPUR=X`` or removing LAP input). When disactivating the radiative impact of a LAP, the discretization rules stayed the same as in the reference version but the LAP acted as transparent in the radiative transfer model TARTES.
+
+
+4) Bypassing TARTES when ice at the surface
+~~~~~~~~~~~~~~~~~~~~
+
+The TARTES snow radiative model is not able to account for LAP in ice, and the LAP content in ice is often unknown without in-situ measurements.
+
+When ``OSNOW_GLACIER`` is set to ``.TRUE.``, albedo was is to the constant value inferred with ``XALBICE1``, ``XALBICE2``, and ``XALBICE3`` if the top density is higher than 850 kg/m3, which is close to the pore close-off density. TARTES is bypassed this way when one of the first 3 layers was made of ice (density > 850 kg/m3). However TARTES is still running for those points while the result is not used, mainly because only a fraction of simulation points may need to switch to ice albedo. 
+
+This modification may not be perfect for now. A satisfying solution would be to have a radiative transfer model working of both snow and ice such such as the SNICAR model. 
+
+
+5) Basal zero constant flux
+~~~~~~~~~~~~~~~~~~~~
+
+For applications on surface mass balance of glaciers, the basal heat fluxhas to be set to 0. This is not effective in the version of the 24/11/2026 (bug in ``SNOWCROSLVT`` routine). The bugged code is commented. 
+
+
+
+
 References
 ^^^^^^^^^^
 
