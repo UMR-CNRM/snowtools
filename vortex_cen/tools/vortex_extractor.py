@@ -115,7 +115,7 @@ def get_data(configfile=None, configsection=None, **kw):
     description = read_configuration_file(description, configfile, configsection)
 
     # Update description with command-line arguments
-    for key in ["kind", "vapp", "vconf", "experiment", "username", "geometry", "block", "member", "duration"]:
+    for key in ["kind", "vapp", "vconf", "experiment", "username", "geometry", "block", "member", "duration", "local"]:
         if kw.get(key, False):
             description.update({key: kw.get(key)})
 

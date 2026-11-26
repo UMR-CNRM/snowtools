@@ -25,8 +25,8 @@ Options :
    * -rlon Longitude Resolution for 2D grid (250 or 30)
    * -rlat Latitude Resolution for 2D grid (250 or 30)
    * --MNT_alt Path for MNT altitude
-   * -m massif method in order to assign massif number ('map', 'one', 'mapfill', 'force')
-   * -n massif number if you have choosen the 'force' method
+   * -m massif method in order to assign massif number ('map', 'one', 'mapfill', 'force', 'force_inside')
+   * -n massif number if you have choosen the 'force' or 'force_inside' method
 
 The options for massif method are:
 
@@ -35,8 +35,9 @@ The options for massif method are:
    * 'map': each point gets the massif number it should have (0 if outside all massif)
    * 'one': each point gets the most common massif number
    * 'mapfill': like map, with points outside all massif getting the most common massif number
-   * 'force': each point gets the massif number you choose 
-   
+   * 'force': each point gets the massif number you choose
+   * 'force_inside': each point inside shapefile gets the massif number you choose. Others points get 0.
+
 
 RQ: Massif number can be found in file `snowtools/DATA/METADATA.xml`
 
@@ -98,52 +99,54 @@ On SXCEN:
 
 """
 
-import os
 import argparse
+import logging  # Import pour les log
+import os
 import shutil
 import sys
-import logging  # Import pour les log
-
-from netCDF4 import Dataset
-import numpy as np
-import shapefile
-from shapely.geometry import shape
-from shapely.geometry import Point
-from shapely.ops import transform
 from functools import partial
-import pyproj
 
-from snowtools.utils.infomassifs import infomassifs
-from snowtools.DATA import SNOWTOOLS_DIR
-from snowtools.DATA import DIRDATADEM
+import numpy as np
+import pyproj
+import shapefile
+from netCDF4 import Dataset
+from shapely.geometry import Point, shape
+from shapely.ops import transform
+
+from snowtools.DATA import DIRDATADEM, SNOWTOOLS_DIR
 from snowtools.tools.execute import printandcallSystemOrDie
+from snowtools.utils.infomassifs import infomassifs
 
 ################################################################
 # DEFAULT VALUES (but can change with options):
 # MNT (30m) and name of the output NetCDF
 ################################################################
-NetCDF_out = 'NetCDF2D_from_shapefile.nc'
+NetCDF_out = "NetCDF2D_from_shapefile.nc"
 
 # PATH_MNT
-path_MNT_30m = dict(alti=DIRDATADEM + 'france_30m/DEM_FRANCE_L93_30m_bilinear.tif',
-                    aspect=DIRDATADEM + 'france_30m/ASP_FRANCE_L93_30m_bilinear.tif',
-                    slope=DIRDATADEM + 'france_30m/SLP_FRANCE_L93_30m_bilinear.tif',
-                    massif=DIRDATADEM + 'france_30m/MSF_FRANCE_L93_30m_bilinear.tif')
+path_MNT_30m = {
+    "alti": DIRDATADEM + "france_30m/DEM_FRANCE_L93_30m_bilinear.tif",
+    "aspect": DIRDATADEM + "france_30m/ASP_FRANCE_L93_30m_bilinear.tif",
+    "slope": DIRDATADEM + "france_30m/SLP_FRANCE_L93_30m_bilinear.tif",
+    "massif": DIRDATADEM + "france_30m/MSF_FRANCE_L93_30m_bilinear.tif",
+}
 
-path_MNT_250m = dict(alti=DIRDATADEM + 'france_250m/DEM_FRANCE_L93_250m_bilinear.tif',
-                    aspect=DIRDATADEM + 'france_250m/ASP_FRANCE_L93_250m_bilinear.tif',
-                    slope=DIRDATADEM + 'france_250m/SLP_FRANCE_L93_250m_bilinear.tif',
-                    massif=DIRDATADEM + 'france_250m/MSF_FRANCE_L93_250m_bilinear.tif')
+path_MNT_250m = {
+    "alti": DIRDATADEM + "france_250m/DEM_FRANCE_L93_250m_bilinear.tif",
+    "aspect": DIRDATADEM + "france_250m/ASP_FRANCE_L93_250m_bilinear.tif",
+    "slope": DIRDATADEM + "france_250m/SLP_FRANCE_L93_250m_bilinear.tif",
+    "massif": DIRDATADEM + "france_250m/MSF_FRANCE_L93_250m_bilinear.tif",
+}
 
-vartopo_out = dict(alti="ZS", aspect="aspect", slope="slope", massif="massif_num")
-vartopo_longname = dict(alti="Elevation", aspect="Aspect angle", slope="Slope angle", massif="Massif number")
-vartopo_units = dict(alti="m", aspect="degrees", slope="degrees", massif="-")
-vartopo_typegdal = dict(alti="Float32", aspect="Float32", slope="Float32", massif="Int32")
+vartopo_out = {"alti": "ZS", "aspect": "aspect", "slope": "slope", "massif": "massif_num"}
+vartopo_longname = {"alti": "Elevation", "aspect": "Aspect angle", "slope": "Slope angle", "massif": "Massif number"}
+vartopo_units = {"alti": "m", "aspect": "degrees", "slope": "degrees", "massif": "-"}
+vartopo_typegdal = {"alti": "Float32", "aspect": "Float32", "slope": "Float32", "massif": "Int32"}
 
 ################################################################
 # Infos shapefile massif, normally stable and durable
 ################################################################
-path_shapefile_massif = SNOWTOOLS_DIR + '/DATA/massifs'
+path_shapefile_massif = SNOWTOOLS_DIR + "/DATA/massifs"
 
 ################################################################
 # Log
@@ -151,9 +154,10 @@ path_shapefile_massif = SNOWTOOLS_DIR + '/DATA/massifs'
 logger = logging.getLogger()
 logger.setLevel(logging.WARNING)
 console_handler = logging.StreamHandler()
-console_handler.setFormatter(logging.Formatter('%(levelname)s :: %(message)s'))
+console_handler.setFormatter(logging.Formatter("%(levelname)s :: %(message)s"))
 console_handler.setLevel(logging.DEBUG)
 logger.addHandler(console_handler)
+
 
 ################################################################
 #   STEP 1: convert kml in shapefile in order to read it
@@ -168,8 +172,8 @@ def convert_kml2shp(path_shape_kml):
     :type path_shape_kml: str
     :return: a string: the path to the .shp file after conversion from the .kml file.
     """
-    path_shape_shp = path_shape_kml[:-3] + 'shp'
-    cmd = f'ogr2ogr -f ESRI Shapefile {path_shape_shp} {path_shape_kml}'
+    path_shape_shp = path_shape_kml[:-3] + "shp"
+    cmd = f"ogr2ogr -f ESRI Shapefile {path_shape_shp} {path_shape_kml}"
     printandcallSystemOrDie(cmd)
     return path_shape_shp
 
@@ -209,8 +213,7 @@ def conversion_to_L93_if_lat_lon(list_of_four):
     if max(list_of_four) < 200:
         Lower = Point(list_of_four[0], list_of_four[1])
         Upper = Point(list_of_four[2], list_of_four[3])
-        project_from_WGS84_to_L93 = partial(pyproj.transform, pyproj.Proj(init='epsg:4326'),
-                                            pyproj.Proj(init='epsg:2154'))
+        project_from_WGS84_to_L93 = partial(pyproj.transform, pyproj.Proj(init="epsg:4326"), pyproj.Proj(init="epsg:2154"))
         Lower_L93 = transform(project_from_WGS84_to_L93, Lower)
         Upper_L93 = transform(project_from_WGS84_to_L93, Upper)
         return [int(Lower_L93.x), int(Lower_L93.y), int(Upper_L93.x) + 1, int(Upper_L93.y) + 1]
@@ -230,16 +233,17 @@ def clean_the_mess(path_shape_shp, clean_all):
     :return: In a pythonic point of view, nothing. Some files are deleted.
     """
     if clean_all:
-        for suffixe in ['shp', 'prj', 'shx', 'dbf']:
+        for suffixe in ["shp", "prj", "shx", "dbf"]:
             path_shape_rm = path_shape_shp[:-3] + suffixe
             if os.path.isfile(path_shape_rm):
                 os.remove(path_shape_rm)
 
-    for vartopo in vartopo_out.keys():
-        if os.path.isfile(f'{vartopo}.tif'):
-            os.remove(f'{vartopo}.tif')
-        if os.path.isfile(f'{vartopo}.nc'):
-            os.remove(f'{vartopo}.nc')
+    for vartopo in vartopo_out:
+        if os.path.isfile(f"{vartopo}.tif"):
+            os.remove(f"{vartopo}.tif")
+        if os.path.isfile(f"{vartopo}.nc"):
+            os.remove(f"{vartopo}.nc")
+
 
 ################################################################
 #   STEP 4: create grid (250m * 250m)
@@ -261,13 +265,20 @@ def create_dict_all_infos(list_of_four, resol_x=250, resol_y=250):
     YLL = list_of_four[1]
     XUR = list_of_four[2]
     YUR = list_of_four[3]
-    Nb_pixel_x = round((XUR - XLL)/resol_x) + 1
-    Nb_pixel_y = round((YUR - YLL)/resol_y) + 1
+    Nb_pixel_x = round((XUR - XLL) / resol_x) + 1
+    Nb_pixel_y = round((YUR - YLL) / resol_y) + 1
     new_XUR = XLL + resol_x * (Nb_pixel_x - 1)
     new_YUR = YLL + resol_y * (Nb_pixel_y - 1)
-    return {'XLL': int(XLL), 'YLL': int(YLL), 'XUR': int(new_XUR), 'YUR': int(new_YUR),
-            'Nb_pixel_x': int(Nb_pixel_x), 'Nb_pixel_y': int(Nb_pixel_y),
-            'resol_x': int(resol_x), 'resol_y': int(resol_y)}
+    return {
+        "XLL": int(XLL),
+        "YLL": int(YLL),
+        "XUR": int(new_XUR),
+        "YUR": int(new_YUR),
+        "Nb_pixel_x": int(Nb_pixel_x),
+        "Nb_pixel_y": int(Nb_pixel_y),
+        "resol_x": int(resol_x),
+        "resol_y": int(resol_y),
+    }
 
 
 ################################################################
@@ -285,23 +296,25 @@ def create_MNT_tif(dict_info, path_MNT_given=None):
     :type path_MNT_given: str
     :return: In a pythonic point of view, nothing. A .tif file is created.
     """
-    if abs(dict_info['resol_x'] - 250) < 10 and abs(dict_info['resol_y'] - 250) < 10:
+    if abs(dict_info["resol_x"] - 250) < 10 and abs(dict_info["resol_y"] - 250) < 10:
         path_MNT = path_MNT_250m
-    elif abs(dict_info['resol_x'] - 30) < 10 and abs(dict_info['resol_y'] - 30) < 10:
+    elif abs(dict_info["resol_x"] - 30) < 10 and abs(dict_info["resol_y"] - 30) < 10:
         path_MNT = path_MNT_30m
     elif path_MNT_given is not None:
         path_MNT = path_MNT_given
     else:
-        print('PB: no MNT provided with this resolution, please have a look to the code')
+        print("PB: no MNT provided with this resolution, please have a look to the code")
         pass
 
-    for vartopo in vartopo_out.keys():
-
-        cmd = (f"gdalwarp -te {str(dict_info['XLL'])} {str(dict_info['YLL'])} {str(dict_info['XUR'])}"
-               f" {str(dict_info['YUR'])} -tap -tr {str(dict_info['resol_x'])} {str(dict_info['resol_y'])}"
-               f" -te_srs EPSG:2154 -s_srs EPSG:2154 {path_MNT[vartopo]} {vartopo}.tif")
+    for vartopo in vartopo_out:
+        cmd = (
+            f"gdalwarp -te {str(dict_info['XLL'])} {str(dict_info['YLL'])} {str(dict_info['XUR'])}"
+            f" {str(dict_info['YUR'])} -tap -tr {str(dict_info['resol_x'])} {str(dict_info['resol_y'])}"
+            f" -r bilinear -te_srs EPSG:2154 -s_srs EPSG:2154 {path_MNT[vartopo]} {vartopo}.tif"
+        )
 
         printandcallSystemOrDie(cmd)
+
 
 ################################################################
 #   STEP 5: most common massif
@@ -317,28 +330,28 @@ def find_most_common_massif(dict_info):
     :type dict_info: dict
     :return: an integer (the massif number of the most common massif) or a numpy array (if there is not common massif).
     """
-    massif_num = np.zeros((dict_info['Nb_pixel_y'], dict_info['Nb_pixel_x']))
+    massif_num = np.zeros((dict_info["Nb_pixel_y"], dict_info["Nb_pixel_x"]))
     massif_num = massif_num.astype(int)
     r = shapefile.Reader(path_shapefile_massif)
     shapes = r.shapes()
     infos = r.shapeRecords()
     # Enlève les massifs qui sont "trop loin" du shapefile d'intérêt
-    massif_potentiel = [True]*len(shapes)
+    massif_potentiel = [True] * len(shapes)
     for i in range(len(shapes)):
-        if shape(shapes[i]).bounds[0] > dict_info['XUR']:
+        if shape(shapes[i]).bounds[0] > dict_info["XUR"]:
             massif_potentiel[i] = False
-        elif shape(shapes[i]).bounds[1] > dict_info['YUR']:
+        elif shape(shapes[i]).bounds[1] > dict_info["YUR"]:
             massif_potentiel[i] = False
-        elif shape(shapes[i]).bounds[2] < dict_info['XLL']:
+        elif shape(shapes[i]).bounds[2] < dict_info["XLL"]:
             massif_potentiel[i] = False
-        elif shape(shapes[i]).bounds[3] < dict_info['YLL']:
+        elif shape(shapes[i]).bounds[3] < dict_info["YLL"]:
             massif_potentiel[i] = False
 
     # On remplit le tableau de numéro des massifs
-    for xi in range(dict_info['Nb_pixel_x']):
-        for yj in range(dict_info['Nb_pixel_y']):
-            abscisse = dict_info['XLL'] + xi * dict_info['resol_x']
-            ordonnee = dict_info['YLL'] + yj * dict_info['resol_y']
+    for xi in range(dict_info["Nb_pixel_x"]):
+        for yj in range(dict_info["Nb_pixel_y"]):
+            abscisse = dict_info["XLL"] + xi * dict_info["resol_x"]
+            ordonnee = dict_info["YLL"] + yj * dict_info["resol_y"]
             point = Point(abscisse, ordonnee)
             for i in range(len(shapes)):
                 if massif_potentiel[i]:
@@ -349,16 +362,51 @@ def find_most_common_massif(dict_info):
 
     # Les stats sur le tableau massif_num
     stat = np.bincount(massif_num.flatten())
-    print('le massif majoritaire est: ', stat.argmax())
-    if 100. * max(stat)/sum(stat) > 50.:
-        print('sa fréquence est: ', 100. * max(stat)/sum(stat))
-        print('tous les points sont mis dans le même massif')
+    print("le massif majoritaire est: ", stat.argmax())
+    if 100.0 * max(stat) / sum(stat) > 50.0:
+        print("sa fréquence est: ", 100.0 * max(stat) / sum(stat))
+        print("tous les points sont mis dans le même massif")
         return stat.argmax()
     else:
-        print('sa fréquence est: ', 100. * max(stat)/sum(stat))
-        print('cette valeur est trop faible')
-        print('on ne regroupe pas tous les points dans le même massif')
+        print("sa fréquence est: ", 100.0 * max(stat) / sum(stat))
+        print("cette valeur est trop faible")
+        print("on ne regroupe pas tous les points dans le même massif")
         return massif_num
+
+
+#################################################################
+#   STEP 5 bis: massif given by user inside shapefile 0 otherwise
+#################################################################
+def massif_inside(massif_force, dict_info, path_shapefile_user):
+    """
+    TO BE DONE
+    Give the massif number defined by user inside the shapefile.
+    Points outside the shapefile get 0 as massif number.
+
+    :param massif_force: the massif number forced by user
+    :type massif_force: int
+    :param dict_info: dictionary with all the information for the grid
+    :type dict_info: dict
+    :param path_shapefile_user: path to the shapefile
+    :type path_shapefile_user: str
+    :return: a numpy array filled with 0 (outside shapefile) and massif_force (inside shapefile)
+    """
+    massif_num = np.zeros((dict_info["Nb_pixel_y"], dict_info["Nb_pixel_x"]))
+    massif_num = massif_num.astype(int)
+    r = shapefile.Reader(path_shapefile_user)
+    shapes = r.shapes()
+
+    # On remplit le tableau de numéro des massifs
+    for xi in range(dict_info["Nb_pixel_x"]):
+        for yj in range(dict_info["Nb_pixel_y"]):
+            abscisse = dict_info["XLL"] + xi * dict_info["resol_x"]
+            ordonnee = dict_info["YLL"] + yj * dict_info["resol_y"]
+            point = Point(abscisse, ordonnee)
+            polygon = shape(shapes[0])
+            if polygon.contains(point):
+                massif_num[yj, xi] = massif_force
+
+    return massif_num
 
 
 ################################################################
@@ -371,59 +419,63 @@ def create_netcdf(massif_method, massif_number, file_out=NetCDF_out):
     :param massif_number: an integer or a numpy array depending of the percentage of points in the most common massif
     :param file_out: the name of the output for the netcdf file
     :type file_out: str
-    :return: In a pythonic point of view, nothing. A .nc file is created.
+    :return: coordinate of center of left lower point from netcdf file.
     """
 
     # Convert all extracted tif in netcdf files with correct variable names and create one single file with
     # all variables
     listvartopo = list(vartopo_out.keys())
-    if massif_method in ['one', 'force']:
-        listvartopo.remove('massif')
+    if massif_method in ["one", "force", "force_inside"]:
+        listvartopo.remove("massif")
 
     for vartopo in listvartopo:
-        cmd = f'gdal_translate -of netCDF -co FORMAT=NC4 -ot {vartopo_typegdal[vartopo]} {vartopo}.tif {vartopo}.nc'
+        cmd = f"gdal_translate -of netCDF -co FORMAT=NC4 -ot {vartopo_typegdal[vartopo]} {vartopo}.tif {vartopo}.nc"
         printandcallSystemOrDie(cmd)
-        cmd = f'ncrename -v Band1,{vartopo_out[vartopo]} {vartopo}.nc'
+        cmd = f"ncrename -v Band1,{vartopo_out[vartopo]} {vartopo}.nc"
         printandcallSystemOrDie(cmd)
-        cmd = (f'ncatted -a long_name,{vartopo_out[vartopo]},o,c,"{vartopo_longname[vartopo]}" '
-               f'-a units,"{vartopo_out[vartopo]}",o,c,{vartopo_units[vartopo]} {vartopo}.nc')
+        cmd = (
+            f'ncatted -a long_name,{vartopo_out[vartopo]},o,c,"{vartopo_longname[vartopo]}" '
+            f'-a units,"{vartopo_out[vartopo]}",o,c,{vartopo_units[vartopo]} {vartopo}.nc'
+        )
         printandcallSystemOrDie(cmd)
 
-        if not os.path.isfile('step1.nc'):
-            shutil.copy(f'{vartopo}.nc', 'step1.nc')
+        if not os.path.isfile("step1.nc"):
+            shutil.copy(f"{vartopo}.nc", "step1.nc")
         else:
-            cmd = f'ncks -v {vartopo_out[vartopo]} -A {vartopo}.nc step1.nc'
+            cmd = f"ncks -v {vartopo_out[vartopo]} -A {vartopo}.nc step1.nc"
             printandcallSystemOrDie(cmd)
 
     # Open final file
-    NetCDF_file = Dataset('step1.nc', 'r+')
+    NetCDF_file = Dataset("step1.nc", "r+")
 
-    if massif_method in ['one', 'force']:
+    if massif_method in ["one", "force", "force_inside"]:
         # Create massif variable and force to prescribed or prevailing value
-        massif_num_nc = NetCDF_file.createVariable('massif_num', 'int',
-                                                   NetCDF_file.variables['ZS'].dimensions, fill_value=-9999999)
-        massif_num_nc.long_name = 'Massif number'
+        massif_num_nc = NetCDF_file.createVariable(
+            "massif_num", "int", NetCDF_file.variables["ZS"].dimensions, fill_value=-9999999
+        )
+        massif_num_nc.long_name = "Massif number"
         massif_num_nc[:, :] = massif_number
 
-    elif massif_method in ['mapfill']:
+    elif massif_method in ["mapfill"]:
         # Take massif number for preexisting gridded file but replace 0 by prevailing value
-        massif_num_nc = NetCDF_file.variables['massif_num'][:]
+        massif_num_nc = NetCDF_file.variables["massif_num"][:]
 
         indzeros = np.where(massif_num_nc == 0)
         nzeros = np.shape(indzeros)[-1]
-        print(f'{nzeros} pixels outside massifs boundaries filled with massif number {massif_number}')
+        print(f"{nzeros} pixels outside massifs boundaries filled with massif number {massif_number}")
         massif_num_nc[:, :] = np.where(massif_num_nc == 0, massif_number, massif_num_nc)
-        NetCDF_file.variables['massif_num'][:, :] = massif_num_nc
+        NetCDF_file.variables["massif_num"][:, :] = massif_num_nc
 
-    elif massif_method in ['map']:
+    elif massif_method in ["map"]:
         # Take massif number for preexisting gridded file
-        massif_num_nc = NetCDF_file.variables['massif_num']
+        massif_num_nc = NetCDF_file.variables["massif_num"]
     else:
         raise Exception("Massif method unknown")
 
     # Check and if necessary correct consistency between pixel elevation
     # and massif extreme elevations for all massifs of the domain
-    ZS = NetCDF_file.variables['ZS'][:, :]
+    ZS = NetCDF_file.variables["ZS"][:, :]
+    xbound, ybound = int(NetCDF_file.variables["x"][0]), int(NetCDF_file.variables["y"][0])
 
     nbelow = 0
     nabove = 0
@@ -442,22 +494,22 @@ def create_netcdf(massif_method, massif_number, file_out=NetCDF_out):
             print(f"WARNING: massif number {massif_number} is unknown")
 
     if nbelow > 0 or nabove > 0:
-        print (f'Elevation corrected for {nbelow} pixels below minimum elevation '
-               f'and {nabove} pixels above maximum elevation')
-        NetCDF_file.variables['ZS'][:, :] = ZS
+        print(f"Elevation corrected for {nbelow} pixels below minimum elevation and {nabove} pixels above maximum elevation")
+        NetCDF_file.variables["ZS"][:, :] = ZS
 
-    print('NETCDF dimension:')
-    print(NetCDF_file.variables['ZS'].shape)
+    print("NETCDF dimension:")
+    print(NetCDF_file.variables["ZS"].shape)
 
     NetCDF_file.close()
 
-    os.rename('step1.nc', file_out)
+    os.rename("step1.nc", file_out)
+    return xbound, ybound
 
 
 ################################################################
 #   STEP 7: infos for NAM_IGN part of namelist on screen
 ################################################################
-def print_for_namelist(dict_info, output_name):
+def print_for_namelist(dict_info, output_name, xll, yll):
     """
     Just to have a print on the screen in order to have all the relevant information for the namelist used later in the
     Surfex simulations.
@@ -466,17 +518,23 @@ def print_for_namelist(dict_info, output_name):
     :type dict_info: dict
     :param output_name: the name of the output for the netcdf file
     :type output_name: str
+    :param xll: x coord of lower left point (centered in the middle of the grid)
+    :type xll: int
+    :param yll: y coord of lower left point (centered in the middle of the grid)
+    :type yll: int
     :return: In a pythonic point of view, nothing. Some information are printed on the screen.
     """
-    print('File: ', output_name)
-    print('In namelist &NAM_IGN:')
-    print('XCELLSIZE=', dict_info['resol_x'])
-    print('XX_LLCORNER=', dict_info['XLL'])
-    print('XY_LLCORNER=', dict_info['YLL'])
-    print('!! Check with NETCDF dimensions (gap of 1 possible):')
-    print('NCOLS=', dict_info['Nb_pixel_x'])
-    print('NROWS=', dict_info['Nb_pixel_y'])
-    print('!! For BELENOS, take ntasks < min(NCOLS, NROWS)')
+    print("File: ", output_name)
+    print("In namelist:")
+    print("&NAM_IGN:")
+    print("CLAMBERT='L93'")
+    print("NCOLS=", dict_info["Nb_pixel_x"])
+    print("NROWS=", dict_info["Nb_pixel_y"])
+    print("XCELLSIZE=", dict_info["resol_x"])
+    print("XX_LLCORNER=", int(xll - dict_info["resol_x"] / 2))
+    print("XY_LLCORNER=", int(yll - dict_info["resol_x"] / 2))
+
+    print("!! For BELENOS, take ntasks < min(NCOLS, NROWS)")
 
 
 ################################################################
@@ -495,15 +553,24 @@ def parseArguments(args):
 
     # Optional argument
     parser.add_argument("-o", "--output", help="Name for NetCDF file to save", type=str, default=NetCDF_out)
-    parser.add_argument("-rlon", "--resol_lon", help="Longitude Resolution for 2D grid (250 or 30)", type=int,
-                        default=250)
-    parser.add_argument("-rlat", "--resol_lat", help="Latitude Resolution for 2D grid (250 or 30)", type=int,
-                        default=250)
+    parser.add_argument("-rlon", "--resol_lon", help="Longitude Resolution for 2D grid (250 or 30)", type=int, default=250)
+    parser.add_argument("-rlat", "--resol_lat", help="Latitude Resolution for 2D grid (250 or 30)", type=int, default=250)
     parser.add_argument("--MNT_alt", help="Path for MNT altitude", type=str, default=None)
-    parser.add_argument("-m", "--massif_method", help="Method to assign massif number", type=str,
-                        default='map', choices=['map', 'one', 'mapfill', 'force'])
-    parser.add_argument("-n", "--massif_number", help="Massif number to assign if --massif_method=force",
-                        type=int, default=None)
+    parser.add_argument(
+        "-m",
+        "--massif_method",
+        help="Method to assign massif number",
+        type=str,
+        default="map",
+        choices=["map", "one", "mapfill", "force", "force_inside"],
+    )
+    parser.add_argument(
+        "-n",
+        "--massif_number",
+        help="Massif number to assign if --massif_method=force or force_inside",
+        type=int,
+        default=None,
+    )
 
     args = parser.parse_args(args)
     return args
@@ -526,26 +593,28 @@ def main(args=None):
         massif = args.massif_number
         # Check if mandatory path for shapefile is OK
         if not os.path.isfile(path_shapefile):
-            logger.critical('Provided path for shapefile file does not exist ({})'.format(path_shapefile))
+            logger.critical(f"Provided path for shapefile file does not exist ({path_shapefile})")
             sys.exit(1)
 
         clean_all = False
-        if path_shapefile[-3:] == 'kml':
+        if path_shapefile[-3:] == "kml":
             path_shapefile = convert_kml2shp(path_shapefile)
             clean_all = True
         bounds = get_bounds(path_shapefile)
         bounds = conversion_to_L93_if_lat_lon(bounds)
         dict_info = create_dict_all_infos(bounds, resol_x, resol_y)
         create_MNT_tif(dict_info, path_MNT_alti)
-        if args.massif_method == 'force':
+        if args.massif_method == "force":
             massif_num = massif
-        elif args.massif_method in 'one, mapfill':
+        elif args.massif_method == "force_inside":
+            massif_num = massif_inside(massif, dict_info, path_shapefile)
+        elif args.massif_method in "one, mapfill":
             massif_num = find_most_common_massif(dict_info)
 
-        create_netcdf(args.massif_method, massif_num, output_name)
+        XL, YL = create_netcdf(args.massif_method, massif_num, output_name)
         clean_the_mess(path_shapefile, clean_all)
-        print_for_namelist(dict_info, output_name)
+        print_for_namelist(dict_info, output_name, XL, YL)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
